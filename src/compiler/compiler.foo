@@ -8,9 +8,9 @@
 
 (define (optimize expr)
   ;; TOOD optimize redundant bindings etc
-  (constant-fold (closure-convert expr)))
+  (lambda-lift (closure-convert expr)))
 
-(define (constant-fold expr)
+(define (lambda-lift expr)
   ;; TODO actually implement this
   expr)
 
