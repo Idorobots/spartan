@@ -8,6 +8,8 @@
         ((tagged-list? 'if expr) (cpc-if expr env cont))
         ((tagged-list? 'letcc expr) (cpc-letcc expr env cont))
         ((tagged-list? 'letrec expr) (cpc-letrec expr env cont))
+        ((tagged-list? 'reset expr) (cpc-reset expr env cont))
+        ((tagged-list? 'shift expr) (cpc-shift expr env cont))
         ('else (cpc-app expr env cont))))
 
 (define (tagged-list? tag lst)
@@ -130,6 +132,35 @@
 (define (cpc-letrec expr env cont)
   ;; TODO Actually implement this.
   expr)
+
+(define (push-cont! cont)
+  (set! &stored-cont (cons cont &stored-cont)))
+
+(define (pop-cont!)
+  (let ((c (car &stored-cont)))
+    (set! &stored-cont (cdr &stored-cont))
+    c))
+
+(define (cpc-reset expr env cont)
+  `(begin (push-cont! ,cont)
+          ,(cpc (reset-expr expr) env (make-identity-continuation))))
+
+(define (reset-expr expr)
+  (cadr expr))
+
+(define (cpc-shift expr env cont)
+  (let ((sc (gensym 'cont)))
+    `(let ((,(shift-cont expr) (lambda (x c) (,cont x)))
+           (,sc (pop-cont!)))
+       (,sc ,(cpc (shift-expr expr)
+                  (extend-environment (list (shift-cont expr)) env)
+                  cont)))))
+
+(define (shift-cont expr)
+  (cadr expr))
+
+(define (shift-expr expr)
+  (caddr expr))
 
 (define (cpc-app expr env cont)
   (let ((exprs (cpc-build-simple-app expr env nil nil)))

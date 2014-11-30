@@ -33,3 +33,6 @@
 (define old-pp pretty-print)
 (define (pretty-print expr)
   (old-pp expr))
+
+;; Required by other modules:
+(define &stored-cont (list (lambda (x) x)))
