@@ -39,11 +39,17 @@
   expr)
 
 (define (cpc-define expr env cont)
-  `(,cont (define ,(definition-name expr)
-            ,(cpc-lambda `(lambda (,@(definition-args expr))
-                            ,@(definition-body expr))
-                         env
-                         cont))))
+  (let* ((name (definition-name expr))
+         (safe-name (symbol->llvm name)))
+    `(,cont (define ,safe-name
+              ,(cpc-lambda `(lambda (,@(definition-args expr))
+                              ,@(definition-body expr))
+                           (extend-environment (list name)
+                                               env)
+                           cont)))))
+
+(define (extend-environment bindings env)
+  (append bindings env))
 
 (define (definition-name expr)
   (caadr expr))
@@ -81,16 +87,13 @@
   (cdr statements))
 
 (define (cpc-lambda expr env cont)
-  (let ((ct (gensym 'ct)))
-    `(lambda (,@(lambda-args expr) ,ct)
+  (let ((ct (gensym 'ct))
+        (args (map symbol->llvm (lambda-args expr))))
+    `(lambda ,(append args (list ct))
        ,@(cpc-sequence (lambda-body expr)
-                       (extend-environment (lambda-args expr)
-                                           (extend-environment (list ct)
-                                                               env))
+                       (extend-environment (append args (list ct))
+                                           env)
                        ct))))
-
-(define (extend-environment bindings env)
-  (append bindings env))
 
 (define (lambda-args expr)
   (cadr expr))

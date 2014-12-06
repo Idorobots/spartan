@@ -13,7 +13,7 @@
 
 (define old-gensym gensym)
 (define (gensym root)
-  (old-gensym (symbol->string root)))
+  (old-gensym (symbol->string (symbol->llvm root))))
 
 (define (slurp file-name)
   (with-input-from-file file-name
