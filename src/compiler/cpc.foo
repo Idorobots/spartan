@@ -13,10 +13,17 @@
         ('else (cpc-app expr env cont))))
 
 (define (tagged-list? tag lst)
-  (and (pair? lst) (eq? (car lst) tag)))
+  (and (pair? lst)
+     (eq? (car lst) tag)))
 
 (define (simple-expression? expr)
-  (or (atom? expr) (tagged-list? 'quote expr) (tagged-list? 'lambda expr)))
+  (or (symbol? expr)
+     (number? expr)
+     (char? expr)
+     (string? expr) ;; NOTE Not actually simple.
+     (vector? expr) ;; NOTE ditto
+     (tagged-list? 'quote expr)
+     (tagged-list? 'lambda expr)))
 
 (define (cpc-simple expr env cont)
   (let ((e (cpc-build-simple expr env cont)))
@@ -25,15 +32,28 @@
         `(,cont ,e))))
 
 (define (cpc-build-simple expr env cont)
-  (cond ((atom? expr) (cpc-atom expr env cont))
+  (cond ((symbol? expr) (cpc-symbol expr env cont))
+        ((number? expr) (cpc-number expr env cont))
+        ((char? expr) (cpc-character expr env cont))
+        ((string? expr) (cpc-string expr env cont))
+        ((vector? expr) (cpc-vector expr env cont))
         ((tagged-list? 'quote expr) (cpc-quote expr env cont))
         ((tagged-list? 'lambda expr) (cpc-lambda expr env cont))))
 
-(define (atom? at)
-  (or (symbol? at) (number? at) (string? at)))
+(define (cpc-symbol expr env cont)
+  (symbol->llvm expr))
 
-(define (cpc-atom expr env cont)
+(define (cpc-number expr env cont)
   expr)
+
+(define (cpc-character expr env cont)
+  expr)
+
+(define (cpc-string expr env cont)
+  expr) ;; FIXME Add string interpolation.
+
+(define (cpc-vector expr env cont)
+  expr) ;; FIXME Implement this.
 
 (define (cpc-quote expr env cont)
   expr)
