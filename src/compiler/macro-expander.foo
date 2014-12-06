@@ -26,8 +26,8 @@
         (cons 'let* let*-macro)))
 
 (define (quasiquote-macro expr)
-  ;; TODO This is crucial
-  expr)
+  ;; FIXME This needs implementing.
+  nil)
 
 (define (when-macro expr)
   `(if ,(conditional-predicate expr)
