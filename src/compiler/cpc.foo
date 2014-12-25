@@ -26,37 +26,52 @@
      (tagged-list? 'lambda expr)))
 
 (define (cpc-simple expr env cont)
-  (let ((e (cpc-build-simple expr env cont)))
+  (let ((e (cpc-build-simple expr env)))
     (if (null? cont)
         e
         `(,cont ,e))))
 
-(define (cpc-build-simple expr env cont)
-  (cond ((symbol? expr) (cpc-symbol expr env cont))
-        ((number? expr) (cpc-number expr env cont))
-        ((char? expr) (cpc-character expr env cont))
-        ((string? expr) (cpc-string expr env cont))
-        ((vector? expr) (cpc-vector expr env cont))
-        ((tagged-list? 'quote expr) (cpc-quote expr env cont))
-        ((tagged-list? 'lambda expr) (cpc-lambda expr env cont))))
+(define (cpc-build-simple expr env)
+  (cond ((symbol? expr) (cpc-symbol expr env))
+        ((number? expr) (cpc-number expr env))
+        ((char? expr) (cpc-character expr env))
+        ((string? expr) (cpc-string expr env))
+        ((vector? expr) (cpc-vector expr env))
+        ((tagged-list? 'quote expr) (cpc-quote expr env))
+        ((tagged-list? 'lambda expr) (cpc-lambda expr env))))
 
-(define (cpc-symbol expr env cont)
+(define (cpc-symbol expr env)
   (symbol->llvm expr))
 
-(define (cpc-number expr env cont)
+(define (cpc-number expr env)
   expr)
 
-(define (cpc-character expr env cont)
+(define (cpc-character expr env)
   expr)
 
-(define (cpc-string expr env cont)
+(define (cpc-string expr env)
   expr) ;; FIXME Add string interpolation.
 
-(define (cpc-vector expr env cont)
+(define (cpc-vector expr env)
   expr) ;; FIXME Implement this.
 
-(define (cpc-quote expr env cont)
+(define (cpc-quote expr env)
   expr)
+
+(define (cpc-lambda expr env)
+  (let ((ct (gensym 'ct))
+        (args (map symbol->llvm (lambda-args expr))))
+    `(lambda ,(append args (list ct))
+       ,@(cpc-sequence (lambda-body expr)
+                       (extend-environment (append args (list ct))
+                                           env)
+                       ct))))
+
+(define (lambda-args expr)
+  (cadr expr))
+
+(define (lambda-body expr)
+  (cddr expr))
 
 (define (cpc-define expr env cont)
   (let* ((name (definition-name expr))
@@ -65,8 +80,7 @@
               ,(cpc-lambda `(lambda (,@(definition-args expr))
                               ,@(definition-body expr))
                            (extend-environment (list name)
-                                               env)
-                           cont)))))
+                                               env))))))
 
 (define (extend-environment bindings env)
   (append bindings env))
@@ -105,21 +119,6 @@
 
 (define (rest-statements statements)
   (cdr statements))
-
-(define (cpc-lambda expr env cont)
-  (let ((ct (gensym 'ct))
-        (args (map symbol->llvm (lambda-args expr))))
-    `(lambda ,(append args (list ct))
-       ,@(cpc-sequence (lambda-body expr)
-                       (extend-environment (append args (list ct))
-                                           env)
-                       ct))))
-
-(define (lambda-args expr)
-  (cadr expr))
-
-(define (lambda-body expr)
-  (cddr expr))
 
 (define (cpc-if expr env cont)
   (let ((ct (gensym 'ct)))
