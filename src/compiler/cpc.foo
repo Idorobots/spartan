@@ -20,6 +20,7 @@
 (define (simple-expression? expr)
   (or (symbol? expr)
      (number? expr)
+     (nil? expr)
      (char? expr)
      (tagged-list? 'quote expr)
      (tagged-list? 'lambda expr)))
@@ -27,6 +28,7 @@
 (define (cpc-simple expr)
   (cond ((symbol? expr) (cpc-symbol expr))
         ((number? expr) (cpc-number expr))
+        ((nil? expr) (cpc-nil expr))
         ((char? expr) (cpc-character expr))
         ((tagged-list? 'quote expr) (cpc-quote expr))
         ((tagged-list? 'lambda expr) (cpc-lambda expr))))
@@ -35,6 +37,9 @@
   (symbol->llvm expr))
 
 (define (cpc-number expr)
+  expr)
+
+(define (cpc-nil expr)
   expr)
 
 (define (cpc-character expr)
