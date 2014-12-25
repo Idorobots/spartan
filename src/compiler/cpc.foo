@@ -127,9 +127,11 @@
 (define (cpc-letcc expr cont)
   (let ((cc (let-bindings expr))
         (body (let-body expr))
-        (ct (gensym 'cont)))
+        (ct (gensym 'cont))
+        (arg (gensym 'arg))
+        (ignored (gensym 'ignored)))
     `(let ((,ct ,cont))
-       (let ((,cc (lambda (value ignored) (,ct value))))
+       (let ((,cc (lambda (,arg ,ignored) (,ct ,arg))))
          ,@(cpc-sequence body ct)))))
 
 (define (cpc-letrec expr cont)
@@ -144,8 +146,10 @@
   (cadr expr))
 
 (define (cpc-shift expr cont)
-  (let ((sc (gensym 'cont)))
-    `(let ((,(shift-cont expr) (lambda (x c) (,cont x)))
+  (let ((sc (gensym 'cont))
+        (arg (gensym 'arg))
+        (ignored (gensym 'ignored)))
+    `(let ((,(shift-cont expr) (lambda (,arg ,ignored) (,cont ,arg)))
            (,sc (pop-cont!)))
        (,sc ,(cpc (shift-expr expr) cont)))))
 
