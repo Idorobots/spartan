@@ -3,6 +3,8 @@
 
 (define (cpc expr env cont)
   (cond ((simple-expression? expr) (cpc-simple expr env cont))
+        ((string? expr) (cpc-string expr env cont))
+        ((vector? expr) (cpc-vector expr env cont))
         ((tagged-list? 'define expr) (cpc-define expr env cont))
         ((tagged-list? 'do expr) (cpc-do expr env cont))
         ((tagged-list? 'if expr) (cpc-if expr env cont))
@@ -20,8 +22,6 @@
   (or (symbol? expr)
      (number? expr)
      (char? expr)
-     (string? expr) ;; NOTE Not actually simple.
-     (vector? expr) ;; NOTE ditto
      (tagged-list? 'quote expr)
      (tagged-list? 'lambda expr)))
 
@@ -35,8 +35,6 @@
   (cond ((symbol? expr) (cpc-symbol expr env))
         ((number? expr) (cpc-number expr env))
         ((char? expr) (cpc-character expr env))
-        ((string? expr) (cpc-string expr env))
-        ((vector? expr) (cpc-vector expr env))
         ((tagged-list? 'quote expr) (cpc-quote expr env))
         ((tagged-list? 'lambda expr) (cpc-lambda expr env))))
 
@@ -48,12 +46,6 @@
 
 (define (cpc-character expr env)
   expr)
-
-(define (cpc-string expr env)
-  expr) ;; FIXME Add string interpolation.
-
-(define (cpc-vector expr env)
-  expr) ;; FIXME Implement this.
 
 (define (cpc-quote expr env)
   expr)
@@ -72,6 +64,12 @@
 
 (define (lambda-body expr)
   (cddr expr))
+
+(define (cpc-string expr env cont)
+  expr) ;; FIXME Add string interpolation.
+
+(define (cpc-vector expr env cont)
+  expr) ;; FIXME Implement this.
 
 (define (cpc-define expr env cont)
   (let* ((name (definition-name expr))
