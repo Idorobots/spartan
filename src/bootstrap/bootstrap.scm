@@ -6,14 +6,19 @@
 
 (define nil '())
 
+(define (nil? x)
+  (null? x))
+
 (define (id x) x)
 
 (define (empty? lst)
   (null? lst))
 
-(define old-gensym gensym)
+(define &gensym-counter 0)
 (define (gensym root)
-  (old-gensym (symbol->string (symbol->llvm root))))
+  (set! &gensym-counter (+ 1 &gensym-counter))
+  (string->symbol (string-append (symbol->string (symbol->llvm root))
+                                 (number->string &gensym-counter))))
 
 (define (slurp file-name)
   (with-input-from-file file-name
@@ -36,3 +41,16 @@
 
 ;; Required by other modules:
 (define &stored-cont (list (lambda (x) x)))
+
+(define (push-cont! cont)
+  (set! &stored-cont (cons cont &stored-cont)))
+
+(define (pop-cont!)
+  (let ((c (car &stored-cont)))
+    (set! &stored-cont (cdr &stored-cont))
+    c))
+
+(define-syntax do
+  (syntax-rules ()
+    ((do expression ...)
+     (begin expression ...))))

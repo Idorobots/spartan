@@ -15,8 +15,7 @@
         ('else (cpc-app expr env cont))))
 
 (define (tagged-list? tag lst)
-  (and (pair? lst)
-     (eq? (car lst) tag)))
+  (and (pair? lst) (eq? (car lst) tag)))
 
 (define (simple-expression? expr)
   (or (symbol? expr)
@@ -26,10 +25,7 @@
      (tagged-list? 'lambda expr)))
 
 (define (cpc-simple expr env cont)
-  (let ((e (cpc-build-simple expr env)))
-    (if (null? cont)
-        e
-        `(,cont ,e))))
+  `(,cont ,(cpc-build-simple expr env)))
 
 (define (cpc-build-simple expr env)
   (cond ((symbol? expr) (cpc-symbol expr env))
@@ -38,16 +34,16 @@
         ((tagged-list? 'quote expr) (cpc-quote expr env))
         ((tagged-list? 'lambda expr) (cpc-lambda expr env))))
 
-(define (cpc-symbol expr env)
+(define (cpc-symbol expr _)
   (symbol->llvm expr))
 
-(define (cpc-number expr env)
+(define (cpc-number expr _)
   expr)
 
-(define (cpc-character expr env)
+(define (cpc-character expr _)
   expr)
 
-(define (cpc-quote expr env)
+(define (cpc-quote expr _)
   expr)
 
 (define (cpc-lambda expr env)
@@ -153,17 +149,9 @@
   ;; TODO Actually implement this.
   expr)
 
-(define (push-cont! cont)
-  (set! &stored-cont (cons cont &stored-cont)))
-
-(define (pop-cont!)
-  (let ((c (car &stored-cont)))
-    (set! &stored-cont (cdr &stored-cont))
-    c))
-
 (define (cpc-reset expr env cont)
-  `(begin (push-cont! ,cont)
-          ,(cpc (reset-expr expr) env (make-identity-continuation))))
+  `(do (push-cont! ,cont)
+       ,(cpc (reset-expr expr) env (make-identity-continuation))))
 
 (define (reset-expr expr)
   (cadr expr))
@@ -203,14 +191,14 @@
 
 (define (cpc-build-app env todo vals finally)
   (cond ((empty? todo) finally)
-        ((null? (car todo)) (cpc-build-app env
-                                           (cdr todo)
-                                           (cdr vals)
-                                           finally))
-        (true (cpc-build-app env
-                             (cdr todo)
-                             (cdr vals)
-                             (cpc (car todo)
-                                  env
-                                  `(lambda (,(car vals))
-                                     ,finally))))))
+        ((nil? (car todo)) (cpc-build-app env
+                                          (cdr todo)
+                                          (cdr vals)
+                                          finally))
+        ('else (cpc-build-app env
+                              (cdr todo)
+                              (cdr vals)
+                              (cpc (car todo)
+                                   env
+                                   `(lambda (,(car vals))
+                                      ,finally))))))
