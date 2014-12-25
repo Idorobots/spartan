@@ -1,18 +1,18 @@
 ;; Continuation Passing Converter
 ;; Assumes macro-expanded code.
 
-(define (cpc expr env cont)
-  (cond ((simple-expression? expr) (cpc-simple expr env cont))
-        ((string? expr) (cpc-string expr env cont))
-        ((vector? expr) (cpc-vector expr env cont))
-        ((tagged-list? 'define expr) (cpc-define expr env cont))
-        ((tagged-list? 'do expr) (cpc-do expr env cont))
-        ((tagged-list? 'if expr) (cpc-if expr env cont))
-        ((tagged-list? 'letcc expr) (cpc-letcc expr env cont))
-        ((tagged-list? 'letrec expr) (cpc-letrec expr env cont))
-        ((tagged-list? 'reset expr) (cpc-reset expr env cont))
-        ((tagged-list? 'shift expr) (cpc-shift expr env cont))
-        ('else (cpc-app expr env cont))))
+(define (cpc expr cont)
+  (cond ((simple-expression? expr) (cpc-simple expr cont))
+        ((string? expr) (cpc-string expr cont))
+        ((vector? expr) (cpc-vector expr cont))
+        ((tagged-list? 'define expr) (cpc-define expr cont))
+        ((tagged-list? 'do expr) (cpc-do expr cont))
+        ((tagged-list? 'if expr) (cpc-if expr cont))
+        ((tagged-list? 'letcc expr) (cpc-letcc expr cont))
+        ((tagged-list? 'letrec expr) (cpc-letrec expr cont))
+        ((tagged-list? 'reset expr) (cpc-reset expr cont))
+        ((tagged-list? 'shift expr) (cpc-shift expr cont))
+        ('else (cpc-app expr cont))))
 
 (define (tagged-list? tag lst)
   (and (pair? lst) (eq? (car lst) tag)))
@@ -24,36 +24,33 @@
      (tagged-list? 'quote expr)
      (tagged-list? 'lambda expr)))
 
-(define (cpc-simple expr env cont)
-  `(,cont ,(cpc-build-simple expr env)))
+(define (cpc-simple expr cont)
+  `(,cont ,(cpc-build-simple expr)))
 
-(define (cpc-build-simple expr env)
-  (cond ((symbol? expr) (cpc-symbol expr env))
-        ((number? expr) (cpc-number expr env))
-        ((char? expr) (cpc-character expr env))
-        ((tagged-list? 'quote expr) (cpc-quote expr env))
-        ((tagged-list? 'lambda expr) (cpc-lambda expr env))))
+(define (cpc-build-simple expr)
+  (cond ((symbol? expr) (cpc-symbol expr))
+        ((number? expr) (cpc-number expr))
+        ((char? expr) (cpc-character expr))
+        ((tagged-list? 'quote expr) (cpc-quote expr))
+        ((tagged-list? 'lambda expr) (cpc-lambda expr))))
 
-(define (cpc-symbol expr _)
+(define (cpc-symbol expr)
   (symbol->llvm expr))
 
-(define (cpc-number expr _)
+(define (cpc-number expr)
   expr)
 
-(define (cpc-character expr _)
+(define (cpc-character expr)
   expr)
 
-(define (cpc-quote expr _)
+(define (cpc-quote expr)
   expr)
 
-(define (cpc-lambda expr env)
+(define (cpc-lambda expr)
   (let ((ct (gensym 'ct))
         (args (map symbol->llvm (lambda-args expr))))
     `(lambda ,(append args (list ct))
-       ,@(cpc-sequence (lambda-body expr)
-                       (extend-environment (append args (list ct))
-                                           env)
-                       ct))))
+       ,@(cpc-sequence (lambda-body expr) ct))))
 
 (define (lambda-args expr)
   (cadr expr))
@@ -61,23 +58,18 @@
 (define (lambda-body expr)
   (cddr expr))
 
-(define (cpc-string expr env cont)
+(define (cpc-string expr cont)
   expr) ;; FIXME Add string interpolation.
 
-(define (cpc-vector expr env cont)
+(define (cpc-vector expr cont)
   expr) ;; FIXME Implement this.
 
-(define (cpc-define expr env cont)
+(define (cpc-define expr cont)
   (let* ((name (definition-name expr))
          (safe-name (symbol->llvm name)))
     `(,cont (define ,safe-name
               ,(cpc-lambda `(lambda (,@(definition-args expr))
-                              ,@(definition-body expr))
-                           (extend-environment (list name)
-                                               env))))))
-
-(define (extend-environment bindings env)
-  (append bindings env))
+                              ,@(definition-body expr)))))))
 
 (define (definition-name expr)
   (caadr expr))
@@ -88,17 +80,15 @@
 (define (definition-body expr)
   (cddr expr))
 
-(define (cpc-do expr env cont)
-  `(,cont ,@(cpc-sequence (do-statements expr) env cont)))
+(define (cpc-do expr cont)
+  `(,cont ,@(cpc-sequence (do-statements expr) cont)))
 
-(define (cpc-sequence statements env cont)
+(define (cpc-sequence statements cont)
   (list (if (empty? (rest-statements statements))
-            (cpc (first-statement statements) env cont)
+            (cpc (first-statement statements) cont)
             (cpc (first-statement statements)
-                 env
                  (make-continuation (gensym 'ignored)
                                     (cpc-sequence (rest-statements statements)
-                                                  env
                                                   cont))))))
 
 (define (make-continuation arg-name body)
@@ -114,16 +104,15 @@
 (define (rest-statements statements)
   (cdr statements))
 
-(define (cpc-if expr env cont)
+(define (cpc-if expr cont)
   (let ((ct (gensym 'ct)))
     `((lambda (,ct)
         ,(cpc (if-predicate expr)
-              env
               (let ((value (gensym 'value)))
                 (make-continuation value
                                    `((if ,value
-                                         ,(cpc (if-then expr) env ct)
-                                         ,(cpc (if-else expr) env ct)))))))
+                                         ,(cpc (if-then expr) ct)
+                                         ,(cpc (if-else expr) ct)))))))
       ,cont)))
 
 (define (if-predicate expr)
@@ -135,34 +124,30 @@
 (define (if-else expr)
   (cadddr expr))
 
-(define (cpc-letcc expr env cont)
+(define (cpc-letcc expr cont)
   (let ((cc (let-bindings expr))
         (body (let-body expr))
         (ct (gensym 'cont)))
     `(let ((,ct ,cont))
        (let ((,cc (lambda (value ignored) (,ct value))))
-         ,@(cpc-sequence body
-                         (extend-environment (list cc) env)
-                         ct)))))
+         ,@(cpc-sequence body ct)))))
 
-(define (cpc-letrec expr env cont)
+(define (cpc-letrec expr cont)
   ;; TODO Actually implement this.
   expr)
 
-(define (cpc-reset expr env cont)
+(define (cpc-reset expr cont)
   `(do (push-cont! ,cont)
-       ,(cpc (reset-expr expr) env (make-identity-continuation))))
+       ,(cpc (reset-expr expr) (make-identity-continuation))))
 
 (define (reset-expr expr)
   (cadr expr))
 
-(define (cpc-shift expr env cont)
+(define (cpc-shift expr cont)
   (let ((sc (gensym 'cont)))
     `(let ((,(shift-cont expr) (lambda (x c) (,cont x)))
            (,sc (pop-cont!)))
-       (,sc ,(cpc (shift-expr expr)
-                  (extend-environment (list (shift-cont expr)) env)
-                  cont)))))
+       (,sc ,(cpc (shift-expr expr) cont)))))
 
 (define (shift-cont expr)
   (cadr expr))
@@ -170,35 +155,30 @@
 (define (shift-expr expr)
   (caddr expr))
 
-(define (cpc-app expr env cont)
-  (let ((exprs (cpc-build-simple-app expr env nil nil)))
-    (cpc-build-app env
-                   (car exprs)
+(define (cpc-app expr cont)
+  (let ((exprs (cpc-build-simple-app expr nil nil)))
+    (cpc-build-app (car exprs)
                    (cdr exprs)
                    (reverse (cons cont (cdr exprs))))))
 
-(define (cpc-build-simple-app expr env todo exprs)
+(define (cpc-build-simple-app expr todo exprs)
   (cond ((empty? expr) (cons todo exprs))
         ((simple-expression? (car expr)) (cpc-build-simple-app (cdr expr)
-                                                               env
                                                                (cons nil todo)
-                                                               (cons (cpc (car expr) env nil)
+                                                               ;; FIXME Cant pass nil here.
+                                                               (cons (cpc (car expr) nil)
                                                                      exprs)))
         (true (cpc-build-simple-app (cdr expr)
-                                    env
                                     (cons (car expr) todo)
                                     (cons (gensym 'temp) exprs)))))
 
-(define (cpc-build-app env todo vals finally)
+(define (cpc-build-app todo vals finally)
   (cond ((empty? todo) finally)
-        ((nil? (car todo)) (cpc-build-app env
-                                          (cdr todo)
+        ((nil? (car todo)) (cpc-build-app (cdr todo)
                                           (cdr vals)
                                           finally))
-        ('else (cpc-build-app env
-                              (cdr todo)
+        ('else (cpc-build-app (cdr todo)
                               (cdr vals)
                               (cpc (car todo)
-                                   env
                                    `(lambda (,(car vals))
                                       ,finally))))))

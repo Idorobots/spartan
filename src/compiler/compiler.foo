@@ -3,18 +3,18 @@
 (define (compile expr)
   (optimize (cpc (macro-expand (process expr)
                                (make-builtin-macros))
-                 (make-empty-environment)
                  (make-identity-continuation))))
 
 (define (optimize expr)
   ;; TOOD optimize redundant bindings etc
-  (lambda-lift (closure-convert expr)))
+  (lambda-lift (closure-convert expr
+                                (make-empty-environment))))
 
 (define (lambda-lift expr)
   ;; TODO actually implement this
   expr)
 
-(define (closure-convert expr)
+(define (closure-convert expr env)
   ;;TODO actually implement this
   expr)
 
