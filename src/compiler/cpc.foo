@@ -5,22 +5,22 @@
   (cond ((simple-expression? expr) (kont (cpc-simple expr)))
         ((string? expr) (cpc-string expr kont))
         ((vector? expr) (cpc-vector expr kont))
-        ((tagged-list? 'define expr) (cpc-define expr kont))
-        ((tagged-list? 'do expr) (cpc-do expr kont))
-        ((tagged-list? 'if expr) (cpc-if expr kont))
-        ((tagged-list? 'letcc expr) (cpc-letcc expr kont))
-        ((tagged-list? 'letrec expr) (cpc-letrec expr kont))
-        ((tagged-list? 'reset expr) (cpc-reset expr kont))
-        ((tagged-list? 'shift expr) (cpc-shift expr kont))
-        ('else (cpc-app expr kont))))
+        ((define? expr) (cpc-define expr kont))
+        ((do? expr) (cpc-do expr kont))
+        ((if? expr) (cpc-if expr kont))
+        ((letcc? expr) (cpc-letcc expr kont))
+        ((letrec? expr) (cpc-letrec expr kont))
+        ((reset? expr) (cpc-reset expr kont))
+        ((shift? expr) (cpc-shift expr kont))
+        ((application? expr) (cpc-app expr kont))))
 
 (define (cpc-simple expr)
   (cond ((symbol? expr) (cpc-symbol expr))
         ((number? expr) (cpc-number expr))
         ((nil? expr) (cpc-nil expr))
         ((char? expr) (cpc-character expr))
-        ((tagged-list? 'quote expr) (cpc-quote expr))
-        ((tagged-list? 'lambda expr) (cpc-lambda expr))))
+        ((quote? expr) (cpc-quote expr))
+        ((lambda? expr) (cpc-lambda expr))))
 
 (define (cpc-symbol expr)
   (symbol->llvm expr))
@@ -40,12 +40,13 @@
 (define (cpc-lambda expr)
   (let ((ct (gensym 'ct))
         (args (map symbol->llvm (lambda-args expr))))
-    `(lambda ,(append args (list ct))
-       ,(cpc-sequence (lambda-body expr)
-                      (lambda (sts)
-                        (returning-last sts
-                                        (lambda (s)
-                                          `(,ct ,s))))))))
+    (make-lambda
+     (append args (list ct))
+     (cpc-sequence (lambda-body expr)
+                   (lambda (sts)
+                     (returning-last sts
+                                     (lambda (s)
+                                       (make-app ct s))))))))
 
 (define (cpc-string expr kont)
   (kont expr)) ;; TODO Add string interpolation.
@@ -54,11 +55,10 @@
   (kont expr)) ;; TODO Implement this.
 
 (define (cpc-define expr kont)
-  (let* ((name (definition-name expr))
-         (safe-name (symbol->llvm name)))
-    (kont `(define ,safe-name
-             ,(cpc-lambda `(lambda (,@(definition-args expr))
-                             ,@(definition-body expr)))))))
+  (kont (make-define-1 (symbol->llvm (define-name expr))
+                       (cpc-lambda (make-lambda
+                                    (define-args expr)
+                                    (define-body expr))))))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)
@@ -75,11 +75,11 @@
                              (kont (cons fst rst))))))))
 
 (define (returning-last statements kont)
-  `(do ,@(returning-last* statements kont)))
+  (make-do (returning-last* statements kont)))
 
 (define (returning-last* statements kont)
   (if (empty? (rest-statements statements))
-      (list  (kont (first-statement statements)))
+      (list (kont (first-statement statements)))
       (cons (first-statement statements)
             (returning-last* (rest-statements statements)
                              kont))))
@@ -87,25 +87,29 @@
 (define (cpc-if expr kont)
   (let* ((ct (gensym 'cont))
          (value (gensym 'value))
-         (cont `(lambda (,value) ,(kont value))))
+         (cont (make-lambda-1 value
+                              (kont value))))
     (cpc (if-predicate expr)
          (lambda (condition)
-           `(let ((,ct ,cont))
-              (if ,condition
-                  ,(cpc (if-then expr) (lambda (v) `(,ct ,v)))
-                  ,(cpc (if-else expr) (lambda (v) `(,ct ,v)))))))))
+           (make-let-1
+            ct cont
+            (make-if condition
+                     (cpc (if-then expr)
+                          (lambda (v) (make-app ct v)))
+                     (cpc (if-else expr)
+                          (lambda (v) (make-app ct v)))))))))
 
 (define (cpc-letcc expr kont)
   (let* ((cc (symbol->llvm (let-bindings expr)))
          (v1 (gensym 'value))
          (v2 (gensym 'value))
          (ct (gensym 'cont)))
-    `(let ((,ct (lambda (,v1) ,(kont v1)))
-           (,cc (lambda (,v2 ,(gensym 'ignored))
-                  (,ct ,v2))))
-       ,(cpc-sequence (let-body expr)
-                      (lambda (sts)
-                        (returning-last sts ct))))))
+    (make-let (list (list ct (make-lambda-1 v1 (kont v1)))
+                    (list cc (make-lambda-2 v2 (gensym 'ignored)
+                                            (make-app ct v2))))
+              (cpc-sequence (let-body expr)
+                            (lambda (sts)
+                              (returning-last sts ct))))))
 
 (define (cpc-letrec expr kont)
   ;; TODO Actually implement this.
@@ -113,26 +117,27 @@
 
 (define (cpc-reset expr kont)
   (let* ((value (gensym 'value)))
-    `((lambda (,value) ,(kont value))
-      ;; NOTE This is purely static. Might need some continuation stack
-      ;; NOTE maintenance in order to implement push-prompt etc.
-      ,(cpc (reset-expr expr)
-            (make-identity-continuation)))))
+    (make-app (make-lambda-1 value (kont value))
+              ;; NOTE This is purely static. Might need some continuation stack
+              ;; NOTE maintenance in order to implement push-prompt etc.
+              (cpc (reset-expr expr)
+                   (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
   (let* ((name (symbol->llvm (shift-cont expr)))
          (ct (gensym 'cont))
          (value (gensym 'value)))
-    `(let ((,name (lambda (,value ,ct)
-                    (,ct ,(kont value)))))
-       ,(cpc (shift-expr expr)
-             (make-identity-continuation)))))
+    (make-let-1 name
+                (make-lambda-2 value ct
+                               (make-app ct (kont value)))
+                (cpc (shift-expr expr)
+                     (make-idontity-continuation)))))
 
 (define (cpc-app expr kont)
   (let* ((value (gensym 'value))
-         (cont `(lambda (,value) ,(kont value))))
+         (cont (make-lambda-1 value (kont value))))
     (cpc (app-op expr)
          (lambda (op)
            (cpc-sequence (app-args expr)
                          (lambda (args)
-                           `(,op ,@args ,cont)))))))
+                           (make-app op (append args (list cont)))))))))
