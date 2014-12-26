@@ -32,10 +32,10 @@
        nil))
 
 (define (conditional-predicate expr)
-  (car expr))
+  (cadr expr))
 
 (define (conditional-body expr)
-  (cdr expr))
+  (cddr expr))
 
 (define (unless-macro expr)
   `(if ,(conditional-predicate expr)

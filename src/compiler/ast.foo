@@ -59,7 +59,10 @@
   (cdadr expr))
 
 (define (define-body expr)
-  (cddr expr))
+  (let ((b (cddr expr)))
+    (if (> (length b) 1)
+        (make-do b)
+        (car b))))
 
 ;; (do statements ...)
 (define (do? expr)
