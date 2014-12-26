@@ -22,9 +22,9 @@
 (define (lambda? expr)
   (tagged-list? 'lambda expr))
 
-(define (make-lambda args . body)
+(define (make-lambda args body)
   `(lambda ,args
-     ,@body))
+     ,body))
 
 (define (lambda-args expr)
   (cadr expr))
@@ -32,13 +32,13 @@
 (define (lambda-body expr)
   (cddr expr))
 
-;; (define (name args ...) body ...)
+;; (define (name args ...) body)
 (define (define? expr)
   (tagged-list? 'define expr))
 
-(define (make-define name args . body)
+(define (make-define name args body)
   `(define (,name ,@args)
-     ,@body))
+     ,body))
 
 (define (define-name expr)
   (caadr expr))
@@ -53,8 +53,8 @@
 (define (do? expr)
   (tagged-list? 'do expr))
 
-(define (make-do . statements)
-  `(do ,@statements))
+(define (make-do statements)
+  `(do ,statements))
 
 (define (do-statements expr)
   (cdr expr))
@@ -83,29 +83,29 @@
 (define (if-else expr)
   (cadddr expr))
 
-;; (let ((variable value) ...) body ...)
+;; (let ((variable value) ...) body)
 (define (let? expr)
   (tagged-list? 'let expr))
 
-(define (make-let bindings . body)
+(define (make-let bindings body)
   `(let ,bindings
-     ,@body))
+     ,body))
 
-;; (letrec ((variable value) ...) body ...)
+;; (letrec ((variable value) ...) body)
 (define (letrec? expr)
   (tagged-list? 'letrec expr))
 
-(define (make-letrec bindings . body)
+(define (make-letrec bindings body)
   `(letrec ,bindings
-     ,@body))
+     ,body))
 
-;; (letcc continuation body ...)
+;; (letcc continuation body)
 (define (letcc? expr)
   (tagged-list? 'letcc expr))
 
-(define (make-letcc variable . body)
+(define (make-letcc variable body)
   `(let ,variable
-     ,@body))
+     ,body))
 
 (define (let-bindings expr)
   (cadr expr))
@@ -141,7 +141,7 @@
 (define (application? expr)
   (and (list? expr) (not-nil? expr)))
 
-(define (make-app op . args)
+(define (make-app op args)
   `(,op ,@args))
 
 (define (app-op expr)
