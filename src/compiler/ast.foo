@@ -26,6 +26,14 @@
   `(lambda ,args
      ,body))
 
+(define (make-lambda-1 arg body)
+  `(lambda (,arg)
+     ,body))
+
+(define (make-lambda-2 arg0 arg1 body)
+  `(lambda (,arg0 ,arg1)
+     ,body))
+
 (define (lambda-args expr)
   (cadr expr))
 
@@ -39,6 +47,10 @@
 (define (make-define name args body)
   `(define (,name ,@args)
      ,body))
+
+(define (make-define-1 name value)
+  `(define ,name
+     ,value))
 
 (define (define-name expr)
   (caadr expr))
@@ -89,6 +101,10 @@
 
 (define (make-let bindings body)
   `(let ,bindings
+     ,body))
+
+(define (make-let-1 variable value body)
+  `(let ((,variable value))
      ,body))
 
 ;; (letrec ((variable value) ...) body)
@@ -143,6 +159,9 @@
 
 (define (make-app op args)
   `(,op ,@args))
+
+(define (make-app-1 op arg)
+  `(,op ,arg))
 
 (define (app-op expr)
   (car expr))
