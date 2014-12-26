@@ -1,0 +1,151 @@
+;; AST handling routines
+
+(define (simple-expression? expr)
+  (or (symbol? expr)
+     (number? expr)
+     (nil? expr)
+     (char? expr)
+     (quote? expr)
+     (lambda? expr)))
+
+;; (quote expr)
+(define (quote? expr)
+  (tagged-list? 'quote expr))
+
+(define (make-quote expr)
+  `',expr)
+
+(define (quoted-expr expr)
+  (cadr expr))
+
+;; (lambda (args ...) body ...)
+(define (lambda? expr)
+  (tagged-list? 'lambda expr))
+
+(define (make-lambda args . body)
+  `(lambda ,args
+     ,@body))
+
+(define (lambda-args expr)
+  (cadr expr))
+
+(define (lambda-body expr)
+  (cddr expr))
+
+;; (define (name args ...) body ...)
+(define (define? expr)
+  (tagged-list? 'define expr))
+
+(define (make-define name args . body)
+  `(define (,name ,@args)
+     ,@body))
+
+(define (define-name expr)
+  (caadr expr))
+
+(define (define-args expr)
+  (cdadr expr))
+
+(define (define-body expr)
+  (cddr expr))
+
+;; (do statements ...)
+(define (do? expr)
+  (tagged-list? 'do expr))
+
+(define (make-do . statements)
+  `(do ,@statements))
+
+(define (do-statements expr)
+  (cdr expr))
+
+(define (first-statement statements)
+  (car statements))
+
+(define (rest-statements statements)
+  (cdr statements))
+
+;; (if condition then else)
+(define (if? expr)
+  (tagged-list? 'if expr))
+
+(define (make-if condition then else)
+  `(if ,condition
+       ,then
+       ,else))
+
+(define (if-predicate expr)
+  (cadr expr))
+
+(define (if-then expr)
+  (caddr expr))
+
+(define (if-else expr)
+  (cadddr expr))
+
+;; (let ((variable value) ...) body ...)
+(define (let? expr)
+  (tagged-list? 'let expr))
+
+(define (make-let bindings . body)
+  `(let ,bindings
+     ,@body))
+
+;; (letrec ((variable value) ...) body ...)
+(define (letrec? expr)
+  (tagged-list? 'letrec expr))
+
+(define (make-letrec bindings . body)
+  `(letrec ,bindings
+     ,@body))
+
+;; (letcc continuation body ...)
+(define (letcc? expr)
+  (tagged-list? 'letcc expr))
+
+(define (make-letcc variable . body)
+  `(let ,variable
+     ,@body))
+
+(define (let-bindings expr)
+  (cadr expr))
+
+(define (let-body expr)
+  (cddr expr))
+
+;; (reset expression)
+(define (reset? expr)
+  (tagged-list? 'reset expr))
+
+(define (make-reset expression)
+  `(reset ,expression))
+
+(define (reset-expr expr)
+  (cadr expr))
+
+;; (shift continuation expression)
+(define (shift? expr)
+  (tagged-list? 'shift expr))
+
+(define (make-shift variable expression)
+  `(shift ,variable
+          ,expression))
+
+(define (shift-cont expr)
+  (cadr expr))
+
+(define (shift-expr expr)
+  (caddr expr))
+
+;; (operator args ...)
+(define (application? expr)
+  (and (list? expr) (not-nil? expr)))
+
+(define (make-app op . args)
+  `(,op ,@args))
+
+(define (app-op expr)
+  (car expr))
+
+(define (app-args expr)
+  (cdr expr))

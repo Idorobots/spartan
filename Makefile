@@ -10,7 +10,7 @@ FOOF_SCM = foof.scm
 FOOF_FOO = foof.foo
 
 BOOTSTRAP_SCM_SRC = bootstrap.scm
-FOOF_SRC = compiler.foo rename.foo cpc.foo macro-expander.foo
+FOOF_SRC = ast.foo utils.foo compiler.foo rename.foo cpc.foo macro-expander.foo
 
 all: bootstrap
 

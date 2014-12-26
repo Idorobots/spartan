@@ -114,9 +114,3 @@
                          (cdr vals)
                          body))
          ,(car vals)))))
-
-(define (let-bindings expr)
-  (cadr expr))
-
-(define (let-body expr)
-  (cddr expr))

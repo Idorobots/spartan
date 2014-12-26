@@ -1,0 +1,7 @@
+;; Various utilities
+
+(define (tagged-list? tag lst)
+  (and (pair? lst) (eq? (car lst) tag)))
+
+(define (not-nil? x)
+  (not (nil? x)))

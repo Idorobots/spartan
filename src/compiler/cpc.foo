@@ -14,17 +14,6 @@
         ((tagged-list? 'shift expr) (cpc-shift expr kont))
         ('else (cpc-app expr kont))))
 
-(define (tagged-list? tag lst)
-  (and (pair? lst) (eq? (car lst) tag)))
-
-(define (simple-expression? expr)
-  (or (symbol? expr)
-     (number? expr)
-     (nil? expr)
-     (char? expr)
-     (tagged-list? 'quote expr)
-     (tagged-list? 'lambda expr)))
-
 (define (cpc-simple expr)
   (cond ((symbol? expr) (cpc-symbol expr))
         ((number? expr) (cpc-number expr))
@@ -58,12 +47,6 @@
                                         (lambda (s)
                                           `(,ct ,s))))))))
 
-(define (lambda-args expr)
-  (cadr expr))
-
-(define (lambda-body expr)
-  (cddr expr))
-
 (define (cpc-string expr kont)
   (kont expr)) ;; TODO Add string interpolation.
 
@@ -76,15 +59,6 @@
     (kont `(define ,safe-name
              ,(cpc-lambda `(lambda (,@(definition-args expr))
                              ,@(definition-body expr)))))))
-
-(define (definition-name expr)
-  (caadr expr))
-
-(define (definition-args expr)
-  (cdadr expr))
-
-(define (definition-body expr)
-  (cddr expr))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)
@@ -110,15 +84,6 @@
             (returning-last* (rest-statements statements)
                              kont))))
 
-(define (do-statements expr)
-  (cdr expr))
-
-(define (first-statement statements)
-  (car statements))
-
-(define (rest-statements statements)
-  (cdr statements))
-
 (define (cpc-if expr kont)
   (let* ((ct (gensym 'cont))
          (value (gensym 'value))
@@ -129,15 +94,6 @@
               (if ,condition
                   ,(cpc (if-then expr) (lambda (v) `(,ct ,v)))
                   ,(cpc (if-else expr) (lambda (v) `(,ct ,v)))))))))
-
-(define (if-predicate expr)
-  (cadr expr))
-
-(define (if-then expr)
-  (caddr expr))
-
-(define (if-else expr)
-  (cadddr expr))
 
 (define (cpc-letcc expr kont)
   (let* ((cc (symbol->llvm (let-bindings expr)))
@@ -163,9 +119,6 @@
       ,(cpc (reset-expr expr)
             (make-identity-continuation)))))
 
-(define (reset-expr expr)
-  (cadr expr))
-
 (define (cpc-shift expr kont)
   (let* ((name (symbol->llvm (shift-cont expr)))
          (ct (gensym 'cont))
@@ -175,12 +128,6 @@
        ,(cpc (shift-expr expr)
              (make-identity-continuation)))))
 
-(define (shift-cont expr)
-  (cadr expr))
-
-(define (shift-expr expr)
-  (caddr expr))
-
 (define (cpc-app expr kont)
   (let* ((value (gensym 'value))
          (cont `(lambda (,value) ,(kont value))))
@@ -189,9 +136,3 @@
            (cpc-sequence (app-args expr)
                          (lambda (args)
                            `(,op ,@args ,cont)))))))
-
-(define (app-op expr)
-  (car expr))
-
-(define (app-args expr)
-  (cdr expr))
