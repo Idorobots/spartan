@@ -2,11 +2,8 @@
 
 (define (macro-expand expr macros)
   (if (pair? expr)
-      ((macro-expander (car expr)
-                       macros)
-       (map (lambda (e)
-              (macro-expand e macros))
-            expr))
+      (map (lambda (e) (macro-expand e macros))
+             ((macro-expander (car expr) macros) expr))
       expr))
 
 (define (macro-expander name macros)
