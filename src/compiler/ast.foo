@@ -41,8 +41,12 @@
   (cddr expr))
 
 ;; (define (name args ...) body)
+;; (define name value)
 (define (define? expr)
   (tagged-list? 'define expr))
+
+(define (value-define? expr)
+  (and (define? expr) (symbol? (cadr expr))))
 
 (define (make-define name args body)
   `(define (,name ,@args)
@@ -53,7 +57,12 @@
      ,value))
 
 (define (define-name expr)
-  (caadr expr))
+  (if (value-define? expr)
+      (cadr expr)
+      (caadr expr)))
+
+(define (define-value expr)
+  (caddr expr))
 
 (define (define-args expr)
   (cdadr expr))

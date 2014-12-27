@@ -56,9 +56,9 @@
 
 (define (cpc-define expr kont)
   (kont (make-define-1 (symbol->llvm (define-name expr))
-                       (cpc-lambda (make-lambda
-                                    (define-args expr)
-                                    (define-body expr))))))
+                       (cpc (define-value expr)
+                            ;; FIXME Shouldn't this be the other definitions?
+                            (make-identity-continuation)))))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)

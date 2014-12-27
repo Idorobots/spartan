@@ -14,6 +14,7 @@
 
 (define (make-builtin-macros)
   (list (cons 'quasiquote quasiquote-macro)
+        (cons 'define define-macro_)
         (cons 'when when-macro)
         (cons 'unless unless-macro)
         (cons 'cond cond-macro)
@@ -25,6 +26,14 @@
 (define (quasiquote-macro expr)
   ;; FIXME This needs implementing.
   nil)
+
+;; FIXME There's already a 'define-macro' macro in Scheme...
+(define (define-macro_ expr)
+  (if (value-define? expr)
+      expr
+      `(define ,(define-name expr)
+         (lambda (,@(define-args expr))
+           ,(define-body expr)))))
 
 (define (when-macro expr)
   `(if ,(conditional-predicate expr)
