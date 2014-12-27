@@ -1,0 +1,13 @@
+;; Core runtime features.
+
+;; Delimited continuation stack.
+(define &stored-cont (ref nil))
+
+(define (push-cont! cont)
+  (set! &stored-cont (cons cont (deref &stored-cont))))
+
+(define (pop-cont!)
+  ;; FIXME Protect from excessive poppin'.
+  (let ((c (car (deref &stored-cont))))
+    (set! &stored-cont (cdr (deref &stored-cont)))
+    c))

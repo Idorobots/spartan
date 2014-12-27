@@ -39,16 +39,6 @@
 (define (pretty-print expr)
   (old-pp expr))
 
-;; Required by other modules:
-(define &stored-cont (list (lambda (x) x)))
-
-(define (push-cont! cont)
-  (set! &stored-cont (cons cont &stored-cont)))
-
-(define (pop-cont!)
-  (let ((c (car &stored-cont)))
-    (set! &stored-cont (cdr &stored-cont))
-    c))
 
 (define-syntax do
   (syntax-rules ()
