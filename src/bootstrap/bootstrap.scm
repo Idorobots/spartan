@@ -1,5 +1,7 @@
 ;; Scheme bootstrap code
+;; TODO Move some of this code to runtime, stdlib and compiler.
 
+;; Basic definitions making Scheme not-Scheme:
 (define true #t)
 
 (define false #f)
@@ -9,16 +11,14 @@
 (define (nil? x)
   (null? x))
 
-(define (id x) x)
+;; Mutable references:
+(define (ref x)
+  x)
 
-(define (empty? lst)
-  (null? lst))
+(define (deref x)
+  x)
 
-(define &gensym-counter 0)
-(define (gensym root)
-  (set! &gensym-counter (+ 1 &gensym-counter))
-  (string->symbol (string-append (symbol->string (symbol->llvm root))
-                                 (number->string &gensym-counter))))
+;; IO:
 
 (define (slurp file-name)
   (with-input-from-file file-name
@@ -39,6 +39,7 @@
 (define (pretty-print expr)
   (old-pp expr))
 
+;; Other stuff
 
 (define-syntax do
   (syntax-rules ()
