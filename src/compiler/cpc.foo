@@ -46,7 +46,7 @@
                    (lambda (sts)
                      (returning-last sts
                                      (lambda (s)
-                                       (make-app ct s))))))))
+                                       (make-app-1 ct s))))))))
 
 (define (cpc-string expr kont)
   (kont expr)) ;; TODO Add string interpolation.
@@ -86,18 +86,14 @@
 
 (define (cpc-if expr kont)
   (let* ((ct (gensym 'cont))
-         (value (gensym 'value))
-         (cont (make-lambda-1 value
-                              (kont value))))
+         (rest (lambda (v) (make-app-1 ct v)))
+         (value (gensym 'value)))
     (cpc (if-predicate expr)
          (lambda (condition)
-           (make-let-1
-            ct cont
-            (make-if condition
-                     (cpc (if-then expr)
-                          (lambda (v) (make-app ct v)))
-                     (cpc (if-else expr)
-                          (lambda (v) (make-app ct v)))))))))
+           (make-let-1 ct (make-lambda-1 value (kont value))
+                       (make-if condition
+                                (cpc (if-then expr) rest)
+                                (cpc (if-else expr) rest)))))))
 
 (define (cpc-letcc expr kont)
   (let* ((cc (symbol->llvm (let-bindings expr)))
@@ -117,11 +113,11 @@
 
 (define (cpc-reset expr kont)
   (let* ((value (gensym 'value)))
-    (make-app (make-lambda-1 value (kont value))
-              ;; NOTE This is purely static. Might need some continuation stack
-              ;; NOTE maintenance in order to implement push-prompt etc.
-              (cpc (reset-expr expr)
-                   (make-identity-continuation)))))
+    (make-app-1 (make-lambda-1 value (kont value))
+                ;; NOTE This is purely static. Might need some continuation stack
+                ;; NOTE maintenance in order to implement push-prompt etc.
+                (cpc (reset-expr expr)
+                     (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
   (let* ((name (symbol->llvm (shift-cont expr)))
@@ -129,9 +125,9 @@
          (value (gensym 'value)))
     (make-let-1 name
                 (make-lambda-2 value ct
-                               (make-app ct (kont value)))
+                               (make-app-1 ct (kont value)))
                 (cpc (shift-expr expr)
-                     (make-idontity-continuation)))))
+                     (make-identity-continuation)))))
 
 (define (cpc-app expr kont)
   (let* ((value (gensym 'value))

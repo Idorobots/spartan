@@ -78,7 +78,7 @@
   (tagged-list? 'do expr))
 
 (define (make-do statements)
-  `(do ,statements))
+  `(do ,@statements))
 
 (define (do-statements expr)
   (cdr expr))
@@ -116,7 +116,7 @@
      ,body))
 
 (define (make-let-1 variable value body)
-  `(let ((,variable value))
+  `(let ((,variable ,value))
      ,body))
 
 ;; (letrec ((variable value) ...) body)
