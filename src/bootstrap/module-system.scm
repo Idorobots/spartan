@@ -45,10 +45,11 @@
        (define (unload) nil)
        (define (reload) nil)
        (define (load)
-         (append &module-defs
-                 (list (cons 'unload unload)
-                       (cons 'reload reload)
-                       (cons 'load load))))
+         (cons 'name
+               (append &module-defs
+                       (list (cons 'unload unload)
+                             (cons 'reload reload)
+                             (cons 'load load)))))
        (define-module forms ...)))
     ((define-module (require module) forms ...)
      ;; TODO Ensure the module is loaded.
