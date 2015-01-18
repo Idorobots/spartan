@@ -23,10 +23,6 @@
         (cons 'let let-macro)
         (cons 'let* let*-macro)))
 
-(define (quasiquote-macro expr)
-  ;; FIXME This needs implementing.
-  nil)
-
 ;; FIXME There's already a 'define-macro' macro in Scheme...
 (define (define-macro_ expr)
   (if (value-define? expr)
