@@ -1,5 +1,5 @@
-################################################################################
-#+TITLE: \Huge \bf Experiments with  \tt O_{2}F_{2}
+# ###############################################################################
+#+TITLE: \Huge \bf Experiments with  \tt FOOF
 #+DATE: \today
 #
 #+BEGIN_OPTIONS
@@ -10,13 +10,13 @@
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+OPTIONS: tags:nil todo:nil toc:nil
 #+END_OPTIONS
-####################
+# ###################
 
 #+latex: \thispagestyle{empty}
 
 #+latex: \vfill
 #+begin_center
-#+attr_latex: scale=1.5
+#+attr_latex: :width 0.6\textwidth
 [[file:./img/logo1.pdf]]
 #+end_center
 #+latex: \vfill
