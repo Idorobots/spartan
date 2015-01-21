@@ -1,10 +1,6 @@
 ;; Core functionality of the standard library.
 ;; TODO Actually write the standard library.
 
-;; Utils:
-(define (empty? lst)
-  (nil? lst))
-
 (define (id x) x)
 
 (define &gensym-counter (ref 0))
