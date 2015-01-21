@@ -12,7 +12,7 @@ FOOF_FOO = foof.foo
 BOOTSTRAP_SCM_SRC = bootstrap.scm
 RT_SRC = rt.foo
 FOOF_SRC = ast.foo utils.foo compiler.foo rename.foo cpc.foo macro-expander.foo
-STD_SRC = core.foo
+STD_SRC = core.foo qq.foo list.foo
 
 all: bootstrap
 

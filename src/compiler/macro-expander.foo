@@ -24,8 +24,7 @@
         (cons 'let* let*-macro)))
 
 (define (quasiquote-macro expr)
-  ;; FIXME This needs implementing.
-  nil)
+  (quasiquote-expand (cadr expr)))
 
 ;; FIXME There's already a 'define-macro' macro in Scheme...
 (define (define-macro_ expr)
