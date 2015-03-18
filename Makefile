@@ -14,7 +14,7 @@ RT_SRC = rt.foo
 FOOF_SRC = ast.foo utils.foo compiler.foo rename.foo cpc.foo macro-expander.foo
 STD_SRC = core.foo qq.foo list.foo
 
-all: bootstrap
+all: bootstrap unimplemented
 
 bootstrap: $(FOOF_SCM)
 
@@ -24,6 +24,9 @@ $(FOOF_FOO): $(RT_SRC) $(STD_SRC) $(FOOF_SRC)
 $(FOOF_SCM): $(BOOTSTRAP_SCM_SRC) $(FOOF_FOO)
 	$(CAT) $^ > $(TMP)
 	$(SCM) -l $(TMP) -e main "$(FOOF_FOO)" > $@  
+
+unimplemented: bootstrap
+	 cat $(TMP) $(FOOF_SCM) > /tmp/unimplemented.scm
 
 .PHONY: clean
 
