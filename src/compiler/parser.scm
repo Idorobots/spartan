@@ -11,5 +11,5 @@
                       (loop (read-char) (cons char result)))))))))
 
 (define (parse file)
-  (with-input-from-string (string-append "(do" file ")")
+  (with-input-from-string (string-append file)
     (lambda () (read))))

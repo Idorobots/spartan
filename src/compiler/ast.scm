@@ -5,6 +5,8 @@
 (define (simple-expression? expr)
   (or (symbol? expr)
      (number? expr)
+     (string? expr)
+     (vector? expr)
      (nil? expr)
      (char? expr)
      (quote? expr)
@@ -80,7 +82,9 @@
   (tagged-list? 'do expr))
 
 (define (make-do statements)
-  `(do ,@statements))
+  (if (= (length statements) 1)
+      (car statements)
+      `(do ,@statements)))
 
 (define (do-statements expr)
   (cdr expr))
