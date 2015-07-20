@@ -1,5 +1,5 @@
 DC = gdc
-DFLAGS = -ggdb3 -Wall -Wextra -pedantic
+DFLAGS = -ggdb3 -Wall -Wextra -pedantic -Isrc
 LDLIBS =
 SCM = guile
 CAT = cat
@@ -18,7 +18,7 @@ RT_SRC = rt.foo
 FOOF_SRC = ast.foo utils.foo compiler.foo rename.foo cpc.foo macro-expander.foo
 STD_SRC = core.foo qq.foo list.foo
 
-RUNTIME_OBJS = rt.o
+RUNTIME_OBJS = rt.o continuations.o
 
 all: runtime #bootstrap unimplemented
 
