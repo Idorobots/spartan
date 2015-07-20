@@ -48,7 +48,7 @@
   expr)
 
 (define (cpc-lambda expr)
-  (let ((ct (gensym 'ct))
+  (let ((ct (gensym 'cont))
         (args (map symbol->safe (lambda-args expr))))
     (make-lambda
      (append args (list ct))
