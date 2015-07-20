@@ -20,7 +20,7 @@ STD_SRC = core.foo qq.foo list.foo
 
 RUNTIME_OBJS = rt.o
 
-all: runtime bootstrap unimplemented
+all: runtime #bootstrap unimplemented
 
 runtime: $(FOOF_RT)
 
