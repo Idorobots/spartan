@@ -1,6 +1,6 @@
 ;; AST handling routines
 
-(load "utils.scm")
+(load "compiler/utils.scm")
 
 (define (simple-expression? expr)
   (or (symbol? expr)
