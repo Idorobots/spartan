@@ -1,6 +1,6 @@
 ;; A crude quasiquote type deal.
 
-(load "utils.scm")
+(load "compiler/utils.scm")
 
 (define (quasiquote-expand expr)
   (if (tagged-list? 'unquote-splicing expr)

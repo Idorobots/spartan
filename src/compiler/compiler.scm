@@ -1,7 +1,8 @@
-;; Compiler top-level
+;; Tha compiler.
 
-(load "cpc.scm")
-(load "macro-expander.scm")
+(load "compiler/cpc.scm")
+(load "compiler/macro-expander.scm")
+(load "compiler/utils.scm")
 
 (define (compile expr)
   (optimize (cpc (macro-expand (preprocess expr)

@@ -1,6 +1,6 @@
 ;; Various utilities
 
-(load "rename.scm")
+(load "compiler/rename.scm")
 
 ;; Basic definitions making Scheme less-of-a-Scheme:
 (define true #t)

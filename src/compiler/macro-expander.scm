@@ -1,6 +1,6 @@
 ;; Pseudo macro-expander for convenience
 
-(load "qq.scm")
+(load "compiler/qq.scm")
 
 (define (macro-expand expr macros)
   (if (pair? expr)

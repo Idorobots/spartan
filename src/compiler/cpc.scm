@@ -1,9 +1,9 @@
 ;; Continuation Passing Converter
 ;; Assumes macro-expanded code.
 
-(load "rename.scm")
-(load "ast.scm")
-(load "utils.scm")
+(load "compiler/rename.scm")
+(load "compiler/ast.scm")
+(load "compiler/utils.scm")
 
 (define (cpc expr kont)
   (cond ((simple-expression? expr) (kont (cpc-simple expr)))
