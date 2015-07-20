@@ -83,3 +83,24 @@
                              (&yield-cont __cont1 __value4)))
                   (__e __f (lambda (__value5)
                              (&yield-cont __cont1 __value5))))))))
+
+;; TODO CPCing letcc works.
+;; TODO CPCing letrec works.
+;; TODO CPCing shift/reset works.
+
+;; CPCing application works.
+(gensym-reset!)
+(assert (cpc-app '(a) id)
+        '(__a (lambda (__value1)
+                __value1)))
+
+(gensym-reset!)
+(assert (cpc-app '(a b) id)
+        '(__a __b (lambda (__value1)
+                    __value1)))
+
+(gensym-reset!)
+(assert (cpc-app '(a (b c)) id)
+        '(__b __c (lambda (__value2)
+                    (__a __value2 (lambda (__value1)
+                                    __value1)))))
