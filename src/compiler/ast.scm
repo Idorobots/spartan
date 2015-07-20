@@ -82,7 +82,9 @@
   (tagged-list? 'do expr))
 
 (define (make-do statements)
-  `(do ,@statements))
+  (if (= (length statements) 1)
+      (car statements)
+      `(do ,@statements)))
 
 (define (do-statements expr)
   (cdr expr))
