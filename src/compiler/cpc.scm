@@ -50,7 +50,7 @@
                    (lambda (sts)
                      (returning-last sts
                                      (lambda (s)
-                                       (make-app-1 ct s))))))))
+                                       (make-yield (make-app-1 ct s)))))))))
 
 (define (cpc-string expr kont)
   (kont expr)) ;; TODO Add string interpolation.
@@ -90,7 +90,7 @@
 
 (define (cpc-if expr kont)
   (let* ((ct (gensym 'cont))
-         (rest (lambda (v) (make-app-1 ct v)))
+         (rest (lambda (v) (make-yield (make-app-1 ct v))))
          (value (gensym 'value)))
     (cpc (if-predicate expr)
          (lambda (condition)
@@ -106,7 +106,7 @@
          (ct (gensym 'cont)))
     (make-let (list (list ct (make-lambda-1 v1 (kont v1)))
                     (list cc (make-lambda-2 v2 (gensym 'ignored)
-                                            (make-app ct v2))))
+                                            (make-yield (make-app-1 ct v2)))))
               (cpc-sequence (let-body expr)
                             (lambda (sts)
                               (returning-last sts ct))))))
@@ -141,3 +141,6 @@
            (cpc-sequence (app-args expr)
                          (lambda (args)
                            (make-app op (append args (list cont)))))))))
+
+(define (make-yield expr)
+  (cons '&yield-cont expr))

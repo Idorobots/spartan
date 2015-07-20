@@ -3,6 +3,9 @@
 (load "compiler/compiler.scm")
 (load "compiler/parser.scm")
 
+(load "runtime/bootstrap.scm")
+(load "runtime/rt.scm")
+
 (define (do-expr expr)
   (eval/pp (compile/pp expr)))
 
