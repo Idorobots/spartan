@@ -1,5 +1,7 @@
 ;; A crude quasiquote type deal.
 
+(load "utils.scm")
+
 (define (quasiquote-expand expr)
   (if (tagged-list? 'unquote-splicing expr)
       (raise '(invalid-splicing-context expr))
@@ -21,6 +23,11 @@
            make-cons)
        (quasiquote-expand-1 (car exprs))
        (quasiquote-expand-form (cdr exprs)))))
+
+(define (concat a b)
+  (if (empty? a)
+      b
+      (cons (car a) (concat (cdr a) b))))
 
 (define (make-concat a b)
   (cons 'concat (cons a (cons b '()))))

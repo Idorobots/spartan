@@ -1,5 +1,7 @@
 ;; Pseudo macro-expander for convenience
 
+(load "qq.scm")
+
 (define (macro-expand expr macros)
   (if (pair? expr)
       (map (lambda (e) (macro-expand e macros))

@@ -12,6 +12,9 @@
 (define (nil? x)
   (null? x))
 
+(define (empty? lst)
+  (nil? lst))
+
 ;; Mutable references:
 (define (ref x)
   x)
