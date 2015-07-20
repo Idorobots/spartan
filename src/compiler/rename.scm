@@ -1,8 +1,8 @@
 ;; LLVM-safe variable renaming.
 
-(define (symbol->llvm s)
+(define (symbol->safe s)
   (string->symbol (apply string-append
-                         "%"
+                         "__"
                          (map fix-char
                               (string->list (symbol->string s))))))
 

@@ -1,6 +1,10 @@
 ;; Continuation Passing Converter
 ;; Assumes macro-expanded code.
 
+(load "rename.scm")
+(load "ast.scm")
+(load "utils.scm")
+
 (define (cpc expr kont)
   (cond ((simple-expression? expr) (kont (cpc-simple expr)))
         ((string? expr) (cpc-string expr kont))
@@ -23,7 +27,7 @@
         ((lambda? expr) (cpc-lambda expr))))
 
 (define (cpc-symbol expr)
-  (symbol->llvm expr))
+  (symbol->safe expr))
 
 (define (cpc-number expr)
   expr)
@@ -39,7 +43,7 @@
 
 (define (cpc-lambda expr)
   (let ((ct (gensym 'ct))
-        (args (map symbol->llvm (lambda-args expr))))
+        (args (map symbol->safe (lambda-args expr))))
     (make-lambda
      (append args (list ct))
      (cpc-sequence (lambda-body expr)
@@ -55,7 +59,7 @@
   (kont expr)) ;; TODO Implement this.
 
 (define (cpc-define expr kont)
-  (kont (make-define-1 (symbol->llvm (define-name expr))
+  (kont (make-define-1 (symbol->safe (define-name expr))
                        (cpc (define-value expr)
                             ;; FIXME Shouldn't this be the other definitions?
                             (make-identity-continuation)))))
@@ -96,7 +100,7 @@
                                 (cpc (if-else expr) rest)))))))
 
 (define (cpc-letcc expr kont)
-  (let* ((cc (symbol->llvm (let-bindings expr)))
+  (let* ((cc (symbol->safe (let-bindings expr)))
          (v1 (gensym 'value))
          (v2 (gensym 'value))
          (ct (gensym 'cont)))
@@ -120,7 +124,7 @@
                      (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
-  (let* ((name (symbol->llvm (shift-cont expr)))
+  (let* ((name (symbol->safe (shift-cont expr)))
          (ct (gensym 'cont))
          (value (gensym 'value)))
     (make-let-1 name
