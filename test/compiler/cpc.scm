@@ -16,7 +16,7 @@
 (assert (cpc-simple '(quote 23)) ''23)
 (assert (cpc ''23 id) ''23)
 
-;; CPCing lambda works
+;; CPCing lambda works.
 (gensym-reset!)
 (assert (cpc-lambda '(lambda (x) x))
         '(lambda (__x __cont1)
@@ -33,7 +33,7 @@
            (__x (lambda (__value2)
                   (&yield-cont __cont1 __value2)))))
 
-;; CPCing define works
+;; CPCing define works.
 (gensym-reset!)
 (assert (cpc-define '(define x 23) id) '(define __x 23))
 
@@ -51,7 +51,7 @@
                     (__bar 3 (lambda (__value2)
                                (do __value1 __value2))))))
 
-;; CPCing if works
+;; CPCing if works.
 (gensym-reset!)
 (assert (cpc-if '(if a b c) id)
         '(let ((__cont1 (lambda (__value2)
