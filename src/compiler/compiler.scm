@@ -30,6 +30,3 @@
 
 (define (make-identity-continuation)
   id)
-
-(define (main args)
-  (pretty-print (compile (parse (slurp (car args))))))
