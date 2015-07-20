@@ -1,5 +1,7 @@
 ;; AST handling routines
 
+(load "utils.scm")
+
 (define (simple-expression? expr)
   (or (symbol? expr)
      (number? expr)

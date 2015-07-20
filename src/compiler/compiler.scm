@@ -1,7 +1,10 @@
 ;; Compiler top-level
 
+(load "cpc.scm")
+(load "macro-expander.scm")
+
 (define (compile expr)
-  (optimize (cpc (macro-expand (process expr)
+  (optimize (cpc (macro-expand (preprocess expr)
                                (make-builtin-macros))
                  (make-identity-continuation))))
 
@@ -18,7 +21,7 @@
   ;;TODO actually implement this
   expr)
 
-(define (process expr)
+(define (preprocess expr)
   ;; TODO pre-process the expression
   expr)
 
@@ -29,4 +32,4 @@
   id)
 
 (define (main args)
-  (pretty-print (compile (parse (slurp (car  args))))))
+  (pretty-print (compile (parse (slurp (car args))))))
