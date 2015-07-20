@@ -7,8 +7,6 @@
 
 (define (cpc expr kont)
   (cond ((simple-expression? expr) (kont (cpc-simple expr)))
-        ((string? expr) (cpc-string expr kont))
-        ((vector? expr) (cpc-vector expr kont))
         ((define? expr) (cpc-define expr kont))
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
@@ -21,6 +19,8 @@
 (define (cpc-simple expr)
   (cond ((symbol? expr) (cpc-symbol expr))
         ((number? expr) (cpc-number expr))
+        ((string? expr) (cpc-string expr))
+        ((vector? expr) (cpc-vector expr))
         ((nil? expr) (cpc-nil expr))
         ((char? expr) (cpc-character expr))
         ((quote? expr) (cpc-quote expr))
@@ -30,6 +30,12 @@
   (symbol->safe expr))
 
 (define (cpc-number expr)
+  expr)
+
+(define (cpc-string expr)
+  expr)
+
+(define (cpc-vector expr)
   expr)
 
 (define (cpc-nil expr)
@@ -51,12 +57,6 @@
                      (returning-last sts
                                      (lambda (s)
                                        (make-yield (make-app-1 ct s)))))))))
-
-(define (cpc-string expr kont)
-  (kont expr)) ;; TODO Add string interpolation.
-
-(define (cpc-vector expr kont)
-  (kont expr)) ;; TODO Implement this.
 
 (define (cpc-define expr kont)
   (kont (make-define-1 (symbol->safe (define-name expr))

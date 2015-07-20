@@ -5,6 +5,8 @@
 (define (simple-expression? expr)
   (or (symbol? expr)
      (number? expr)
+     (string? expr)
+     (vector? expr)
      (nil? expr)
      (char? expr)
      (quote? expr)

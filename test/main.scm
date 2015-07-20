@@ -2,4 +2,5 @@
 
 (load "../test/utils.scm")
 (load "../test/compiler/rename.scm")
+(load "../test/compiler/cpc.scm")
 (load "../test/rt/resume.scm")
