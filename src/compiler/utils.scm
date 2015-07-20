@@ -17,10 +17,13 @@
 
 ;; Mutable references:
 (define (ref x)
-  x)
+  (make-vector 1 x))
 
-(define (deref x)
-  x)
+(define (deref ref)
+  (vector-ref ref 0))
+
+(define (assign! ref x)
+  (vector-set! ref 0 x))
 
 ;; Other stuff
 
@@ -39,6 +42,9 @@
 
 (define &gensym-counter (ref 0))
 (define (gensym root)
-  (set! &gensym-counter (+ 1 (deref &gensym-counter)))
+  (assign! &gensym-counter (+ 1 (deref &gensym-counter)))
   (string->symbol (string-append (symbol->string (symbol->safe root))
-                                 (number->string &gensym-counter))))
+                                 (number->string (deref &gensym-counter)))))
+
+(define (gensym-reset!)
+  (assign! &gensym-counter 0))
