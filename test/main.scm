@@ -5,5 +5,5 @@
 (load "../test/compiler/rename.scm")
 (load "../test/compiler/cpc.scm")
 (load "../test/compiler/parser.scm")
-(load "../test/rt/resume.scm")
+(load "../test/rt/scheduler.scm")
 (load "../test/rt/recurse.scm")

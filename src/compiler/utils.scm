@@ -25,8 +25,17 @@
 (define (assign! ref x)
   (vector-set! ref 0 x))
 
-;; Other stuff
+;; Mutable arrays:
+(define (array n x)
+  (make-vector n x))
 
+(define (array-ref array index)
+  (vector-ref array index))
+
+(define (array-assign! array index value)
+  (vector-set! array index value))
+
+;; Other stuff
 (define-syntax do
   (syntax-rules ()
     ((do expression ...)
