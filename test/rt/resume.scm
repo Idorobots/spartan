@@ -2,6 +2,7 @@
 
 ;; Can run values.
 (assert (run 23) 23)
+(assert (run nil) nil)
 
 ;; Can run compiled values.
 (assert (run (do-expr '23)) 23)

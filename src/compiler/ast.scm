@@ -147,6 +147,19 @@
 (define (let-body expr)
   (cddr expr))
 
+;; Mutation:
+(define (set!? expr)
+  (tagged-list? 'set! expr))
+
+(define (make-set! variable value)
+  `(set! ,variable ,value))
+
+(define (set!-var expr)
+  (cadr expr))
+
+(define (set!-val expr)
+  (caddr expr))
+
 ;; (reset expression)
 (define (reset? expr)
   (tagged-list? 'reset expr))
