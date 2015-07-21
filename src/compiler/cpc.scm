@@ -112,8 +112,18 @@
                               (returning-last sts ct))))))
 
 (define (cpc-letrec expr kont)
-  ;; TODO Actually implement this.
-  expr)
+  (let* ((bindings (let-bindings expr))
+         (names (map (lambda (b) (symbol->safe (car b))) bindings))
+         (values (map cadr bindings)))
+    (make-let (map (lambda (v)
+                     (list v (make-quote '())))
+                   names)
+              (cpc-sequence values
+                            (lambda (sts)
+                              (make-do (append (map make-set! names sts)
+                                        (list (cpc-sequence (let-body expr)
+                                                             (lambda (sts)
+                                                               (returning-last sts kont)))))))))))
 
 (define (cpc-reset expr kont)
   (let* ((value (gensym 'value)))

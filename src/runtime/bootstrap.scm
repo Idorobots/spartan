@@ -9,6 +9,16 @@
                         (take args
                               (- (length args) 1))))))
 
+;; Built-in functions:
+(define __cons (cpsfy cons))
+(define __list (cpsfy list))
+
 (define __MULT (cpsfy *))
 (define __PLUS (cpsfy +))
+(define ___ (cpsfy -))
+
 (define __EQUAL (cpsfy =))
+(define __LESS (cpsfy <))
+
+;; Built-in values:
+(define __nil nil)

@@ -1,11 +1,12 @@
 ;; The runtime.
 
+(load "compiler/utils.scm")
+
 (define (&yield-cont cont hole)
   (list &yield-cont cont hole))
 
 (define (resumable? thing)
-  (and (list? thing)
-       (equal? (car thing) &yield-cont)))
+  (tagged-list? &yield-cont thing))
 
 (define (resumable-cont thing)
   (cadr thing))
