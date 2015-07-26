@@ -55,6 +55,6 @@
 
 ;; FIXME This should accept task list istead.
 (define (run cont)
-  (reset-tasks! (list (uproc cont)))
+  (reset-tasks! (list (uproc cont 0)))
   ;; FIXME Returns only the first result.
   (car (execute!)))
