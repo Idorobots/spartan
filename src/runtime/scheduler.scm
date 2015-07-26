@@ -2,19 +2,32 @@
 
 (load "runtime/processes.scm")
 
-(define (task-list . tasks)
-  tasks)
+;; Task management:
+(define *current-task* (ref nil))
+(define *task-list* (ref nil))
 
-(define (add-task tasks task)
-  (append tasks (list task)))
+(define (reset-task-list! tasks)
+  (assign! *task-list* tasks))
 
-(define (pop-task tasks)
-  (cdr tasks))
+(define (task-list-empty?)
+  (empty? (deref *task-list*)))
 
-(define (next-task tasks)
-  (car tasks))
+(define (add-task! task)
+  (assign! *task-list*
+           (append (deref *task-list*)
+                   (list task))))
 
-(define (step uproc)
+(define (pop-task!)
+  (let ((n (next-task)))
+    (assign! *task-list*
+             (cdr (deref *task-list*)))
+    n))
+
+(define (next-task)
+  (car (deref *task-list*)))
+
+;; Task execution:
+(define (execute-step! uproc)
   (set-uproc-continuation! uproc
                            (resume (uproc-continuation uproc)))
   uproc)
@@ -22,22 +35,26 @@
 (define (executable? task)
   (resumable? (uproc-continuation task)))
 
-(define (execute tasks)
-  (if (empty? tasks)
-      nil
-      (let ((n (next-task tasks))
-            (rest (pop-task tasks)))
+(define (execute-loop! acc)
+  (if (task-list-empty?)
+      acc
+      (let ((n (pop-task!)))
         (if (executable? n)
-            (execute (add-task rest (step n)))
-            (let ((result (uproc-continuation n)))
+            (do (assign! *current-task* n)
+                (add-task! (execute-step! n))
+                (execute-loop! acc))
+            (let ((r (uproc-continuation n)))
               (display ";; uProc finished with result:")
               (newline)
-              (display result)
+              (display r)
               (newline)
-              (cons result (execute rest)))))))
+              (execute-loop! (cons r acc)))))))
+
+(define (execute!)
+  (execute-loop! nil))
 
 ;; FIXME This should accept task list istead.
 (define (run cont)
-  (let ((tasks (task-list (uproc cont))))
-    ;; FIXME Returns only the first result.
-    (car (execute tasks))))
+  (reset-tasks! (list (uproc cont)))
+  ;; FIXME Returns only the first result.
+  (car (execute!)))

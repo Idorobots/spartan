@@ -1,20 +1,24 @@
 ;; Process scheduling tests.
 
-;; Can modify task list:
-(let ((t (uproc nil)))
-  (assert (next-task (task-list t))
-          t))
-
-(let* ((t1 (uproc 1))
-       (t2 (uproc 2))
-       (tasks (task-list t1 t2)))
-  (assert (next-task tasks) t1)
-  (assert (next-task (pop-task tasks)) t2))
-
 ;; Can step a process:
 (assert (not (executable? (uproc nil))))
 (assert (executable? (uproc (&yield-cont nil nil))))
 (assert (uproc? (step (uproc (&yield-cont id nil)))))
+
+;; Can modify task list:
+(let ((t (uproc nil)))
+  (assert (do (reset-task-list! (list t))
+              (next-task))
+          t))
+
+(let* ((t1 (uproc 1))
+       (t2 (uproc 2)))
+  (assert (do (reset-task-list! (list t1 t2))
+              (next-task)) t1)
+  (assert (do (reset-task-list! (list t1 t2))
+              (pop-task!)
+              (next-task))
+          t2))
 
 ;; Can run values.
 (assert (run 23) 23)
