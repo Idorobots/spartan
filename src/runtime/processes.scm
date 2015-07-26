@@ -7,10 +7,11 @@
   (list &uproc fields))
 
 (define (uproc priority cont rtime)
-  (let ((f (array 3 nil)))
+  (let ((f (array 4 nil)))
     (array-assign! f 0 cont)
     (array-assign! f 1 rtime)
     (array-assign! f 2 priority)
+    (array-assign! f 3 (gensym 'pid))
     (&uproc f)))
 
 (define (uproc? thing)
@@ -37,3 +38,6 @@
 (define (uproc-vtime uproc)
   (* (uproc-rtime uproc)
      (uproc-priority uproc)))
+
+(define (uproc-pid uproc)
+  (array-ref (cadr uproc) 3))

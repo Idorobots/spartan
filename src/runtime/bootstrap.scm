@@ -22,3 +22,7 @@
 
 ;; Built-in values:
 (define __nil nil)
+
+;; Misc:
+(define __task_info (cpsfy task-info))
+

@@ -11,6 +11,9 @@
 (define *current-task* (ref nil))
 (define *task-list* (ref nil))
 
+(define (running-tasks)
+  (deref *task-list*))
+
 (define (task-queue)
   (priority-queue (lambda (t1 t2)
                     (<= (uproc-vtime t1)
