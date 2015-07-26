@@ -11,6 +11,9 @@
 (define *current-task* (ref nil))
 (define *task-list* (ref nil))
 
+(define (current-task)
+  (deref *current-task*))
+
 (define (running-tasks)
   (deref *task-list*))
 
