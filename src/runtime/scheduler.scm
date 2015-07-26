@@ -3,6 +3,10 @@
 (load "runtime/priority-queue.scm")
 (load "runtime/processes.scm")
 
+;; Some configuration constants:
+(define +priority+ 100)     ;; Default priority.
+(define +n-reductions+ 100) ;; Default number of reductions.
+
 ;; Task management:
 (define *current-task* (ref nil))
 (define *task-list* (ref nil))
@@ -45,21 +49,19 @@
   (queue-min (deref *run-queue*)))
 
 ;; Task execution:
-(define (execute-step! task)
-  ;; NOTE We could see ports added some time in the future.
-  (cond ((uproc? task)
-         (set-uproc-continuation! task
-                                  (resume (uproc-continuation task)))
-         (inc-uproc-vtime! task 1)))
-  task)
-
 (define (executable? task)
   ;; NOTE We could see ports added some time in the future.
-  (cond ((uproc? task) (resumable? (uproc-continuation task)))))
+  (cond ((uproc? task)
+         (let ((c (uproc-continuation task)))
+           (and (resumable? c)
+                (can-resume? c))))))
 
 (define (halted? task)
   ;; FIXME Actually check uproc state.
   (not (executable? task)))
+
+(define (execute!)
+  (execute-loop! nil))
 
 (define (execute-loop! acc)
   (if (task-queue-empty?)
@@ -76,13 +78,23 @@
               (newline)
               (execute-loop! (cons r acc)))))))
 
-(define (execute!)
-  (execute-loop! nil))
+(define (execute-step! task)
+  ;; NOTE We could see ports added some time in the future.
+  (cond ((uproc? task) (execute-uproc-step! task)))
+  task)
 
-;; FIXME This should accept task list istead.
+(define (execute-uproc-step! uproc)
+  (let ((start (current-milliseconds))
+        (cont (resume-loop (uproc-continuation uproc) +n-reductions+))
+        (stop (current-milliseconds)))
+    (set-uproc-continuation! uproc cont)
+    (inc-uproc-rtime! uproc (- stop start))))
+
+;; FIXME This should accept a task instead.
 (define (run cont)
-  (reset-tasks! (list (uproc (&yield-cont (lambda (_)
+  (reset-tasks! (list (uproc +priority+
+                             (&yield-cont (lambda (_)
                                             cont)
                                           nil)
-                             0)))
+                             (current-milliseconds))))
   (car (execute!)))
