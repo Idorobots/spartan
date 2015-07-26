@@ -3,20 +3,21 @@
 ;; Can step a process:
 (assert (not (executable? (uproc nil 0))))
 (assert (executable? (uproc (&yield-cont nil nil) 0)))
-(assert (uproc? (step (uproc (&yield-cont id nil) 0))))
+(assert (uproc? (execute-step! (uproc (&yield-cont id nil) 0))))
 
 ;; Can modify task list:
 (let ((t (uproc nil 0)))
-  (assert (do (reset-task-list! (list t))
+  (assert (do (reset-tasks! (list t))
               (next-task))
           t))
 
 (let* ((t1 (uproc nil 1))
        (t2 (uproc nil 2)))
-  (assert (do (reset-task-list! (list t1 t2))
-              (next-task)) t1)
-  (assert (do (reset-task-list! (list t1 t2))
-              (pop-task!)
+  (assert (do (reset-tasks! (list t1 t2))
+              (next-task))
+          t1)
+  (assert (do (reset-tasks! (list t1 t2))
+              (dequeue-next-task!)
               (next-task))
           t2))
 
