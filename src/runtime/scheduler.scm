@@ -15,12 +15,12 @@
   (car tasks))
 
 (define (step uproc)
-  (update-continuation! uproc
-                        (resume (micro-proc-continuation uproc)))
+  (set-uproc-continuation! uproc
+                           (resume (uproc-continuation uproc)))
   uproc)
 
 (define (executable? task)
-  (resumable? (micro-proc-continuation task)))
+  (resumable? (uproc-continuation task)))
 
 (define (execute tasks)
   (if (empty? tasks)
@@ -29,7 +29,7 @@
             (rest (pop-task tasks)))
         (if (executable? n)
             (execute (add-task rest (step n)))
-            (let ((result (micro-proc-continuation n)))
+            (let ((result (uproc-continuation n)))
               (display ";; uProc finished with result:")
               (newline)
               (display result)
@@ -38,6 +38,6 @@
 
 ;; FIXME This should accept task list istead.
 (define (run cont)
-  (let ((tasks (task-list (&micro-proc cont))))
+  (let ((tasks (task-list (uproc cont))))
     ;; FIXME Returns only the first result.
     (car (execute tasks))))

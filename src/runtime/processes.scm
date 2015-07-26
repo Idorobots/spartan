@@ -3,14 +3,17 @@
 (load "compiler/utils.scm")
 (load "runtime/continuations.scm")
 
-(define (&micro-proc cont)
-  (list &micro-proc (array 1 cont)))
+(define (&uproc fields)
+  (list &uproc fields))
 
-(define (micro-proc? thing)
-  (tagged-list? &micro-proc thing))
+(define (uproc cont)
+  (&uproc (array 1 cont)))
 
-(define (micro-proc-continuation uproc)
+(define (uproc? thing)
+  (tagged-list? &uproc thing))
+
+(define (uproc-continuation uproc)
   (array-ref (cadr uproc) 0))
 
-(define (update-continuation! uproc cont)
+(define (set-uproc-continuation! uproc cont)
   (array-assign! (cadr uproc) 0 cont))

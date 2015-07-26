@@ -49,11 +49,11 @@
 
 (define (id x) x)
 
-(define &gensym-counter (ref 0))
+(define *gensym-counter* (ref 0))
 (define (gensym root)
-  (assign! &gensym-counter (+ 1 (deref &gensym-counter)))
+  (assign! *gensym-counter* (+ 1 (deref *gensym-counter*)))
   (string->symbol (string-append (symbol->string (symbol->safe root))
-                                 (number->string (deref &gensym-counter)))))
+                                 (number->string (deref *gensym-counter*)))))
 
 (define (gensym-reset!)
-  (assign! &gensym-counter 0))
+  (assign! *gensym-counter* 0))

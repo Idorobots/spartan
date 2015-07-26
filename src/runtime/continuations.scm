@@ -2,7 +2,7 @@
 
 (load "compiler/utils.scm")
 
-(define (&yield-cont cont hole)
+(define (&yield-cont cont hole) ;; NOTE Used in compiler-generated code not via bootstrap.
   (list &yield-cont cont hole))
 
 (define (resumable? thing)

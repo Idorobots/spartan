@@ -1,20 +1,20 @@
 ;; Process scheduling tests.
 
 ;; Can modify task list:
-(let ((t (&micro-proc nil)))
+(let ((t (uproc nil)))
   (assert (next-task (task-list t))
           t))
 
-(let* ((t1 (&micro-proc 1))
-       (t2 (&micro-proc 2))
+(let* ((t1 (uproc 1))
+       (t2 (uproc 2))
        (tasks (task-list t1 t2)))
   (assert (next-task tasks) t1)
   (assert (next-task (pop-task tasks)) t2))
 
 ;; Can step a process:
-(assert (not (executable? (&micro-proc nil))))
-(assert (executable? (&micro-proc (&yield-cont nil nil))))
-(assert (micro-proc? (step (&micro-proc (&yield-cont id nil)))))
+(assert (not (executable? (uproc nil))))
+(assert (executable? (uproc (&yield-cont nil nil))))
+(assert (uproc? (step (uproc (&yield-cont id nil)))))
 
 ;; Can run values.
 (assert (run 23) 23)
