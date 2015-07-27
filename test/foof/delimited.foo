@@ -1,1 +1,0 @@
-(reset (* 2 (shift k (k 2))))

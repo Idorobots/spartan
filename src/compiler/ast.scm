@@ -138,7 +138,7 @@
   (tagged-list? 'letcc expr))
 
 (define (make-letcc variable body)
-  `(let ,variable
+  `(letcc ,variable
      ,body))
 
 (define (let-bindings expr)
