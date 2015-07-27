@@ -66,13 +66,13 @@
                                   'halted)
                 v)))
     (&yield-cont cont (spawn-task! (&yield-cont (lambda (_)
-                                                  (fun cont))
+                                                  (fun kont))
                                                 nil)
                                    (lambda (e _)
                                      (display ";; Task finished due to unhandled error: ")
                                      (display e)
                                      (newline)
-                                     e)))))
+                                     (kont e))))))
 
 ;; Misc:
 (define __task_info (cpsfy task-info))
