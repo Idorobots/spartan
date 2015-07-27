@@ -123,9 +123,9 @@
               (cpc-sequence values
                             (lambda (sts)
                               (make-do (append (map make-set! names sts)
-                                        (list (cpc-sequence (let-body expr)
-                                                             (lambda (sts)
-                                                               (returning-last sts kont)))))))))))
+                                               (list (cpc-sequence (let-body expr)
+                                                                   (lambda (sts)
+                                                                     (returning-last sts kont)))))))))))
 
 (define (cpc-reset expr kont)
   (let* ((value (gensym 'value)))
@@ -136,9 +136,9 @@
                      (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
-  (let* ((name (symbol->safe (shift-cont expr)))
-         (ct (gensym 'cont))
-         (value (gensym 'value)))
+  (let ((name (symbol->safe (shift-cont expr)))
+        (ct (gensym 'cont))
+        (value (gensym 'value)))
     (make-let-1 name
                 (make-lambda-2 value ct
                                (make-app-1 ct (kont value)))
@@ -146,13 +146,14 @@
                      (make-identity-continuation)))))
 
 (define (cpc-app expr kont)
-  (let* ((value (gensym 'value))
-         (cont (make-lambda-1 value (kont value))))
+  (let ((value (gensym 'value)))
     (cpc (app-op expr)
          (lambda (op)
            (cpc-sequence (app-args expr)
                          (lambda (args)
-                           (make-app op (append args (list cont)))))))))
+                           (make-app op
+                                     (append args (list (make-lambda-1 value
+                                                                       (kont value)))))))))))
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
