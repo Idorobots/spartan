@@ -53,6 +53,3 @@
                      (list 'foo 23))
                     (list 'bar 5)))
         '(bar 5))
-
-
-

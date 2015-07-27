@@ -34,6 +34,15 @@
                   (task-queue)
                   tasks)))
 
+(define (spawn-task! cont)
+  (let ((t (uproc +priority+
+                  cont
+                  (current-milliseconds)
+                  +initial-state+)))
+    (add-task! t)
+    (enqueue-task! t)
+    (uproc-pid t)))
+
 (define (add-task! task)
   (assign! *task-list*
            (cons task (deref *task-list*))))
@@ -135,12 +144,3 @@
                (can-resume? cont))
       (set-uproc-continuation! uproc (resume cont))
       (resume-execution! uproc (- n-reductions 1)))))
-
-(define (spawn-task! cont)
-  (let ((t (uproc +priority+
-                  cont
-                  (current-milliseconds)
-                  +initial-state+)))
-    (add-task! t)
-    (enqueue-task! t)
-    (uproc-pid t)))

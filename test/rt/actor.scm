@@ -18,8 +18,7 @@
 
 ;; Can retrieve own pid.
 (gensym-reset!)
-(assert (run '(self))
-        '__pid1)
+(assert (run '(self)) '__pid1)
 
 ;; TODO Can retrieve current node.
 
@@ -83,5 +82,6 @@
 
 ;; Can spawn a process.
 (gensym-reset!)
-(assert (run '(spawn (lambda () (* 1 (+ 2 3)))))
+(assert (run '(spawn (lambda ()
+                       (* 1 (+ 2 3)))))
         '__pid6)
