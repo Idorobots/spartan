@@ -31,5 +31,6 @@
 (define (run expr)
   (reset-tasks! (list (uproc +priority+ ;; Defined in scheduler.
                              (&yield-cont do-expr expr)
-                             (current-milliseconds))))
+                             (current-milliseconds)
+                             +initial-state+))) ;; ditto
   (car (execute!)))

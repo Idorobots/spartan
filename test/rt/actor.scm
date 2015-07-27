@@ -9,7 +9,8 @@
                 (&yield-cont (lambda (v)
                                (__sleep v id))
                              23)
-                0)))
+                0
+                'waiting)))
   (reset-tasks! (list p))
   (execute!)
   (assert (near-enough? (uproc-rtime p) 23 1))
@@ -31,7 +32,8 @@
                                                  (lambda (__value3)
                                                    __value3)))))
                              'msg)
-                0)))
+                0
+                'waiting)))
   (reset-tasks! (list p))
   (execute!)
   (assert (not (empty? (uproc-msg-queue p))))
@@ -50,7 +52,8 @@
                                              (lambda (__value5)
                                                __value5)))))))
                              'msg)
-                0)))
+                0
+                'waiting)))
   (reset-tasks! (list p))
   (execute!)
   (assert (equal? (length (uproc-msg-queue p)) 2))

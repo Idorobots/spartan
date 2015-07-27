@@ -4,9 +4,10 @@
 (load "runtime/processes.scm")
 
 ;; Some configuration constants:
-(define +priority+ 100)     ;; Default priority.
-(define +n-reductions+ 100) ;; Default number of reductions.
-(define +idle-timeout+ 50)  ;; Time to wait between run queue polls.
+(define +priority+ 100)           ;; Default priority.
+(define +n-reductions+ 100)       ;; Default number of reductions.
+(define +idle-timeout+ 50)        ;; Time to wait between run queue polls.
+(define +initial-state+ 'waiting) ;; Initial state of uProcs.
 
 ;; Task management:
 (define *current-task* (ref nil))
@@ -43,13 +44,15 @@
 (define (enqueue-task! task)
   (assign! *run-queue*
            (queue-enqueue (deref *run-queue*)
-                          task)))
+                          task))
+  (set-uproc-state! task 'waiting))
 
 (define (dequeue-next-task!)
   (let ((n (next-task)))
     (assign! *current-task* n)
     (assign! *run-queue*
              (queue-dequeue (deref *run-queue*)))
+    (set-uproc-state! n 'running)
     n))
 
 (define (next-task)
@@ -68,10 +71,6 @@
            (and (resumable? c)
                 (can-resume? c))))))
 
-(define (halted? task)
-  ;; FIXME Actually check uproc state.
-  (not (executable? task)))
-
 (define (execute!)
   (execute-loop! nil))
 
@@ -82,15 +81,33 @@
         (wait-until-ready n)
         (dequeue-next-task!)
         (execute-step! n)
-        (if (not (halted? n))
-            (do (enqueue-task! n)
-                (execute-loop! acc))
-            (let ((r (uproc-continuation n)))
-              (display ";; Task finished with result:")
-              (newline)
-              (display r)
-              (newline)
-              (execute-loop! (cons r acc)))))))
+        (let ((s (task-state n)))
+          (cond ((equal? s 'halted)
+                 (execute-loop! (cons (extract-result n)
+                                      acc)))
+
+                ((equal? s 'waiting-4-msg)
+                 ;; NOTE Don't schedule until task is notified.
+                 (execute-loop! acc))
+
+                ('else
+                 (enqueue-task! n)
+                 (execute-loop! acc)))))))
+
+(define (extract-result task)
+  (let ((r (uproc-continuation task)))
+    (display ";; Task finished with result:")
+    (newline)
+    (display r)
+    (newline)
+    r))
+
+(define (task-state task)
+  ;; NOTE Ports, ports, ports, ports.
+  (cond ((uproc? task)
+         (if (executable? task)
+             (uproc-state task)
+             'halted))))
 
 (define (wait-until-ready task)
   (let ((t (current-milliseconds)))
@@ -117,8 +134,9 @@
 (define (resume-execution! uproc n-reductions)
   (let ((cont (uproc-continuation uproc)))
     (when (and (ready? uproc (current-milliseconds))
+               (equal? (uproc-state uproc) 'running)
+               (> n-reductions 0)
                (resumable? cont)
-               (can-resume? cont)
-               (> n-reductions 0))
+               (can-resume? cont))
       (set-uproc-continuation! uproc (resume cont))
       (resume-execution! uproc (- n-reductions 1)))))

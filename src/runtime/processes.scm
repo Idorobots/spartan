@@ -6,13 +6,14 @@
 (define (&uproc fields)
   (list &uproc fields))
 
-(define (uproc priority cont rtime)
-  (let ((f (array 5 nil)))
+(define (uproc priority cont rtime state)
+  (let ((f (array 6 nil)))
     (array-assign! f 0 cont)
     (array-assign! f 1 rtime)
     (array-assign! f 2 priority)
     (array-assign! f 3 (gensym 'pid))
     (array-assign! f 4 nil) ;; NOTE message queue
+    (array-assign! f 5 state)
     (&uproc f)))
 
 (define (uproc? thing)
@@ -62,3 +63,9 @@
 
 (define (uproc-msg-queue-empty? uproc)
   (empty? (uproc-msg-queue uproc)))
+
+(define (uproc-state uproc)
+  (array-ref (cadr uproc) 5))
+
+(define (set-uproc-state! uproc state)
+  (array-assign! (cadr uproc) 5 state))
