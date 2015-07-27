@@ -1,0 +1,8 @@
+(letrec ((fun (lambda (text)
+                (display text)
+                (newline)
+                (sleep 100)
+                (fun text))))
+  (spawn (lambda ()
+           (fun "Hello")))
+  (fun "world!"))

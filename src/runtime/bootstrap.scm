@@ -13,6 +13,11 @@
                         (take args
                               (- (length args) 1))))))
 
+(define __car (cpsfy car))
+(define __cadr (cpsfy car))
+(define __cdr (cpsfy cdr))
+(define __cddr (cpsfy cddr))
+
 (define __cons (cpsfy cons))
 (define __list (cpsfy list))
 
@@ -63,3 +68,5 @@
 
 ;; Misc:
 (define __task_info (cpsfy task-info))
+(define __display (cpsfy display))
+(define __newline (cpsfy newline))

@@ -1,0 +1,12 @@
+(letrec ((fib (lambda (n)
+                (if (< n 2)
+                    n
+                    (+ (fib (- n 1))
+                       (fib (- n 2))))))
+         (monitor (lambda ()
+                    (task-info)
+                    (sleep 2000)
+                    (monitor))))
+  (spawn (lambda ()
+           (fib 30)))
+  (monitor))
