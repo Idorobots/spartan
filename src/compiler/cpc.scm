@@ -162,10 +162,7 @@
         (handler (gensym 'handler))
         (value (gensym 'value))
         (restart (gensym 'restart))
-        (error (gensym 'error))
-        (with-handler (lambda (h then)
-                        (make-do (list (make-app-1 '&set-uproc-error-handler! h)
-                                       then)))))
+        (error (gensym 'error)))
     (make-let (list (list handler (make-app '&uproc-error-handler nil))
                     (list ct (make-lambda-1 value (kont value))))
               (cpc (handle-handler expr)
@@ -184,8 +181,17 @@
 
 (define (cpc-raise expr kont)
   (let ((value (gensym 'value))
-        (ignored (gensym 'ignored)))
-    (cpc (raise-expr expr)
-         (lambda (v)
-           (make-app (make-app '&uproc-error-handler nil)
-                     (list v (make-lambda-2 value ignored (kont value))))))))
+        (ignored (gensym 'ignored))
+        (h (gensym 'handler)))
+    (make-let-1 h
+                (make-app '&uproc-error-handler nil)
+                (cpc (raise-expr expr)
+                     (lambda (v)
+                       (make-app h
+                        (list v (make-lambda-2 value ignored
+                                               (with-handler h
+                                                             (kont value))))))))))
+
+(define (with-handler h next)
+  (make-do (list (make-app-1 '&set-uproc-error-handler! h)
+                 next)))

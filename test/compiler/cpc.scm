@@ -199,29 +199,33 @@
 ;; CPCing raise works.
 (gensym-reset!)
 (assert (cpc-raise '(raise 23) id)
-        '((&uproc-error-handler)
-          23
-          (lambda (__value1) __value1)))
+        '(let ((__handler3 (&uproc-error-handler)))
+           (__handler3 23
+                       (lambda (__value1 __ignored2)
+                         (do (&set-uproc-error-handler! __handler3)
+                             __value1)))))
 
 (gensym-reset!)
 (assert (cpc-raise '(raise (* 2 2)) id)
-        '(__MULT 2
-                 2
-                 (lambda (__value2)
-                   ((&uproc-error-handler)
-                    __value2
-                    (lambda (__value1)
-                      __value1)))))
+        '(let ((__handler3 (&uproc-error-handler)))
+           (__MULT 2
+                   2
+                   (lambda (__value4)
+                     (__handler3 __value4
+                                 (lambda (__value1 __ignored2)
+                                   (do (&set-uproc-error-handler! __handler3)
+                                       __value1)))))))
 
 (gensym-reset!)
 (assert (cpc '(* 2 (raise 2)) id)
-        '((&uproc-error-handler)
-          2
-          (lambda (__value2)
-            (__MULT 2
-                    __value2
-                    (lambda (__value1)
-                      __value1)))))
+        '(let ((__handler4 (&uproc-error-handler)))
+           (__handler4 2
+                       (lambda (__value2 __ignored3)
+                         (do (&set-uproc-error-handler! __handler4)
+                             (__MULT 2
+                                     __value2
+                                     (lambda (__value1)
+                                       __value1)))))))
 
 ;; CPCing handle works.
 (gensym-reset!)

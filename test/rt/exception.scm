@@ -30,3 +30,9 @@
                            (lambda (_ restart)
                              (restart 2)))))
         4)
+
+;; Restarted computation has proper handler.
+(assert (run '(* 2 (handle (raise (raise 3))
+                           (lambda (e restart)
+                             (restart (* 2 e))))))
+        24)
