@@ -4,6 +4,9 @@
 (assert (cpc-simple 'foo) (symbol->safe 'foo))
 (assert (cpc 'foo id) (symbol->safe 'foo))
 
+(assert (cpc-simple 'foo.bar) '(&structure-ref __foo 'bar))
+(assert (cpc 'foo.bar id) '(&structure-ref __foo 'bar))
+
 (assert (cpc-simple 23) 23)
 (assert (cpc 23 id) 23)
 

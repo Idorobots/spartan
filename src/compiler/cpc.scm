@@ -29,7 +29,16 @@
         ((lambda? expr) (cpc-lambda expr))))
 
 (define (cpc-symbol expr)
-  (symbol->safe expr))
+  ;; FIXME This shouldn't be in CPC...
+  (let ((parts (map string->symbol
+                    (string-split (symbol->string expr)
+                                  "."))))
+    (if (> (length parts) 1)
+        (foldl (lambda (p a)
+                 (make-app '&structure-ref (list a (make-quote p))))
+               (symbol->safe (car parts))
+               (cdr parts))
+        (symbol->safe (car parts)))))
 
 (define (cpc-number expr)
   expr)
