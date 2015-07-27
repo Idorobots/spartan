@@ -62,8 +62,10 @@
 
 (define (__spawn fun cont)
   (&yield-cont cont (spawn-task! (&yield-cont (lambda (_)
-                                                ;; FIXME Add a better continuation.
-                                                (fun id))
+                                                (fun (lambda (v)
+                                                       (set-uproc-state! (current-task)
+                                                                         'halted)
+                                                       v)))
                                               nil))))
 
 ;; Misc:

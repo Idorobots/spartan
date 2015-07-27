@@ -95,12 +95,7 @@
                  (execute-loop! acc)))))))
 
 (define (extract-result task)
-  (let ((r (uproc-continuation task)))
-    (display ";; Task finished with result:")
-    (newline)
-    (display r)
-    (newline)
-    r))
+  (uproc-continuation task))
 
 (define (task-state task)
   ;; NOTE Ports, ports, ports, ports.
