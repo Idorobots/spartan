@@ -34,9 +34,10 @@
                   (task-queue)
                   tasks)))
 
-(define (spawn-task! cont)
+(define (spawn-task! cont handler)
   (let ((t (uproc +priority+
                   cont
+                  handler
                   (current-milliseconds)
                   +initial-state+)))
     (add-task! t)

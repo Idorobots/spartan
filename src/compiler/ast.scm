@@ -199,3 +199,27 @@
 
 (define (app-args expr)
   (cdr expr))
+
+;; (handle expr hadler)
+(define (handle? expr)
+  (tagged-list? 'handle expr))
+
+(define (make-handle expr handler)
+  `(handle ,expr
+           ,handler))
+
+(define (handle-expr expr)
+  (cadr expr))
+
+(define (handle-handler expr)
+  (caddr expr))
+
+;; (raise error)
+(define (raise? expr)
+  (tagged-list? 'raise expr))
+
+(define (make-raise expr)
+  `(raise ,expr))
+
+(define (raise-expr expr)
+  (cadr expr))

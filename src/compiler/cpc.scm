@@ -14,6 +14,8 @@
         ((letrec? expr) (cpc-letrec expr kont))
         ((reset? expr) (cpc-reset expr kont))
         ((shift? expr) (cpc-shift expr kont))
+        ((handle? expr) (cpc-handle expr kont))
+        ((raise? expr) (cpc-raise expr kont))
         ((application? expr) (cpc-app expr kont))))
 
 (define (cpc-simple expr)
@@ -121,9 +123,9 @@
               (cpc-sequence values
                             (lambda (sts)
                               (make-do (append (map make-set! names sts)
-                                        (list (cpc-sequence (let-body expr)
-                                                             (lambda (sts)
-                                                               (returning-last sts kont)))))))))))
+                                               (list (cpc-sequence (let-body expr)
+                                                                   (lambda (sts)
+                                                                     (returning-last sts kont)))))))))))
 
 (define (cpc-reset expr kont)
   (let* ((value (gensym 'value)))
@@ -134,9 +136,9 @@
                      (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
-  (let* ((name (symbol->safe (shift-cont expr)))
-         (ct (gensym 'cont))
-         (value (gensym 'value)))
+  (let ((name (symbol->safe (shift-cont expr)))
+        (ct (gensym 'cont))
+        (value (gensym 'value)))
     (make-let-1 name
                 (make-lambda-2 value ct
                                (make-app-1 ct (kont value)))
@@ -144,13 +146,53 @@
                      (make-identity-continuation)))))
 
 (define (cpc-app expr kont)
-  (let* ((value (gensym 'value))
-         (cont (make-lambda-1 value (kont value))))
+  (let ((value (gensym 'value)))
     (cpc (app-op expr)
          (lambda (op)
            (cpc-sequence (app-args expr)
                          (lambda (args)
-                           (make-app op (append args (list cont)))))))))
+                           (make-app op
+                                     (append args (list (make-lambda-1 value
+                                                                       (kont value)))))))))))
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
+
+(define (cpc-handle expr kont)
+  (let ((ct (gensym 'cont))
+        (handler (gensym 'handler))
+        (value (gensym 'value))
+        (restart (gensym 'restart))
+        (error (gensym 'error)))
+    (make-let (list (list handler (make-app '&uproc-error-handler nil))
+                    (list ct (make-lambda-1 value (kont value))))
+              (cpc (handle-handler expr)
+                   (lambda (h)
+                     (let ((wrap (make-lambda-2 error restart
+                                                (with-handler handler
+                                                              (make-app h
+                                                                        (list error
+                                                                              restart
+                                                                              ct))))))
+                       (with-handler wrap
+                                     (cpc (handle-expr expr)
+                                          (lambda (v)
+                                            (with-handler handler
+                                                          (make-yield (make-app-1 ct v))))))))))))
+
+(define (cpc-raise expr kont)
+  (let ((value (gensym 'value))
+        (ignored (gensym 'ignored))
+        (h (gensym 'handler)))
+    (make-let-1 h
+                (make-app '&uproc-error-handler nil)
+                (cpc (raise-expr expr)
+                     (lambda (v)
+                       (make-app h
+                        (list v (make-lambda-2 value ignored
+                                               (with-handler h
+                                                             (kont value))))))))))
+
+(define (with-handler h next)
+  (make-do (list (make-app-1 '&set-uproc-error-handler! h)
+                 next)))

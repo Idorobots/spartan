@@ -30,6 +30,11 @@
 
 (define (run expr)
   (reset-tasks! nil)
-  (spawn-task! (&yield-cont do-expr expr))
+  (spawn-task! (&yield-cont do-expr expr)
+               (lambda (e _)
+                 (display ";; Execution finished due to an unhandled error: ")
+                 (display e)
+                 (newline)
+                 e))
   ;; NOTE Returns only the last result.
   (last (execute!)))

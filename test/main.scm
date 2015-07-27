@@ -9,3 +9,4 @@
 (load "../test/rt/scheduler.scm")
 (load "../test/rt/recurse.scm")
 (load "../test/rt/actor.scm")
+(load "../test/rt/exception.scm")
