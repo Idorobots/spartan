@@ -199,3 +199,13 @@
 
 (define (app-args expr)
   (cdr expr))
+
+;; (raise error)
+(define (raise? expr)
+  (tagged-list? 'raise expr))
+
+(define (make-raise expr)
+  `(raise ,expr))
+
+(define (raise-expr expr)
+  (cadr expr))

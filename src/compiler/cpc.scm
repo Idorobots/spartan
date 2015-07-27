@@ -14,6 +14,7 @@
         ((letrec? expr) (cpc-letrec expr kont))
         ((reset? expr) (cpc-reset expr kont))
         ((shift? expr) (cpc-shift expr kont))
+        ((raise? expr) (cpc-raise expr kont))
         ((application? expr) (cpc-app expr kont))))
 
 (define (cpc-simple expr)
@@ -154,3 +155,10 @@
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
+
+(define (cpc-raise expr kont)
+  (let* ((value (gensym 'value))
+         (cont (make-lambda-1 value (kont value))))
+    (cpc (raise-expr expr)
+         (lambda (v)
+           (make-app (make-app '&uproc-error-handler nil) (list v cont))))))
