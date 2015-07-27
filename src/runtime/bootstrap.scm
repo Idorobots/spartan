@@ -78,3 +78,6 @@
 (define __task_info (cpsfy task-info))
 (define __display (cpsfy display))
 (define __newline (cpsfy newline))
+
+;; Module system bootstrap:
+(define __make_structure (cpsfy make-structure))
