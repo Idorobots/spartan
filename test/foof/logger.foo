@@ -1,0 +1,27 @@
+(module (logger)
+  (define (log level string)
+    (display "[")
+    (display level)
+    (display "] ")
+    (display string)
+    (newline))
+
+  (define (debug string)
+    (log 'DEBUG string))
+
+  (define (info string)
+    (log 'INFO string))
+
+  (define (warn string)
+    (log 'WARN string))
+
+  (define (error string)
+    (log 'ERROR string)))
+
+(module (test logger)
+  (define (do-something)
+    (logger.info "doing something")
+    (logger.error "failed badly!")))
+
+(let ((t (test (logger))))
+  (t.do-something))
