@@ -223,3 +223,23 @@
 
 (define (raise-expr expr)
   (cadr expr))
+
+;; (module (name deps ..) body ...)
+(define (module? expr)
+  (tagged-list? 'module expr))
+
+(define (module-name expr)
+  (caadr expr))
+
+(define (module-deps expr)
+  (cdadr expr))
+
+(define (module-body expr)
+  (cddr expr))
+
+;; (structure defs ...)
+(define (structure? expr)
+  (tagged-list? 'structure expr))
+
+(define (structure-defs expr)
+  (cdr expr))
