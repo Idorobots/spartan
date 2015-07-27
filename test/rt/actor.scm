@@ -15,7 +15,11 @@
   (assert (near-enough? (uproc-rtime p) 23 1))
   (assert (near-enough? (uproc-vtime p) 2300 100)))
 
-;; TODO Can retrieve own pid.
+;; Can retrieve own pid.
+
+(gensym-reset!)
+(assert (run (do-expr '(self)))
+        '__pid2)
 
 ;; TODO Can retrieve current node.
 
