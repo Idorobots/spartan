@@ -40,11 +40,20 @@
   (let ((t (find-task pid)))
     ;; FIXME Throw exception when pid isn't found.
     (uproc-enqueue-msg! t msg)
+    (when (equal? (uproc-state t) 'waiting-4-msg)
+      (set-uproc-rtime! t (current-milliseconds))
+      (enqueue-task! t))
     (&yield-cont cont pid)))
 
 (define (__recv cont)
-  ;; TODO
-  (&yield-cont cont nil))
+  (let ((p (current-task)))
+    (if (uproc-msg-queue-empty? p)
+        (do (set-uproc-state! p 'waiting-4-msg)
+            (&yield-cont (lambda (_)
+                           ;; NOTE Retry receive.
+                           (__recv cont))
+                         nil))
+        (&yield-cont cont (uproc-dequeue-msg! p)))))
 
 (define (__spawn fun cont)
   ;; TODO

@@ -59,6 +59,26 @@
   (assert (equal? (length (uproc-msg-queue p)) 2))
   (assert (equal? (first (uproc-msg-queue p)) 'msg)))
 
-;; TODO Can receive a message.
+;; Can't receive when there are no messages.
+(let ((p (uproc 100
+                (&yield-cont (lambda (_)
+                               (__recv id))
+                             nil)
+                0
+                'waiting)))
+  (reset-tasks! (list p))
+  (execute!)
+  (assert (uproc-state p) 'waiting-4-msg))
+
+;; Can receive a message.
+(assert (run '(do (send (self) 'msg)
+                  (recv)))
+        'msg)
+
+;; Messages are received in the correct order.
+(assert (run '(do (send (self) 1)
+                  (send (self) 2)
+                (recv)))
+        1)
 
 ;; TODO Can spawn a process.
