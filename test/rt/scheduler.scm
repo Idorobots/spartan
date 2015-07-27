@@ -21,22 +21,14 @@
               (next-task))
           t2))
 
-;; Can run values.
-(assert (run 23) 23)
-(assert (run nil) nil)
-
 ;; Can run compiled values.
-(assert (run (do-expr '23)) 23)
+(assert (run '23) 23)
 
 ;; Can run stuff.
-(assert (run (do-expr '(= (* 3 2) (+ 3 3)))))
+(assert (run '(= (* 3 2) (+ 3 3))))
 
 ;; Can as easily resume stuff.
 (assert (resume (resume (resume (do-expr '(= (* 3 2) (+ 3 3)))))))
 
 ;; Can do the same for do-string
-(assert (run (do-string "23")) 23)
-(assert (run (do-string "(= (* 3 2) (+ 3 3))")))
 (assert (resume (resume (resume (do-string "(= (* 3 2) (+ 3 3))")))))
-
-;; TODO Can run several tasks.

@@ -55,6 +55,11 @@
 (define (next-task)
   (queue-min (deref *run-queue*)))
 
+(define (find-task pid)
+  (findf (lambda (t)
+           (equal? (uproc-pid t) pid))
+         (deref *task-list*)))
+
 ;; Task execution:
 (define (executable? task)
   ;; NOTE We could see ports added some time in the future.
@@ -117,12 +122,3 @@
                (> n-reductions 0))
       (set-uproc-continuation! uproc (resume cont))
       (resume-execution! uproc (- n-reductions 1)))))
-
-;; FIXME This should accept a task instead.
-(define (run cont)
-  (reset-tasks! (list (uproc +priority+
-                             (&yield-cont (lambda (_)
-                                            cont)
-                                          nil)
-                             (current-milliseconds))))
-  (car (execute!)))

@@ -16,14 +16,45 @@
   (assert (near-enough? (uproc-vtime p) 2300 100)))
 
 ;; Can retrieve own pid.
-
 (gensym-reset!)
-(assert (run (do-expr '(self)))
-        '__pid2)
+(assert (run '(self))
+        '__pid1)
 
 ;; TODO Can retrieve current node.
 
-;; TODO Can send a message.
+;; Can send a message.
+(let ((p (uproc 100
+                (&yield-cont (lambda (v)
+                               (__self (lambda (__value4)
+                                         (__send __value4
+                                                 v
+                                                 (lambda (__value3)
+                                                   __value3)))))
+                             'msg)
+                0)))
+  (reset-tasks! (list p))
+  (execute!)
+  (assert (not (empty? (uproc-msg-queue p))))
+  (assert (equal? (first (uproc-msg-queue p)) 'msg)))
+
+(let ((p (uproc 100
+                (&yield-cont (lambda (v)
+                               (__self
+                                (lambda (__value7)
+                                  (__send
+                                   __value7
+                                   v
+                                   (lambda (__value6)
+                                     (__send __value6
+                                             v
+                                             (lambda (__value5)
+                                               __value5)))))))
+                             'msg)
+                0)))
+  (reset-tasks! (list p))
+  (execute!)
+  (assert (equal? (length (uproc-msg-queue p)) 2))
+  (assert (equal? (first (uproc-msg-queue p)) 'msg)))
 
 ;; TODO Can receive a message.
 

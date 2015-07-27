@@ -37,8 +37,10 @@
   (&yield-cont cont nil))
 
 (define (__send pid msg cont)
-  ;; TODO
-  (&yield-cont cont nil))
+  (let ((t (find-task pid)))
+    ;; FIXME Throw exception when pid isn't found.
+    (uproc-enqueue-msg! t msg)
+    (&yield-cont cont pid)))
 
 (define (__recv cont)
   ;; TODO

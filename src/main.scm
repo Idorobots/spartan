@@ -2,9 +2,8 @@
 
 (load "compiler/compiler.scm")
 (load "compiler/parser.scm")
-
-(load "runtime/bootstrap.scm")
 (load "runtime/rt.scm")
+(load "runtime/bootstrap.scm")
 
 (define (do-expr expr)
   (eval/pp (compile/pp expr)))
@@ -28,3 +27,9 @@
   (display ";; Result:")
   (newline)
   (eval expr))
+
+(define (run expr)
+  (reset-tasks! (list (uproc +priority+ ;; Defined in scheduler.
+                             (&yield-cont do-expr expr)
+                             (current-milliseconds))))
+  (car (execute!)))
