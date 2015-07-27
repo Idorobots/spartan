@@ -5,7 +5,7 @@
 (define (macro-expand expr macros)
   (if (pair? expr)
       (map (lambda (e) (macro-expand e macros))
-             ((macro-expander (car expr) macros) expr))
+           ((macro-expander (car expr) macros) expr))
       expr))
 
 (define (macro-expander name macros)

@@ -198,9 +198,9 @@
                 (cpc (raise-expr expr)
                      (lambda (v)
                        (make-app h
-                        (list v (make-lambda-2 value ignored
-                                               (with-handler h
-                                                             (kont value))))))))))
+                                 (list v (make-lambda-2 value ignored
+                                                        (with-handler h
+                                                                      (kont value))))))))))
 
 (define (with-handler h next)
   (make-do (list (make-app-1 '&set-uproc-error-handler! h)
