@@ -56,8 +56,10 @@
         (&yield-cont cont (uproc-dequeue-msg! p)))))
 
 (define (__spawn fun cont)
-  ;; TODO
-  (&yield-cont cont nil))
+  (&yield-cont cont (spawn-task! (&yield-cont (lambda (_)
+                                                ;; FIXME Add a better continuation.
+                                                (fun id))
+                                              nil))))
 
 ;; Misc:
 (define __task_info (cpsfy task-info))

@@ -81,4 +81,7 @@
                 (recv)))
         1)
 
-;; TODO Can spawn a process.
+;; Can spawn a process.
+(gensym-reset!)
+(assert (run '(spawn (lambda () (* 1 (+ 2 3)))))
+        '__pid6)

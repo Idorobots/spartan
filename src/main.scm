@@ -29,8 +29,7 @@
   (eval expr))
 
 (define (run expr)
-  (reset-tasks! (list (uproc +priority+ ;; Defined in scheduler.
-                             (&yield-cont do-expr expr)
-                             (current-milliseconds)
-                             +initial-state+))) ;; ditto
-  (car (execute!)))
+  (reset-tasks! nil)
+  (spawn-task! (&yield-cont do-expr expr))
+  ;; NOTE Returns only the last result.
+  (last (execute!)))
