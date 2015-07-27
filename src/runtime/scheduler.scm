@@ -75,11 +75,9 @@
 
 ;; Task execution:
 (define (executable? task)
-  ;; NOTE We could see ports added some time in the future.
-  (cond ((uproc? task)
-         (let ((c (uproc-continuation task)))
-           (and (resumable? c)
-                (can-resume? c))))))
+  (let ((c (uproc-continuation task)))
+    (and (resumable? c)
+         (can-resume? c))))
 
 (define (execute!)
   (execute-loop! nil))
@@ -108,11 +106,9 @@
   (uproc-continuation task))
 
 (define (task-state task)
-  ;; NOTE Ports, ports, ports, ports.
-  (cond ((uproc? task)
-         (if (executable? task)
-             (uproc-state task)
-             'halted))))
+  (if (executable? task)
+      (uproc-state task)
+      'halted))
 
 (define (wait-until-ready task)
   (let ((t (current-milliseconds)))
@@ -122,12 +118,10 @@
       (wait-until-ready task))))
 
 (define (ready? task t)
-  ;; NOTE Ports yadda yadda yadda.
-  (cond ((uproc? task) (>= t (uproc-rtime task)))))
+  (>= t (uproc-rtime task)))
 
 (define (execute-step! task)
-  ;; NOTE We could see ports added some time in the future.
-  (cond ((uproc? task) (execute-uproc-step! task)))
+  (execute-uproc-step! task)
   task)
 
 (define (execute-uproc-step! uproc)
