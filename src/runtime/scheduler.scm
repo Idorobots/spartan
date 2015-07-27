@@ -6,6 +6,7 @@
 ;; Some configuration constants:
 (define +priority+ 100)     ;; Default priority.
 (define +n-reductions+ 100) ;; Default number of reductions.
+(define +idle-timeout+ 50)  ;; Time to wait between run queue polls.
 
 ;; Task management:
 (define *current-task* (ref nil))
@@ -72,7 +73,9 @@
 (define (execute-loop! acc)
   (if (task-queue-empty?)
       acc
-      (let ((n (dequeue-next-task!)))
+      (let ((n (next-task)))
+        (wait-until-ready n)
+        (dequeue-next-task!)
         (execute-step! n)
         (if (not (halted? n))
             (do (enqueue-task! n)
@@ -84,6 +87,17 @@
               (newline)
               (execute-loop! (cons r acc)))))))
 
+(define (wait-until-ready task)
+  (let ((t (current-milliseconds)))
+    (unless (ready? task t)
+      ;; TODO Do useful stuff here.
+      (sleep (/ +idle-timeout+ 1000))
+      (wait-until-ready task))))
+
+(define (ready? task t)
+  ;; NOTE Ports yadda yadda yadda.
+  (cond ((uproc? task) (>= t (uproc-rtime task)))))
+
 (define (execute-step! task)
   ;; NOTE We could see ports added some time in the future.
   (cond ((uproc? task) (execute-uproc-step! task)))
@@ -91,10 +105,18 @@
 
 (define (execute-uproc-step! uproc)
   (let ((start (current-milliseconds))
-        (cont (resume-loop (uproc-continuation uproc) +n-reductions+))
+        (_ (resume-execution! uproc +n-reductions+))
         (stop (current-milliseconds)))
-    (set-uproc-continuation! uproc cont)
     (inc-uproc-rtime! uproc (- stop start))))
+
+(define (resume-execution! uproc n-reductions)
+  (let ((cont (uproc-continuation uproc)))
+    (when (and (ready? uproc (current-milliseconds))
+               (resumable? cont)
+               (can-resume? cont)
+               (> n-reductions 0))
+      (set-uproc-continuation! uproc (resume cont))
+      (resume-execution! uproc (- n-reductions 1)))))
 
 ;; FIXME This should accept a task instead.
 (define (run cont)
