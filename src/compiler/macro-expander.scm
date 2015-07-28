@@ -1,9 +1,10 @@
 ;; Pseudo macro-expander for convenience
 
 (load "compiler/qq.scm")
+(load "compiler/ast.scm")
 
 (define (macro-expand expr macros)
-  (if (pair? expr)
+  (if (and (pair? expr) (not (quote? expr)))
       (map (lambda (e) (macro-expand e macros))
            ((macro-expander (car expr) macros) expr))
       expr))
