@@ -29,6 +29,7 @@
   (eval expr))
 
 (define (run expr)
+  (reset-rete!)
   (reset-tasks! nil)
   (spawn-task! (&yield-cont do-expr expr)
                (lambda (e _)

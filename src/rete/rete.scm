@@ -13,7 +13,7 @@
 
 ;; Utils:
 
-(define (reset!)
+(define (reset-rete!)
   (reset-facts!)
   (assign! *rete* (root-node null))
   (assign! *rules* null))
