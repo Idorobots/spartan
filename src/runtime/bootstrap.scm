@@ -1,6 +1,7 @@
 ;; The bootstrap code.
 
 (load "runtime/rt.scm")
+(load "rete/rete.scm")
 
 ;; Built-in values:
 (define __nil nil)
@@ -29,55 +30,39 @@
 (define __LESS (cpsfy <))
 
 ;; Actor model:
-(define (__sleep time cont)
-  (inc-uproc-rtime! (current-task)
-                    time)
-  (&yield-cont cont time))
-
-(define (__self cont)
-  (&yield-cont cont (uproc-pid (current-task))))
-
-(define (__node cont)
-  ;; TODO
-  (&yield-cont cont nil))
-
-(define (__send pid msg cont)
-  (let ((t (find-task pid)))
-    ;; FIXME Throw exception when pid isn't found.
-    (uproc-enqueue-msg! t msg)
-    (when (equal? (uproc-state t) 'waiting-4-msg)
-      (set-uproc-rtime! t (current-milliseconds))
-      (enqueue-task! t))
-    (&yield-cont cont pid)))
+(define __sleep (cpsfy wait))
+(define __self (cpsfy self))
+(define __send (cpsfy send))
 
 (define (__recv cont)
-  (let ((p (current-task)))
-    (if (uproc-msg-queue-empty? p)
-        (do (set-uproc-state! p 'waiting-4-msg)
-            (&yield-cont (lambda (_)
-                           ;; NOTE Retry receive.
-                           (__recv cont))
-                         nil))
-        (&yield-cont cont (uproc-dequeue-msg! p)))))
+  (let ((r (recv)))
+    (if (car r)
+        (&yield-cont cont (cdr r))
+        (&yield-cont (lambda (_)
+                       ;; NOTE Retry receive.
+                       (__recv cont))
+                     nil))))
 
-(define (__spawn fun cont)
-  (let ((kont (lambda (v)
-                (set-uproc-state! (current-task)
-                                  'halted)
-                v)))
-    (&yield-cont cont (spawn-task! (&yield-cont (lambda (_)
-                                                  (fun kont))
-                                                nil)
-                                   (lambda (e _)
-                                     (display ";; Task finished due to unhandled error: ")
-                                     (display e)
-                                     (newline)
-                                     (kont e))))))
+(define __spawn (cpsfy spawn))
+
+;; Module system bootstrap:
+(define __make_structure (cpsfy make-structure))
+
+;; RBS bootstrap:
+(define __assertBANG (cpsfy assert!))
+(define __signalBANG (cpsfy signal!))
+(define __retractBANG (cpsfy retract!))
+(define __select (cpsfy select))
+
+(define (__notify_whenever who pattern cont)
+  (&yield-cont cont
+               (whenever pattern
+                         ;; NOTE We can't use FOOF functions, since they yield execution.
+                         (lambda (b)
+                           (send who b)))))
 
 ;; Misc:
 (define __task_info (cpsfy task-info))
 (define __display (cpsfy display))
 (define __newline (cpsfy newline))
-
-;; Module system bootstrap:
-(define __make_structure (cpsfy make-structure))
+(define __random (cpsfy random))

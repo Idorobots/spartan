@@ -5,14 +5,14 @@
 
 (define (paddify thing padding)
   (let ((s (format "~a" thing)))
-    (string-append (make-string (- padding (string-length s))
+    (string-append (make-string (max (- padding (string-length s)) 1)
                                 #\ )
                    s)))
 
 (define (display-line . args)
   (display ";;")
   (map (lambda (a)
-         (display (paddify a 10)))
+         (display (paddify a 15)))
        (take args 3))
   (map (lambda (a)
          (display (paddify a 20)))

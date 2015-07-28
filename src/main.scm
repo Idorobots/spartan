@@ -3,6 +3,7 @@
 (load "compiler/compiler.scm")
 (load "compiler/parser.scm")
 (load "runtime/bootstrap.scm")
+(load "rete/rete.scm")
 
 (define (do-expr expr)
   (eval/pp (compile/pp expr)))
@@ -28,6 +29,7 @@
   (eval expr))
 
 (define (run expr)
+  (reset-rete!)
   (reset-tasks! nil)
   (spawn-task! (&yield-cont do-expr expr)
                (lambda (e _)
