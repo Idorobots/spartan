@@ -2,7 +2,6 @@
 
 (load "compiler/compiler.scm")
 (load "compiler/parser.scm")
-(load "runtime/rt.scm")
 (load "runtime/bootstrap.scm")
 
 (define (do-expr expr)

@@ -10,3 +10,4 @@
 (load "../test/rt/recurse.scm")
 (load "../test/rt/actor.scm")
 (load "../test/rt/exception.scm")
+(load "../test/rt/modules.scm")
