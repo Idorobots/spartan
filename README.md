@@ -1,4 +1,4 @@
-![FOOF](/docs/img/flask1.png)
+![FOOF](/flask.png)
 
 # FOOF
 
