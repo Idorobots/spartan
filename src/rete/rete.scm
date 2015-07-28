@@ -204,36 +204,32 @@
                      (not-equal? (car r) id))
                    (deref *rules*))))
 
-;; Syntax for convenience:
-(define-syntax assert!
-  (syntax-rules ()
-    ((assert! fact)
-     (begin (add-fact! 'fact)
-            (assert-fact! (deref *rete*) 'fact)))))
+;; Convenience functions:
+(define (assert! fact)
+  (add-fact! fact)
+  (assert-fact! (deref *rete*) fact))
 
-(define-syntax signal!
-  (syntax-rules ()
-    ((signal! fact)
-     (signal-fact! (deref *rete*) 'fact))))
+(define (signal! fact)
+  (signal-fact! (deref *rete*) fact))
 
-(define-syntax retract!
-  (syntax-rules ()
-    ((retract! fact)
-     (begin (remove-fact! 'fact)
-            (retract-fact! (deref *rete*) 'fact)))))
+(define (retract! fact)
+  (remove-fact! fact)
+  (retract-fact! (deref *rete*) fact))
 
-(define-syntax whenever
-  (syntax-rules (=>)
-    ((whenever pattern vars => action ...)
-     (let ((id (gensym 'rule)))
-       (add-rule! id
-                  (compile-rule 'pattern id)
-                  (lambda (bindings)
-                    (apply (lambda vars action ...)
-                           (map (lambda (v)
-                                  (let ((val (assoc v bindings)))
-                                    (when val
-                                      (cdr val))))
-                                'vars))))
-       id))))
+(define (whenever pattern action)
+  (let ((id (gensym 'rule)))
+    (add-rule! id
+               (compile-rule pattern id)
+               action)
+    id))
 
+(define (select pattern)
+  (let* ((store (ref nil))
+         (rule (compile-rule pattern
+                             (lambda (bindings)
+                               (assign! store
+                                        (cons bindings
+                                              (deref store)))))))
+    (map-facts (lambda (fact)
+                 (assert-fact! rule fact)))
+    (deref store)))
