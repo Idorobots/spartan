@@ -9,4 +9,8 @@
                     (monitor))))
   (spawn (lambda ()
            (fib 30)))
+  (spawn (lambda ()
+           (fib 30)))
+  (spawn (lambda ()
+           (fib 30)))
   (monitor))
