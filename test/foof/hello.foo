@@ -1,0 +1,9 @@
+(define (hello world)
+  (if (= nil world)
+      (raise 'nope)
+      (do (display "Hello ")
+          (display world)
+          (display "!")
+          (newline))))
+
+(hello "world")
