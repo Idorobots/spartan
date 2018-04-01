@@ -16,7 +16,7 @@
                    (make-empty-environment)))
 
 (define (make-empty-environment)
-  '())
+  '(&apply &env-ref &make-env &make-closure &yield-cont))
 
 (define (make-identity-continuation)
   id)

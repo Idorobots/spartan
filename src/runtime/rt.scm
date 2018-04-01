@@ -1,5 +1,6 @@
 ;; The runtime.
 
+(load "runtime/closures.scm")
 (load "runtime/continuations.scm")
 (load "runtime/processes.scm")
 (load "runtime/actor.scm")
