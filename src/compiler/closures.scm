@@ -7,7 +7,7 @@
 (define (closure-convert expr globals)
   (let ((cc (flip closure-convert globals)))
     (cond ((lambda? expr) (cc-lambda (make-lambda (lambda-args expr)
-                                                  (cc (car (lambda-body expr))))
+                                                  (make-do (map cc (lambda-body expr))))
                                      globals))
           ((simple-expression? expr) expr)
           ((define? expr) (make-define-1 (define-name expr)
@@ -16,10 +16,18 @@
           ((if? expr) (make-if (cc (if-predicate expr))
                                (cc (if-then expr))
                                (cc (if-else expr))))
-          ((let? expr) expr) ;; TODO
+          ((let? expr) (make-let (map (lambda (b)
+                                        (list (car b)
+                                              (cc (cadr b))))
+                                      (let-bindings expr))
+                                 (make-do (map cc (let-body expr)))))
           ((letcc? expr) (make-letcc (let-bindings expr)
-                                     (cc (car (let-body expr)))))
-          ((letrec? expr) expr) ;; TODO
+                                     (make-do (map cc (let-body expr)))))
+          ((letrec? expr) (make-letrec (map (lambda (b)
+                                              (list (car b)
+                                                    (cc (cadr b))))
+                                            (let-bindings expr))
+                                       (make-do (map cc (let-body expr)))))
           ((reset? expr) (make-reset (cc (reset-expr expr))))
           ((shift? expr) (make-shift (shift-cont expr)
                                      (cc (shift-expr expr))))
@@ -37,7 +45,7 @@
 (define (cc-lambda expr globals)
   (let ((env (gensym 'env))
         (args (lambda-args expr))
-        (body (car (lambda-body expr)))
+        (body (lambda-body expr))
         (free (set-difference (free-vars expr)
                               globals)))
     (make-app '&make-closure
@@ -49,7 +57,7 @@
                                                                     (list env
                                                                           (offset var free)))))
                                                   free)
-                                             body))))))
+                                             (make-do body)))))))
 
 (define (offset needle haystack)
   (- (length haystack)

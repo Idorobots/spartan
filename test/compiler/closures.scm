@@ -128,16 +128,49 @@
              c))
 
 ;; Converting let works.
-(assert (closure-convert '(let ((a b)) a)) '(let ((a b)) a))
-;; TODO
+(assert (closure-convert '(let ((a b)) a) '()) '(let ((a b)) a))
+
+(gensym-reset!)
+(assert (closure-convert '(let ((a 23)) (lambda (x) a)) '(&apply))
+        '(let ((a 23))
+           (&make-closure (&make-env a)
+                          (lambda (__env1 x)
+                            (&env-ref __env1 0)))))
+
+(gensym-reset!)
+(assert (closure-convert '(let ((a (lambda (x) x))) (a 23)) '(&apply))
+        '(let ((a (&make-closure (&make-env)
+                                 (lambda (__env1 x)
+                                   x))))
+           (&apply a 23)))
 
 ;; Converting letrec works.
-(assert (closure-convert '(letrec ((a b)) a)) '(letrec ((a b)) a))
-;; TODO
+(assert (closure-convert '(letrec ((a b)) a) '()) '(letrec ((a b)) a))
+
+(gensym-reset!)
+(assert (closure-convert '(letrec ((a 23)) (lambda (x) a)) '(&apply))
+        '(letrec ((a 23))
+           (&make-closure (&make-env a)
+                          (lambda (__env1 x)
+                            (&env-ref __env1 0)))))
+
+(gensym-reset!)
+(assert (closure-convert '(letrec ((a (lambda (x) x))) (a 23)) '(&apply))
+        '(letrec ((a (&make-closure (&make-env)
+                                 (lambda (__env1 x)
+                                   x))))
+           (&apply a 23)))
 
 ;; Converting letcc works.
 (assert (closure-convert '(letcc k k) '()) '(letcc k k))
-;; TODO
+
+(gensym-reset!)
+(assert (closure-convert '(letcc k (lambda (x) k)) '(&apply))
+        '(letcc k
+           (&make-closure (&make-env k)
+                          (lambda (__env1 x)
+                            (&env-ref __env1 0)))))
+
 
 ;; Converting shift/reset works.
 (assert (closure-convert '(shift k (reset k)) '()) '(shift k (reset k)))
