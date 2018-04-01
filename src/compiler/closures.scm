@@ -34,13 +34,7 @@
           ((handle? expr) (make-handle (cc (handle-expr expr))
                                        (cc (handle-handler expr))))
           ((raise? expr) (make-raise (cc (raise-expr expr))))
-          ((application? expr) (make-app '&apply
-                                         (cons (cc (app-op expr))
-                                               (map cc (app-args expr))))))))
-
-(define (flip f x)
-  (lambda (y)
-    (f y x)))
+          ((application? expr) (cc-application expr globals)))))
 
 (define (cc-lambda expr globals)
   (let ((env (gensym 'env))
@@ -59,28 +53,15 @@
                                                   free)
                                              (make-do body)))))))
 
-(define (offset needle haystack)
-  (- (length haystack)
-     (length (member needle haystack))))
-
-(define (symbol<? a b)
-  (string<? (symbol->string a)
-            (symbol->string b)))
-
-(define (set . args)
-  (sort args symbol<?))
-
-(define (set-difference as bs)
-  (filter (lambda (a)
-            (not (member a bs)))
-          as))
-
-(define (set-union as bs)
-  (sort (append as (set-difference bs as))
-        symbol<?))
-
-(define (set-sum sets)
-  (foldl set-union (set) sets))
+(define (cc-application expr globals)
+  (let* ((cc (flip closure-convert globals))
+         (op (app-op expr))
+         (args (map cc (app-args expr))))
+    (if (member op globals)
+        (make-app op args)
+        (make-app '&apply
+                  (cons (cc (app-op expr))
+                        args)))))
 
 (define (free-vars expr)
   (cond ((symbol? expr) (set expr))
