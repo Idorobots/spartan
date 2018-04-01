@@ -5,8 +5,55 @@
 (load "compiler/utils.scm")
 
 (define (closure-convert expr globals)
-  ;; TODO Implement the conversion.
-  expr)
+  (let ((cc (flip closure-convert globals)))
+    (cond ((lambda? expr) (cc-lambda (make-lambda (lambda-args expr)
+                                                  (cc (car (lambda-body expr))))
+                                     globals))
+          ((simple-expression? expr) expr)
+          ((define? expr) (make-define-1 (define-name expr)
+                                         (cc (define-value expr))))
+          ((do? expr) (make-do (map cc (do-statements expr))))
+          ((if? expr) (make-if (cc (if-predicate expr))
+                               (cc (if-then expr))
+                               (cc (if-else expr))))
+          ((let? expr) expr) ;; TODO
+          ((letcc? expr) (make-letcc (let-bindings expr)
+                                     (cc (car (let-body expr)))))
+          ((letrec? expr) expr) ;; TODO
+          ((reset? expr) (make-reset (cc (reset-expr expr))))
+          ((shift? expr) (make-shift (shift-cont expr)
+                                     (cc (shift-expr expr))))
+          ((handle? expr) (make-handle (cc (handle-expr expr))
+                                       (cc (handle-handler expr))))
+          ((raise? expr) (make-raise (cc (raise-expr expr))))
+          ((application? expr) (make-app '&apply
+                                         (cons (cc (app-op expr))
+                                               (map cc (app-args expr))))))))
+
+(define (flip f x)
+  (lambda (y)
+    (f y x)))
+
+(define (cc-lambda expr globals)
+  (let ((env (gensym 'env))
+        (args (lambda-args expr))
+        (body (car (lambda-body expr)))
+        (free (set-difference (free-vars expr)
+                              globals)))
+    (make-app '&make-closure
+              (list (make-app '&make-env free)
+                    (make-lambda (cons env args)
+                                 (substitute (map (lambda (var)
+                                                    (cons var
+                                                          (make-app '&env-ref
+                                                                    (list env
+                                                                          (offset var free)))))
+                                                  free)
+                                             body))))))
+
+(define (offset needle haystack)
+  (- (length haystack)
+     (length (member needle haystack))))
 
 (define (symbol<? a b)
   (string<? (symbol->string a)
