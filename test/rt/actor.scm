@@ -6,8 +6,9 @@
        (<= value (+ expected delta))))
 
 (let ((p (uproc 100
-                (&yield-cont (lambda (v)
-                               (__sleep v id))
+                (&yield-cont (closurize
+                              (lambda (v)
+                                (&apply __sleep v (closurize id))))
                              23)
                 nil
                 0
@@ -25,12 +26,16 @@
 
 ;; Can send a message.
 (let ((p (uproc 100
-                (&yield-cont (lambda (v)
-                               (__self (lambda (__value4)
-                                         (__send __value4
-                                                 v
-                                                 (lambda (__value3)
-                                                   __value3)))))
+                (&yield-cont (closurize
+                              (lambda (v)
+                                (&apply __self (closurize
+                                                (lambda (__value4)
+                                                  (&apply __send
+                                                          __value4
+                                                          v
+                                                          (closurize
+                                                           (lambda (__value3)
+                                                             __value3))))))))
                              'msg)
                 nil
                 0
@@ -41,17 +46,22 @@
   (assert (equal? (first (uproc-msg-queue p)) 'msg)))
 
 (let ((p (uproc 100
-                (&yield-cont (lambda (v)
-                               (__self
-                                (lambda (__value7)
-                                  (__send
-                                   __value7
-                                   v
-                                   (lambda (__value6)
-                                     (__send __value6
-                                             v
-                                             (lambda (__value5)
-                                               __value5)))))))
+                (&yield-cont (closurize
+                              (lambda (v)
+                                (&apply __self
+                                        (closurize
+                                         (lambda (__value7)
+                                           (&apply __send
+                                                   __value7
+                                                   v
+                                                   (closurize
+                                                    (lambda (__value6)
+                                                      (&apply __send
+                                                              __value6
+                                                              v
+                                                              (closurize
+                                                               (lambda (__value5)
+                                                                 __value5)))))))))))
                              'msg)
                 nil
                 0
@@ -63,8 +73,9 @@
 
 ;; Can't receive when there are no messages.
 (let ((p (uproc 100
-                (&yield-cont (lambda (_)
-                               (__recv id))
+                (&yield-cont (closurize
+                              (lambda (_)
+                                (&apply __recv (closurize id))))
                              nil)
                 nil
                 0
