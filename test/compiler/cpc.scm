@@ -1,37 +1,26 @@
 ;; Continuation Passing Style Conversion
 
 ;; Simple CPC works.
-(assert (cpc-simple 'foo) (symbol->safe 'foo))
 (assert (cpc 'foo id) (symbol->safe 'foo))
-
-(assert (cpc-simple 'foo.bar) '(&structure-ref __foo 'bar))
 (assert (cpc 'foo.bar id) '(&structure-ref __foo 'bar))
-
-(assert (cpc-simple 23) 23)
 (assert (cpc 23 id) 23)
-
-(assert (cpc-simple '()) '())
 (assert (cpc '() id) '())
-
-(assert (cpc-simple "hurr") "hurr")
 (assert (cpc "hurr" id) "hurr")
-
-(assert (cpc-simple '(quote 23)) ''23)
 (assert (cpc ''23 id) ''23)
 
 ;; CPCing lambda works.
 (gensym-reset!)
-(assert (cpc-lambda '(lambda (x) x))
+(assert (cpc-lambda '(lambda (x) x) id)
         '(lambda (__x __cont1)
            (&yield-cont __cont1 __x)))
 
 (gensym-reset!)
-(assert (cpc-lambda '(lambda (x) 1 2 x))
+(assert (cpc-lambda '(lambda (x) 1 2 x) id)
         '(lambda (__x __cont1)
            (do 1 2 (&yield-cont __cont1 __x))))
 
 (gensym-reset!)
-(assert (cpc-lambda '(lambda (x) (x)))
+(assert (cpc-lambda '(lambda (x) (x)) id)
         '(lambda (__x __cont1)
            (__x (lambda (__value2)
                   (&yield-cont __cont1 __value2)))))

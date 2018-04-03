@@ -6,7 +6,14 @@
 (load "compiler/utils.scm")
 
 (define (cpc expr kont)
-  (cond ((simple-expression? expr) (kont (cpc-simple expr)))
+  (cond ((symbol? expr) (cpc-symbol expr kont))
+        ((number? expr) (kont expr))
+        ((string? expr) (kont expr))
+        ((vector? expr) (kont expr))
+        ((nil? expr) (kont expr))
+        ((char? expr) (kont expr))
+        ((quote? expr) (kont expr))
+        ((lambda? expr) (cpc-lambda expr kont))
         ((define? expr) (cpc-define expr kont))
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
@@ -18,56 +25,28 @@
         ((raise? expr) (cpc-raise expr kont))
         ((application? expr) (cpc-app expr kont))))
 
-(define (cpc-simple expr)
-  (cond ((symbol? expr) (cpc-symbol expr))
-        ((number? expr) (cpc-number expr))
-        ((string? expr) (cpc-string expr))
-        ((vector? expr) (cpc-vector expr))
-        ((nil? expr) (cpc-nil expr))
-        ((char? expr) (cpc-character expr))
-        ((quote? expr) (cpc-quote expr))
-        ((lambda? expr) (cpc-lambda expr))))
-
-(define (cpc-symbol expr)
+(define (cpc-symbol expr kont)
   ;; FIXME This shouldn't be in CPC...
   (let ((parts (map string->symbol
                     (string-split (symbol->string expr)
                                   "."))))
-    (if (> (length parts) 1)
-        (foldl (lambda (p a)
-                 (make-app '&structure-ref (list a (make-quote p))))
-               (symbol->safe (car parts))
-               (cdr parts))
-        (symbol->safe (car parts)))))
+    (kont (if (> (length parts) 1)
+              (foldl (lambda (p a)
+                       (make-app '&structure-ref (list a (make-quote p))))
+                     (symbol->safe (car parts))
+                     (cdr parts))
+              (symbol->safe (car parts))))))
 
-(define (cpc-number expr)
-  expr)
-
-(define (cpc-string expr)
-  expr)
-
-(define (cpc-vector expr)
-  expr)
-
-(define (cpc-nil expr)
-  expr)
-
-(define (cpc-character expr)
-  expr)
-
-(define (cpc-quote expr)
-  expr)
-
-(define (cpc-lambda expr)
+(define (cpc-lambda expr kont)
   (let ((ct (gensym 'cont))
         (args (map symbol->safe (lambda-args expr))))
-    (make-lambda
-     (append args (list ct))
-     (cpc-sequence (lambda-body expr)
-                   (lambda (sts)
-                     (returning-last sts
-                                     (lambda (s)
-                                       (make-yield (make-app-1 ct s)))))))))
+    (kont (make-lambda
+           (append args (list ct))
+           (cpc-sequence (lambda-body expr)
+                         (lambda (sts)
+                           (returning-last sts
+                                           (lambda (s)
+                                             (make-yield (make-app-1 ct s))))))))))
 
 (define (cpc-define expr kont)
   (kont (make-define-1 (symbol->safe (define-name expr))
