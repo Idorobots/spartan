@@ -31,14 +31,15 @@
 (define (run expr)
   (reset-rete!)
   (reset-tasks! nil)
-  (spawn-task! (&yield-cont (&make-closure (&make-env)
-                                           (lambda (_ expr)
-                                             (do-expr expr)))
+  (spawn-task! (&yield-cont (closurize
+                             (lambda (expr)
+                               (do-expr expr)))
                             expr)
-               (lambda (e _)
-                 (display ";; Execution finished due to an unhandled error: ")
-                 (display e)
-                 (newline)
-                 e))
+               (closurize
+                (lambda (e _)
+                  (display ";; Execution finished due to an unhandled error: ")
+                  (display e)
+                  (newline)
+                  e)))
   ;; NOTE Returns only the last result.
   (last (execute!)))

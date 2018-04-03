@@ -20,7 +20,9 @@
     &env-ref
     &make-env
     &make-closure
+    &set-uproc-error-handler!
     &structure-ref
+    &uproc-error-handler
     &yield-cont
     ;; FIXME let & set! is required by current, broken letrec implementation.
     set!
