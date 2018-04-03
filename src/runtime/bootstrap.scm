@@ -41,15 +41,12 @@
 (define __self (bootstrap self))
 (define __send (bootstrap send))
 
-(define __recv (closurize
-                (lambda (cont)
+(define __recv (bootstrap
+                (lambda ()
                   (let ((r (recv)))
                     (if (car r)
-                        (&yield-cont cont (cdr r))
-                        (&yield-cont (lambda (env _)
-                                       ;; NOTE Retry receive.
-                                       (__recv cont))
-                                     nil))))))
+                        (cdr r)
+                        nil)))))
 
 (define __spawn (bootstrap spawn))
 
@@ -62,13 +59,12 @@
 (define __retractBANG (bootstrap retract!))
 (define __select (bootstrap select))
 
-(define __notify_whenever (closurize
-                           (lambda (who pattern cont)
-                             (&yield-cont cont
-                                          (whenever pattern
-                                                    ;; NOTE We can't use FOOF functions, since they yield execution.
-                                                    (lambda (b)
-                                                      (send who b)))))))
+(define __notify_whenever (bootstrap
+                           (lambda (who pattern)
+                             (whenever pattern
+                                       ;; NOTE We can't use FOOF functions, since they yield execution.
+                                       (lambda (b)
+                                         (send who b))))))
 
 ;; Misc:
 (define __task_info (bootstrap task-info))
