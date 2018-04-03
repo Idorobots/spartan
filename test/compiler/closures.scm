@@ -94,6 +94,22 @@
                                             (&env-ref __env1 1)
                                             y))))))
 
+(gensym-reset!)
+(assert (closure-convert '(lambda (n cont)
+                            (let ((c (lambda (v) (&yield-cont cont v))))
+                              (if n
+                                  (&yield-cont c n)
+                                  (&yield-cont c n))))
+                         (make-empty-environment))
+        '(&make-closure (&make-env)
+                        (lambda (__env2 n cont)
+                          (let ((c (&make-closure (&make-env cont)
+                                                  (lambda (__env1 v)
+                                                    (&yield-cont (&env-ref __env1 0) v)))))
+                            (if n
+                                (&yield-cont c n)
+                                (&yield-cont c n))))))
+
 ;; Converting define works.
 (assert (closure-convert '(define k v) '()) '(define k v))
 
