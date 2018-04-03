@@ -16,7 +16,14 @@
                    (make-empty-environment)))
 
 (define (make-empty-environment)
-  '(&apply &env-ref &make-env &make-closure &yield-cont))
+  '(&apply
+    &env-ref
+    &make-env
+    &make-closure
+    &yield-cont
+    ;; FIXME let & set! is required by current, broken letrec implementation.
+    set!
+    let))
 
 (define (make-identity-continuation)
   id)
