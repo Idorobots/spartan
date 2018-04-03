@@ -75,7 +75,7 @@
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) (+ foo 23)) '(+ &apply))
         '(&make-closure (&make-env)
-                        (lambda (__env1 foo) (&apply + foo 23))))
+                        (lambda (__env1 foo) (+ foo 23))))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) (foo bar baz)) '(&apply))
