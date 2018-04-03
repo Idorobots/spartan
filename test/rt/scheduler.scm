@@ -2,8 +2,8 @@
 
 ;; Can step a process:
 (assert (not (executable? (uproc 100 nil nil 0 'waiting))))
-(assert (executable? (uproc 100 (&yield-cont id nil) nil 0 'waiting)))
-(assert (uproc? (execute-step! (uproc 100 (&yield-cont id nil) nil 0 'waiting))))
+(assert (executable? (uproc 100 (&yield-cont (&make-closure (&make-env) id) nil) nil 0 'waiting)))
+(assert (uproc? (execute-step! (uproc 100 (&yield-cont (&make-closure (&make-env) id) nil) nil 0 'waiting))))
 
 ;; Can modify task list:
 (let ((t (uproc 100 nil nil 0 'waiting)))
