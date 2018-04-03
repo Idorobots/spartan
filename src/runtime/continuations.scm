@@ -1,6 +1,7 @@
 ;; Continuations:
 
 (load "compiler/utils.scm")
+(load "runtime/closures.scm")
 
 (define (&yield-cont cont hole) ;; NOTE Used in compiler-generated code not via bootstrap.
   (list &yield-cont cont hole))
@@ -15,7 +16,7 @@
   (caddr thing))
 
 (define (resume thing)
-  ((resumable-cont thing) (resumable-arg thing)))
+  (&apply (resumable-cont thing) (resumable-arg thing)))
 
 (define (can-resume? thing)
-  (procedure? (resumable-cont thing)))
+  (closure? (resumable-cont thing)))

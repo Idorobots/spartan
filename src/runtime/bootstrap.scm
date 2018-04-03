@@ -14,55 +14,64 @@
                         (take args
                               (- (length args) 1))))))
 
-(define __car (cpsfy car))
-(define __cadr (cpsfy car))
-(define __cdr (cpsfy cdr))
-(define __cddr (cpsfy cddr))
+(define (closurize f)
+  (&make-closure '()
+                 (lambda (env . args)
+                   (apply f args))))
 
-(define __cons (cpsfy cons))
-(define __list (cpsfy list))
+(define bootstrap (compose closurize cpsfy))
 
-(define __MULT (cpsfy *))
-(define __PLUS (cpsfy +))
-(define ___ (cpsfy -))
+(define __car (bootstrap car))
+(define __cadr (bootstrap car))
+(define __cdr (bootstrap cdr))
+(define __cddr (bootstrap cddr))
 
-(define __EQUAL (cpsfy =))
-(define __LESS (cpsfy <))
+(define __cons (bootstrap cons))
+(define __list (bootstrap list))
+
+(define __MULT (bootstrap *))
+(define __PLUS (bootstrap +))
+(define ___ (bootstrap -))
+
+(define __EQUAL (bootstrap =))
+(define __LESS (bootstrap <))
 
 ;; Actor model:
-(define __sleep (cpsfy wait))
-(define __self (cpsfy self))
-(define __send (cpsfy send))
+(define __sleep (bootstrap wait))
+(define __self (bootstrap self))
+(define __send (bootstrap send))
 
-(define (__recv cont)
-  (let ((r (recv)))
-    (if (car r)
-        (&yield-cont cont (cdr r))
-        (&yield-cont (lambda (_)
-                       ;; NOTE Retry receive.
-                       (__recv cont))
-                     nil))))
+(define __recv (closurize
+                (lambda (cont)
+                  (let ((r (recv)))
+                    (if (car r)
+                        (&yield-cont cont (cdr r))
+                        (&yield-cont (lambda (env _)
+                                       ;; NOTE Retry receive.
+                                       (__recv cont))
+                                     nil))))))
 
-(define __spawn (cpsfy spawn))
+(define __spawn (bootstrap spawn))
 
 ;; Module system bootstrap:
-(define __make_structure (cpsfy make-structure))
+(define __make_structure (bootstrap make-structure))
 
 ;; RBS bootstrap:
-(define __assertBANG (cpsfy assert!))
-(define __signalBANG (cpsfy signal!))
-(define __retractBANG (cpsfy retract!))
-(define __select (cpsfy select))
+(define __assertBANG (bootstrap assert!))
+(define __signalBANG (bootstrap signal!))
+(define __retractBANG (bootstrap retract!))
+(define __select (bootstrap select))
 
-(define (__notify_whenever who pattern cont)
-  (&yield-cont cont
-               (whenever pattern
-                         ;; NOTE We can't use FOOF functions, since they yield execution.
-                         (lambda (b)
-                           (send who b)))))
+(define __notify_whenever (closurize
+                           (lambda (who pattern cont)
+                             (&yield-cont cont
+                                          (whenever pattern
+                                                    ;; NOTE We can't use FOOF functions, since they yield execution.
+                                                    (lambda (b)
+                                                      (send who b)))))))
 
 ;; Misc:
-(define __task_info (cpsfy task-info))
-(define __display (cpsfy display))
-(define __newline (cpsfy newline))
-(define __random (cpsfy random))
+(define __task_info (bootstrap task-info))
+(define __display (bootstrap display))
+(define __newline (bootstrap newline))
+(define __random (bootstrap random))

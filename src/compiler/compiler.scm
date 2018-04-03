@@ -1,5 +1,6 @@
 ;; Tha compiler.
 
+(load "compiler/closures.scm")
 (load "compiler/cpc.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/utils.scm")
@@ -11,23 +12,15 @@
 
 (define (optimize expr)
   ;; TOOD optimize redundant bindings etc
-  (lambda-lift (closure-convert expr
-                                (make-empty-environment))))
+  (closure-convert expr
+                   (make-empty-environment)))
 
-(define (lambda-lift expr)
-  ;; TODO actually implement this
-  expr)
+(define (make-empty-environment)
+  '(&apply &env-ref &make-env &make-closure &yield-cont))
 
-(define (closure-convert expr env)
-  ;;TODO actually implement this
-  expr)
+(define (make-identity-continuation)
+  id)
 
 (define (preprocess expr)
   ;; TODO pre-process the expression
   expr)
-
-(define (make-empty-environment)
-  '())
-
-(define (make-identity-continuation)
-  id)
