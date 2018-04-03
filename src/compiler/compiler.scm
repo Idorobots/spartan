@@ -20,6 +20,7 @@
     &env-ref
     &make-env
     &make-closure
+    &structure-ref
     &yield-cont
     ;; FIXME let & set! is required by current, broken letrec implementation.
     set!
