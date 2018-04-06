@@ -100,7 +100,7 @@
                               (if n
                                   (&yield-cont c n)
                                   (&yield-cont c n))))
-                         (make-empty-environment))
+                         (make-global-environment))
         '(&make-closure (&make-env)
                         (lambda (__env2 n cont)
                           (let ((c (&make-closure (&make-env cont)

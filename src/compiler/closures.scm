@@ -21,20 +21,36 @@
                                               (cc (cadr b))))
                                       (let-bindings expr))
                                  (make-do (map cc (let-body expr)))))
-          ((letcc? expr) (make-letcc (let-bindings expr)
-                                     (make-do (map cc (let-body expr)))))
           ((letrec? expr) (make-letrec (map (lambda (b)
                                               (list (car b)
                                                     (cc (cadr b))))
                                             (let-bindings expr))
                                        (make-do (map cc (let-body expr)))))
+          ;; These shouldn't be here anymore.
+          ((letcc? expr) (make-letcc (let-bindings expr)
+                                     (make-do (map cc (let-body expr)))))
           ((reset? expr) (make-reset (cc (reset-expr expr))))
           ((shift? expr) (make-shift (shift-cont expr)
                                      (cc (shift-expr expr))))
           ((handle? expr) (make-handle (cc (handle-expr expr))
                                        (cc (handle-handler expr))))
           ((raise? expr) (make-raise (cc (raise-expr expr))))
-          ((application? expr) (cc-application expr globals)))))
+          ;; --
+          ((application? expr) (cc-application expr globals))
+          ('else (error "Unexpected expression:" expr)))))
+
+(define (make-global-environment)
+  '(&apply
+    &env-ref
+    &make-env
+    &make-closure
+    &set-uproc-error-handler!
+    &structure-ref
+    &uproc-error-handler
+    &yield-cont
+    ;; FIXME let & set! is required by current, broken letrec implementation.
+    set!
+    let))
 
 (define (cc-lambda expr globals)
   (let ((env (gensym 'env))

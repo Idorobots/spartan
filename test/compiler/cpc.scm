@@ -76,12 +76,15 @@
                   (__e __f (lambda (__value5)
                              (&yield-cont __cont1 __value5))))))))
 
+;; TODO CPCing let works.
+
 ;; CPCing letrec works.
 (gensym-reset!)
-(assert (cpc-letrec '(letrec ((hcf (lambda (x) (hcf x))))
-                       hcf)
-                    id)
-        '(let ((__hcf '()))
+(assert (cpc-let make-letrec
+                 '(letrec ((hcf (lambda (x) (hcf x))))
+                    hcf)
+                 id)
+        '(letrec ((__hcf '()))
            (do (set!
                 __hcf
                 (lambda (__x __cont1)
@@ -89,13 +92,14 @@
                __hcf)))
 
 (gensym-reset!)
-(assert (cpc-letrec '(letrec ((fact (lambda (n)
-                                      (if (< n 2)
-                                          n
-                                          (* n (fact (- n 1)))))))
-                       (fact 10))
-                    id)
-        '(let ((__fact '()))
+(assert (cpc-let make-letrec
+                 '(letrec ((fact (lambda (n)
+                                   (if (< n 2)
+                                       n
+                                       (* n (fact (- n 1)))))))
+                    (fact 10))
+                 id)
+        '(letrec ((__fact '()))
            (do (set!
                 __fact
                 (lambda (__n __cont1)
@@ -123,11 +127,12 @@
 
 ;; NOTE I don't even...
 (gensym-reset!)
-(assert (cpc-letrec '(letrec ((even? (lambda (x) (if (= 0 x) 't (odd? (- x 1)))))
-                              (odd? (lambda (x) (if (= 0 x) 'n (even? (- x 1))))))
-                       (even? 7))
-                    id)
-        '(let ((__evenQUEST '()) (__oddQUEST '()))
+(assert (cpc-let make-letrec
+                 '(letrec ((even? (lambda (x) (if (= 0 x) 't (odd? (- x 1)))))
+                           (odd? (lambda (x) (if (= 0 x) 'n (even? (- x 1))))))
+                    (even? 7))
+                 id)
+        '(letrec ((__evenQUEST '()) (__oddQUEST '()))
            (do (set!
                 __evenQUEST
                 (lambda (__x __cont1)
