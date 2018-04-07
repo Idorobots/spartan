@@ -196,29 +196,29 @@
 ;; CPCing raise works.
 (gensym-reset!)
 (assert (cpc-raise '(raise 23) id)
-        '(let ((__handler3 (&uproc-error-handler)))
+        '(let ((__handler3 (&error-handler)))
            (__handler3 23
                        (lambda (__value1 __ignored2)
-                         (do (&set-uproc-error-handler! __handler3)
+                         (do (&set-error-handler! __handler3)
                              __value1)))))
 
 (gensym-reset!)
 (assert (cpc-raise '(raise (* 2 2)) id)
-        '(let ((__handler3 (&uproc-error-handler)))
+        '(let ((__handler3 (&error-handler)))
            (__MULT 2
                    2
                    (lambda (__value4)
                      (__handler3 __value4
                                  (lambda (__value1 __ignored2)
-                                   (do (&set-uproc-error-handler! __handler3)
+                                   (do (&set-error-handler! __handler3)
                                        __value1)))))))
 
 (gensym-reset!)
 (assert (cpc '(* 2 (raise 2)) id)
-        '(let ((__handler4 (&uproc-error-handler)))
+        '(let ((__handler4 (&error-handler)))
            (__handler4 2
                        (lambda (__value2 __ignored3)
-                         (do (&set-uproc-error-handler! __handler4)
+                         (do (&set-error-handler! __handler4)
                              (__MULT 2
                                      __value2
                                      (lambda (__value1)
@@ -227,68 +227,68 @@
 ;; CPCing handle works.
 (gensym-reset!)
 (assert (cpc-handle '(handle expr handler) id)
-        '(let ((__handler2 (&uproc-error-handler))
+        '(let ((__handler2 (&error-handler))
                (__cont1 (lambda (__value3) __value3)))
-           (do (&set-uproc-error-handler!
+           (do (&set-error-handler!
                 (lambda (__error5 __restart4)
-                  (do (&set-uproc-error-handler! __handler2)
+                  (do (&set-error-handler! __handler2)
                       (__handler __error5 __restart4 __cont1))))
                (do
-                   (&set-uproc-error-handler! __handler2)
+                   (&set-error-handler! __handler2)
                    (&yield-cont __cont1 __expr)))))
 
 (gensym-reset!)
 (assert (cpc-handle '(handle (* 2 2) handler) id)
-        '(let ((__handler2 (&uproc-error-handler))
+        '(let ((__handler2 (&error-handler))
                (__cont1 (lambda (__value3) __value3)))
-           (do (&set-uproc-error-handler!
+           (do (&set-error-handler!
                 (lambda (__error5 __restart4)
-                  (do (&set-uproc-error-handler! __handler2)
+                  (do (&set-error-handler! __handler2)
                       (__handler __error5 __restart4 __cont1))))
                (__MULT
                 2
                 2
                 (lambda (__value6)
-                  (do (&set-uproc-error-handler! __handler2)
+                  (do (&set-error-handler! __handler2)
                       (&yield-cont __cont1 __value6)))))))
 
 (gensym-reset!)
 (assert (cpc '(* 2 (handle expr handler)) id)
-        '(let ((__handler3 (&uproc-error-handler))
+        '(let ((__handler3 (&error-handler))
                (__cont2
                 (lambda (__value4) (__MULT 2 __value4 (lambda (__value1) __value1)))))
-           (do (&set-uproc-error-handler!
+           (do (&set-error-handler!
                 (lambda (__error6 __restart5)
-                  (do (&set-uproc-error-handler! __handler3)
+                  (do (&set-error-handler! __handler3)
                       (__handler __error6 __restart5 __cont2))))
                (do
-                   (&set-uproc-error-handler! __handler3)
+                   (&set-error-handler! __handler3)
                    (&yield-cont __cont2 __expr)))))
 
 (gensym-reset!)
 (assert (cpc '(* 2 (handle expr handler)) id)
-        '(let ((__handler3 (&uproc-error-handler))
+        '(let ((__handler3 (&error-handler))
                (__cont2
                 (lambda (__value4) (__MULT 2 __value4 (lambda (__value1) __value1)))))
-           (do (&set-uproc-error-handler!
+           (do (&set-error-handler!
                 (lambda (__error6 __restart5)
-                  (do (&set-uproc-error-handler! __handler3)
+                  (do (&set-error-handler! __handler3)
                       (__handler __error6 __restart5 __cont2))))
                (do
-                   (&set-uproc-error-handler! __handler3)
+                   (&set-error-handler! __handler3)
                    (&yield-cont __cont2 __expr)))))
 
 (gensym-reset!)
 (assert (cpc-handle '(handle expr (get handler)) id)
-        '(let ((__handler2 (&uproc-error-handler))
+        '(let ((__handler2 (&error-handler))
                (__cont1 (lambda (__value3) __value3)))
            (__get
             __handler
             (lambda (__value6)
-              (do (&set-uproc-error-handler!
+              (do (&set-error-handler!
                    (lambda (__error5 __restart4)
-                     (do (&set-uproc-error-handler! __handler2)
+                     (do (&set-error-handler! __handler2)
                          (__value6 __error5 __restart4 __cont1))))
                   (do
-                      (&set-uproc-error-handler! __handler2)
+                      (&set-error-handler! __handler2)
                       (&yield-cont __cont1 __expr)))))))

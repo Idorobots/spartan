@@ -42,11 +42,11 @@
 (define (make-global-environment)
   '(&apply
     &env-ref
+    &error-handler
     &make-env
     &make-closure
-    &set-uproc-error-handler!
+    &set-error-handler!
     &structure-ref
-    &uproc-error-handler
     &yield-cont
     ;; FIXME let & set! is required by current, broken letrec implementation.
     set!

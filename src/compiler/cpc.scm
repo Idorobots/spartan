@@ -157,7 +157,7 @@
                      (make-identity-continuation)))))
 
 (define (with-handler h next)
-  (make-do (list (make-app-1 '&set-uproc-error-handler! h)
+  (make-do (list (make-app-1 '&set-error-handler! h)
                  next)))
 
 (define (cpc-handle expr kont)
@@ -166,7 +166,7 @@
         (value (gensym 'value))
         (restart (gensym 'restart))
         (error (gensym 'error)))
-    (make-let (list (list handler (make-app '&uproc-error-handler nil))
+    (make-let (list (list handler (make-app '&error-handler nil))
                     (list ct (make-lambda-1 value (kont value))))
               (cpc (handle-handler expr)
                    (lambda (h)
@@ -187,7 +187,7 @@
         (ignored (gensym 'ignored))
         (h (gensym 'handler)))
     (make-let-1 h
-                (make-app '&uproc-error-handler nil)
+                (make-app '&error-handler nil)
                 (cpc (raise-expr expr)
                      (lambda (v)
                        (make-app h
