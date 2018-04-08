@@ -17,6 +17,7 @@
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
         ((letrec? expr) (cpc-let make-letrec expr kont))
+        ((application? expr) (cpc-app expr kont))
         ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
         ((reset? expr) (cpc-reset expr kont))
@@ -27,7 +28,6 @@
         ((define? expr) (cpc-define expr kont))
         ((let? expr) (cpc-let make-let expr kont))
         ;; --
-        ((application? expr) (cpc-app expr kont))
         ('else (error "Unexpected expression: " expr))))
 
 (define (make-identity-continuation)

@@ -26,6 +26,10 @@
                                                     (cc (cadr b))))
                                             (let-bindings expr))
                                        (make-do (map cc (let-body expr)))))
+          ((application? expr) (cc-application expr globals))
+          ;; These are required by broken letrec implementation.
+          ((set!? expr) (make-set! (set!-var expr)
+                                   (cc (set!-val expr))))
           ;; These shouldn't be here anymore.
           ((letcc? expr) (make-letcc (let-bindings expr)
                                      (make-do (map cc (let-body expr)))))
@@ -36,7 +40,6 @@
                                        (cc (handle-handler expr))))
           ((raise? expr) (make-raise (cc (raise-expr expr))))
           ;; --
-          ((application? expr) (cc-application expr globals))
           ('else (error "Unexpected expression:" expr)))))
 
 (define (make-global-environment)
@@ -47,10 +50,7 @@
     &make-closure
     &set-error-handler!
     &structure-ref
-    &yield-cont
-    ;; FIXME let & set! is required by current, broken letrec implementation.
-    set!
-    let))
+    &yield-cont))
 
 (define (cc-lambda expr globals)
   (let ((env (gensym 'env))
@@ -100,27 +100,35 @@
                                                    (free-vars (let-body expr)))
                                         (set-sum (map (compose free-vars car)
                                                       (let-bindings expr)))))
-        ((letcc? expr) (set-difference (free-vars (let-body expr))
-                                       (set (let-bindings expr))))
         ((letrec? expr) (set-difference (set-union (set-sum (map (compose free-vars cadr)
                                                                  (let-bindings expr)))
                                                    (free-vars (let-body expr)))
                                         (set-sum (map (compose free-vars car)
                                                       (let-bindings expr)))))
+        ((application? expr) (set-union (free-vars (app-op expr))
+                                        (foldl set-union
+                                               (set)
+                                               (map free-vars
+                                                    (app-args expr)))))
+        ;; These are required by broken letrec implementation.
+        ((set!? expr) (free-vars (set!-val expr)))
+        ;; These shouldn't be here anymore.
+        ((letcc? expr) (set-difference (free-vars (let-body expr))
+                                       (set (let-bindings expr))))
         ((reset? expr) (free-vars (reset-expr expr)))
         ((shift? expr) (set-difference (free-vars (shift-expr expr))
                                        (set (shift-cont expr))))
         ((handle? expr) (set-union (free-vars (handle-expr expr))
                                    (free-vars (handle-handler expr))))
         ((raise? expr) (free-vars (raise-expr expr)))
-        ((application? expr) (set-union (free-vars (app-op expr))
-                                        (foldl set-union
-                                               (set)
-                                               (map free-vars
-                                                    (app-args expr)))))))
+        ;; --
+        ('else (error "Unexpected expression:" expr))))
 
 (define (substitute subs expr)
-  (cond ((symbol? expr) (subs-symbol subs expr))
+  (cond ((symbol? expr) (let ((a (assoc expr subs)))
+                          (if a
+                              (cdr a)
+                              expr)))
         ((number? expr) expr)
         ((string? expr) expr)
         ((vector? expr) expr)
@@ -128,9 +136,3 @@
         ((char? expr) expr)
         ((quote? expr) expr)
         ('else (map (partial substitute subs) expr))))
-
-(define (subs-symbol subs symbol)
-  (let ((a (assoc symbol subs)))
-    (if a
-        (cdr a)
-        symbol)))
