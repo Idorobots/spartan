@@ -2,6 +2,7 @@
 
 (load "../test/utils.scm")
 (load "../test/compiler/utils.scm")
+(load "../test/compiler/ast.scm")
 (load "../test/compiler/rename.scm")
 (load "../test/compiler/closures.scm")
 (load "../test/compiler/cpc.scm")
