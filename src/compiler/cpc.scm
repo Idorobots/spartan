@@ -6,7 +6,7 @@
 (load "compiler/utils.scm")
 
 (define (cpc expr kont)
-  (cond ((symbol? expr) (cpc-symbol expr kont))
+  (cond ((symbol? expr) (kont (rename-symbol expr)))
         ((number? expr) (kont expr))
         ((string? expr) (kont expr))
         ((vector? expr) (kont expr))
@@ -17,7 +17,12 @@
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
         ((letrec? expr) (cpc-let make-letrec expr kont))
-        ((application? expr) (cpc-app expr kont))
+        ((and (application? expr)
+              (not (primop-application? expr))) (cpc-app expr kont))
+        ;; FIXME This is required due to a broken modules implementation.
+        ((primop-application? expr) (kont (make-app (app-op expr)
+                                                    (map (flip cpc (make-identity-continuation))
+                                                         (app-args expr)))))
         ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
         ((reset? expr) (cpc-reset expr kont))
@@ -32,6 +37,16 @@
 
 (define (make-identity-continuation)
   id)
+
+(define (primop-application? expr)
+  (and (application? expr)
+       (member (app-op expr) (make-global-environment))))
+
+(define (rename-symbol symbol)
+  ;; FIXME This shouldn't be here.
+  (if (member symbol (make-global-environment))
+      symbol
+      (symbol->safe symbol)))
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
@@ -55,21 +70,9 @@
             (returning-last* (rest-statements statements)
                              kont))))
 
-(define (cpc-symbol expr kont)
-  ;; FIXME This shouldn't be in CPC...
-  (let ((parts (map string->symbol
-                    (string-split (symbol->string expr)
-                                  "."))))
-    (kont (if (> (length parts) 1)
-              (foldl (lambda (p a)
-                       (make-app '&structure-ref (list a (make-quote p))))
-                     (symbol->safe (car parts))
-                     (cdr parts))
-              (symbol->safe (car parts))))))
-
 (define (cpc-lambda expr kont)
   (let ((ct (gensym 'cont))
-        (args (map symbol->safe (lambda-args expr))))
+        (args (map rename-symbol (lambda-args expr))))
     (kont (make-lambda
            (append args (list ct))
            (cpc-sequence (lambda-body expr)
@@ -79,7 +82,7 @@
                                              (make-yield (make-app-1 ct s))))))))))
 
 (define (cpc-define expr kont)
-  (kont (make-define-1 (symbol->safe (define-name expr))
+  (kont (make-define-1 (rename-symbol (define-name expr))
                        (cpc (define-value expr)
                             ;; FIXME Shouldn't this be the other definitions?
                             (make-identity-continuation)))))
@@ -102,7 +105,7 @@
 
 (define (cpc-let builder expr kont)
   (let* ((bindings (let-bindings expr))
-         (names (map (lambda (b) (symbol->safe (car b))) bindings))
+         (names (map (lambda (b) (rename-symbol (car b))) bindings))
          (values (map cadr bindings)))
     (builder (map (lambda (v)
                     (list v (make-quote '())))
@@ -125,7 +128,7 @@
                                                                        (kont value)))))))))))
 
 (define (cpc-letcc expr kont)
-  (let* ((cc (symbol->safe (let-bindings expr)))
+  (let* ((cc (rename-symbol (let-bindings expr)))
          (v1 (gensym 'value))
          (v2 (gensym 'value))
          (ct (gensym 'cont)))
@@ -147,7 +150,7 @@
                      (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
-  (let ((name (symbol->safe (shift-cont expr)))
+  (let ((name (rename-symbol (shift-cont expr)))
         (ct (gensym 'cont))
         (value (gensym 'value)))
     (make-let-1 name

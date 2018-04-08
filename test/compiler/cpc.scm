@@ -1,8 +1,8 @@
 ;; Continuation Passing Style Conversion
 
 ;; Simple CPC works.
-(assert (cpc 'foo id) (symbol->safe 'foo))
-(assert (cpc 'foo.bar id) '(&structure-ref __foo 'bar))
+(assert (cpc 'foo id) '__foo)
+(assert (cpc '&structure-ref id) '&structure-ref)
 (assert (cpc 23 id) 23)
 (assert (cpc '() id) '())
 (assert (cpc "hurr" id) "hurr")

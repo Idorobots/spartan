@@ -124,6 +124,7 @@
         ;; --
         ('else (error "Unexpected expression:" expr))))
 
+;; FIXME This should use a generic ast-walk.
 (define (substitute subs expr)
   (cond ((symbol? expr) (let ((a (assoc expr subs)))
                           (if a

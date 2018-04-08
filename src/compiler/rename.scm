@@ -1,4 +1,4 @@
-;; LLVM-safe variable renaming.
+;; Target-safe variable renaming.
 
 (define (symbol->safe s)
   (string->symbol (apply string-append
