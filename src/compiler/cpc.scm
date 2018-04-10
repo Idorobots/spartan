@@ -1,84 +1,48 @@
 ;; Continuation Passing Converter
 ;; Assumes macro-expanded code.
 
-(load "compiler/rename.scm")
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
 
 (define (cpc expr kont)
-  (cond ((simple-expression? expr) (kont (cpc-simple expr)))
-        ((define? expr) (cpc-define expr kont))
+  (cond ((symbol? expr) (kont expr))
+        ((number? expr) (kont expr))
+        ((string? expr) (kont expr))
+        ((vector? expr) (kont expr))
+        ((nil? expr) (kont expr))
+        ((char? expr) (kont expr))
+        ((quote? expr) (kont expr))
+        ((lambda? expr) (cpc-lambda expr kont))
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
+        ((letrec? expr) (cpc-let make-letrec expr kont))
+        ((and (application? expr)
+              (not (primop-application? expr))) (cpc-app expr kont))
+        ;; FIXME This is required due to a broken modules implementation.
+        ((primop-application? expr) (kont (make-app (app-op expr)
+                                                    (map (flip cpc (make-identity-continuation))
+                                                         (app-args expr)))))
+        ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
-        ((letrec? expr) (cpc-letrec expr kont))
         ((reset? expr) (cpc-reset expr kont))
         ((shift? expr) (cpc-shift expr kont))
         ((handle? expr) (cpc-handle expr kont))
         ((raise? expr) (cpc-raise expr kont))
-        ((application? expr) (cpc-app expr kont))))
+        ;; These shouldn't be here.
+        ((define? expr) (cpc-define expr kont))
+        ((let? expr) (cpc-let make-let expr kont))
+        ;; --
+        ('else (error "Unexpected expression: " expr))))
 
-(define (cpc-simple expr)
-  (cond ((symbol? expr) (cpc-symbol expr))
-        ((number? expr) (cpc-number expr))
-        ((string? expr) (cpc-string expr))
-        ((vector? expr) (cpc-vector expr))
-        ((nil? expr) (cpc-nil expr))
-        ((char? expr) (cpc-character expr))
-        ((quote? expr) (cpc-quote expr))
-        ((lambda? expr) (cpc-lambda expr))))
+(define (make-identity-continuation)
+  id)
 
-(define (cpc-symbol expr)
-  ;; FIXME This shouldn't be in CPC...
-  (let ((parts (map string->symbol
-                    (string-split (symbol->string expr)
-                                  "."))))
-    (if (> (length parts) 1)
-        (foldl (lambda (p a)
-                 (make-app '&structure-ref (list a (make-quote p))))
-               (symbol->safe (car parts))
-               (cdr parts))
-        (symbol->safe (car parts)))))
+(define (primop-application? expr)
+  (and (application? expr)
+       (member (app-op expr) (make-global-environment))))
 
-(define (cpc-number expr)
-  expr)
-
-(define (cpc-string expr)
-  expr)
-
-(define (cpc-vector expr)
-  expr)
-
-(define (cpc-nil expr)
-  expr)
-
-(define (cpc-character expr)
-  expr)
-
-(define (cpc-quote expr)
-  expr)
-
-(define (cpc-lambda expr)
-  (let ((ct (gensym 'cont))
-        (args (map symbol->safe (lambda-args expr))))
-    (make-lambda
-     (append args (list ct))
-     (cpc-sequence (lambda-body expr)
-                   (lambda (sts)
-                     (returning-last sts
-                                     (lambda (s)
-                                       (make-yield (make-app-1 ct s)))))))))
-
-(define (cpc-define expr kont)
-  (kont (make-define-1 (symbol->safe (define-name expr))
-                       (cpc (define-value expr)
-                            ;; FIXME Shouldn't this be the other definitions?
-                            (make-identity-continuation)))))
-
-(define (cpc-do expr kont)
-  (cpc-sequence (do-statements expr)
-                (lambda (sts)
-                  (returning-last sts kont))))
+(define (make-yield expr)
+  (cons '&yield-cont expr))
 
 (define (cpc-sequence exprs kont)
   (if (empty? exprs)
@@ -99,6 +63,27 @@
             (returning-last* (rest-statements statements)
                              kont))))
 
+(define (cpc-lambda expr kont)
+  (let ((ct (gensym 'cont)))
+    (kont (make-lambda
+           (append (lambda-args expr) (list ct))
+           (cpc-sequence (lambda-body expr)
+                         (lambda (sts)
+                           (returning-last sts
+                                           (lambda (s)
+                                             (make-yield (make-app-1 ct s))))))))))
+
+(define (cpc-define expr kont)
+  (kont (make-define-1 (define-name expr)
+                       (cpc (define-value expr)
+                            ;; FIXME Shouldn't this be the other definitions?
+                            (make-identity-continuation)))))
+
+(define (cpc-do expr kont)
+  (cpc-sequence (do-statements expr)
+                (lambda (sts)
+                  (returning-last sts kont))))
+
 (define (cpc-if expr kont)
   (let* ((ct (gensym 'cont))
          (rest (lambda (v) (make-yield (make-app-1 ct v))))
@@ -110,51 +95,19 @@
                                 (cpc (if-then expr) rest)
                                 (cpc (if-else expr) rest)))))))
 
-(define (cpc-letcc expr kont)
-  (let* ((cc (symbol->safe (let-bindings expr)))
-         (v1 (gensym 'value))
-         (v2 (gensym 'value))
-         (ct (gensym 'cont)))
-    (make-let-1 ct (make-lambda-1 v1 (kont v1))
-                (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
-                                              (make-yield (make-app-1 ct v2)))
-                            (cpc-sequence (let-body expr)
-                                          (lambda (sts)
-                                            (returning-last sts
-                                                            (lambda (v)
-                                                              (make-yield (make-app-1 ct v))))))))))
-
-(define (cpc-letrec expr kont)
+(define (cpc-let builder expr kont)
   (let* ((bindings (let-bindings expr))
-         (names (map (lambda (b) (symbol->safe (car b))) bindings))
+         (names (map car bindings))
          (values (map cadr bindings)))
-    (make-let (map (lambda (v)
-                     (list v (make-quote '())))
-                   names)
-              (cpc-sequence values
-                            (lambda (sts)
-                              (make-do (append (map make-set! names sts)
-                                               (list (cpc-sequence (let-body expr)
-                                                                   (lambda (sts)
-                                                                     (returning-last sts kont)))))))))))
-
-(define (cpc-reset expr kont)
-  (let* ((value (gensym 'value)))
-    (make-app-1 (make-lambda-1 value (kont value))
-                ;; NOTE This is purely static. Might need some continuation stack
-                ;; NOTE maintenance in order to implement push-prompt etc.
-                (cpc (reset-expr expr)
-                     (make-identity-continuation)))))
-
-(define (cpc-shift expr kont)
-  (let ((name (symbol->safe (shift-cont expr)))
-        (ct (gensym 'cont))
-        (value (gensym 'value)))
-    (make-let-1 name
-                (make-lambda-2 value ct
-                               (make-app-1 ct (kont value)))
-                (cpc (shift-expr expr)
-                     (make-identity-continuation)))))
+    (builder (map (lambda (v)
+                    (list v (make-quote '())))
+                  names)
+             (cpc-sequence values
+                           (lambda (sts)
+                             (make-do (append (map make-set! names sts)
+                                              (list (cpc-sequence (let-body expr)
+                                                                  (lambda (sts)
+                                                                    (returning-last sts kont)))))))))))
 
 (define (cpc-app expr kont)
   (let ((value (gensym 'value)))
@@ -166,8 +119,41 @@
                                      (append args (list (make-lambda-1 value
                                                                        (kont value)))))))))))
 
-(define (make-yield expr)
-  (cons '&yield-cont expr))
+(define (cpc-letcc expr kont)
+  (let ((cc (let-bindings expr))
+        (v1 (gensym 'value))
+        (v2 (gensym 'value))
+        (ct (gensym 'cont)))
+    (make-let-1 ct (make-lambda-1 v1 (kont v1))
+                (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
+                                              (make-yield (make-app-1 ct v2)))
+                            (cpc-sequence (let-body expr)
+                                          (lambda (sts)
+                                            (returning-last sts
+                                                            (lambda (v)
+                                                              (make-yield (make-app-1 ct v))))))))))
+
+(define (cpc-reset expr kont)
+  (let ((value (gensym 'value)))
+    (make-app-1 (make-lambda-1 value (kont value))
+                ;; NOTE This is purely static. Might need some continuation stack
+                ;; NOTE maintenance in order to implement push-prompt etc.
+                (cpc (reset-expr expr)
+                     (make-identity-continuation)))))
+
+(define (cpc-shift expr kont)
+  (let ((name (shift-cont expr))
+        (ct (gensym 'cont))
+        (value (gensym 'value)))
+    (make-let-1 name
+                (make-lambda-2 value ct
+                               (make-app-1 ct (kont value)))
+                (cpc (shift-expr expr)
+                     (make-identity-continuation)))))
+
+(define (with-handler h next)
+  (make-do (list (make-app-1 '&set-error-handler! h)
+                 next)))
 
 (define (cpc-handle expr kont)
   (let ((ct (gensym 'cont))
@@ -175,7 +161,7 @@
         (value (gensym 'value))
         (restart (gensym 'restart))
         (error (gensym 'error)))
-    (make-let (list (list handler (make-app '&uproc-error-handler nil))
+    (make-let (list (list handler (make-app '&error-handler nil))
                     (list ct (make-lambda-1 value (kont value))))
               (cpc (handle-handler expr)
                    (lambda (h)
@@ -196,14 +182,10 @@
         (ignored (gensym 'ignored))
         (h (gensym 'handler)))
     (make-let-1 h
-                (make-app '&uproc-error-handler nil)
+                (make-app '&error-handler nil)
                 (cpc (raise-expr expr)
                      (lambda (v)
                        (make-app h
                                  (list v (make-lambda-2 value ignored
                                                         (with-handler h
                                                                       (kont value))))))))))
-
-(define (with-handler h next)
-  (make-do (list (make-app-1 '&set-uproc-error-handler! h)
-                 next)))

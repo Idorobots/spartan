@@ -1,36 +1,28 @@
 ;; Tha compiler.
 
-(load "compiler/closures.scm")
-(load "compiler/cpc.scm")
-(load "compiler/macro-expander.scm")
 (load "compiler/utils.scm")
+(load "compiler/syntax.scm")
+(load "compiler/macro-expander.scm")
+(load "compiler/cpc.scm")
+(load "compiler/closures.scm")
+(load "compiler/rename.scm")
 
 (define (compile expr)
-  (optimize (cpc (macro-expand (preprocess expr)
-                               (make-builtin-macros))
-                 (make-identity-continuation))))
+  (foldl (lambda (phase expr)
+           (phase expr))
+         expr
+         (list syntax-expand
+               (flip macro-expand (make-builtin-macros))
+               (flip cpc (make-identity-continuation))
+               (flip closure-convert (make-global-environment))
+               optimize
+               (flip mangle (make-global-environment))
+               generate)))
 
 (define (optimize expr)
-  ;; TOOD optimize redundant bindings etc
-  (closure-convert expr
-                   (make-empty-environment)))
+  ;; TOOD Optimize redundant bindings etc.
+  expr)
 
-(define (make-empty-environment)
-  '(&apply
-    &env-ref
-    &make-env
-    &make-closure
-    &set-uproc-error-handler!
-    &structure-ref
-    &uproc-error-handler
-    &yield-cont
-    ;; FIXME let & set! is required by current, broken letrec implementation.
-    set!
-    let))
-
-(define (make-identity-continuation)
-  id)
-
-(define (preprocess expr)
-  ;; TODO pre-process the expression
+(define (generate expr)
+  ;; TODO Generate target-specific code.
   expr)

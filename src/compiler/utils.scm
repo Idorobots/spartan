@@ -1,7 +1,5 @@
 ;; Various utilities
 
-(load "compiler/rename.scm")
-
 ;; Basic definitions making Scheme less-of-a-Scheme:
 (define true #t)
 
@@ -52,7 +50,7 @@
 (define *gensym-counter* (ref 0))
 (define (gensym root)
   (assign! *gensym-counter* (+ 1 (deref *gensym-counter*)))
-  (string->symbol (string-append (symbol->string (symbol->safe root))
+  (string->symbol (string-append (symbol->string root)
                                  (number->string (deref *gensym-counter*)))))
 
 (define (gensym-reset!)

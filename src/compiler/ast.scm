@@ -2,6 +2,26 @@
 
 (load "compiler/utils.scm")
 
+(define +syntax-keys+
+  '(quote
+    if
+    lambda
+    quasiquote
+    unquote
+    unquote-splicing
+    define
+    do
+    let
+    letrec
+    letcc
+    set!
+    reset
+    shift
+    handle
+    raise
+    module
+    structure))
+
 (define (simple-expression? expr)
   (or (symbol? expr)
      (number? expr)
@@ -186,7 +206,10 @@
 
 ;; (operator args ...)
 (define (application? expr)
-  (and (list? expr) (not-nil? expr)))
+  (and (list? expr)
+       (not-nil? expr)
+       (not (member (car expr)
+                    +syntax-keys+))))
 
 (define (make-app op args)
   `(,op ,@args))

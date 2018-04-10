@@ -16,8 +16,7 @@
         id)))
 
 (define (make-builtin-macros)
-  (list (cons 'quasiquote quasiquote-macro)
-        (cons 'define define-macro_)
+  (list (cons 'define define-macro_)
         (cons 'when when-macro)
         (cons 'unless unless-macro)
         (cons 'cond cond-macro)
@@ -25,6 +24,8 @@
         (cons 'or or-macro)
         (cons 'let let-macro)
         (cons 'let* let*-macro)
+        ;; FIXME These should be moved to syntax expansion phase.
+        (cons 'quasiquote quasiquote-macro)
         (cons 'structure structure-macro)
         (cons 'module module-macro)))
 
@@ -133,6 +134,7 @@
                        (structure-defs expr)))
          (names (map car lambdas)))
     `(letrec (,@lambdas)
+       ;; FIXME This should be a primop.
        (make-structure ,@(map (lambda (n)
                                 `(cons ',n ,n))
                               names)))))

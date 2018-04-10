@@ -3,8 +3,8 @@
 (load "runtime/processes.scm")
 (load "runtime/scheduler.scm")
 
-(define (&uproc-error-handler)
+(define (&error-handler)
   (uproc-error-handler (current-task)))
 
-(define (&set-uproc-error-handler! handler)
+(define (&set-error-handler! handler)
   (set-uproc-error-handler! (current-task) handler))
