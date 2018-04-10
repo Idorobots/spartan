@@ -9,7 +9,7 @@
 (assert (deref x) 2)
 
 (gensym-reset!)
-(assert (gensym 'a) '__a1)
-(assert (gensym 'b) '__b2)
+(assert (gensym 'a) 'a1)
+(assert (gensym 'b) 'b2)
 (gensym-reset!)
-(assert (gensym 'c) '__c1)
+(assert (gensym 'c) 'c1)

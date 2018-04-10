@@ -53,45 +53,45 @@
 (gensym-reset!)
 (assert (closure-convert '((lambda (a) a) a) '())
         '(&apply (&make-closure (&make-env)
-                                (lambda (__env1 a) a))
+                                (lambda (env1 a) a))
                  a))
 
 ;; Convertin lambda works.
 (gensym-reset!)
 (assert (closure-convert '(lambda () 23) '())
         '(&make-closure (&make-env)
-                        (lambda (__env1) 23)))
+                        (lambda (env1) 23)))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) foo) '())
         '(&make-closure (&make-env)
-                        (lambda (__env1 foo) foo)))
+                        (lambda (env1 foo) foo)))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) (+ foo 23)) '(&apply))
         '(&make-closure (&make-env +)
-                        (lambda (__env1 foo) (&apply (&env-ref __env1 0) foo 23))))
+                        (lambda (env1 foo) (&apply (&env-ref env1 0) foo 23))))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) (+ foo 23)) '(+ &apply))
         '(&make-closure (&make-env)
-                        (lambda (__env1 foo) (+ foo 23))))
+                        (lambda (env1 foo) (+ foo 23))))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (foo) (foo bar baz)) '(&apply))
         '(&make-closure (&make-env bar baz)
-                        (lambda (__env1 foo)
-                          (&apply foo (&env-ref __env1 0) (&env-ref __env1 1)))))
+                        (lambda (env1 foo)
+                          (&apply foo (&env-ref env1 0) (&env-ref env1 1)))))
 
 (gensym-reset!)
 (assert (closure-convert '(lambda (x) (lambda (y) (+ x y))) '(&apply &env-ref &make-closure &make-env))
         '(&make-closure (&make-env +)
-                        (lambda (__env2 x)
-                          (&make-closure (&make-env (&env-ref __env2 0) x)
-                                         (lambda (__env1 y)
+                        (lambda (env2 x)
+                          (&make-closure (&make-env (&env-ref env2 0) x)
+                                         (lambda (env1 y)
                                            (&apply
-                                            (&env-ref __env1 0)
-                                            (&env-ref __env1 1)
+                                            (&env-ref env1 0)
+                                            (&env-ref env1 1)
                                             y))))))
 
 (gensym-reset!)
@@ -102,10 +102,10 @@
                                   (&yield-cont c n))))
                          (make-global-environment))
         '(&make-closure (&make-env)
-                        (lambda (__env2 n cont)
+                        (lambda (env2 n cont)
                           (let ((c (&make-closure (&make-env cont)
-                                                  (lambda (__env1 v)
-                                                    (&yield-cont (&env-ref __env1 0) v)))))
+                                                  (lambda (env1 v)
+                                                    (&yield-cont (&env-ref env1 0) v)))))
                             (if n
                                 (&yield-cont c n)
                                 (&yield-cont c n))))))
@@ -116,12 +116,12 @@
 (gensym-reset!)
 (assert (closure-convert '(define f (lambda (x) x)) '())
         '(define f (&make-closure (&make-env)
-                                  (lambda (__env1 x) x))))
+                                  (lambda (env1 x) x))))
 
 (gensym-reset!)
 (assert (closure-convert '(define f (lambda (x) f)) '())
         '(define f (&make-closure (&make-env f)
-                                  (lambda (__env1 x) (&env-ref __env1 0)))))
+                                  (lambda (env1 x) (&env-ref env1 0)))))
 
 ;; Converting do works.
 (assert (closure-convert '(do a b c) '()) '(do a b c))
@@ -130,7 +130,7 @@
 (assert (closure-convert '(do a (lambda (x) b) c) '())
         '(do a
              (&make-closure (&make-env b)
-                            (lambda (__env1 x) (&env-ref __env1 0)))
+                            (lambda (env1 x) (&env-ref env1 0)))
            c))
 
 ;; Converting if works.
@@ -140,7 +140,7 @@
 (assert (closure-convert '(if a (lambda (x) b) c) '())
         '(if a
              (&make-closure (&make-env b)
-                            (lambda (__env1 x) (&env-ref __env1 0)))
+                            (lambda (env1 x) (&env-ref env1 0)))
              c))
 
 ;; Converting let works.
@@ -150,13 +150,13 @@
 (assert (closure-convert '(let ((a 23)) (lambda (x) a)) '(&apply))
         '(let ((a 23))
            (&make-closure (&make-env a)
-                          (lambda (__env1 x)
-                            (&env-ref __env1 0)))))
+                          (lambda (env1 x)
+                            (&env-ref env1 0)))))
 
 (gensym-reset!)
 (assert (closure-convert '(let ((a (lambda (x) x))) (a 23)) '(&apply))
         '(let ((a (&make-closure (&make-env)
-                                 (lambda (__env1 x)
+                                 (lambda (env1 x)
                                    x))))
            (&apply a 23)))
 
@@ -167,13 +167,13 @@
 (assert (closure-convert '(letrec ((a 23)) (lambda (x) a)) '(&apply))
         '(letrec ((a 23))
            (&make-closure (&make-env a)
-                          (lambda (__env1 x)
-                            (&env-ref __env1 0)))))
+                          (lambda (env1 x)
+                            (&env-ref env1 0)))))
 
 (gensym-reset!)
 (assert (closure-convert '(letrec ((a (lambda (x) x))) (a 23)) '(&apply))
         '(letrec ((a (&make-closure (&make-env)
-                                 (lambda (__env1 x)
+                                 (lambda (env1 x)
                                    x))))
            (&apply a 23)))
 
@@ -184,8 +184,8 @@
 (assert (closure-convert '(letcc k (lambda (x) k)) '(&apply))
         '(letcc k
            (&make-closure (&make-env k)
-                          (lambda (__env1 x)
-                            (&env-ref __env1 0)))))
+                          (lambda (env1 x)
+                            (&env-ref env1 0)))))
 
 
 ;; Converting shift/reset works.
@@ -195,24 +195,24 @@
 (assert (closure-convert '(shift k (lambda (x) (k x))) '(&apply))
         '(shift k
                 (&make-closure (&make-env k)
-                               (lambda (__env1 x)
+                               (lambda (env1 x)
                                  (&apply
-                                  (&env-ref __env1 0)
+                                  (&env-ref env1 0)
                                   x)))))
 
 (gensym-reset!)
 (assert (closure-convert '(reset (lambda (x) x)) '(&apply))
         '(reset
           (&make-closure (&make-env)
-                         (lambda (__env1 x) x))))
+                         (lambda (env1 x) x))))
 
 (gensym-reset!)
 (assert (closure-convert '(shift k (reset (lambda (x) (k x)))) '(&apply))
         '(shift k
                 (reset (&make-closure (&make-env k)
-                                      (lambda (__env1 x)
+                                      (lambda (env1 x)
                                         (&apply
-                                         (&env-ref __env1 0)
+                                         (&env-ref env1 0)
                                          x))))))
 
 ;; Converting raise works.
@@ -221,7 +221,7 @@
 (gensym-reset!)
 (assert (closure-convert '(raise (lambda (x) x)) '())
         '(raise (&make-closure (&make-env)
-                               (lambda (__env1 x) x))))
+                               (lambda (env1 x) x))))
 
 ;; Converting handle works.
 (assert (closure-convert '(handle e h) '()) '(handle e h))
@@ -229,11 +229,11 @@
 (gensym-reset!)
 (assert (closure-convert '(handle (lambda (x) x) h) '())
         '(handle (&make-closure (&make-env)
-                                (lambda (__env1 x) x))
+                                (lambda (env1 x) x))
                  h))
 
 (gensym-reset!)
 (assert (closure-convert '(handle x (lambda (e) e)) '())
         '(handle x
                  (&make-closure (&make-env)
-                                (lambda (__env1 e) e))))
+                                (lambda (env1 e) e))))

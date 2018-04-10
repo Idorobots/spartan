@@ -1,12 +1,11 @@
 ;; Continuation Passing Converter
 ;; Assumes macro-expanded code.
 
-(load "compiler/rename.scm")
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
 
 (define (cpc expr kont)
-  (cond ((symbol? expr) (kont (rename-symbol expr)))
+  (cond ((symbol? expr) (kont expr))
         ((number? expr) (kont expr))
         ((string? expr) (kont expr))
         ((vector? expr) (kont expr))
@@ -42,12 +41,6 @@
   (and (application? expr)
        (member (app-op expr) (make-global-environment))))
 
-(define (rename-symbol symbol)
-  ;; FIXME This shouldn't be here.
-  (if (member symbol (make-global-environment))
-      symbol
-      (symbol->safe symbol)))
-
 (define (make-yield expr)
   (cons '&yield-cont expr))
 
@@ -71,10 +64,9 @@
                              kont))))
 
 (define (cpc-lambda expr kont)
-  (let ((ct (gensym 'cont))
-        (args (map rename-symbol (lambda-args expr))))
+  (let ((ct (gensym 'cont)))
     (kont (make-lambda
-           (append args (list ct))
+           (append (lambda-args expr) (list ct))
            (cpc-sequence (lambda-body expr)
                          (lambda (sts)
                            (returning-last sts
@@ -82,7 +74,7 @@
                                              (make-yield (make-app-1 ct s))))))))))
 
 (define (cpc-define expr kont)
-  (kont (make-define-1 (rename-symbol (define-name expr))
+  (kont (make-define-1 (define-name expr)
                        (cpc (define-value expr)
                             ;; FIXME Shouldn't this be the other definitions?
                             (make-identity-continuation)))))
@@ -105,7 +97,7 @@
 
 (define (cpc-let builder expr kont)
   (let* ((bindings (let-bindings expr))
-         (names (map (lambda (b) (rename-symbol (car b))) bindings))
+         (names (map car bindings))
          (values (map cadr bindings)))
     (builder (map (lambda (v)
                     (list v (make-quote '())))
@@ -128,10 +120,10 @@
                                                                        (kont value)))))))))))
 
 (define (cpc-letcc expr kont)
-  (let* ((cc (rename-symbol (let-bindings expr)))
-         (v1 (gensym 'value))
-         (v2 (gensym 'value))
-         (ct (gensym 'cont)))
+  (let ((cc (let-bindings expr))
+        (v1 (gensym 'value))
+        (v2 (gensym 'value))
+        (ct (gensym 'cont)))
     (make-let-1 ct (make-lambda-1 v1 (kont v1))
                 (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
                                               (make-yield (make-app-1 ct v2)))
@@ -142,7 +134,7 @@
                                                               (make-yield (make-app-1 ct v))))))))))
 
 (define (cpc-reset expr kont)
-  (let* ((value (gensym 'value)))
+  (let ((value (gensym 'value)))
     (make-app-1 (make-lambda-1 value (kont value))
                 ;; NOTE This is purely static. Might need some continuation stack
                 ;; NOTE maintenance in order to implement push-prompt etc.
@@ -150,7 +142,7 @@
                      (make-identity-continuation)))))
 
 (define (cpc-shift expr kont)
-  (let ((name (rename-symbol (shift-cont expr)))
+  (let ((name (shift-cont expr))
         (ct (gensym 'cont))
         (value (gensym 'value)))
     (make-let-1 name
