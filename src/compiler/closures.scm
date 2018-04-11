@@ -5,39 +5,34 @@
 (load "compiler/utils.scm")
 
 (define (closure-convert expr globals)
-  (let ((cc (flip closure-convert globals)))
-    (cond ((lambda? expr) (cc-lambda (make-lambda (lambda-args expr)
-                                                  (make-do (map cc (lambda-body expr))))
-                                     globals))
-          ((simple-expression? expr) expr)
-          ((do? expr) (make-do (map cc (do-statements expr))))
-          ((if? expr) (make-if (cc (if-predicate expr))
-                               (cc (if-then expr))
-                               (cc (if-else expr))))
-          ((letrec? expr) (make-letrec (map (partial map cc)
-                                            (let-bindings expr))
-                                       (make-do (map cc (let-body expr)))))
-          ((application? expr) (cc-application expr globals))
-          ;; These are required by broken letrec implementation.
-          ((set!? expr) (make-set! (cc (set!-var expr))
-                                   (cc (set!-val expr))))
-          ;; These shouldn't be here anymore.
-          ((letcc? expr) (make-letcc (cc (let-bindings expr))
-                                     (make-do (map cc (let-body expr)))))
-          ((reset? expr) (make-reset (cc (reset-expr expr))))
-          ((shift? expr) (make-shift (cc (shift-cont expr))
-                                     (cc (shift-expr expr))))
-          ((handle? expr) (make-handle (cc (handle-expr expr))
-                                       (cc (handle-handler expr))))
-          ((raise? expr) (make-raise (cc (raise-expr expr))))
-          ;; These shouldn't be here.
-          ((define? expr) (make-define-1 (define-name expr)
-                                         (cc (define-value expr))))
-          ((let? expr) (make-let (map (partial map cc)
-                                      (let-bindings expr))
-                                 (make-do (map cc (let-body expr)))))
-          ;; --
-          ('else (error "Unexpected expression: " expr)))))
+  (walk (lambda (expr)
+          (cond ((application? expr)
+                 (let ((op (app-op expr)))
+                   (if (member op globals)
+                       expr
+                       (make-app '&apply
+                                 (cons op
+                                       (app-args expr))))))
+
+                ((lambda? expr)
+                 (let ((env (gensym 'env))
+                       (args (lambda-args expr))
+                       (body (lambda-body expr))
+                       (free (set-difference (free-vars expr)
+                                             globals)))
+                   (make-app '&make-closure
+                             (list (make-app '&make-env free)
+                                   (make-lambda (cons env args)
+                                                (substitute (map (lambda (var)
+                                                                   (cons var
+                                                                         (make-app '&env-ref
+                                                                                   (list env
+                                                                                         (offset var free)))))
+                                                                 free)
+                                                            (make-do body)))))))
+
+                ('else expr)))
+        expr))
 
 (define (make-global-environment)
   '(&apply
@@ -49,32 +44,13 @@
     &structure-ref
     &yield-cont))
 
-(define (cc-lambda expr globals)
-  (let ((env (gensym 'env))
-        (args (lambda-args expr))
-        (body (lambda-body expr))
-        (free (set-difference (free-vars expr)
-                              globals)))
-    (make-app '&make-closure
-              (list (make-app '&make-env free)
-                    (make-lambda (cons env args)
-                                 (substitute (map (lambda (var)
-                                                    (cons var
-                                                          (make-app '&env-ref
-                                                                    (list env
-                                                                          (offset var free)))))
-                                                  free)
-                                             (make-do body)))))))
-
-(define (cc-application expr globals)
-  (let* ((cc (flip closure-convert globals))
-         (op (app-op expr))
-         (args (map cc (app-args expr))))
-    (if (member op globals)
-        (make-app op args)
-        (make-app '&apply
-                  (cons (cc (app-op expr))
-                        args)))))
+(define (substitute subs expr)
+  (walk (lambda (expr)
+          (let ((a (assoc expr subs)))
+            (if a
+                (cdr a)
+                expr)))
+        expr))
 
 (define (free-vars expr)
   (cond ((symbol? expr) (set expr))
@@ -120,17 +96,3 @@
         ((raise? expr) (free-vars (raise-expr expr)))
         ;; --
         ('else (error "Unexpected expression:" expr))))
-
-;; FIXME This should use a generic ast-walk.
-(define (substitute subs expr)
-  (cond ((symbol? expr) (let ((a (assoc expr subs)))
-                          (if a
-                              (cdr a)
-                              expr)))
-        ((number? expr) expr)
-        ((string? expr) expr)
-        ((vector? expr) expr)
-        ((nil? expr) expr)
-        ((char? expr) expr)
-        ((quote? expr) expr)
-        ('else (map (partial substitute subs) expr))))
