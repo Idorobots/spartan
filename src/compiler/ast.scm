@@ -39,6 +39,10 @@
            ((raise? expr) (make-raise (w (raise-expr expr))))
            ((application? expr) (make-app (w (app-op expr))
                                           (map w (app-args expr))))
+           ((module? expr) (make-module (w (module-name expr))
+                                        (map w (module-deps expr))
+                                        (map w (module-body expr))))
+           ((structure? expr) (make-structure (map w (structure-defs expr))))
            ('else (error "Unexpected expression: " expr))))))
 
 (define +syntax-keys+
@@ -286,7 +290,7 @@
 (define (raise-expr expr)
   (cadr expr))
 
-;; (module (name deps ..) body ...)
+;; (module (name deps ...) body ...)
 (define (module? expr)
   (tagged-list? 'module expr))
 
@@ -299,9 +303,15 @@
 (define (module-body expr)
   (cddr expr))
 
+(define (make-module name deps body)
+  `(module (,name ,@deps) ,@body))
+
 ;; (structure defs ...)
 (define (structure? expr)
   (tagged-list? 'structure expr))
 
 (define (structure-defs expr)
   (cdr expr))
+
+(define (make-structure defs)
+  `(structure ,@defs))

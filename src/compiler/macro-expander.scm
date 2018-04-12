@@ -134,9 +134,8 @@
                        (structure-defs expr)))
          (names (map car lambdas)))
     `(letrec (,@lambdas)
-       ;; FIXME This should be a primop.
-       (make-structure ,@(map (lambda (n)
-                                `(cons ',n ,n))
+       (&make-structure ,@(map (lambda (n)
+                                `(&structure-binding ',n ,n))
                               names)))))
 
 (define (module-macro expr)

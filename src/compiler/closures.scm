@@ -41,7 +41,9 @@
     &error-handler
     &make-env
     &make-closure
+    &make-structure
     &set-error-handler!
+    &structure-binding
     &structure-ref
     &yield-cont))
 

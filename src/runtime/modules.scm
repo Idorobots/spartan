@@ -1,8 +1,10 @@
 ;; Runtime support for modules.
 
-(define (make-structure . defs)
+(define (&make-structure . defs)
   ;; FIXME Yeah, an alist... Don't judge me...
-  (list make-structure defs))
+  (list &make-structure defs))
+
+(define &structure-binding cons)
 
 (define (&structure-ref s f)
   (cdr (assoc f (cadr s))))
