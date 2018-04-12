@@ -93,12 +93,13 @@
     (handle x (lambda (e) e))))
 
 (map (lambda (expr)
-       (assert (walk id expr)
+       (assert (walk id id expr)
                expr))
      forms)
 
 (map (lambda (expr expected)
-       (assert (walk (lambda (e)
+       (assert (walk id
+                     (lambda (e)
                        (if (symbol? e)
                            's
                            e))
@@ -148,3 +149,22 @@
        (handle s s)
        (handle (lambda (s) s) s)
        (handle s (lambda (s) s))))
+
+;; Pre & post processing works correctly.
+(assert (walk (lambda (expr)
+                (cond ((number? expr) 23)
+                      ((lambda? expr) (make-lambda (lambda-args expr)
+                                                   42))
+                      ('else expr)))
+              id
+              '(lambda (x) 5))
+        '(lambda (x) 23))
+
+(assert (walk id
+              (lambda (expr)
+                (cond ((number? expr) 23)
+                      ((lambda? expr) (make-lambda (lambda-args expr)
+                                                   42))
+                      ('else expr)))
+              '(lambda (x) 5))
+        '(lambda (x) 42))

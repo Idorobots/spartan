@@ -5,7 +5,8 @@
 (load "compiler/utils.scm")
 
 (define (syntax-expand expr)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (if (symbol? expr)
               (expand-symbol expr)
               expr))

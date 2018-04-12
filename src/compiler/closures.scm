@@ -5,7 +5,8 @@
 (load "compiler/utils.scm")
 
 (define (closure-convert expr globals)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (cond ((application? expr)
                  (let ((op (app-op expr)))
                    (if (member op globals)
@@ -45,7 +46,8 @@
     &yield-cont))
 
 (define (substitute subs expr)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (let ((a (assoc expr subs)))
             (if a
                 (cdr a)

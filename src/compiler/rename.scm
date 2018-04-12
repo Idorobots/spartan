@@ -4,7 +4,8 @@
 (load "compiler/utils.scm")
 
 (define (mangle expr globals)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (if (symbol? expr)
               (rename-symbol expr globals)
               expr))

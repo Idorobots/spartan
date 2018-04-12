@@ -2,9 +2,10 @@
 
 (load "compiler/utils.scm")
 
-(define (walk callback expr)
-  (let ((w (partial walk callback)))
-    (callback
+(define (walk pre post expression)
+  (let ((w (partial walk pre post))
+        (expr (pre expression)))
+    (post
      (cond ((symbol? expr) expr)
            ((number? expr) expr)
            ((string? expr) expr)
