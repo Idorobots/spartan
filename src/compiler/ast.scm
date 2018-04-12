@@ -17,8 +17,8 @@
            ((if? expr) (make-if (w (if-predicate expr))
                                 (w (if-then expr))
                                 (w (if-else expr))))
-           ((value-define? expr) (make-define-1 (w (define-name expr))
-                                          (w (define-value expr))))
+           ((value-define? expr) (make-val-define (w (define-name expr))
+                                                  (w (define-value expr))))
            ((define? expr) (make-define (w (define-name expr))
                                         (map w (define-args expr))
                                         (w (define-body expr))))
@@ -125,7 +125,7 @@
   `(define (,name ,@args)
      ,body))
 
-(define (make-define-1 name value)
+(define (make-val-define name value)
   `(define ,name
      ,value))
 
@@ -140,11 +140,11 @@
 (define (define-args expr)
   (cdadr expr))
 
+(define (define-body* expr)
+  (cddr expr))
+
 (define (define-body expr)
-  (let ((b (cddr expr)))
-    (if (> (length b) 1)
-        (make-do b)
-        (car b))))
+  (car (define-body* expr)))
 
 ;; (do statements ...)
 (define (do? expr)

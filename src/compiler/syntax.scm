@@ -10,7 +10,16 @@
                  (make-lambda (lambda-args expr)
                               (make-do (lambda-body* expr))))
 
-                ('else expr)))
+                ((value-define? expr)
+                 expr)
+
+                ((define? expr)
+                 (make-val-define (define-name expr)
+                              (make-lambda (define-args expr)
+                                           (make-do (define-body* expr)))))
+
+                ('else
+                 expr)))
         (lambda (expr)
           (if (symbol? expr)
               (expand-symbol expr)

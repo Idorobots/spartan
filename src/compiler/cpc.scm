@@ -72,10 +72,10 @@
                   (make-yield (make-app-1 ct s))))))))
 
 (define (cpc-define expr kont)
-  (kont (make-define-1 (define-name expr)
-                       (cpc (define-value expr)
-                            ;; FIXME Shouldn't this be the other definitions?
-                            (make-identity-continuation)))))
+  (kont (make-val-define (define-name expr)
+                         (cpc (define-value expr)
+                              ;; FIXME Shouldn't this be the other definitions?
+                              (make-identity-continuation)))))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)
