@@ -15,7 +15,7 @@
            (&yield-cont cont1 x)))
 
 (gensym-reset!)
-(assert (cpc-lambda '(lambda (x) 1 2 x) id)
+(assert (cpc-lambda '(lambda (x) (do 1 2 x)) id)
         '(lambda (x cont1)
            (do 1 2 (&yield-cont cont1 x))))
 

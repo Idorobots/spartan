@@ -25,7 +25,9 @@
            ((set!? expr) (make-set! (w (set!-var expr))
                                     (w (set!-val expr))))
            ((lambda? expr) (make-lambda (map w (lambda-args expr))
-                                        (make-do (map w (lambda-body expr)))))
+                                        (w (lambda-body expr))))
+           ((application? expr) (make-app (w (app-op expr))
+                                          (map w (app-args expr))))
            ((let? expr) (make-let (map (partial map w)
                                        (let-bindings expr))
                                   (make-do (map w (let-body expr)))))
@@ -40,8 +42,6 @@
            ((handle? expr) (make-handle (w (handle-expr expr))
                                         (w (handle-handler expr))))
            ((raise? expr) (make-raise (w (raise-expr expr))))
-           ((application? expr) (make-app (w (app-op expr))
-                                          (map w (app-args expr))))
            ((module? expr) (make-module (w (module-name expr))
                                         (map w (module-deps expr))
                                         (map w (module-body expr))))
@@ -107,8 +107,11 @@
 (define (lambda-args expr)
   (cadr expr))
 
-(define (lambda-body expr)
+(define (lambda-body* expr)
   (cddr expr))
+
+(define (lambda-body expr)
+  (car (lambda-body* expr)))
 
 ;; (define (name args ...) body)
 ;; (define name value)

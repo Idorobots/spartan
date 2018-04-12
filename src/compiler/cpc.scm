@@ -1,5 +1,5 @@
 ;; Continuation Passing Converter
-;; Assumes macro-expanded code.
+;; Assumes syntax & macro-expanded code.
 
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
@@ -67,11 +67,9 @@
   (let ((ct (gensym 'cont)))
     (kont (make-lambda
            (append (lambda-args expr) (list ct))
-           (cpc-sequence (lambda-body expr)
-                         (lambda (sts)
-                           (returning-last sts
-                                           (lambda (s)
-                                             (make-yield (make-app-1 ct s))))))))))
+           (cpc (lambda-body expr)
+                (lambda (s)
+                  (make-yield (make-app-1 ct s))))))))
 
 (define (cpc-define expr kont)
   (kont (make-define-1 (define-name expr)

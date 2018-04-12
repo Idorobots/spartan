@@ -30,7 +30,7 @@
                                                                                    (list env
                                                                                          (offset var free)))))
                                                                  free)
-                                                            (make-do body)))))))
+                                                            body))))))
 
                 ('else expr)))
         expr))

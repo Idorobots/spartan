@@ -5,7 +5,12 @@
 (load "compiler/utils.scm")
 
 (define (syntax-expand expr)
-  (walk id
+  (walk (lambda (expr)
+          (cond ((lambda? expr)
+                 (make-lambda (lambda-args expr)
+                              (make-do (lambda-body* expr))))
+
+                ('else expr)))
         (lambda (expr)
           (if (symbol? expr)
               (expand-symbol expr)
