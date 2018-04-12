@@ -16,12 +16,7 @@
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
         ((letrec? expr) (cpc-let make-letrec expr kont))
-        ((and (application? expr)
-              (not (primop-application? expr))) (cpc-app expr kont))
-        ;; FIXME This is required due to a broken modules implementation.
-        ((primop-application? expr) (kont (make-app (app-op expr)
-                                                    (map (flip cpc (make-identity-continuation))
-                                                         (app-args expr)))))
+        ((application? expr) (cpc-app expr kont))
         ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
         ((reset? expr) (cpc-reset expr kont))
@@ -36,10 +31,6 @@
 
 (define (make-identity-continuation)
   id)
-
-(define (primop-application? expr)
-  (and (application? expr)
-       (member (app-op expr) (make-global-environment))))
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
@@ -108,14 +99,18 @@
                                                                     (returning-last sts kont)))))))))))
 
 (define (cpc-app expr kont)
-  (let ((value (gensym 'value)))
-    (cpc (app-op expr)
-         (lambda (op)
-           (cpc-sequence (app-args expr)
-                         (lambda (args)
-                           (make-app op
-                                     (append args (list (make-lambda-1 value
-                                                                       (kont value)))))))))))
+  (if (primop-application? expr)
+      (kont (make-app (app-op expr)
+                      (map (flip cpc (make-identity-continuation))
+                           (app-args expr))))
+      (let ((value (gensym 'value)))
+        (cpc (app-op expr)
+             (lambda (op)
+               (cpc-sequence (app-args expr)
+                             (lambda (args)
+                               (make-app op
+                                         (append args (list (make-lambda-1 value
+                                                                           (kont value))))))))))))
 
 (define (cpc-letcc expr kont)
   (let ((cc (let-bindings expr))

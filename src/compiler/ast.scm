@@ -68,16 +68,6 @@
     module
     structure))
 
-(define (simple-expression? expr)
-  (or (symbol? expr)
-     (number? expr)
-     (string? expr)
-     (vector? expr)
-     (nil? expr)
-     (char? expr)
-     (quote? expr)
-     (lambda? expr)))
-
 ;; (quote expr)
 (define (quote? expr)
   (tagged-list? 'quote expr))
@@ -259,6 +249,11 @@
        (not-nil? expr)
        (not (member (car expr)
                     +syntax-keys+))))
+
+(define (primop-application? expr)
+  (and (application? expr)
+       ;; FIXME Don't rely on make-global-environment.
+       (member (app-op expr) (make-global-environment))))
 
 (define (make-app op args)
   `(,op ,@args))
