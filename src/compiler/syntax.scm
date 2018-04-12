@@ -2,17 +2,14 @@
 
 (load "compiler/qq.scm")
 (load "compiler/ast.scm")
+(load "compiler/utils.scm")
 
-;; FIXME This should use a generic ast-walk.
 (define (syntax-expand expr)
-  (cond ((symbol? expr) (expand-symbol expr))
-        ((number? expr) expr)
-        ((string? expr) expr)
-        ((vector? expr) expr)
-        ((nil? expr) expr)
-        ((char? expr) expr)
-        ((quote? expr) expr)
-        ('else (map syntax-expand expr))))
+  (walk (lambda (expr)
+          (if (symbol? expr)
+              (expand-symbol expr)
+              expr))
+        expr))
 
 (define (expand-symbol expr)
   (let ((parts (map string->symbol
