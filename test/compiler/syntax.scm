@@ -27,3 +27,16 @@
 
 (assert (syntax-expand '(define (foo x) bar x))
         '(define foo (lambda (x) (do bar x))))
+
+;; Wrapping let body works.
+(assert (syntax-expand '(let ((x 23)) x))
+        '(let ((x 23)) x))
+
+(assert (syntax-expand '(let ((x 23)) x y))
+        '(let ((x 23)) (do x y)))
+
+(assert (syntax-expand '(letrec ((x 23)) x y))
+        '(letrec ((x 23)) (do x y)))
+
+(assert (syntax-expand '(letcc x x y))
+        '(letcc x (do x y)))

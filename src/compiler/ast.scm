@@ -30,12 +30,12 @@
                                           (map w (app-args expr))))
            ((let? expr) (make-let (map (partial map w)
                                        (let-bindings expr))
-                                  (make-do (map w (let-body expr)))))
+                                  (w (let-body expr))))
            ((letrec? expr) (make-letrec (map (partial map w)
                                              (let-bindings expr))
-                                        (make-do (map w (let-body expr)))))
+                                        (w (let-body expr))))
            ((letcc? expr) (make-letcc (w (let-bindings expr))
-                                      (make-do (map w (let-body expr)))))
+                                      (w (let-body expr))))
            ((reset? expr) (make-reset (w (reset-expr expr))))
            ((shift? expr) (make-shift (w (shift-cont expr))
                                       (w (shift-expr expr))))
@@ -203,8 +203,11 @@
 (define (let-bindings expr)
   (cadr expr))
 
-(define (let-body expr)
+(define (let-body* expr)
   (cddr expr))
+
+(define (let-body expr)
+  (car (let-body* expr)))
 
 ;; Mutation:
 (define (set!? expr)

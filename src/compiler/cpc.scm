@@ -84,6 +84,7 @@
                                 (cpc (if-then expr) rest)
                                 (cpc (if-else expr) rest)))))))
 
+;; FIXME This does not make any sense for plain let.
 (define (cpc-let builder expr kont)
   (let* ((bindings (let-bindings expr))
          (names (map car bindings))
@@ -94,9 +95,19 @@
              (cpc-sequence values
                            (lambda (sts)
                              (make-do (append (map make-set! names sts)
-                                              (list (cpc-sequence (let-body expr)
-                                                                  (lambda (sts)
-                                                                    (returning-last sts kont)))))))))))
+                                              (list (cpc (let-body expr) kont)))))))))
+
+(define (cpc-letcc expr kont)
+  (let ((cc (let-bindings expr))
+        (v1 (gensym 'value))
+        (v2 (gensym 'value))
+        (ct (gensym 'cont)))
+    (make-let-1 ct (make-lambda-1 v1 (kont v1))
+                (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
+                                              (make-yield (make-app-1 ct v2)))
+                            (cpc (let-body expr)
+                                 (lambda (v)
+                                   (make-yield (make-app-1 ct v))))))))
 
 (define (cpc-app expr kont)
   (if (primop-application? expr)
@@ -111,20 +122,6 @@
                                (make-app op
                                          (append args (list (make-lambda-1 value
                                                                            (kont value))))))))))))
-
-(define (cpc-letcc expr kont)
-  (let ((cc (let-bindings expr))
-        (v1 (gensym 'value))
-        (v2 (gensym 'value))
-        (ct (gensym 'cont)))
-    (make-let-1 ct (make-lambda-1 v1 (kont v1))
-                (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
-                                              (make-yield (make-app-1 ct v2)))
-                            (cpc-sequence (let-body expr)
-                                          (lambda (sts)
-                                            (returning-last sts
-                                                            (lambda (v)
-                                                              (make-yield (make-app-1 ct v))))))))))
 
 (define (cpc-reset expr kont)
   (let ((value (gensym 'value)))
