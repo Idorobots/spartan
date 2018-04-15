@@ -2,11 +2,15 @@
 
 (load "compiler/qq.scm")
 (load "compiler/ast.scm")
+(load "compiler/utils.scm")
 
+;; FIXME Implement in terms of AST walk.
 (define (macro-expand expr macros)
   (if (and (pair? expr) (not (quote? expr)))
-      (map (lambda (e) (macro-expand e macros))
-           ((macro-expander (car expr) macros) expr))
+      (let ((r ((macro-expander (car expr) macros) expr)))
+        (if (pair? r)
+            (map (flip macro-expand macros) r)
+            (macro-expand r macros)))
       expr))
 
 (define (macro-expander name macros)
@@ -16,8 +20,7 @@
         id)))
 
 (define (make-builtin-macros)
-  (list (cons 'define define-macro_)
-        (cons 'when when-macro)
+  (list (cons 'when when-macro)
         (cons 'unless unless-macro)
         (cons 'cond cond-macro)
         (cons 'and and-macro)
@@ -31,14 +34,6 @@
 
 (define (quasiquote-macro expr)
   (quasiquote-expand (cadr expr)))
-
-;; FIXME There's already a 'define-macro' macro in Scheme...
-(define (define-macro_ expr)
-  (if (value-define? expr)
-      expr
-      `(define ,(define-name expr)
-         (lambda (,@(define-args expr))
-           ,(define-body expr)))))
 
 (define (when-macro expr)
   `(if ,(conditional-predicate expr)
@@ -108,36 +103,27 @@
   (let ((args (map car (let-bindings expr)))
         (vals (map cadr (let-bindings expr)))
         (body (let-body expr)))
-    `((lambda (,@args) ,@body)
+    `((lambda (,@args) ,body)
       ,@vals)))
 
 (define (let*-macro expr)
-  (let ((args (map car (let-bindings expr)))
-        (vals (map cadr (let-bindings expr)))
-        (body (let-body expr)))
-    (car (build-let* args vals body))))
-
-(define (build-let* args vals body)
-  (if (empty? args)
-      body
-      `(((lambda (,(car args))
-           ,@(build-let* (cdr args)
-                         (cdr vals)
-                         body))
-         ,(car vals)))))
+  (foldr (lambda (b acc)
+           `((lambda (,(car b))
+               ,acc)
+             ,(cadr b)))
+         (let-body expr)
+         (let-bindings expr)))
 
 (define (structure-macro expr)
   (let* ((lambdas (map (lambda (def)
                          `(,(define-name def)
-                           (lambda (,@(define-args def))
-                             ,(define-body def))))
+                           ,(define-value def)))
                        (structure-defs expr)))
          (names (map car lambdas)))
     `(letrec (,@lambdas)
-       ;; FIXME This should be a primop.
-       (make-structure ,@(map (lambda (n)
-                                `(cons ',n ,n))
-                              names)))))
+       (&make-structure ,@(map (lambda (n)
+                                 `(&structure-binding ',n ,n))
+                               names)))))
 
 (define (module-macro expr)
   `(define ,(module-name expr)

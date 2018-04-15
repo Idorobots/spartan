@@ -50,9 +50,6 @@
 
 (define __spawn (bootstrap spawn))
 
-;; Module system bootstrap:
-(define __make_structure (bootstrap make-structure))
-
 ;; RBS bootstrap:
 (define __assertBANG (bootstrap assert!))
 (define __signalBANG (bootstrap signal!))

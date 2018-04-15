@@ -2,9 +2,10 @@
 
 (load "compiler/utils.scm")
 
-(define (walk callback expr)
-  (let ((w (partial walk callback)))
-    (callback
+(define (walk pre post expression)
+  (let ((w (partial walk pre post))
+        (expr (pre expression)))
+    (post
      (cond ((symbol? expr) expr)
            ((number? expr) expr)
            ((string? expr) expr)
@@ -16,28 +17,35 @@
            ((if? expr) (make-if (w (if-predicate expr))
                                 (w (if-then expr))
                                 (w (if-else expr))))
-           ((define? expr) (make-define-1 (w (define-name expr))
-                                          (w (define-value expr))))
+           ((value-define? expr) (make-val-define (w (define-name expr))
+                                                  (w (define-value expr))))
+           ((define? expr) (make-define (w (define-name expr))
+                                        (map w (define-args expr))
+                                        (w (define-body expr))))
            ((set!? expr) (make-set! (w (set!-var expr))
                                     (w (set!-val expr))))
            ((lambda? expr) (make-lambda (map w (lambda-args expr))
-                                        (make-do (map w (lambda-body expr)))))
+                                        (w (lambda-body expr))))
+           ((application? expr) (make-app (w (app-op expr))
+                                          (map w (app-args expr))))
            ((let? expr) (make-let (map (partial map w)
                                        (let-bindings expr))
-                                  (make-do (map w (let-body expr)))))
+                                  (w (let-body expr))))
            ((letrec? expr) (make-letrec (map (partial map w)
                                              (let-bindings expr))
-                                        (make-do (map w (let-body expr)))))
+                                        (w (let-body expr))))
            ((letcc? expr) (make-letcc (w (let-bindings expr))
-                                      (make-do (map w (let-body expr)))))
+                                      (w (let-body expr))))
            ((reset? expr) (make-reset (w (reset-expr expr))))
            ((shift? expr) (make-shift (w (shift-cont expr))
                                       (w (shift-expr expr))))
            ((handle? expr) (make-handle (w (handle-expr expr))
                                         (w (handle-handler expr))))
            ((raise? expr) (make-raise (w (raise-expr expr))))
-           ((application? expr) (make-app (w (app-op expr))
-                                          (map w (app-args expr))))
+           ((module? expr) (make-module (w (module-name expr))
+                                        (map w (module-deps expr))
+                                        (map w (module-body expr))))
+           ((structure? expr) (make-structure (map w (structure-defs expr))))
            ('else (error "Unexpected expression: " expr))))))
 
 (define +syntax-keys+
@@ -59,16 +67,6 @@
     raise
     module
     structure))
-
-(define (simple-expression? expr)
-  (or (symbol? expr)
-     (number? expr)
-     (string? expr)
-     (vector? expr)
-     (nil? expr)
-     (char? expr)
-     (quote? expr)
-     (lambda? expr)))
 
 ;; (quote expr)
 (define (quote? expr)
@@ -99,8 +97,11 @@
 (define (lambda-args expr)
   (cadr expr))
 
-(define (lambda-body expr)
+(define (lambda-body* expr)
   (cddr expr))
+
+(define (lambda-body expr)
+  (car (lambda-body* expr)))
 
 ;; (define (name args ...) body)
 ;; (define name value)
@@ -114,7 +115,7 @@
   `(define (,name ,@args)
      ,body))
 
-(define (make-define-1 name value)
+(define (make-val-define name value)
   `(define ,name
      ,value))
 
@@ -129,11 +130,11 @@
 (define (define-args expr)
   (cdadr expr))
 
+(define (define-body* expr)
+  (cddr expr))
+
 (define (define-body expr)
-  (let ((b (cddr expr)))
-    (if (> (length b) 1)
-        (make-do b)
-        (car b))))
+  (car (define-body* expr)))
 
 ;; (do statements ...)
 (define (do? expr)
@@ -202,8 +203,11 @@
 (define (let-bindings expr)
   (cadr expr))
 
-(define (let-body expr)
+(define (let-body* expr)
   (cddr expr))
+
+(define (let-body expr)
+  (car (let-body* expr)))
 
 ;; Mutation:
 (define (set!? expr)
@@ -249,6 +253,11 @@
        (not (member (car expr)
                     +syntax-keys+))))
 
+(define (primop-application? expr)
+  (and (application? expr)
+       ;; FIXME Don't rely on make-global-environment.
+       (member (app-op expr) (make-global-environment))))
+
 (define (make-app op args)
   `(,op ,@args))
 
@@ -285,7 +294,7 @@
 (define (raise-expr expr)
   (cadr expr))
 
-;; (module (name deps ..) body ...)
+;; (module (name deps ...) body ...)
 (define (module? expr)
   (tagged-list? 'module expr))
 
@@ -298,9 +307,15 @@
 (define (module-body expr)
   (cddr expr))
 
+(define (make-module name deps body)
+  `(module (,name ,@deps) ,@body))
+
 ;; (structure defs ...)
 (define (structure? expr)
   (tagged-list? 'structure expr))
 
 (define (structure-defs expr)
   (cdr expr))
+
+(define (make-structure defs)
+  `(structure ,@defs))

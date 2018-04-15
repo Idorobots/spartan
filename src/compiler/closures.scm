@@ -5,7 +5,8 @@
 (load "compiler/utils.scm")
 
 (define (closure-convert expr globals)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (cond ((application? expr)
                  (let ((op (app-op expr)))
                    (if (member op globals)
@@ -29,7 +30,7 @@
                                                                                    (list env
                                                                                          (offset var free)))))
                                                                  free)
-                                                            (make-do body)))))))
+                                                            body))))))
 
                 ('else expr)))
         expr))
@@ -40,12 +41,15 @@
     &error-handler
     &make-env
     &make-closure
+    &make-structure
     &set-error-handler!
+    &structure-binding
     &structure-ref
     &yield-cont))
 
 (define (substitute subs expr)
-  (walk (lambda (expr)
+  (walk id
+        (lambda (expr)
           (let ((a (assoc expr subs)))
             (if a
                 (cdr a)

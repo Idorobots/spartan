@@ -1,5 +1,5 @@
 ;; Continuation Passing Converter
-;; Assumes macro-expanded code.
+;; Assumes syntax & macro-expanded code.
 
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
@@ -16,12 +16,7 @@
         ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
         ((letrec? expr) (cpc-let make-letrec expr kont))
-        ((and (application? expr)
-              (not (primop-application? expr))) (cpc-app expr kont))
-        ;; FIXME This is required due to a broken modules implementation.
-        ((primop-application? expr) (kont (make-app (app-op expr)
-                                                    (map (flip cpc (make-identity-continuation))
-                                                         (app-args expr)))))
+        ((application? expr) (cpc-app expr kont))
         ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
         ((reset? expr) (cpc-reset expr kont))
@@ -36,10 +31,6 @@
 
 (define (make-identity-continuation)
   id)
-
-(define (primop-application? expr)
-  (and (application? expr)
-       (member (app-op expr) (make-global-environment))))
 
 (define (make-yield expr)
   (cons '&yield-cont expr))
@@ -67,17 +58,15 @@
   (let ((ct (gensym 'cont)))
     (kont (make-lambda
            (append (lambda-args expr) (list ct))
-           (cpc-sequence (lambda-body expr)
-                         (lambda (sts)
-                           (returning-last sts
-                                           (lambda (s)
-                                             (make-yield (make-app-1 ct s))))))))))
+           (cpc (lambda-body expr)
+                (lambda (s)
+                  (make-yield (make-app-1 ct s))))))))
 
 (define (cpc-define expr kont)
-  (kont (make-define-1 (define-name expr)
-                       (cpc (define-value expr)
-                            ;; FIXME Shouldn't this be the other definitions?
-                            (make-identity-continuation)))))
+  (kont (make-val-define (define-name expr)
+                         (cpc (define-value expr)
+                              ;; FIXME Shouldn't this be the other definitions?
+                              (make-identity-continuation)))))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)
@@ -95,6 +84,7 @@
                                 (cpc (if-then expr) rest)
                                 (cpc (if-else expr) rest)))))))
 
+;; FIXME This does not make any sense for plain let.
 (define (cpc-let builder expr kont)
   (let* ((bindings (let-bindings expr))
          (names (map car bindings))
@@ -105,19 +95,7 @@
              (cpc-sequence values
                            (lambda (sts)
                              (make-do (append (map make-set! names sts)
-                                              (list (cpc-sequence (let-body expr)
-                                                                  (lambda (sts)
-                                                                    (returning-last sts kont)))))))))))
-
-(define (cpc-app expr kont)
-  (let ((value (gensym 'value)))
-    (cpc (app-op expr)
-         (lambda (op)
-           (cpc-sequence (app-args expr)
-                         (lambda (args)
-                           (make-app op
-                                     (append args (list (make-lambda-1 value
-                                                                       (kont value)))))))))))
+                                              (list (cpc (let-body expr) kont)))))))))
 
 (define (cpc-letcc expr kont)
   (let ((cc (let-bindings expr))
@@ -127,11 +105,23 @@
     (make-let-1 ct (make-lambda-1 v1 (kont v1))
                 (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
                                               (make-yield (make-app-1 ct v2)))
-                            (cpc-sequence (let-body expr)
-                                          (lambda (sts)
-                                            (returning-last sts
-                                                            (lambda (v)
-                                                              (make-yield (make-app-1 ct v))))))))))
+                            (cpc (let-body expr)
+                                 (lambda (v)
+                                   (make-yield (make-app-1 ct v))))))))
+
+(define (cpc-app expr kont)
+  (if (primop-application? expr)
+      (kont (make-app (app-op expr)
+                      (map (flip cpc (make-identity-continuation))
+                           (app-args expr))))
+      (let ((value (gensym 'value)))
+        (cpc (app-op expr)
+             (lambda (op)
+               (cpc-sequence (app-args expr)
+                             (lambda (args)
+                               (make-app op
+                                         (append args (list (make-lambda-1 value
+                                                                           (kont value))))))))))))
 
 (define (cpc-reset expr kont)
   (let ((value (gensym 'value)))

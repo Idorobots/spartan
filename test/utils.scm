@@ -10,6 +10,7 @@
          (display "FAILURE: ") (newline)
          (display "  expression: ") (display 'actual) (newline)
          (display "  expected:   ") (display e) (newline)
-         (display "  actual:     ") (display a) (newline))))
+         (display "  actual:     ") (display a) (newline)
+         (error "Assertion failed: " a "did not equal" e))))
     ((_ actual)
      (assert actual #t))))

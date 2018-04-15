@@ -15,7 +15,7 @@
            (&yield-cont cont1 x)))
 
 (gensym-reset!)
-(assert (cpc-lambda '(lambda (x) 1 2 x) id)
+(assert (cpc-lambda '(lambda (x) (do 1 2 x)) id)
         '(lambda (x cont1)
            (do 1 2 (&yield-cont cont1 x))))
 
@@ -76,7 +76,23 @@
                   (e f (lambda (value5)
                              (&yield-cont cont1 value5))))))))
 
-;; TODO CPCing let works.
+;; CPCing let works.
+(gensym-reset!)
+(assert (cpc-let make-let
+                 '(let ((a 23))
+                    a)
+                 id)
+        '(let ((a '()))
+           (do (set! a 23) a)))
+
+(gensym-reset!)
+(assert (cpc-let make-let
+                 '(let ((a 23))
+                    (do 23 a))
+                 id)
+        '(let ((a '()))
+           (do (set! a 23)
+               (do 23 a))))
 
 ;; CPCing letrec works.
 (gensym-reset!)
@@ -190,7 +206,28 @@
                 (a value2 (lambda (value1)
                             value1)))))
 
-;; TODO CPCing letcc works.
+;; CPCing letcc works.
+(gensym-reset!)
+(assert (cpc-letcc '(letcc k k)
+                   id)
+        '(let ((cont3 (lambda (value1) value1)))
+           (let ((k (lambda (value2 ignored4) (&yield-cont cont3 value2))))
+             (&yield-cont cont3 k))))
+
+(gensym-reset!)
+(assert (cpc-letcc '(letcc k (k 23))
+                   id)
+        '(let ((cont3 (lambda (value1) value1)))
+           (let ((k (lambda (value2 ignored4) (&yield-cont cont3 value2))))
+             (k 23 (lambda (value5) (&yield-cont cont3 value5))))))
+
+(gensym-reset!)
+(assert (cpc '(+ 5 (letcc k (k 23)))
+             id)
+        '(let ((cont4 (lambda (value2) (+ 5 value2 (lambda (value1) value1)))))
+           (let ((k (lambda (value3 ignored5) (&yield-cont cont4 value3))))
+             (k 23 (lambda (value6) (&yield-cont cont4 value6))))))
+
 ;; TODO CPCing shift/reset works.
 
 ;; CPCing raise works.
