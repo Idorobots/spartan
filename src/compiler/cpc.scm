@@ -13,7 +13,6 @@
         ((char? expr) (kont expr))
         ((quote? expr) (kont expr))
         ((lambda? expr) (cpc-lambda expr kont))
-        ((do? expr) (cpc-do expr kont))
         ((if? expr) (cpc-if expr kont))
         ((letrec? expr) (cpc-let make-letrec expr kont))
         ((application? expr) (cpc-app expr kont))
@@ -24,6 +23,7 @@
         ((handle? expr) (cpc-handle expr kont))
         ((raise? expr) (cpc-raise expr kont))
         ;; These shouldn't be here.
+        ((do? expr) (cpc-do expr kont))
         ((define? expr) (cpc-define expr kont))
         ((let? expr) (cpc-let make-let expr kont))
         ;; --

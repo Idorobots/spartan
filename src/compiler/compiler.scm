@@ -3,6 +3,7 @@
 (load "compiler/utils.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
+(load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")

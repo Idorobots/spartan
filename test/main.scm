@@ -6,6 +6,7 @@
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/syntax.scm")
 (load "../test/compiler/macros.scm")
+(load "../test/compiler/anormal.scm")
 (load "../test/compiler/cpc.scm")
 (load "../test/compiler/closures.scm")
 (load "../test/compiler/rename.scm")
