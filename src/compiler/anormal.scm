@@ -57,10 +57,11 @@
 
 (define (normalize-named expr kont)
   (normalize expr (lambda (normalized)
-                    (let ((temp (gensym 'temp)))
-                      ;; TODO Avoid introducing names when dealing with a simple value.
-                      (make-let-1 temp normalized
-                                  (kont temp))))))
+                    (if (atomic? normalized)
+                        (kont normalized)
+                        (let ((temp (gensym 'temp)))
+                          (make-let-1 temp normalized
+                                      (kont temp)))))))
 
 (define (normalize-sequence exprs kont)
   (if (empty? exprs)
@@ -70,3 +71,15 @@
                          (normalize-sequence (cdr exprs)
                                              (lambda (rest)
                                                (kont (cons temp rest))))))))
+
+(define (atomic? expr)
+  (foldl (lambda (predicate is-atomic)
+           (or is-atomic (predicate expr)))
+         #f
+         (list symbol?
+               number?
+               string?
+               vector?
+               nil?
+               char?
+               quote?)))
