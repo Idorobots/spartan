@@ -90,6 +90,14 @@
              (let ((temp1 (foo bar)))
                (temp1 baz)))))
 
+(gensym-reset!)
+(assert (normalize '((lambda (x) x)
+                     (define x 23))
+                   id)
+        '(let ((temp1 (lambda (x) x)))
+           (let ((temp2 (define x 23)))
+             (temp1 temp2))))
+
 ;; Normalizing let works.
 (gensym-reset!)
 (assert (normalize '(let ((foo (bar 23)))
@@ -125,6 +133,16 @@
                       (bar temp1))))
            13))
 
+(gensym-reset!)
+(assert (normalize '((lambda (x) x)
+                     (let ((x 23))
+                       x))
+                   id)
+        '(let ((temp1 (lambda (x) x)))
+           (let ((temp2 (let ((x 23))
+                          x)))
+             (temp1 temp2))))
+
 ;; Normalizing letrec works.
 (gensym-reset!)
 (assert (normalize '(letrec ((foo (bar 23))
@@ -144,6 +162,16 @@
                   (bar (let ((temp1 (foo 5)))
                          (bar temp1))))
            13))
+
+(gensym-reset!)
+(assert (normalize '((lambda (x) x)
+                     (letrec ((x 23))
+                       x))
+                   id)
+        '(let ((temp1 (lambda (x) x)))
+           (let ((temp2 (letrec ((x 23))
+                          x)))
+             (temp1 temp2))))
 
 ;; Normalizing letcc works.
 (gensym-reset!)

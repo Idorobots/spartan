@@ -25,10 +25,10 @@
                                          (make-if p
                                                   (n (if-then expr))
                                                   (n (if-else expr))))))
-          ((letrec? expr) (make-letrec (map (lambda (b)
-                                              (list (car b) (n (cadr b))))
-                                            (let-bindings expr))
-                                       (n (let-body expr))))
+          ((letrec? expr) (kont (make-letrec (map (lambda (b)
+                                                    (list (car b) (n (cadr b))))
+                                                  (let-bindings expr))
+                                             (n (let-body expr)))))
           ((letcc? expr) (kont (make-letcc (let-bindings expr)
                                            (n (let-body expr)))))
           ((reset? expr) (kont (make-reset (n (reset-expr expr)))))
@@ -46,12 +46,12 @@
                                           (lambda (sts)
                                             (kont (last sts)))))
           ;; These shouldn't be here.
-          ((define? expr) (make-val-define (define-name expr)
-                                           (n (define-value expr))))
-          ((let? expr) (make-let (map (lambda (b)
-                                        (list (car b) (n (cadr b))))
-                                      (let-bindings expr))
-                                 (n (let-body expr))))
+          ((define? expr) (kont (make-val-define (define-name expr)
+                                                 (n (define-value expr)))))
+          ((let? expr) (kont (make-let (map (lambda (b)
+                                              (list (car b) (n (cadr b))))
+                                            (let-bindings expr))
+                                       (n (let-body expr)))))
           ;; --
           ('else (error "Unexpected expression: " expr)))))
 
