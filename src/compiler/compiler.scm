@@ -14,6 +14,7 @@
          expr
          (list syntax-expand
                (flip macro-expand (make-builtin-macros))
+               (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
                (flip closure-convert (make-global-environment))
                optimize
