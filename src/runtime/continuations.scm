@@ -3,6 +3,16 @@
 (load "compiler/utils.scm")
 (load "runtime/closures.scm")
 
+(define *delimited-continuations* nil)
+
+(define (&push-delimited-continuation! cont)
+  (set! *delimited-continuations* (cons cont *delimited-continuations*)))
+
+(define (&pop-delimited-continuation!)
+  (let ((h (car *delimited-continuations*)))
+    (set! *delimited-continuations* (cdr *delimited-continuations*))
+    h))
+
 (define (&yield-cont cont hole) ;; NOTE Used in compiler-generated code not via bootstrap.
   (list &yield-cont cont hole))
 

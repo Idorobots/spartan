@@ -78,12 +78,16 @@
 (define (quoted-expr expr)
   (cadr expr))
 
-;; (lambda (args ...) body ...)
+;; (lambda (args ...) body)
 (define (lambda? expr)
   (tagged-list? 'lambda expr))
 
 (define (make-lambda args body)
   `(lambda ,args
+     ,body))
+
+(define (make-lambda-0 body)
+  `(lambda ()
      ,body))
 
 (define (make-lambda-1 arg body)
@@ -260,6 +264,9 @@
 
 (define (make-app op args)
   `(,op ,@args))
+
+(define (make-app-0 op)
+  `(,op))
 
 (define (make-app-1 op arg)
   `(,op ,arg))

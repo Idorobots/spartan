@@ -45,7 +45,9 @@
     &set-error-handler!
     &structure-binding
     &structure-ref
-    &yield-cont))
+    &yield-cont
+    &push-delimited-continuation!
+    &pop-delimited-continuation!))
 
 (define (substitute subs expr)
   (walk id
