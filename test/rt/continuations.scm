@@ -32,3 +32,19 @@
                (let ((x (shift f (shift f1 (f1 (cons 'a (f '())))))))
                  (shift g x))))
         '(a))
+
+(assert (run '(let ((yield (lambda (x)
+                             (shift k (cons x (k '()))))))
+                (reset (do (yield 1) (yield 2) (yield 3) (yield 4) (yield 5)))))
+        '(1 2 3 4 5))
+
+(assert (run '(let ((traverse (lambda (xs)
+                                (letrec ((visit (lambda (xs)
+                                                  (if (nil? xs)
+                                                      '()
+                                                      (visit (shift k
+                                                                    (cons (car xs)
+                                                                          (k (cdr xs)))))))))
+                                  (reset (visit xs))))))
+                (display (traverse '(1 2 3 4 5)))))
+        '(1 2 3 4 5))

@@ -29,9 +29,13 @@
 (define __cons (bootstrap cons))
 (define __list (bootstrap list))
 
+(define __equalQUEST (bootstrap equal?))
+(define __nilQUEST (bootstrap null?))
+
 (define __MULT (bootstrap *))
 (define __PLUS (bootstrap +))
 (define ___ (bootstrap -))
+(define __DIV (bootstrap /))
 
 (define __EQUAL (bootstrap =))
 (define __LESS (bootstrap <))
