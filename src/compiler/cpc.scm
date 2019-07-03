@@ -124,22 +124,28 @@
                                                                            (kont value))))))))))))
 
 (define (cpc-reset expr kont)
-  (let ((value (gensym 'value)))
-    (make-app-1 (make-lambda-1 value (kont value))
-                ;; NOTE This is purely static. Might need some continuation stack
-                ;; NOTE maintenance in order to implement push-prompt etc.
-                (cpc (reset-expr expr)
-                     (make-identity-continuation)))))
+  (let ((ct (gensym 'cont))
+        (v1 (gensym 'value)))
+    (make-let-1 ct (make-lambda-1 v1 (kont v1))
+                (make-do (list (make-app-1 '&push-delimited-continuation! ct)
+                               (cpc (reset-expr expr)
+                                    (lambda (v)
+                                      (make-app-1 (make-app-0 '&pop-delimited-continuation!)
+                                                  v))))))))
 
 (define (cpc-shift expr kont)
-  (let ((name (shift-cont expr))
-        (ct (gensym 'cont))
-        (value (gensym 'value)))
-    (make-let-1 name
-                (make-lambda-2 value ct
-                               (make-app-1 ct (kont value)))
-                (cpc (shift-expr expr)
-                     (make-identity-continuation)))))
+  (let ((ct1 (gensym 'cont))
+        (ct2 (gensym 'cont))
+        (v1 (gensym 'value))
+        (v2 (gensym 'value)))
+    (make-let-1 ct1 (make-lambda-1 v1 (kont v1))
+                (make-let-1 (shift-cont expr) (make-lambda-2 v2 ct2
+                                                             (make-do (list (make-app-1 '&push-delimited-continuation! ct2)
+                                                                            (make-yield (make-app-1 ct1 v2)))))
+                            (cpc (shift-expr expr)
+                                 (lambda (v)
+                                   (make-app-1 (make-app-0 '&pop-delimited-continuation!)
+                                               v)))))))
 
 (define (with-handler h next)
   (make-do (list (make-app-1 '&set-error-handler! h)

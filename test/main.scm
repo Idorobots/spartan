@@ -12,6 +12,7 @@
 (load "../test/rt/queue.scm")
 (load "../test/rt/scheduler.scm")
 (load "../test/rt/recurse.scm")
+(load "../test/rt/continuations.scm")
 (load "../test/rt/exception.scm")
 (load "../test/rt/actor.scm")
 (load "../test/rt/modules.scm")
