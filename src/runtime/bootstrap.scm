@@ -1,5 +1,6 @@
 ;; The bootstrap code.
 
+(load "compiler/utils.scm")
 (load "runtime/rt.scm")
 (load "rete/rete.scm")
 
@@ -26,8 +27,9 @@
 (define __cdr (bootstrap cdr))
 (define __cddr (bootstrap cddr))
 
-(define __cons (bootstrap cons))
 (define __list (bootstrap list))
+(define __cons (bootstrap cons))
+(define __append (bootstrap append))
 
 (define __MULT (bootstrap *))
 (define __PLUS (bootstrap +))
@@ -35,6 +37,10 @@
 
 (define __EQUAL (bootstrap =))
 (define __LESS (bootstrap <))
+
+(define __ref (bootstrap ref))
+(define __deref (bootstrap deref))
+(define __assignBANG (bootstrap assign!))
 
 ;; Actor model:
 (define __sleep (bootstrap wait))
