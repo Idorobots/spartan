@@ -3,6 +3,7 @@
 (load "compiler/utils.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
+(load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
@@ -13,6 +14,7 @@
          expr
          (list syntax-expand
                (flip macro-expand (make-builtin-macros))
+               (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
                (flip closure-convert (make-global-environment))
                optimize

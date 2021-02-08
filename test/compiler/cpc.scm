@@ -78,26 +78,22 @@
 
 ;; CPCing let works.
 (gensym-reset!)
-(assert (cpc-let make-let
-                 '(let ((a 23))
+(assert (cpc-let '(let ((a 23))
                     a)
                  id)
-        '(let ((a '()))
-           (do (set! a 23) a)))
+        '(let ((a 23))
+           a))
 
 (gensym-reset!)
-(assert (cpc-let make-let
-                 '(let ((a 23))
+(assert (cpc-let '(let ((a 23))
                     (do 23 a))
                  id)
-        '(let ((a '()))
-           (do (set! a 23)
-               (do 23 a))))
+        '(let ((a 23))
+           (do 23 a)))
 
 ;; CPCing letrec works.
 (gensym-reset!)
-(assert (cpc-let make-letrec
-                 '(letrec ((hcf (lambda (x) (hcf x))))
+(assert (cpc-letrec '(letrec ((hcf (lambda (x) (hcf x))))
                     hcf)
                  id)
         '(letrec ((hcf '()))
@@ -108,8 +104,7 @@
                hcf)))
 
 (gensym-reset!)
-(assert (cpc-let make-letrec
-                 '(letrec ((fact (lambda (n)
+(assert (cpc-letrec '(letrec ((fact (lambda (n)
                                    (if (< n 2)
                                        n
                                        (* n (fact (- n 1)))))))
@@ -143,8 +138,7 @@
 
 ;; NOTE I don't even...
 (gensym-reset!)
-(assert (cpc-let make-letrec
-                 '(letrec ((even? (lambda (x) (if (= 0 x) 't (odd? (- x 1)))))
+(assert (cpc-letrec '(letrec ((even? (lambda (x) (if (= 0 x) 't (odd? (- x 1)))))
                            (odd? (lambda (x) (if (= 0 x) 'n (even? (- x 1))))))
                     (even? 7))
                  id)
