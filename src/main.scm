@@ -26,7 +26,10 @@
   (pretty-print expr)
   (display ";; Result:")
   (newline)
-  (eval expr))
+  (let ((r (eval expr)))
+    (pretty-print r)
+    (newline)
+    r))
 
 (define (run expr)
   (reset-rete!)

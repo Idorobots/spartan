@@ -37,7 +37,7 @@
 (assert (substitute '((foo . bar)) '(foo bar)) '(bar bar))
 (assert (substitute '((foo . bar) (bar . foo)) '(foo bar)) '(bar foo))
 (assert (substitute '((foo . bar)) '(foo foo)) '(bar bar))
-(assert (substitute '((foo . bar)) '(do foo (lambda (foo) foo))) '(do bar (lambda (bar) bar)))
+(assert (substitute '((foo . bar)) '(do foo (lambda (foo) foo))) '(do bar (lambda (foo) foo)))
 (assert (substitute '((foo . bar)) '(do foo (lambda (bar) foo))) '(do bar (lambda (bar) bar)))
 
 ;; Simple cases work.
@@ -187,7 +187,6 @@
                           (lambda (env1 x)
                             (&env-ref env1 0)))))
 
-
 ;; Converting shift/reset works.
 (assert (closure-convert '(shift k (reset k)) '()) '(shift k (reset k)))
 
@@ -237,3 +236,58 @@
         '(handle x
                  (&make-closure (&make-env)
                                 (lambda (env1 e) e))))
+
+;; Complex examples work.
+(gensym-reset!)
+(assert (closure-convert
+         '(lambda (n cont4)
+            (fact
+             fact
+             (lambda (value11)
+               (let ((fact value11))
+                 23))))
+         '(&yield-cont &make-env &apply &env-ref &make-closure))
+        '(&make-closure
+          (&make-env fact)
+          (lambda (env2 n cont4)
+            (&apply
+             (&env-ref env2 0)
+             (&env-ref env2 0)
+             (&make-closure
+              (&make-env)
+              (lambda (env1 value11)
+                (let ((fact value11))
+                  23)))))))
+
+(gensym-reset!)
+(assert (closure-convert
+         '(let ((foo (lambda (foo bar)
+                       (lambda ()
+                         (let ((bar (bar foo bar)))
+                           bar))))
+                (bar (lambda (foo bar)
+                       (lambda ()
+                         (let ((foo (foo foo bar)))
+                           foo)))))
+            (let ((foo (foo foo bar))
+                  (bar (bar foo bar)))
+              (list (foo) (bar))))
+         '(&yield-cont &make-env &apply &env-ref &make-closure))
+        '(let ((foo (&make-closure
+                     (&make-env)
+                     (lambda (env2 foo bar)
+                       (&make-closure
+                        (&make-env foo)
+                        (lambda (env1)
+                          (let ((bar (&apply bar (&env-ref env1 0) bar)))
+                            bar))))))
+               (bar (&make-closure
+                     (&make-env)
+                     (lambda (env4 foo bar)
+                       (&make-closure
+                        (&make-env bar)
+                        (lambda (env3)
+                          (let ((foo (&apply foo foo (&env-ref env3 0)))) foo)))))))
+           (let ((foo (&apply foo foo bar))
+                 (bar (&apply bar foo bar)))
+             (&apply list (&apply foo) (&apply bar)))))

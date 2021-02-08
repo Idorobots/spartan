@@ -78,3 +78,6 @@
 (define __display (bootstrap display))
 (define __newline (bootstrap newline))
 (define __random (bootstrap random))
+(define __debug (bootstrap (lambda args
+                             (pretty-print args)
+                             (newline))))
