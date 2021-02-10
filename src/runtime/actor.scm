@@ -42,4 +42,4 @@
                     (display ";; Task finished due to unhandled error: ")
                     (display e)
                     (newline)
-                    (kont e))))))
+                    (&apply kont e))))))

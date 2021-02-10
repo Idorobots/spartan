@@ -3,7 +3,10 @@
                 (display c)
                 (newline)
                 (foo (raise c)))))
-  (handle (foo 200)
+  ;; NOTE Spawned processes do not inherit the error handler.
+  (handle (do (spawn (lambda () (foo 0)))
+              (spawn (lambda () (foo 100)))
+              (foo 200))
           (lambda (e r)
             (task-info)
             (sleep 1000)
