@@ -14,7 +14,7 @@
 - actor model (`spawn`, `send`, `recv`),
 - a built-in, Rete-based Rule Based System (`signal!`, `assert!`, `retract!`, `select` and `notify-whenever`),
 
-See [here](src/foof) for some usage examples.
+See [here](test/foof) for some usage examples.
 
 The compiler is far from being useful, it doesn't even have a parser or a code generator yet, and it definitely doesn't optimize anything. It loosely follows the nanopass framework, with currently implemented passes being:
 
