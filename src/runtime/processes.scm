@@ -49,6 +49,7 @@
   (array-ref (cadr uproc) 4))
 
 (define (uproc-enqueue-msg! uproc msg)
+  ;; FIXME Gross...
   (array-assign! (cadr uproc)
                  4
                  (append (uproc-msg-queue uproc)

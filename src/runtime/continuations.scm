@@ -3,6 +3,7 @@
 (load "compiler/utils.scm")
 (load "runtime/closures.scm")
 
+;; FIXME This really needs to be done on a per-uProc basis.
 (define *delimited-continuations* nil)
 
 (define (&push-delimited-continuation! cont)
