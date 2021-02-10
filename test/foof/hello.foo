@@ -1,5 +1,5 @@
 (define (hello world)
-  (if (= nil world)
+  (if (equal? nil world)
       (raise 'nope)
       (do (display "Hello ")
           (display world)
