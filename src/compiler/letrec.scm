@@ -3,6 +3,7 @@
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
 (load "compiler/freevars.scm")
+(load "compiler/substitute.scm")
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 
@@ -316,43 +317,11 @@
         (else
          (filter-bindings pred? (cdr bindings)))))
 
-;; FIXME Rewrite in terms of ast/walk.
-(define (derefy expr refs)
-  (cond ((empty? refs)
-         expr)
-        ((simple? expr)
-         expr)
-        ((and (symbol? expr)
-              (member expr refs))
-         (make-app-1 'deref expr))
-        ((or (let? expr)
-             (letrec? expr))
-         (let* ((bindings (let-bindings expr))
-                (body (let-body expr))
-                (vars (bindings-vars bindings))
-                (unbound-refs (filter (lambda (r)
-                                        (not (member r vars)))
-                                      refs))
-                (derefied-bindings (map (lambda (b)
-                                          (list (car b)
-                                                (derefy (cadr b) unbound-refs)))
-                                        bindings)))
-           ((if (let? expr)
-                make-let
-                make-letrec)
-            derefied-bindings
-            (derefy body unbound-refs))))
-        ((lambda? expr)
-         (let ((vars (lambda-args expr)))
-           (make-lambda vars
-                        (derefy (lambda-body expr)
-                                (filter (lambda (r)
-                                          (not (member r vars)))
-                                        refs)))))
-        ((pair? expr)
-         (cons (derefy (car expr) refs)
-               (derefy (cdr expr) refs)))
-        (else expr)))
+(define (derefy refs expr)
+  (substitute (map (lambda (r)
+                     (cons r (list 'deref r)))
+                   refs)
+              expr))
 
 (define (let-ref-fix expr)
   (let ((bindings (letrec-bindings expr))
@@ -377,13 +346,13 @@
                           rest-vars))
                (setters (map (lambda (b)
                                (make-app 'assign! (list (car b)
-                                                        (derefy (cadr b) rest-vars))))
+                                                        (derefy rest-vars (cadr b)))))
                              rest-bindings))
-               (body (derefy body rest-vars)))
+               (body (derefy rest-vars body)))
           (let-builder refs
                        (let-builder (rewrapped-lambdas lambda-vars
                                                        (map (lambda (v)
-                                                              (derefy v rest-vars))
+                                                              (derefy rest-vars v))
                                                             (bindings-vals lambda-bindings))
                                                        rebound)
                                     (let-builder (filter-unused rebound body-free-vars)

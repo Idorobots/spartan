@@ -75,28 +75,28 @@
 (assert (derefy '() '())
         '())
 
-(assert (derefy 'foo '())
+(assert (derefy '() 'foo)
         'foo)
 
-(assert (derefy 'foo '(foo))
+(assert (derefy '(foo) 'foo)
         '(deref foo))
 
-(assert (derefy '(bar foo) '(foo))
+(assert (derefy '(foo) '(bar foo))
         '(bar (deref foo)))
 
-(assert (derefy '(let ((foo foo)) foo) '(foo))
-        '(let ((foo foo))
-           foo))
-
-(assert (derefy '(lambda (foo) foo) '(foo))
+(assert (derefy '(foo) '(lambda (foo) foo))
         '(lambda (foo) foo))
 
-(assert (derefy '(let ((bar foo)) foo) '(foo))
+(assert (derefy '(foo) '(lambda (bar) foo))
+        '(lambda (bar) (deref foo)))
+
+(assert (derefy '(foo) '(let ((bar foo)) foo))
         '(let ((bar (deref foo)))
            (deref foo)))
 
-(assert (derefy '(lambda (bar) foo) '(foo))
-        '(lambda (bar) (deref foo)))
+(assert (derefy '(foo) '(letrec ((foo foo)) foo))
+        '(letrec ((foo foo))
+           foo))
 
 ;; Conversion:
 
