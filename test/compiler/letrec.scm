@@ -1,24 +1,5 @@
 ;; Letrec conversion tests.
 
-;; Free vars computation.
-
-(assert (free-vars '())
-        '())
-
-(assert (free-vars 'foo)
-        '(foo))
-
-(assert (free-vars '(list 23 foo))
-        '(foo list))
-
-(assert (free-vars '(lambda (foo) (list 23 foo)))
-        '(list))
-
-(assert (free-vars '(let ((f (lambda ()
-                               (even? 5))))
-                      (let ((t (f)))
-                        t)))
-        '(even?))
 ;; SCC
 
 ;;   a

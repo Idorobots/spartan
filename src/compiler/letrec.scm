@@ -2,6 +2,7 @@
 
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
+(load "compiler/freevars.scm")
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 
@@ -119,34 +120,6 @@
     (group scc)))
 
 ;; Dependency derivation::
-
-;; FIXME Rewrite in terms of ast/walk.
-(define (free-vars expr)
-  ;; FIXME This ought to be a separate AST annotation phase.
-  (cond ((symbol? expr)
-         (list expr))
-        ((simple? expr)
-         '())
-        ((or (let? expr)
-             (letrec? expr))
-         (let ((bindings (let-bindings expr)))
-           (filter (lambda (v)
-                     (not (member v (bindings-vars bindings))))
-                   (foldl append
-                          (free-vars (let-body expr))
-                          (map free-vars (bindings-vals bindings))))))
-        ((letcc? expr)
-         (let ((binding (let-bindings expr)))
-           (filter (lambda (v)
-                     (not (equal? v binding)))
-                   (free-vars (let-body expr)))))
-        ((lambda? expr)
-         (filter (lambda (v)
-                   (not (member v (lambda-args expr))))
-                 (free-vars (lambda-body expr))))
-        (else
-         (append (free-vars (car expr))
-                 (free-vars (cdr expr))))))
 
 (define (derive-dependencies bindings)
   (let ((vars (bindings-vars bindings)))
