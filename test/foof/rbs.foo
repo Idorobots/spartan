@@ -9,7 +9,7 @@
          (listen (lambda ()
                    (let ((t (recv)))
                      (display "Current time: ")
-                     (display (cdr (car t)))
+                     (display t)
                      (newline)
                      (listen)))))
   (spawn (lambda () (timer 0)))

@@ -233,6 +233,8 @@
 (define (let-body expr)
   (car (let-body* expr)))
 
+(define letcc-var let-bindings)
+
 (define letrec-bindings let-bindings)
 
 (define letrec-body let-body)
