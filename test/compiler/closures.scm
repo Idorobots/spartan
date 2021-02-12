@@ -60,7 +60,7 @@
                               (if n
                                   (&yield-cont c n)
                                   (&yield-cont c n))))
-                         (make-global-environment))
+                         (make-internal-applicatives))
         '(&make-closure (&make-env)
                         (lambda (env2 n cont)
                           (let ((c (&make-closure (&make-env cont)
@@ -136,6 +136,35 @@
                                  (lambda (env1 x)
                                    x))))
            (&apply a 23)))
+
+;; Converting fix works.
+(gensym-reset!)
+(assert (closure-convert '(fix ((foo (lambda () (foo))))
+                               (foo 23))
+                         '(&apply))
+        '(let ((env2 (&make-env '())))
+           (let ((foo (&make-closure env2
+                                     (lambda (env1)
+                                       (&apply (&env-ref env1 0))))))
+             (do (&set-env! env2 0 foo)
+                 (&apply foo 23)))))
+
+(gensym-reset!)
+(assert (closure-convert '(fix ((foo (lambda () (bar)))
+                                (bar (lambda () (foo))))
+                               (foo))
+                         '(&apply))
+        '(let ((env3 (&make-env '()))
+               (env4 (&make-env '())))
+           (let ((foo (&make-closure env3
+                                     (lambda (env1)
+                                       (&apply (&env-ref env1 0)))))
+                 (bar (&make-closure env4
+                                     (lambda (env2)
+                                       (&apply (&env-ref env2 0))))))
+             (do (&set-env! env4 0 foo)
+                 (&set-env! env3 0 bar)
+               (&apply foo)))))
 
 ;; Converting letcc works.
 (assert (closure-convert '(letcc k k) '()) '(letcc k k))

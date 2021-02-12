@@ -28,14 +28,15 @@
                        (make-let subbed-bindings
                                  (substitute (filter-subs subs (bindings-vars bindings))
                                              (let-body expr)))))
-        ((letrec? expr) (let* ((bindings (let-bindings expr))
-                               (unbound-subs (filter-subs subs (bindings-vars bindings)))
-                               (subbed-bindings (map (lambda (b)
-                                                       (list (car b)
-                                                             (substitute unbound-subs (cadr b))))
-                                                     bindings)))
-                          (make-letrec subbed-bindings
-                                       (substitute unbound-subs (let-body expr)))))
+        ((or (letrec? expr)
+             (fix? expr)) (let* ((bindings (let-bindings expr))
+                                 (unbound-subs (filter-subs subs (bindings-vars bindings)))
+                                 (subbed-bindings (map (lambda (b)
+                                                         (list (car b)
+                                                               (substitute unbound-subs (cadr b))))
+                                                       bindings)))
+                            (make-letrec subbed-bindings
+                                         (substitute unbound-subs (let-body expr)))))
         ((letcc? expr) (let ((var (letcc-var expr)))
                          (make-letcc var
                                      (substitute (filter-subs subs (list var))

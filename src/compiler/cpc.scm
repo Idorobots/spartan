@@ -12,9 +12,11 @@
         ((nil? expr) (kont expr))
         ((char? expr) (kont expr))
         ((quote? expr) (kont expr))
-        ((lambda? expr) (cpc-lambda expr kont))
         ((if? expr) (cpc-if expr kont))
-        ((letrec? expr) (cpc-letrec expr kont))
+        ((do? expr) (cpc-do expr kont))
+        ((let? expr) (cpc-let expr kont))
+        ((lambda? expr) (cpc-lambda expr kont))
+        ((fix? expr) (cpc-fix expr kont))
         ((application? expr) (cpc-app expr kont))
         ;; These shouldn't be there after the phase.
         ((letcc? expr) (cpc-letcc expr kont))
@@ -22,10 +24,8 @@
         ((shift? expr) (cpc-shift expr kont))
         ((handle? expr) (cpc-handle expr kont))
         ((raise? expr) (cpc-raise expr kont))
-        ;; These shouldn't be here.
-        ((do? expr) (cpc-do expr kont))
+        ;; FIXME These shouldn't be here.
         ((define? expr) (cpc-define expr kont))
-        ((let? expr) (cpc-let expr kont))
         ;; --
         ('else (error "Unexpected expression: " expr))))
 
@@ -84,17 +84,14 @@
                                 (cpc (if-then expr) rest)
                                 (cpc (if-else expr) rest)))))))
 
-(define (cpc-letrec expr kont)
-  (let* ((bindings (let-bindings expr))
-         (names (map car bindings))
-         (values (map cadr bindings)))
-    (make-letrec (map (lambda (v)
-                        (list v (make-quote '())))
-                      names)
-                 (cpc-sequence values
-                               (lambda (sts)
-                                 (make-do (append (map make-set! names sts)
-                                                  (list (cpc (let-body expr) kont)))))))))
+(define (cpc-fix expr kont)
+  (make-fix (map (lambda (b)
+                   (list (car b)
+                         (cpc (cadr b)
+                              (make-identity-continuation))))
+                 (let-bindings expr))
+            (cpc (fix-body expr)
+                 kont)))
 
 (define (binding-steps names values finally)
   (if (empty? names)
@@ -114,7 +111,7 @@
                         kont))))
 
 (define (cpc-letcc expr kont)
-  (let ((cc (let-bindings expr))
+  (let ((cc (letcc-var expr))
         (v1 (gensym 'value))
         (v2 (gensym 'value))
         (ct (gensym 'cont)))

@@ -102,27 +102,16 @@
 
 (assert (ref-conversion
          '(letrec ((foo (lambda () (foo)))) (foo)))
-        '(let ((foo (lambda (foo)
-                      (lambda ()
-                        (let ((foo (foo foo)))
-                          (foo))))))
-           (let ((foo (foo foo)))
-             (foo))))
+        '(fix ((foo (lambda () (foo))))
+              (foo)))
 
 (assert (ref-conversion
          '(letrec ((foo (lambda () (bar)))
                    (bar (lambda () (foo))))
             (foo)))
-        '(let ((foo (lambda (foo bar)
-                      (lambda ()
-                        (let ((bar (bar foo bar)))
-                          (bar)))))
-               (bar (lambda (foo bar)
-                      (lambda ()
-                        (let ((foo (foo foo bar)))
-                          (foo))))))
-           (let ((foo (foo foo bar)))
-             (foo))))
+        '(fix ((foo (lambda () (bar)))
+               (bar (lambda () (foo))))
+              (foo)))
 
 ;; Extra tests:
 
@@ -133,7 +122,10 @@
   (let ((converted (f expr)))
     (pretty-print converted) (newline)
     (display "Result:") (newline)
-    (let ((result (eval converted)))
+    (let ((result (eval
+                   ;; NOTE Uses Scheme letrec to implement fix. Kinda cheating.
+                   (substitute '((fix . letrec))
+                                    converted))))
       (pretty-print result) (newline)
       result)))
 

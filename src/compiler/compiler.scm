@@ -15,16 +15,13 @@
          expr
          (list validate
                syntax-expand
-               ;; FIXME This should ideally run after macro-expansion, but it breaks even?/odd? example
-               ;; FIXME when both functions are called within the body. Must be a difference when handling
-               ;; FIXME lambda's and let's in some other phase.
-               letrec-expand
                (flip macro-expand (make-builtin-macros))
+               letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
-               (flip closure-convert (make-global-environment))
+               (flip closure-convert (make-internal-applicatives))
                optimize
-               (flip mangle (make-global-environment))
+               (flip mangle (make-internal-applicatives))
                generate)))
 
 (define (validate expr)

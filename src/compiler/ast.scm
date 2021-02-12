@@ -27,10 +27,13 @@
                                        (let-bindings expr))
                                   (w (let-body expr))))
            ((letrec? expr) (make-letrec (map (partial map w)
-                                             (let-bindings expr))
-                                        (w (let-body expr))))
-           ((letcc? expr) (make-letcc (w (let-bindings expr))
-                                      (w (let-body expr))))
+                                             (letrec-bindings expr))
+                                        (w (letrec-body expr))))
+           ((fix? expr) (make-fix (map (partial map w)
+                                       (fix-bindings expr))
+                                  (w (fix-body expr))))
+           ((letcc? expr) (make-letcc (w (letcc-var expr))
+                                      (w (letcc-body expr))))
            ((reset? expr) (make-reset (w (reset-expr expr))))
            ((shift? expr) (make-shift (w (shift-cont expr))
                                       (w (shift-expr expr))))
@@ -54,6 +57,7 @@
     do
     let
     letrec
+    fix
     letcc
     set!
     reset
@@ -208,22 +212,6 @@
   `(let ((,variable ,value))
      ,body))
 
-;; (letrec ((variable value) ...) body)
-(define (letrec? expr)
-  (tagged-list? 'letrec expr))
-
-(define (make-letrec bindings body)
-  `(letrec ,bindings
-     ,body))
-
-;; (letcc continuation body)
-(define (letcc? expr)
-  (tagged-list? 'letcc expr))
-
-(define (make-letcc variable body)
-  `(letcc ,variable
-     ,body))
-
 (define (let-bindings expr)
   (cadr expr))
 
@@ -233,11 +221,41 @@
 (define (let-body expr)
   (car (let-body* expr)))
 
-(define letcc-var let-bindings)
+;; (letrec ((variable value) ...) body)
+(define (letrec? expr)
+  (tagged-list? 'letrec expr))
+
+(define (make-letrec bindings body)
+  `(letrec ,bindings
+     ,body))
 
 (define letrec-bindings let-bindings)
 
 (define letrec-body let-body)
+
+;; (fix ((variable value) ...) body)
+(define (fix? expr)
+  (tagged-list? 'fix expr))
+
+(define (make-fix bindings body)
+  `(fix ,bindings
+        ,body))
+
+(define fix-bindings let-bindings)
+
+(define fix-body let-body)
+
+;; (letcc continuation body)
+(define (letcc? expr)
+  (tagged-list? 'letcc expr))
+
+(define (make-letcc variable body)
+  `(letcc ,variable
+     ,body))
+
+(define letcc-var let-bindings)
+
+(define letcc-body let-body)
 
 ;; Mutation:
 (define (set!? expr)
@@ -285,8 +303,8 @@
 
 (define (primop-application? expr)
   (and (application? expr)
-       ;; FIXME Don't rely on make-global-environment.
-       (member (app-op expr) (make-global-environment))))
+       ;; FIXME Don't rely on make-internal-applicatives
+       (member (app-op expr) (make-internal-applicatives))))
 
 (define (make-app op args)
   `(,op ,@args))

@@ -91,97 +91,24 @@
         '(let ((a 23))
            (do 23 a)))
 
-;; CPCing letrec works.
+;; CPCing fix works.
 (gensym-reset!)
-(assert (cpc-letrec '(letrec ((hcf (lambda (x) (hcf x))))
-                    hcf)
+(assert (cpc-fix '(fix ((foo (lambda () (foo))))
+                       (foo))
                  id)
-        '(letrec ((hcf '()))
-           (do (set!
-                hcf
-                (lambda (x cont1)
-                  (hcf x (lambda (value2) (&yield-cont cont1 value2)))))
-               hcf)))
+        '(fix
+          ((foo (lambda (cont1) (foo (lambda (value2) (&yield-cont cont1 value2))))))
+          (foo (lambda (value3) value3))))
 
 (gensym-reset!)
-(assert (cpc-letrec '(letrec ((fact (lambda (n)
-                                   (if (< n 2)
-                                       n
-                                       (* n (fact (- n 1)))))))
-                    (fact 10))
+(assert (cpc-fix '(fix ((foo (lambda () (bar)))
+                        (bar (lambda () (foo))))
+                       (foo))
                  id)
-        '(letrec ((fact '()))
-           (do (set!
-                fact
-                (lambda (n cont1)
-                  (<
-                   n
-                   2
-                   (lambda (value4)
-                     (let ((cont2
-                            (lambda (value3) (&yield-cont cont1 value3))))
-                       (if value4
-                           (&yield-cont cont2 n)
-                           (-
-                            n
-                            1
-                            (lambda (value7)
-                              (fact
-                               value7
-                               (lambda (value6)
-                                 (*
-                                  n
-                                  value6
-                                  (lambda (value5)
-                                    (&yield-cont cont2 value5)))))))))))))
-               (fact 10 (lambda (value8) value8)))))
-
-;; NOTE I don't even...
-(gensym-reset!)
-(assert (cpc-letrec '(letrec ((even? (lambda (x) (if (= 0 x) 't (odd? (- x 1)))))
-                           (odd? (lambda (x) (if (= 0 x) 'n (even? (- x 1))))))
-                    (even? 7))
-                 id)
-        '(letrec ((even? '()) (odd? '()))
-           (do (set!
-                even?
-                (lambda (x cont1)
-                  (=
-                   0
-                   x
-                   (lambda (value4)
-                     (let ((cont2
-                            (lambda (value3) (&yield-cont cont1 value3))))
-                       (if value4
-                           (&yield-cont cont2 't)
-                           (-
-                            x
-                            1
-                            (lambda (value6)
-                              (odd?
-                               value6
-                               (lambda (value5)
-                                 (&yield-cont cont2 value5)))))))))))
-               (set!
-                odd?
-                (lambda (x cont7)
-                  (=
-                   0
-                   x
-                   (lambda (value10)
-                     (let ((cont8
-                            (lambda (value9) (&yield-cont cont7 value9))))
-                       (if value10
-                           (&yield-cont cont8 'n)
-                           (-
-                            x
-                            1
-                            (lambda (value12)
-                              (even?
-                               value12
-                               (lambda (value11)
-                                 (&yield-cont cont8 value11)))))))))))
-             (even? 7 (lambda (value13) value13)))))
+        '(fix
+          ((foo (lambda (cont1) (bar (lambda (value2) (&yield-cont cont1 value2)))))
+           (bar (lambda (cont3) (foo (lambda (value4) (&yield-cont cont3 value4))))))
+          (foo (lambda (value5) value5))))
 
 ;; CPCing application works.
 (gensym-reset!)
