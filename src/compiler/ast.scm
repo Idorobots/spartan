@@ -8,6 +8,9 @@
     (post
      (cond ((symbol? expr) expr)
            ((simple? expr) expr)
+           ((quasiquote? expr) (make-quasiquote (w (quoted-expr expr))))
+           ((unquote? expr) (make-unquote (w (quoted-expr expr))))
+           ((unquote-splicing? expr) (make-unquote-splicing (w (quoted-expr expr))))
            ((do? expr) (make-do (map w (do-statements expr))))
            ((if? expr) (make-if (w (if-predicate expr))
                                 (w (if-then expr))
@@ -44,7 +47,7 @@
                                         (map w (module-deps expr))
                                         (map w (module-body expr))))
            ((structure? expr) (make-structure (map w (structure-defs expr))))
-           ('else (error "Unexpected expression: " expr))))))
+           (else (error "Unexpected expression: " expr))))))
 
 (define +syntax-keys+
   '(quote
@@ -101,6 +104,27 @@
 
 (define (quoted-expr expr)
   (cadr expr))
+
+;; (quasiquote expr)
+(define (quasiquote? expr)
+  (tagged-list? 'quasiquote expr))
+
+(define (make-quasiquote expr)
+  (list 'quasiquote expr))
+
+;; (unquote expr)
+(define (unquote? expr)
+  (tagged-list? 'unquote expr))
+
+(define (make-unquote expr)
+  (list 'unquote expr))
+
+;; (unquote-splicing expr)
+(define (unquote-splicing? expr)
+  (tagged-list? 'unquote-splicing expr))
+
+(define (make-unquote-splicing expr)
+  (list 'unquote-splicing expr))
 
 ;; (lambda (args ...) body)
 (define (lambda? expr)
