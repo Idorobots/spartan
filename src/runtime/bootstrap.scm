@@ -30,6 +30,7 @@
 (define __list (bootstrap list))
 (define __cons (bootstrap cons))
 (define __append (bootstrap append))
+(define __concat (bootstrap append))
 
 (define __equalQUEST (bootstrap equal?))
 (define __nilQUEST (bootstrap null?))
