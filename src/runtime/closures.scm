@@ -1,8 +1,10 @@
 ;; Runtime closure creation.
 
+(define &make-env vector)
+
 (define &env-ref vector-ref)
 
-(define &make-env vector)
+(define &set-env! vector-set!)
 
 (define (&make-closure env fun)
   (list &make-closure env fun))

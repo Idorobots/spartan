@@ -1,45 +1,5 @@
 ;; Closure conversion
 
-;; Set operations work.
-(assert (set) '())
-(assert (set 'a 'b 'c) '(a b c))
-(assert (set 'c 'a 'b) '(a b c))
-(assert (set-difference (set 'a 'b 'c) (set 'a 'b 'c)) '())
-(assert (set-difference (set 'a 'b 'c) (set 'a)) '(b c))
-(assert (set-difference (set 'a 'b 'c) (set 'd)) '(a b c))
-(assert (set-difference (set 'a 'b 'c) (set 'c 'd)) '(a b))
-(assert (set-union (set 'a 'b 'c) (set 'a 'b 'c)) '(a b c))
-(assert (set-union (set 'a 'b 'c) (set 'd)) '(a b c d))
-(assert (set-union (set 'b 'c 'd) (set 'a)) '(a b c d))
-(assert (set-union (set 'b 'c) (set 'a 'd)) '(a b c d))
-
-;; Free variables computation works.
-(assert (free-vars '()) '())
-(assert (free-vars '23) '())
-(assert (free-vars '"foo") '())
-(assert (free-vars '(a b c)) '(a b c))
-(assert (free-vars '(quote foo bar)) '())
-(assert (free-vars '(list (quote foo bar) baz)) '(baz list))
-(assert (free-vars '(define foo (list foo bar baz))) '(bar baz foo list))
-(assert (free-vars '(do a b c)) '(a b c))
-(assert (free-vars '(if a b c)) '(a b c))
-(assert (free-vars '(letcc cont (foo bar cont))) '(bar foo))
-(assert (free-vars '(letrec ((a 23) (bar a)) (* 2 bar))) '(*))
-(assert (free-vars '(letrec ((a 23) (bar foo)) (* a bar))) '(* foo))
-(assert (free-vars '(shift k (reset (* foo k)))) '(* foo))
-(assert (free-vars '(handle (raise foo) bar)) '(bar foo))
-(assert (free-vars '(lambda (x y) (+ x y))) '(+))
-(assert (free-vars '(lambda (x) x)) '())
-
-;; Substitution works.
-(assert (substitute '((foo . bar)) 'faz) 'faz)
-(assert (substitute '((foo . bar)) 'foo) 'bar)
-(assert (substitute '((foo . bar)) '(foo bar)) '(bar bar))
-(assert (substitute '((foo . bar) (bar . foo)) '(foo bar)) '(bar foo))
-(assert (substitute '((foo . bar)) '(foo foo)) '(bar bar))
-(assert (substitute '((foo . bar)) '(do foo (lambda (foo) foo))) '(do bar (lambda (bar) bar)))
-(assert (substitute '((foo . bar)) '(do foo (lambda (bar) foo))) '(do bar (lambda (bar) bar)))
-
 ;; Simple cases work.
 (assert (closure-convert 'foo '()) 'foo)
 (assert (closure-convert 23 '()) 23)
@@ -100,7 +60,7 @@
                               (if n
                                   (&yield-cont c n)
                                   (&yield-cont c n))))
-                         (make-global-environment))
+                         (make-internal-applicatives))
         '(&make-closure (&make-env)
                         (lambda (env2 n cont)
                           (let ((c (&make-closure (&make-env cont)
@@ -177,6 +137,35 @@
                                    x))))
            (&apply a 23)))
 
+;; Converting fix works.
+(gensym-reset!)
+(assert (closure-convert '(fix ((foo (lambda () (foo))))
+                               (foo 23))
+                         '(&apply))
+        '(let ((env2 (&make-env '())))
+           (let ((foo (&make-closure env2
+                                     (lambda (env1)
+                                       (&apply (&env-ref env1 0))))))
+             (do (&set-env! env2 0 foo)
+                 (&apply foo 23)))))
+
+(gensym-reset!)
+(assert (closure-convert '(fix ((foo (lambda () (bar)))
+                                (bar (lambda () (foo))))
+                               (foo))
+                         '(&apply))
+        '(let ((env3 (&make-env '()))
+               (env4 (&make-env '())))
+           (let ((foo (&make-closure env3
+                                     (lambda (env1)
+                                       (&apply (&env-ref env1 0)))))
+                 (bar (&make-closure env4
+                                     (lambda (env2)
+                                       (&apply (&env-ref env2 0))))))
+             (do (&set-env! env4 0 foo)
+                 (&set-env! env3 0 bar)
+               (&apply foo)))))
+
 ;; Converting letcc works.
 (assert (closure-convert '(letcc k k) '()) '(letcc k k))
 
@@ -186,7 +175,6 @@
            (&make-closure (&make-env k)
                           (lambda (env1 x)
                             (&env-ref env1 0)))))
-
 
 ;; Converting shift/reset works.
 (assert (closure-convert '(shift k (reset k)) '()) '(shift k (reset k)))
@@ -237,3 +225,58 @@
         '(handle x
                  (&make-closure (&make-env)
                                 (lambda (env1 e) e))))
+
+;; Complex examples work.
+(gensym-reset!)
+(assert (closure-convert
+         '(lambda (n cont4)
+            (fact
+             fact
+             (lambda (value11)
+               (let ((fact value11))
+                 23))))
+         '(&yield-cont &make-env &apply &env-ref &make-closure))
+        '(&make-closure
+          (&make-env fact)
+          (lambda (env2 n cont4)
+            (&apply
+             (&env-ref env2 0)
+             (&env-ref env2 0)
+             (&make-closure
+              (&make-env)
+              (lambda (env1 value11)
+                (let ((fact value11))
+                  23)))))))
+
+(gensym-reset!)
+(assert (closure-convert
+         '(let ((foo (lambda (foo bar)
+                       (lambda ()
+                         (let ((bar (bar foo bar)))
+                           bar))))
+                (bar (lambda (foo bar)
+                       (lambda ()
+                         (let ((foo (foo foo bar)))
+                           foo)))))
+            (let ((foo (foo foo bar))
+                  (bar (bar foo bar)))
+              (list (foo) (bar))))
+         '(&yield-cont &make-env &apply &env-ref &make-closure))
+        '(let ((foo (&make-closure
+                     (&make-env)
+                     (lambda (env2 foo bar)
+                       (&make-closure
+                        (&make-env foo)
+                        (lambda (env1)
+                          (let ((bar (&apply bar (&env-ref env1 0) bar)))
+                            bar))))))
+               (bar (&make-closure
+                     (&make-env)
+                     (lambda (env4 foo bar)
+                       (&make-closure
+                        (&make-env bar)
+                        (lambda (env3)
+                          (let ((foo (&apply foo foo (&env-ref env3 0)))) foo)))))))
+           (let ((foo (&apply foo foo bar))
+                 (bar (&apply bar foo bar)))
+             (&apply list (&apply foo) (&apply bar)))))

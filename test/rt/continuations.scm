@@ -46,5 +46,5 @@
                                                                     (cons (car xs)
                                                                           (k (cdr xs)))))))))
                                   (reset (visit xs))))))
-                (display (traverse '(1 2 3 4 5)))))
+                (traverse '(1 2 3 4 5))))
         '(1 2 3 4 5))

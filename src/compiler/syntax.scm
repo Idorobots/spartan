@@ -23,11 +23,11 @@
                            (make-do (let-body* expr))))
 
                 ((letrec? expr)
-                 (make-letrec (let-bindings expr)
+                 (make-letrec (letrec-bindings expr)
                               (make-do (let-body* expr))))
 
                 ((letcc? expr)
-                 (make-letcc (let-bindings expr)
+                 (make-letcc (letcc-var expr)
                              (make-do (let-body* expr))))
 
                 ('else

@@ -2,10 +2,13 @@
 
 (load "../test/utils.scm")
 (load "../test/compiler/utils.scm")
+(load "../test/compiler/freevars.scm")
+(load "../test/compiler/substitute.scm")
 (load "../test/compiler/parser.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/syntax.scm")
 (load "../test/compiler/macros.scm")
+(load "../test/compiler/letrec.scm")
 (load "../test/compiler/anormal.scm")
 (load "../test/compiler/cpc.scm")
 (load "../test/compiler/closures.scm")

@@ -12,14 +12,13 @@
                  (unless (queue-empty?)
                    ((dequeue) nil))))
          (fork (lambda (proc)
-                 (letcc k
-                        (enqueue k)
-                        (proc)
-                        (join))))
+                 (enqueue (lambda (_)
+                            (reset (proc))
+                            (join)))))
          (yield (lambda ()
-                  (letcc k
-                         (enqueue k)
-                         ((dequeue) nil))))
+                  (shift k
+                         (do (enqueue k)
+                             ((dequeue) nil)))))
          (do-stuff (lambda (x)
                      (lambda ()
                        (display x) (display " 1") (newline)

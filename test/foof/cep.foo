@@ -3,7 +3,7 @@
                     (sleep 10000)
                     (monitor)))
          (notify (lambda (prefix t)
-                   (assert! `(notify ,prefix ,(random)))
+                   (assert! (list 'notify prefix (random)))
                    (sleep t)
                    (notify prefix t)))
          (listen (lambda ()

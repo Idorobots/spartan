@@ -7,12 +7,7 @@
         (expr (pre expression)))
     (post
      (cond ((symbol? expr) expr)
-           ((number? expr) expr)
-           ((string? expr) expr)
-           ((vector? expr) expr)
-           ((nil? expr) expr)
-           ((char? expr) expr)
-           ((quote? expr) expr)
+           ((simple? expr) expr)
            ((do? expr) (make-do (map w (do-statements expr))))
            ((if? expr) (make-if (w (if-predicate expr))
                                 (w (if-then expr))
@@ -32,10 +27,13 @@
                                        (let-bindings expr))
                                   (w (let-body expr))))
            ((letrec? expr) (make-letrec (map (partial map w)
-                                             (let-bindings expr))
-                                        (w (let-body expr))))
-           ((letcc? expr) (make-letcc (w (let-bindings expr))
-                                      (w (let-body expr))))
+                                             (letrec-bindings expr))
+                                        (w (letrec-body expr))))
+           ((fix? expr) (make-fix (map (partial map w)
+                                       (fix-bindings expr))
+                                  (w (fix-body expr))))
+           ((letcc? expr) (make-letcc (w (letcc-var expr))
+                                      (w (letcc-body expr))))
            ((reset? expr) (make-reset (w (reset-expr expr))))
            ((shift? expr) (make-shift (w (shift-cont expr))
                                       (w (shift-expr expr))))
@@ -59,6 +57,7 @@
     do
     let
     letrec
+    fix
     letcc
     set!
     reset
@@ -67,6 +66,31 @@
     raise
     module
     structure))
+
+(define (simple? expr)
+  (or (nil? expr)
+      (number? expr)
+      (string? expr)
+      (char? expr)
+      (vector? expr)
+      (quote? expr)))
+
+(define (value? expr)
+  (or (lambda? expr)
+      (simple? expr)
+      (structure? expr)))
+
+;; ((var val) ...)
+(define binding-var car)
+
+(define binding-val cadr)
+
+(define (bindings-vars bindings)
+  (map binding-var bindings))
+
+(define (bindings-vals bindings)
+  (map binding-val bindings))
+
 
 ;; (quote expr)
 (define (quote? expr)
@@ -188,6 +212,15 @@
   `(let ((,variable ,value))
      ,body))
 
+(define (let-bindings expr)
+  (cadr expr))
+
+(define (let-body* expr)
+  (cddr expr))
+
+(define (let-body expr)
+  (car (let-body* expr)))
+
 ;; (letrec ((variable value) ...) body)
 (define (letrec? expr)
   (tagged-list? 'letrec expr))
@@ -195,6 +228,22 @@
 (define (make-letrec bindings body)
   `(letrec ,bindings
      ,body))
+
+(define letrec-bindings let-bindings)
+
+(define letrec-body let-body)
+
+;; (fix ((variable value) ...) body)
+(define (fix? expr)
+  (tagged-list? 'fix expr))
+
+(define (make-fix bindings body)
+  `(fix ,bindings
+        ,body))
+
+(define fix-bindings let-bindings)
+
+(define fix-body let-body)
 
 ;; (letcc continuation body)
 (define (letcc? expr)
@@ -204,14 +253,9 @@
   `(letcc ,variable
      ,body))
 
-(define (let-bindings expr)
-  (cadr expr))
+(define letcc-var let-bindings)
 
-(define (let-body* expr)
-  (cddr expr))
-
-(define (let-body expr)
-  (car (let-body* expr)))
+(define letcc-body let-body)
 
 ;; Mutation:
 (define (set!? expr)
@@ -259,8 +303,8 @@
 
 (define (primop-application? expr)
   (and (application? expr)
-       ;; FIXME Don't rely on make-global-environment.
-       (member (app-op expr) (make-global-environment))))
+       ;; FIXME Don't rely on make-internal-applicatives
+       (member (app-op expr) (make-internal-applicatives))))
 
 (define (make-app op args)
   `(,op ,@args))
