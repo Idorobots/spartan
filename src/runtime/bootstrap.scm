@@ -82,3 +82,7 @@
 (define __debug (bootstrap (lambda args
                              (pretty-print args)
                              (newline))))
+(define __monitor (bootstrap (lambda (timeout)
+                               (task-info)
+                               (&apply __sleep timeout (bootstrap (lambda _
+                                                                    (&apply __monitor timeout id)))))))
