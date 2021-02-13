@@ -20,14 +20,22 @@
       filename
       (run (parse (slurp filename))))))
 
+(define (sort-lines contents)
+  (string-join
+         (sort (string-split contents "\n")
+               string>?)
+         "\n"))
+
 (define-syntax test-file
   (syntax-rules ()
-      ((_ filename)
-       (let ((expected-file (string-append filename ".output")))
-         (if (file-exists? expected-file)
-             (let ((expected (slurp expected-file)))
-               (assert (run-file filename)
-                       expected))
-             (with-output-to-file expected-file
-               (lambda ()
-                 (run (parse (slurp filename))))))))))
+    ((_ filename)
+     (test-file filename id))
+    ((_ filename preprocess)
+     (let ((expected-file (string-append filename ".output")))
+       (if (file-exists? expected-file)
+           (let ((expected (slurp expected-file)))
+             (assert (preprocess (run-file filename))
+                     (preprocess expected)))
+           (with-output-to-file expected-file
+             (lambda ()
+               (run (parse (slurp filename))))))))))

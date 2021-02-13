@@ -32,7 +32,7 @@
 
 ;; Ensure that timeouts take very short time.
 (define __sleep (bootstrap (lambda (time)
-                             (wait 10))))
+                             (wait 25))))
 
 ;; Ensure that monitor task doesn't ever hang the execution.
 (define __monitor (bootstrap (lambda (time)
@@ -47,17 +47,24 @@
                                     (set! *random* 0.05))
                                 r))))
 
-;; (test-file "../test/foof/cep.foo") ;; FIXME Flaky
+;; Basic language features:
+(test-file "../test/foof/hello.foo")
+(test-file "../test/foof/fibonacci.foo")
+;; (test-file "../test/foof/logger.foo") ;; FIXME Makes no sense to run it untill proper module handling is implemented.
+
+;; Continuations:
+(test-file "../test/foof/errors.foo")
 (test-file "../test/foof/coroutines.foo")
 (test-file "../test/foof/coroutines2.foo")
-(test-file "../test/foof/errors.foo")
-(test-file "../test/foof/errors2.foo")
-(test-file "../test/foof/fibonacci.foo")
-(test-file "../test/foof/fibonacci2.foo")
-;; (test-file "../test/foof/hello.foo")
-;; (test-file "../test/foof/logger.foo")
+
+;; Actor model:
+(test-file "../test/foof/uprocs.foo")
+(test-file "../test/foof/uprocs2.foo" sort-lines)
 (test-file "../test/foof/msgwait.foo") ;; FIXME Sometimes broken.
-(test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
+(test-file "../test/foof/fibonacci2.foo")
+(test-file "../test/foof/errors2.foo")
+
+;; Rule based system:
 (test-file "../test/foof/rbs2.foo")
-;; (test-file "../test/foof/uprocs.foo") ;; FIXME Flaky
-;; (test-file "../test/foof/uprocs2.foo") ;; FIXME Flaky
+(test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
+(test-file "../test/foof/cep.foo")

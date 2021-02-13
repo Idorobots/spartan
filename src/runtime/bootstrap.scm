@@ -22,6 +22,8 @@
 
 (define bootstrap (compose closurize cpsfy))
 
+;; Basic
+
 (define __car (bootstrap car))
 (define __cadr (bootstrap car))
 (define __cdr (bootstrap cdr))
@@ -61,6 +63,12 @@
 
 (define __spawn (bootstrap spawn))
 
+(define __task_info (bootstrap task-info))
+(define __monitor (bootstrap (lambda (timeout)
+                               (task-info)
+                               (&apply __sleep timeout (bootstrap (lambda _
+                                                                    (&apply __monitor timeout id)))))))
+
 ;; RBS bootstrap:
 (define __assertBANG (bootstrap assert!))
 (define __signalBANG (bootstrap signal!))
@@ -75,14 +83,9 @@
                                          (send who b))))))
 
 ;; Misc:
-(define __task_info (bootstrap task-info))
 (define __display (bootstrap display))
 (define __newline (bootstrap newline))
 (define __random (bootstrap random))
 (define __debug (bootstrap (lambda args
                              (pretty-print args)
                              (newline))))
-(define __monitor (bootstrap (lambda (timeout)
-                               (task-info)
-                               (&apply __sleep timeout (bootstrap (lambda _
-                                                                    (&apply __monitor timeout id)))))))
