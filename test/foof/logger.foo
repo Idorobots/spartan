@@ -24,4 +24,4 @@
     (logger.error "failed badly!")))
 
 (let ((t (test (logger))))
-  (t.do-something))
+  (t.do-something)))

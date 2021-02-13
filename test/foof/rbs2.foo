@@ -5,5 +5,6 @@
     (assert! '(bar 3))
     (retract! '(foo 3))
     (signal! '(foo 4))
-    (select '(and (foo ?value)
-                  (bar ?value))))
+    (display (select '(and (foo ?value)
+                           (bar ?value))))
+    (newline))
