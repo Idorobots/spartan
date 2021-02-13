@@ -31,12 +31,12 @@
     (newline)
     r))
 
-(define (run expr)
+(define (run-code prepare expr)
   (reset-rete!)
   (reset-tasks! nil)
   (spawn-task! (&yield-cont (closurize
                              (lambda (expr)
-                               (do-expr expr)))
+                               (prepare expr)))
                             expr)
                (closurize
                 (lambda (e _)
@@ -46,3 +46,7 @@
                   e)))
   ;; NOTE Returns only the last result.
   (last (execute!)))
+
+(define run/pp (partial run-code do-expr))
+
+(define run (partial run-code (compose eval compile)))

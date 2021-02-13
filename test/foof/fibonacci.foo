@@ -3,4 +3,5 @@
                     n
                     (+ (fib (- n 1))
                        (fib (- n 2)))))))
-  (fib 23))
+  (display (fib 23))
+  (newline))
