@@ -1,5 +1,7 @@
 ;; A very simple parser.
 
+(load "compiler/peg.scm")
+
 (define (slurp file-name)
   (with-input-from-file file-name
     (lambda ()
