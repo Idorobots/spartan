@@ -4,15 +4,6 @@
 
 ;; Some debugging & optimizations
 
-(define (trace . args)
-  '())
-
-;; (define *trace-count* 0)
-;; (define (trace where input offset)
-;;   (when where
-;;     (set! *trace-count* (+ 1 *trace-count*)))
-;;   (display (format "~a - ~a at ~a\n" where input offset)))
-
 (define (memoize f)
   f)
 
@@ -60,7 +51,6 @@
                                      (let ((linked (compiled rules)))
                                        (memoize
                                         (lambda (input offset)
-                                          (trace name input offset)
                                           (transform input (linked input offset))))))))))
                         rules))
          (linked ((cadar compiled) compiled)))
@@ -74,7 +64,6 @@
 (define compile-rule-pattern
   (memoize
    (lambda (rule)
-     (trace 'compile-rule-pattern rule '())
      (memoize
       (cond ((nonterminal? rule)      (compile-nonterminal rule))
             ((terminal? rule)         (compile-matcher rule))
@@ -97,28 +86,22 @@
 
 ;; Nonterminal
 (define (compile-nonterminal rule-name)
-  (trace 'compile-nonterminal rule-name '())
   (lambda (rules)
-    (trace 'link-nonterminal rule-name '())
     (let ((linked '()))
       (memoize
        (lambda (input offset)
          (when (empty? linked)
            ;; NOTE Needs to be embedded within the inner function to break recursivity of the rules.
            (set! linked ((find-rule rule-name rules) rules)))
-         (trace 'nonterminal input offset)
          (linked input offset))))))
 
 ;; "terminal"
 (define (compile-matcher regex)
-  (trace 'compile-matcher regex '())
   (lambda (_)
-    (trace 'link-matcher regex '())
     (memoize
      (lambda (input offset)
        (let* ((actual-input (substring input offset))
               (result (regexp-match (string-append "^" regex) actual-input)))
-         (trace 'matcher result regex)
          (if result
              (matches (car result)
                       offset
@@ -127,18 +110,15 @@
 
 ;; (...)
 (define (compile-sequence subrules)
-  (trace 'compile-sequence subrules '())
   (let ((compiled (map (lambda (r)
                          (compile-rule-pattern r))
                        subrules)))
     (lambda (rules)
-      (trace 'link-sequence subrules '())
       (let ((linked (map (lambda (r)
                            (r rules))
                          compiled)))
         (memoize
          (lambda (input offset)
-           (trace 'sequence input offset)
            (foldl (lambda (r acc)
                     (let-matches (ms s e) acc
                                  (let-matches (m new-s new-e) (r input e)
@@ -148,18 +128,15 @@
 
 ;; (/ ...)
 (define (compile-or subrules)
-  (trace 'compile-or subrules '())
   (let ((compiled (map (lambda (r)
                          (compile-rule-pattern r))
                        (cdr subrules))))
     (lambda (rules)
-      (trace 'link-or subrules '())
       (let ((linked (map (lambda (r)
                            (r rules))
                          compiled)))
         (memoize
          (lambda (input offset)
-           (trace 'or input offset)
            (foldl (lambda (r acc)
                     (if (matches? acc)
                         acc
@@ -169,14 +146,11 @@
 
 ;; (* ...)
 (define (compile-zero-or-more subrules)
-  (trace 'compile-zero-or-more subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-zero-or-more subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'zero-or-more input offset)
            (let loop ((s offset)
                       (e offset)
                       (ms '()))
@@ -188,14 +162,11 @@
 
 ;; (+ ...)
 (define (compile-one-or-more subrules)
-  (trace 'compile-one-or-more subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-one-or-more subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'one-or-more input offset)
            (let loop ((s offset)
                       (e offset)
                       (ms '()))
@@ -209,14 +180,11 @@
 
 ;; (? ...)
 (define (compile-optional subrules)
-  (trace 'compile-optional subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-optional subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'optional input offset)
            (let ((result (linked input offset)))
              (if (matches? result)
                  result
@@ -224,14 +192,11 @@
 
 ;; (! ...)
 (define (compile-not subrules)
-  (trace 'compile-not subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-not subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'not input offset)
            (let ((result (linked input offset)))
              (if (matches? result)
                  (no-match)
@@ -239,14 +204,11 @@
 
 ;; (& ...)
 (define (compile-and subrules)
-  (trace 'compile-and subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-and subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'and input offset)
            (let ((result (linked input offset)))
              (let-matches (m s e) result
                           ;; NOTE Doesn't advance the scan.
@@ -254,14 +216,11 @@
 
 ;; (: ...)
 (define (compile-drop subrules)
-  (trace 'compile-drop subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-drop subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'drop input offset)
            (let ((result (linked input offset)))
              (let-matches (m s e) result
                           ;; NOTE Skips the scan.
@@ -269,14 +228,11 @@
 
 ;; (~ ...)
 (define (compile-concat subrules)
-  (trace 'compile-drop subrules '())
   (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-concat subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
-           (trace 'drop input offset)
            (let ((result (linked input offset)))
              (let-matches (ms s e) result
                           (matches (foldr string-append "" ms) s e)))))))))

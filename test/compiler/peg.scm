@@ -209,7 +209,6 @@
    '((Expression <- (/ List Atom String Quote)))
    `((Quote      <- Spacing (: "'") Expression)
      ,(lambda (input result)
-        (trace 'Quote-transform input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
                        (matches (ast ':type 'quote
@@ -220,7 +219,6 @@
                                 end)))))
    `((String     <- Spacing (: "\"") "[^\"]*" (: "\""))
      ,(lambda (input result)
-        (trace 'String-transform input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
                        (matches (ast ':type 'string
@@ -232,7 +230,6 @@
                                 end)))))
    `((List       <- Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
      ,(lambda (input result)
-        (trace 'List-transform input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
                        (matches (ast ':type 'list
@@ -244,7 +241,6 @@
    '((Atom       <- (/ Symbol Number)))
    `((Number     <- Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
      ,(lambda (input result)
-        (trace 'Number-transform input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
                        (matches (ast ':type 'number
@@ -256,7 +252,6 @@
                                 end)))))
    `((Symbol     <- Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
      ,(lambda (input result)
-        (trace 'Symbol-transform input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
                        (matches (ast ':type 'symbol
@@ -268,7 +263,6 @@
                                 end)))))
    `((Spacing    <- (: (* (/ "[ \t\v\r\n]+" Comment))))
      ,(lambda (input result)
-        (trace 'Spacing-tranform input result)
         (let-matches (matching start end) result
                      ;; NOTE So that we can skip the spacing later.
                      (matches end start end))))
