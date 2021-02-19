@@ -37,9 +37,9 @@
 ;; Grammar
 (define (grammar . rules)
   (let* ((compiled (map (lambda (r)
-                          (let* ((name (caar r))
-                                 (body (cddar r))
-                                 (transform (cdr r))
+                          (let* ((name (car r))
+                                 (body (cadr r))
+                                 (transform (cddr r))
                                  (compiled (compile-rule-pattern body))
                                  (transform (if (empty? transform)
                                                 (lambda (input result)

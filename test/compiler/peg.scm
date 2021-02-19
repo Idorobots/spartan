@@ -206,8 +206,10 @@
 
 (define simple-lisp
   (grammar
-   '((Expression <- (/ List Atom String Quote)))
-   `((Quote      <- Spacing (: "'") Expression)
+   '(Expression
+     (/ List Atom String Quote))
+   `(Quote
+     (Spacing (: "'") Expression)
      ,(lambda (input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
@@ -217,7 +219,8 @@
                                      ':end end)
                                 start
                                 end)))))
-   `((String     <- Spacing (: "\"") "[^\"]*" (: "\""))
+   `(String
+     (Spacing (: "\"") "[^\"]*" (: "\""))
      ,(lambda (input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
@@ -228,7 +231,8 @@
                                      ':end end)
                                 start
                                 end)))))
-   `((List       <- Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
+   `(List
+     (Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
      ,(lambda (input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
@@ -238,8 +242,10 @@
                                      ':end end)
                                 start
                                 end)))))
-   '((Atom       <- (/ Symbol Number)))
-   `((Number     <- Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
+   '(Atom
+     (/ Symbol Number))
+   `(Number
+     (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
      ,(lambda (input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
@@ -250,7 +256,8 @@
                                      ':end end)
                                 start
                                 end)))))
-   `((Symbol     <- Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
+   `(Symbol
+     (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
      ,(lambda (input result)
         (let-matches (matching spacing-start end) result
                      (let ((start (car matching)))
@@ -261,12 +268,14 @@
                                      ':end end)
                                 start
                                 end)))))
-   `((Spacing    <- (: (* (/ "[ \t\v\r\n]+" Comment))))
+   `(Spacing
+     (: (* (/ "[ \t\v\r\n]+" Comment)))
      ,(lambda (input result)
         (let-matches (matching start end) result
                      ;; NOTE So that we can skip the spacing later.
                      (matches end start end))))
-   '((Comment    <- (: ";[^\n]*\n")))))
+   '(Comment
+     (: ";[^\n]*\n"))))
 
 (assert (simple-lisp "(foo   )")
         '((:type list
