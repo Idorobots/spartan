@@ -55,11 +55,12 @@
                                 end)))
                    result)))
    `(String
-     (Spacing (: "\"") "[^\"]*" (: "\""))
+     (Spacing "\"[^\"]*\"")
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
-                     (let ((start (car matching)))
-                       (matches (caddr matching)
+                     (let ((start (car matching))
+                           (content (cadr matching)))
+                       (matches (substring content 1 (- (string-length content) 1))
                                 start
                                 end)))
                    result)))
@@ -84,7 +85,7 @@
                                 end)))
                    result)))
    `(Symbol
-     (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
+     (Spacing (! Number) "[^\\(\\)\"'`,@; \t\v\r\n]+")
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
