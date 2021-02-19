@@ -6,8 +6,9 @@
 
 ;; Nonterminal
 
-(assert (equal? (compile-rule-pattern 'Rule)
-                (compile-rule-pattern 'Rule)))
+;; FIXME With memoization disabled this won't work.
+;;(assert (equal? (compile-rule-pattern 'Rule)
+;;                (compile-rule-pattern 'Rule)))
 
 (assert (((compile-rule-pattern 'Rule) `((Rule ,id-rule))) ;; Should delegate correctly.
          "input" 23)
@@ -345,4 +346,3 @@
             (foldl string-append
                    ""
                    (make-list 10 expr))))))
-

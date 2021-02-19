@@ -13,15 +13,15 @@
 ;;     (set! *trace-count* (+ 1 *trace-count*)))
 ;;   (display (format "~a - ~a at ~a\n" where input offset)))
 
-;; (define (memoize f)
-;;   f)
-
 (define (memoize f)
-  (let* ((previous-runs (make-hash)))
-    (lambda args
-      (hash-ref! previous-runs args
-                 (lambda ()
-                   (apply f args))))))
+  f)
+
+;; (define (memoize f)
+;;   (let* ((previous-runs (make-hasheq)))
+;;     (lambda args
+;;       (hash-ref! previous-runs args
+;;                  (lambda ()
+;;                    (apply f args))))))
 
 ;; Matches
 (define (no-match)
