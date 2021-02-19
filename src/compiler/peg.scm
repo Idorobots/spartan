@@ -17,17 +17,11 @@
 ;;   f)
 
 (define (memoize f)
-  (let* ((previous-runs '()))
+  (let* ((previous-runs (make-hash)))
     (lambda args
-      (let ((prev (assoc args previous-runs)))
-        (if prev
-            (begin
-              (trace 'memoize f prev)
-              (cadr prev))
-            (let ((result (apply f args)))
-              (set! previous-runs (cons (list args result)
-                                        previous-runs))
-              result))))))
+      (hash-ref! previous-runs args
+                 (lambda ()
+                   (apply f args))))))
 
 ;; Matches
 (define (no-match)

@@ -129,7 +129,6 @@
           0
           68))
 
-
 ;; Some benchmarks
 
 (time-execution
