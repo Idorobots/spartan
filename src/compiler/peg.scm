@@ -20,16 +20,10 @@
 
 (define matches? (compose not empty?))
 
-(define-syntax let-matches
-  (syntax-rules ()
-    ((_ (m s e) expr body ...)
-     (let ((result expr))
-       (if (matches? result)
-           (let ((m (car result))
-                 (s (cadr result))
-                 (e (caddr result)))
-             body ...)
-           (no-match))))))
+(define (map-match f m)
+  (if (matches? m)
+      (apply f m)
+      m))
 
 ;; Grammar
 (define (grammar . rules)
@@ -113,9 +107,11 @@
                          compiled)))
         (lambda (input offset)
           (foldl (lambda (r acc)
-                   (let-matches (ms s e) acc
-                                (let-matches (m new-s new-e) (r input e)
-                                             (matches (append ms (list m)) s new-e))))
+                   (map-match (lambda (ms s e)
+                                (map-match (lambda (m new-s new-e)
+                                             (matches (append ms (list m)) s new-e))
+                                           (r input e)))
+                              acc))
                  (matches '() offset offset)
                  linked))))))
 
@@ -147,8 +143,9 @@
                      (ms '()))
             (let ((result (linked input e)))
               (if (matches? result)
-                  (let-matches (m _ new-e) result
+                  (map-match (lambda (m _ new-e)
                                (loop s new-e (cons m ms)))
+                             result)
                   (matches (reverse ms) s e)))))))))
 
 ;; (+ ...)
@@ -162,8 +159,9 @@
                      (ms '()))
             (let ((result (linked input e)))
               (if (matches? result)
-                  (let-matches (m new-s new-e) result
+                  (map-match (lambda (m new-s new-e)
                                (loop s new-e (cons m ms)))
+                             result)
                   (if (> (length ms) 0)
                       (matches (reverse ms) s e)
                       (no-match))))))))))
@@ -197,9 +195,10 @@
       (let ((linked (compiled rules)))
         (lambda (input offset)
           (let ((result (linked input offset)))
-            (let-matches (m s e) result
+            (map-match (lambda (m s e)
                          ;; NOTE Doesn't advance the scan.
-                         (matches m offset offset))))))))
+                         (matches m offset offset))
+                       result)))))))
 
 ;; (: ...)
 (define (compile-drop subrules)
@@ -208,9 +207,10 @@
       (let ((linked (compiled rules)))
         (lambda (input offset)
           (let ((result (linked input offset)))
-            (let-matches (m s e) result
+            (map-match (lambda (m s e)
                          ;; NOTE Skips the scan.
-                         (matches '() e e))))))))
+                         (matches '() e e))
+                       result)))))))
 
 ;; (~ ...)
 (define (compile-concat subrules)
@@ -219,5 +219,6 @@
       (let ((linked (compiled rules)))
         (lambda (input offset)
           (let ((result (linked input offset)))
-            (let-matches (ms s e) result
-                         (matches (foldr string-append "" ms) s e))))))))
+            (map-match (lambda (ms s e)
+                         (matches (foldr string-append "" ms) s e))
+                       result)))))))

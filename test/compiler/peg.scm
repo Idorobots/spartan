@@ -211,18 +211,19 @@
    `(Quote
      (Spacing (: "'") Expression)
      ,(lambda (input result)
-        (let-matches (matching spacing-start end) result
+        (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
                        (matches (ast ':type 'quote
                                      ':value (caddr matching)
                                      ':start start
                                      ':end end)
                                 start
-                                end)))))
+                                end)))
+                   result)))
    `(String
      (Spacing (: "\"") "[^\"]*" (: "\""))
      ,(lambda (input result)
-        (let-matches (matching spacing-start end) result
+        (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
                        (matches (ast ':type 'string
                                      ':value (caddr matching)
@@ -230,24 +231,26 @@
                                      ':start start
                                      ':end end)
                                 start
-                                end)))))
+                                end)))
+                   result)))
    `(List
      (Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
      ,(lambda (input result)
-        (let-matches (matching spacing-start end) result
+        (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
                        (matches (ast ':type 'list
                                      ':value (caddr matching)
                                      ':start start
                                      ':end end)
                                 start
-                                end)))))
+                                end)))
+                   result)))
    '(Atom
      (/ Symbol Number))
    `(Number
      (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
      ,(lambda (input result)
-        (let-matches (matching spacing-start end) result
+        (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
                        (matches (ast ':type 'number
                                      ':value (string->number (cadr matching))
@@ -255,11 +258,12 @@
                                      ':start start
                                      ':end end)
                                 start
-                                end)))))
+                                end)))
+                   result)))
    `(Symbol
      (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
      ,(lambda (input result)
-        (let-matches (matching spacing-start end) result
+        (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
                        (matches (ast ':type 'symbol
                                      ':value (string->symbol (caddr matching))
@@ -267,13 +271,15 @@
                                      ':start start
                                      ':end end)
                                 start
-                                end)))))
+                                end)))
+                   result)))
    `(Spacing
      (: (* (/ "[ \t\v\r\n]+" Comment)))
      ,(lambda (input result)
-        (let-matches (matching start end) result
+        (map-match (lambda (matching start end)
                      ;; NOTE So that we can skip the spacing later.
-                     (matches end start end))))
+                     (matches end start end))
+                   result)))
    '(Comment
      (: ";[^\n]*\n"))))
 
