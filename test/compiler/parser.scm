@@ -27,3 +27,13 @@
                                      (<= ?bar 0.1)))
            (process 'foo 1000 100)
            (process 'bar 5000 100)))
+
+;; Some benchmarks
+
+(time-execution
+ (parse
+  (let ((expr (slurp "../test/foof/coroutines2.foo")))
+    (format "(begin ~a)"
+            (foldl string-append
+                   ""
+                   (make-list 10 expr))))))

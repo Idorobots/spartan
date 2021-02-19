@@ -345,13 +345,3 @@
                  :end 68)
           0
           68))
-
-;; Some benchmarks
-
-(time-execution
- (simple-lisp
-  (let ((expr (slurp "../test/foof/coroutines2.foo")))
-    (format "(begin ~a)"
-            (foldl string-append
-                   ""
-                   (make-list 10 expr))))))
