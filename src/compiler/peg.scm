@@ -112,7 +112,7 @@
 ;; "terminal"
 (define (compile-matcher regex)
   (trace 'compile-matcher regex '())
-  (lambda (rules)
+  (lambda (_)
     (trace 'link-matcher regex '())
     (memoize
      (lambda (input offset)
@@ -249,7 +249,8 @@
            (trace 'and input offset)
            (let ((result (linked input offset)))
              (let-matches (m s e) result
-                          (matches m offset e)))))))))
+                          ;; NOTE Doesn't advance the scan.
+                          (matches m offset offset)))))))))
 
 ;; (: ...)
 (define (compile-drop subrules)
@@ -263,7 +264,8 @@
            (trace 'drop input offset)
            (let ((result (linked input offset)))
              (let-matches (m s e) result
-                          (matches '() offset e)))))))))
+                          ;; NOTE Skips the scan.
+                          (matches '() e e)))))))))
 
 ;; (~ ...)
 (define (compile-concat subrules)
@@ -277,4 +279,4 @@
            (trace 'drop input offset)
            (let ((result (linked input offset)))
              (let-matches (ms s e) result
-                          (matches (foldl string-append "" ms) s e)))))))))
+                          (matches (foldr string-append "" ms) s e)))))))))

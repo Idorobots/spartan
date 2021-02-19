@@ -1,5 +1,203 @@
 ;; PEG parser generator tests.
 
+(define id-rule (lambda (rules)
+                  (lambda args
+                    args)))
+
+;; Nonterminal
+
+(assert (equal? (compile-rule-pattern 'Rule)
+                (compile-rule-pattern 'Rule)))
+
+(assert (((compile-rule-pattern 'Rule) `((Rule ,id-rule))) ;; Should delegate correctly.
+         "input" 23)
+        '("input" 23))
+
+;; "terminal"
+
+(assert (((compile-rule-pattern "foo") '())
+         "" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern "foo") '())
+         "barfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern "foo") '())
+         "foobar" 3)
+        (no-match))
+
+(assert (((compile-rule-pattern "foo") '())
+         "foobar" 0)
+        (matches "foo" 0 3))
+
+(assert (((compile-rule-pattern "(foo|bar)+") '())
+         "foobar" 0)
+        (matches "foobar" 0 6))
+
+;; (...)
+
+(assert (((compile-rule-pattern '("foo" "bar")) '())
+         "foofoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '("foo" "bar")) '())
+         "barfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '("foo" "bar")) '())
+         "foobar" 0)
+        (matches '("foo" "bar") 0 6))
+
+(assert (((compile-rule-pattern '("foo" "bar")) '())
+         "foobarbaz" 0)
+        (matches '("foo" "bar") 0 6))
+
+;; (/ ...)
+
+(assert (((compile-rule-pattern '(/ "foo" "bar")) '())
+         "bazbarfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(/ "foo" "bar")) '())
+         "barfoo" 0)
+        (matches "bar" 0 3))
+
+(assert (((compile-rule-pattern '(/ "foo" "bar")) '())
+         "foobarbaz" 0)
+        (matches "foo" 0 3))
+
+;; (* ...)
+
+(assert (((compile-rule-pattern '(* "foo")) '())
+         "barfoo" 0)
+        (matches '() 0 0))
+
+(assert (((compile-rule-pattern '(* "foo")) '())
+         "foobarbaz" 0)
+        (matches '("foo") 0 3))
+
+(assert (((compile-rule-pattern '(* "foo")) '())
+         "foofoofoo" 0)
+        (matches '("foo" "foo" "foo") 0 9))
+
+(assert (((compile-rule-pattern '(* (/ "foo" "bar"))) '())
+         "foobarbarfoo" 0)
+        (matches '("foo" "bar" "bar" "foo") 0 12))
+
+;; (+ ...)
+
+(assert (((compile-rule-pattern '(+ "foo")) '())
+         "barfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(+ "foo")) '())
+         "foobarbaz" 0)
+        (matches '("foo") 0 3))
+
+(assert (((compile-rule-pattern '(+ "foo")) '())
+         "foofoofoo" 0)
+        (matches '("foo" "foo" "foo") 0 9))
+
+(assert (((compile-rule-pattern '(+ (/ "foo" "bar"))) '())
+         "foobarbarfoo" 0)
+        (matches '("foo" "bar" "bar" "foo") 0 12))
+
+;; (? ...)
+
+(assert (((compile-rule-pattern '(? "foo")) '())
+         "barfoo" 0)
+        (matches '() 0 0))
+
+(assert (((compile-rule-pattern '(? "foo")) '())
+         "foobarbaz" 0)
+        (matches "foo" 0 3))
+
+(assert (((compile-rule-pattern '(? (/ "foo" "bar"))) '())
+         "foobarbarfoo" 0)
+        (matches "foo" 0 3))
+
+(assert (((compile-rule-pattern '(? (/ "foo" "bar"))) '())
+         "foobarbarfoo" 3)
+        (matches "bar" 3 6))
+
+;; (! ...)
+
+(assert (((compile-rule-pattern '(! "foo")) '())
+         "barfoo" 0)
+        (matches '() 0 0))
+
+(assert (((compile-rule-pattern '(! "foo")) '())
+         "foobarbaz" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(! (/ "foo" "bar"))) '())
+         "foobarbarfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(! (/ "foo" "bar"))) '())
+         "foobarbarfoo" 3)
+        (no-match))
+
+;; (& ...)
+
+(assert (((compile-rule-pattern '(& "foo")) '())
+         "foaobarbarfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(& "foo")) '())
+         "foobarbarfoo" 0)
+        (matches "foo" 0 0))
+
+(define *expensive-rule-ran* #f)
+
+(define (expensive-rule _)
+  (lambda (input offset)
+    (set! *expensive-rule-ran* #t)
+    (matches "very expensive" 5 23)))
+
+(assert (((compile-rule-pattern '((& "exp") Expensive))
+          `((Expensive ,expensive-rule)))
+         "extravaganza!" 0)
+        (no-match))
+
+(assert (not *expensive-rule-ran*))
+
+(assert (((compile-rule-pattern '((& "exp") Expensive))
+          `((Expensive ,expensive-rule)))
+         "experience the amazig parser generators!" 0)
+        (matches '("exp" "very expensive") 0 23))
+
+(assert *expensive-rule-ran*)
+
+;; (: ...)
+
+(assert (((compile-rule-pattern '(: "foo")) '())
+         "barfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(: "foo")) '())
+         "foobarbarfoo" 0)
+        (matches '() 3 3))
+
+(assert (((compile-rule-pattern '((: "foo") "bar" (: "foo"))) '())
+         "foobarfoo" 0)
+        (matches '(() "bar" ()) 0 9))
+
+;; (~ ...)
+
+(assert (((compile-rule-pattern '(~ "bar" "foo")) '())
+         "foobarfoo" 0)
+        (no-match))
+
+(assert (((compile-rule-pattern '(~ "foo" "bar")) '())
+         "foobarbaz" 0)
+        (matches "foobar" 0 6))
+
+(assert (((compile-rule-pattern '(~ (+ "foo"))) '())
+         "foofoofoofoofoobar" 0)
+        (matches "foofoofoofoofoo" 0 15))
+
 ;; Grammar.
 
 (define (ast . properties)
@@ -31,7 +229,7 @@
                                      ':end end)
                                 start
                                 end)))))
-   `((List       <- Spacing (: "\\(") (* Expression) (: "\\)"))
+   `((List       <- Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
      ,(lambda (input result)
         (trace 'List-transform input result)
         (let-matches (matching spacing-start end) result
@@ -74,6 +272,14 @@
                      ;; NOTE So that we can skip the spacing later.
                      (matches end start end))))
    '((Comment    <- (: ";[^\n]*\n")))))
+
+(assert (simple-lisp "(foo   )")
+        '((:type list
+                 :value ((:type symbol :value foo :original "foo" :start 1 :end 4))
+                 :start 0
+                 :end 8)
+          0
+          8))
 
 (assert (simple-lisp
          (with-output-to-string
@@ -138,5 +344,5 @@
     (format "(begin ~a)"
             (foldl string-append
                    ""
-                   (make-list 30 expr))))))
+                   (make-list 10 expr))))))
 
