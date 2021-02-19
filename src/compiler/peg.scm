@@ -4,14 +4,17 @@
 
 ;; Some debugging & optimizations
 
+(define (trace . args)
+  '())
+
 ;; (define *trace-count* 0)
 ;; (define (trace where input offset)
 ;;   (when where
 ;;     (set! *trace-count* (+ 1 *trace-count*)))
 ;;   (display (format "~a - ~a at ~a\n" where input offset)))
 
-(define (trace . args)
-  '())
+;; (define (memoize f)
+;;   f)
 
 (define (memoize f)
   (let* ((previous-runs '()))
@@ -47,20 +50,12 @@
            (no-match))))))
 
 ;; Grammar
-(define left-arrow '<-)
-(define strip-arrow '<)
-(define concat-arrow '<~)
-
 (define (grammar . rules)
   (let* ((compiled (map (lambda (r)
                           (let* ((name (caar r))
-                                 (type (cadar r))
                                  (body (cddar r))
                                  (transform (cdr r))
-                                 (compiled (compile-rule-pattern (if (equal? type concat-arrow)
-                                                             (list '~ body)
-                                                             body)
-                                                         (equal? type strip-arrow)))
+                                 (compiled (compile-rule-pattern body))
                                  (transform (if (empty? transform)
                                                 (lambda (input result)
                                                   result)
@@ -84,21 +79,21 @@
 
 (define compile-rule-pattern
   (memoize
-   (lambda (rule stripping?)
-     (trace 'compile-rule-pattern rule stripping?)
+   (lambda (rule)
+     (trace 'compile-rule-pattern rule '())
      (memoize
-      (cond ((nonterminal? rule)      (compile-nonterminal rule stripping?))
-            ((terminal? rule)         (compile-matcher rule stripping?))
-            ((equal? (length rule) 1) (compile-rule-pattern (car rule) stripping?))
-            ((tagged-list? '/ rule)   (compile-or rule stripping?))
-            ((tagged-list? '* rule)   (compile-zero-or-more rule stripping?))
-            ((tagged-list? '+ rule)   (compile-one-or-more rule stripping?))
-            ((tagged-list? ': rule)   (compile-drop rule stripping?))
-            ((tagged-list? '? rule)   (compile-optional rule stripping?))
-            ((tagged-list? '! rule)   (compile-not rule stripping?))
-            ((tagged-list? '& rule)   (compile-and rule stripping?))
-            ((tagged-list? '~ rule)   (compile-concat rule stripping?))
-            (else                     (compile-sequence rule stripping?)))))))
+      (cond ((nonterminal? rule)      (compile-nonterminal rule))
+            ((terminal? rule)         (compile-matcher rule))
+            ((equal? (length rule) 1) (compile-rule-pattern (car rule)))
+            ((tagged-list? '/ rule)   (compile-or rule))
+            ((tagged-list? '* rule)   (compile-zero-or-more rule))
+            ((tagged-list? '+ rule)   (compile-one-or-more rule))
+            ((tagged-list? ': rule)   (compile-drop rule))
+            ((tagged-list? '? rule)   (compile-optional rule))
+            ((tagged-list? '! rule)   (compile-not rule))
+            ((tagged-list? '& rule)   (compile-and rule))
+            ((tagged-list? '~ rule)   (compile-concat rule))
+            (else                     (compile-sequence rule)))))))
 
 (define (find-rule name rules)
   (let ((r (assoc name rules)))
@@ -106,11 +101,11 @@
         (cadr r)
         (error (format "Invalid rule name used: ~a" name)))))
 
-;; Terminal
-(define (compile-nonterminal rule-name stripping?)
-  (trace 'compile-nonterminal rule-name stripping?)
+;; Nonterminal
+(define (compile-nonterminal rule-name)
+  (trace 'compile-nonterminal rule-name '())
   (lambda (rules)
-    (trace 'link-nonterminal rule-name stripping?)
+    (trace 'link-nonterminal rule-name '())
     (let ((linked '()))
       (memoize
        (lambda (input offset)
@@ -120,39 +115,30 @@
          (trace 'nonterminal input offset)
          (linked input offset))))))
 
-;; "..."
-(define (compile-matcher regex stripping?)
-  (trace 'compile-matcher regex stripping?)
+;; "terminal"
+(define (compile-matcher regex)
+  (trace 'compile-matcher regex '())
   (lambda (rules)
-    (trace 'link-matcher regex stripping?)
-    (let* ((strip (if stripping?
-                      ((find-rule 'Spacing rules) rules)
-                      (lambda (input offset)
-                        (matches '() offset offset)))))
-      (memoize
-       (lambda (input offset)
-         (let* ((mat (strip input offset))
-                (off (if (matches? mat)
-                         (let-matches (m s e) mat
-                                      e)
-                         offset))
-                (actual-input (substring input off))
-                (result (regexp-match (string-append "^" regex) actual-input)))
-           (trace 'matcher result regex)
-           (if result
-               (matches (car result)
-                        off
-                        (+ off (string-length (car result))))
-               (no-match))))))))
+    (trace 'link-matcher regex '())
+    (memoize
+     (lambda (input offset)
+       (let* ((actual-input (substring input offset))
+              (result (regexp-match (string-append "^" regex) actual-input)))
+         (trace 'matcher result regex)
+         (if result
+             (matches (car result)
+                      offset
+                      (+ offset (string-length (car result))))
+             (no-match)))))))
 
 ;; (...)
-(define (compile-sequence subrules stripping?)
-  (trace 'compile-sequence subrules stripping?)
+(define (compile-sequence subrules)
+  (trace 'compile-sequence subrules '())
   (let ((compiled (map (lambda (r)
-                         (compile-rule-pattern r stripping?))
+                         (compile-rule-pattern r))
                        subrules)))
     (lambda (rules)
-      (trace 'link-sequence subrules stripping?)
+      (trace 'link-sequence subrules '())
       (let ((linked (map (lambda (r)
                            (r rules))
                          compiled)))
@@ -167,13 +153,13 @@
                   linked)))))))
 
 ;; (/ ...)
-(define (compile-or subrules stripping?)
-  (trace 'compile-or subrules stripping?)
+(define (compile-or subrules)
+  (trace 'compile-or subrules '())
   (let ((compiled (map (lambda (r)
-                         (compile-rule-pattern r stripping?))
+                         (compile-rule-pattern r))
                        (cdr subrules))))
     (lambda (rules)
-      (trace 'link-or subrules stripping?)
+      (trace 'link-or subrules '())
       (let ((linked (map (lambda (r)
                            (r rules))
                          compiled)))
@@ -188,11 +174,11 @@
                   linked)))))))
 
 ;; (* ...)
-(define (compile-zero-or-more subrules stripping?)
-  (trace 'compile-zero-or-more subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-zero-or-more subrules)
+  (trace 'compile-zero-or-more subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-zero-or-more subrules stripping?)
+      (trace 'link-zero-or-more subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -207,11 +193,11 @@
                    (matches (reverse ms) s e))))))))))
 
 ;; (+ ...)
-(define (compile-one-or-more subrules stripping?)
-  (trace 'compile-one-or-more subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-one-or-more subrules)
+  (trace 'compile-one-or-more subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-one-or-more subrules stripping?)
+      (trace 'link-one-or-more subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -228,11 +214,11 @@
                        (no-match)))))))))))
 
 ;; (? ...)
-(define (compile-optional subrules stripping?)
-  (trace 'compile-optional subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-optional subrules)
+  (trace 'compile-optional subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-optional subrules stripping?)
+      (trace 'link-optional subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -243,11 +229,11 @@
                  (matches '() offset offset)))))))))
 
 ;; (! ...)
-(define (compile-not subrules stripping?)
-  (trace 'compile-not subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-not subrules)
+  (trace 'compile-not subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-not subrules stripping?)
+      (trace 'link-not subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -258,11 +244,11 @@
                  (matches '() offset offset)))))))))
 
 ;; (& ...)
-(define (compile-and subrules stripping?)
-  (trace 'compile-and subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-and subrules)
+  (trace 'compile-and subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-and subrules stripping?)
+      (trace 'link-and subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -272,11 +258,11 @@
                           (matches m offset e)))))))))
 
 ;; (: ...)
-(define (compile-drop subrules stripping?)
-  (trace 'compile-drop subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-drop subrules)
+  (trace 'compile-drop subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-drop subrules stripping?)
+      (trace 'link-drop subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
@@ -286,11 +272,11 @@
                           (matches '() offset e)))))))))
 
 ;; (~ ...)
-(define (compile-concat subrules stripping?)
-  (trace 'compile-drop subrules stripping?)
-  (let ((compiled (compile-rule-pattern (cdr subrules) stripping?)))
+(define (compile-concat subrules)
+  (trace 'compile-drop subrules '())
+  (let ((compiled (compile-rule-pattern (cdr subrules))))
     (lambda (rules)
-      (trace 'link-concat subrules stripping?)
+      (trace 'link-concat subrules '())
       (let ((linked (compiled rules)))
         (memoize
          (lambda (input offset)
