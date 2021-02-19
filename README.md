@@ -7,6 +7,7 @@
 
 `FOOF` is a small Lisp dialect that serves me as a test bed for programming language features. Currently implemented features are:
 
+- executable language grammar defined as a (PEG parser generator)-generated parser,
 - recursion by way of `letrec` & assignment conversions,
 - a first-class module system with a shorthand accessor syntax (`module`, `structure` and `foo.bar`).
 - continuations - both delimited (`shift` & `reset`) as well as undelimited (`letcc`),
@@ -16,7 +17,7 @@
 
 See [here](test/foof) for some usage examples.
 
-The compiler is far from being useful, it doesn't even have a parser or a code generator yet, and it definitely doesn't optimize anything. It loosely follows the nanopass framework, with currently implemented passes being:
+The compiler is far from being useful, it doesn't even have a code generator yet, and it definitely doesn't optimize anything. It loosely follows the nanopass framework, with currently implemented passes being:
 
 - syntax desugaring,
 - built-in macro expansion,
