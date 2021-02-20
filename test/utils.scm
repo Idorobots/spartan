@@ -39,3 +39,12 @@
            (with-output-to-file expected-file
              (lambda ()
                (run (parse (slurp filename))))))))))
+
+(define-syntax time-execution
+  (syntax-rules ()
+    ((_ body ...)
+     (let-values (((_ cpu real gc) (time-apply
+                                    (lambda ()
+                                      body ...)
+                                    '())))
+       (list cpu real gc)))))
