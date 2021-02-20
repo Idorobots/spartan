@@ -83,8 +83,7 @@
 ;; "terminal"
 (define (compile-matcher regex _)
   (lambda (input offset)
-    (let* ((actual-input (substring input offset))
-           (result (regexp-match (string-append "^" regex) actual-input)))
+    (let ((result (regexp-match (string-append "^" regex) input offset)))
       (if result
           (matches (car result)
                    offset
