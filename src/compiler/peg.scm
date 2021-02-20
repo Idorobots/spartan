@@ -65,20 +65,18 @@
            ((tagged-list? '~ rule)   (compile-concat rule all-rules))
            (else                     (compile-sequence rule all-rules))))))
 
-(define (find-rule name all-rules)
-  (let ((r (assoc name all-rules)))
-    (if r
-        (cadr r)
-        (error (format "Invalid rule name used: ~a" name)))))
+(define find-rule
+  (memoize
+   (lambda (name all-rules)
+     (let ((r (assoc name all-rules)))
+       (if r
+           (cadr r)
+           (error (format "Invalid rule name used: ~a" name)))))))
 
 ;; Nonterminal
 (define (compile-nonterminal rule-name all-rules)
-  (let ((linked '()))
-    (lambda (input offset)
-      (when (empty? linked)
-        ;; NOTE Needs to be embedded within the inner function to break recursivity of the rules.
-        (set! linked (find-rule rule-name (deref all-rules))))
-      (linked input offset))))
+  (lambda (input offset)
+    ((find-rule rule-name (deref all-rules)) input offset)))
 
 ;; "terminal"
 (define (compile-matcher regex _)
