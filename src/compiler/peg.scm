@@ -15,14 +15,25 @@
 (define (no-match)
   '())
 
-(define (matches matching start end)
-  (list matching start end))
+(define (matches m start end)
+  (vector m start end))
 
-(define matches? (compose not empty?))
+(define matches? vector?)
+
+(define (match-match m)
+  (vector-ref m 0))
+
+(define (match-start m)
+  (vector-ref m 1))
+
+(define (match-end m)
+  (vector-ref m 2))
 
 (define (map-match f m)
   (if (matches? m)
-      (apply f m)
+      (f (match-match m)
+         (match-start m)
+         (match-end m))
       m))
 
 ;; Grammar
@@ -39,7 +50,9 @@
                                                 (car transform))))
                             (list name
                                   (lambda (input offset)
-                                    (transform input (compiled input offset))))))
+                                    (map-match (lambda (m start end)
+                                                 (transform input (matches m start end)))
+                                               (compiled input offset))))))
                         rules)))
     (assign! all-rules compiled)
     (lambda (input)

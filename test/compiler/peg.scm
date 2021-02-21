@@ -286,29 +286,29 @@
      (: ";[^\n]*\n"))))
 
 (assert (simple-lisp "(foo   )")
-        '((:type list
-                 :value ((:type symbol :value foo :original "foo" :start 1 :end 4))
-                 :start 0
-                 :end 8)
-          0
-          8))
+        (matches '(:type list
+                         :value ((:type symbol :value foo :original "foo" :start 1 :end 4))
+                         :start 0
+                         :end 8)
+                 0
+                 8))
 
 (assert (simple-lisp
          (with-output-to-string
            (lambda ()
              (pretty-print '(+ 1 2 3)))))
-        '((:type quote
-                 :value (:type list
-                               :value ((:type symbol :value + :original "+" :start 2 :end 3)
-                                       (:type number :value 1 :original "1" :start 4 :end 5)
-                                       (:type number :value 2 :original "2" :start 6 :end 7)
-                                       (:type number :value 3 :original "3" :start 8 :end 9))
-                               :start 1
-                               :end 10)
-                 :start 0
-                 :end 10)
-          0
-          10))
+        (matches '(:type quote
+                         :value (:type list
+                                       :value ((:type symbol :value + :original "+" :start 2 :end 3)
+                                               (:type number :value 1 :original "1" :start 4 :end 5)
+                                               (:type number :value 2 :original "2" :start 6 :end 7)
+                                               (:type number :value 3 :original "3" :start 8 :end 9))
+                                       :start 1
+                                       :end 10)
+                         :start 0
+                         :end 10)
+                 0
+                 10))
 
 (assert (simple-lisp
          (with-output-to-string
@@ -318,32 +318,32 @@
                               (display "hello ")
                               (display wordl)
                               (newline))))))
-        '((:type quote
-                 :value (:type list
-                               :value
-                               ((:type symbol :value define :original "define" :start 2 :end 8)
-                                (:type list
-                                       :value ((:type symbol :value hello :original "hello" :start 10 :end 15)
-                                               (:type symbol :value world :original "world" :start 16 :end 21))
-                                       :start 9
-                                       :end 22)
-                                (:type list
-                                       :value ((:type symbol :value display :original "display" :start 24 :end 31)
-                                               (:type string :value "hello " :original "\"hello \"" :start 32 :end 40))
-                                       :start 23
-                                       :end 41)
-                                (:type list
-                                       :value ((:type symbol :value display :original "display" :start 43 :end 50)
-                                               (:type symbol :value wordl :original "wordl" :start 51 :end 56))
-                                       :start 42
-                                       :end 57)
-                                (:type list
-                                       :value ((:type symbol :value newline :original "newline" :start 59 :end 66))
-                                       :start 58
-                                       :end 67))
-                               :start 1
-                               :end 68)
-                 :start 0
-                 :end 68)
-          0
-          68))
+        (matches '(:type quote
+                         :value (:type list
+                                       :value
+                                       ((:type symbol :value define :original "define" :start 2 :end 8)
+                                        (:type list
+                                               :value ((:type symbol :value hello :original "hello" :start 10 :end 15)
+                                                       (:type symbol :value world :original "world" :start 16 :end 21))
+                                               :start 9
+                                               :end 22)
+                                        (:type list
+                                               :value ((:type symbol :value display :original "display" :start 24 :end 31)
+                                                       (:type string :value "hello " :original "\"hello \"" :start 32 :end 40))
+                                               :start 23
+                                               :end 41)
+                                        (:type list
+                                               :value ((:type symbol :value display :original "display" :start 43 :end 50)
+                                                       (:type symbol :value wordl :original "wordl" :start 51 :end 56))
+                                               :start 42
+                                               :end 57)
+                                        (:type list
+                                               :value ((:type symbol :value newline :original "newline" :start 59 :end 66))
+                                               :start 58
+                                               :end 67))
+                                       :start 1
+                                       :end 68)
+                         :start 0
+                         :end 68)
+                 0
+                 68))

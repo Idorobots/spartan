@@ -103,4 +103,4 @@
    '(Comment
      (: ";[^\n]*\n"))))
 
-(define parse (compose car foof))
+(define parse (compose match-match foof))
