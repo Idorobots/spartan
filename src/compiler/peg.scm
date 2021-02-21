@@ -80,13 +80,19 @@
 
 ;; "terminal"
 (define (compile-matcher regex _)
-  (lambda (input offset)
-    (let ((result (regexp-match (string-append "^" regex) input offset)))
-      (if result
-          (matches (car result)
-                   offset
-                   (+ offset (string-length (car result))))
-          (no-match)))))
+  (if (equal? 1 (string-length regex)) ;; FIXME "." won't work.
+      (let ((char (string-ref regex 0)))
+        (lambda (input offset)
+          (if (equal? (string-ref input offset) char)
+              (matches regex offset (+ 1 offset))
+              (no-match))))
+      (lambda (input offset)
+        (let ((result (regexp-match (string-append-immutable "^" regex) input offset)))
+          (if result
+              (matches (car result)
+                       offset
+                       (+ offset (string-length (car result))))
+              (no-match))))))
 
 ;; (...)
 (define (compile-sequence subrules all-rules)
