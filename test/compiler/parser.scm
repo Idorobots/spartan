@@ -2,31 +2,35 @@
 
 (assert (parse "foo") 'foo)
 (assert (parse "(define (foo x) 23)") '(define (foo x) 23))
+(assert (parse "(define (oof x) 32)") '(define (oof x) 32))
 (assert (parse "(define (foo x) ;; Coments should be removed!
                    true)")
         '(define (foo x) true))
-(assert (parse (slurp "../test/foof/cep.foo"))
-        '(letrec ((process (lambda (prefix t count)
-                             (unless (= count 0)
-                               (assert! `(notify ,prefix ,(random)))
-                               (sleep t)
-                               (process prefix t (- count 1)))))
-                  (listen (lambda (count)
-                            (unless (= count 0)
-                              (let ((m (recv)))
-                                (display "Complex event: ")
-                                (display m)
-                                (newline)
-                                (listen (- count 1)))))))
-           (notify-whenever (spawn (lambda ()
-                                     (listen 10)))
-                            '(filter (and (?notify foo ?foo)
-                                          (?notify bar ?bar))
-                                     (>= ?foo 0.5)
-                                     (< ?foo 0.75)
-                                     (<= ?bar 0.1)))
-           (process 'foo 1000 100)
-           (process 'bar 5000 100)))
+
+(define (expected-read input)
+  (with-input-from-string input
+    (lambda ()
+      (read))))
+
+(map (lambda (filename)
+       (let ((contents (slurp filename)))
+         (assert (parse contents)
+                 (expected-read contents))))
+     (list
+      "../test/foof/hello.foo"
+      "../test/foof/fibonacci.foo"
+      "../test/foof/logger.foo"
+      "../test/foof/errors.foo"
+      "../test/foof/coroutines.foo"
+      "../test/foof/coroutines2.foo"
+      "../test/foof/uprocs.foo"
+      "../test/foof/uprocs2.foo"
+      "../test/foof/msgwait.foo"
+      "../test/foof/fibonacci2.foo"
+      "../test/foof/errors2.foo"
+      "../test/foof/rbs2.foo"
+      "../test/foof/rbs.foo"
+      "../test/foof/cep.foo"))
 
 ;; Some benchmarks
 
