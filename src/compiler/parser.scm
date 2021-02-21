@@ -17,9 +17,9 @@
    '(Expression
      (/ List Atom String Quote))
    '(Quote
-     (/ PlainQuote Quasiquote Unquote UnquoteSplicing))
+     (/ PlainQuote Quasiquote UnquoteSplicing Unquote))
    `(PlainQuote
-     (Spacing (: "'") Expression)
+     (Spacing "'" Expression)
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
@@ -28,7 +28,7 @@
                                 end)))
                    result)))
    `(Quasiquote
-     (Spacing (: "`") Expression)
+     (Spacing "`" Expression)
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
@@ -37,7 +37,7 @@
                                 end)))
                    result)))
    `(Unquote
-     (Spacing (: ",") Expression)
+     (Spacing "," Expression)
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
@@ -46,7 +46,7 @@
                                 end)))
                    result)))
    `(UnquoteSplicing
-     (Spacing (: ",@") Expression)
+     (Spacing ",@" Expression)
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
@@ -55,17 +55,17 @@
                                 end)))
                    result)))
    `(String
-     (Spacing "\"[^\"]*\"")
+     (Spacing (& "\"") "\"[^\"]*\"")
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching))
-                           (content (cadr matching)))
+                           (content (caddr matching)))
                        (matches (substring content 1 (- (string-length content) 1))
                                 start
                                 end)))
                    result)))
    `(List
-     (Spacing (: "\\(") (* Expression) Spacing (: "\\)"))
+     (Spacing "(" (* Expression) Spacing ")")
      ,(lambda (input result)
         (map-match (lambda (matching spacing-start end)
                      (let ((start (car matching)))
