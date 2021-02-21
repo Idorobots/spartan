@@ -30,10 +30,34 @@
 
 ;; Some benchmarks
 
-(time-execution
- (parse
-  (let ((expr (slurp "../test/foof/coroutines2.foo")))
-    (format "(begin ~a)"
-            (foldl string-append
-                   ""
-                   (make-list 10 expr))))))
+(define (iota from to step)
+  (if (> from to)
+      '()
+      (cons from (iota (+ from step) to step))))
+
+(printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
+(map (lambda (reps)
+       (collect-garbage)
+       (let* ((expr (slurp "../test/foof/coroutines2.foo"))
+              (input (format "(begin ~a)"
+                             (foldl string-append
+                                    ""
+                                    (make-list reps expr))))
+              (size (+ 1 (count (partial equal? #\newline) (string->list input))))
+              (time (time-execution (parse (string->immutable-string input)))))
+         (apply printf "~a, ~a, ~a, ~a~n" size time)
+         time))
+     (iota 0 50 5))
+
+;; file-size, cpu, real, gc
+;; 1, 1, 1, 0
+;; 166, 119, 120, 3
+;; 331, 241, 242, 11
+;; 496, 384, 384, 38
+;; 661, 539, 539, 65
+;; 826, 694, 694, 108
+;; 991, 955, 955, 215
+;; 1156, 1159, 1159, 293
+;; 1321, 1510, 1509, 499
+;; 1486, 1879, 1877, 734
+;; 1651, 2065, 2062, 808
