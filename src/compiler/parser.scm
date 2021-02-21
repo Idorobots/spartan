@@ -1,6 +1,7 @@
 ;; A very simple parser.
 
 (load "compiler/peg.scm")
+(load "compiler/peggen.scm")
 
 (define (slurp file-name)
   (with-input-from-file file-name

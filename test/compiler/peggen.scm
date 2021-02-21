@@ -137,7 +137,7 @@
                      (loop4 (cons (match-match result1)
                                   matches3)
                             (match-end result1))
-                     (matches (reverse matches3 off end2)))))
+                     (matches (reverse matches3) off end2))))
              (no-match)))
 
 (gensym-reset!)
@@ -151,7 +151,7 @@
                       (loop4 (cons (match-match result1)
                                    matches3)
                              (match-end result1))
-                      (matches (reverse matches3 off end2)))))
+                      (matches (reverse matches3) off end2))))
               (no-match))))
 
 ;; (? ...)
