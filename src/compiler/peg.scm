@@ -108,13 +108,14 @@
           (if (equal? (string-ref input offset) char)
               (matches regex offset (+ 1 offset))
               (no-match))))
-      (lambda (_ input offset)
-        (let ((result (regexp-match (string-append-immutable "^" regex) input offset)))
+      (let ((compiled-regex (regexp (string-append-immutable "^" regex))))
+        (lambda (_ input offset)
+        (let ((result (regexp-match compiled-regex input offset)))
           (if result
               (matches (car result)
                        offset
                        (+ offset (string-length (car result))))
-              (no-match))))))
+              (no-match)))))))
 
 ;; (...)
 (define (compile-sequence subrules all-rules)
