@@ -2,7 +2,7 @@
 
 (load "compiler/utils.scm")
 
-;; Some debugging & optimizations
+;; Some optimizations
 
 (define (memoize f)
   (let* ((previous-runs (make-hash)))
@@ -122,18 +122,23 @@
                          (compile-rule-pattern r all-rules))
                        subrules)))
     (lambda (hash input offset)
-      (foldl (lambda (r acc)
-               (if (matches? acc)
-                   (let ((result (r hash input (match-end acc))))
-                     (if (matches? result)
-                         (matches (append (match-match acc) ;; FIXME Slow.
-                                          (list (match-match result)))
-                                  (match-start acc)
-                                  (match-end result))
-                         (no-match)))
-                   (no-match)))
-             (matches '() offset offset)
-             compiled))))
+      (let ((result (foldl (lambda (r acc)
+                             (if (matches? acc)
+                                 (let ((result (r hash input (match-end acc))))
+                                   (if (matches? result)
+                                       (matches (cons (match-match result)
+                                                      (match-match acc))
+                                                (match-start acc)
+                                                (match-end result))
+                                       (no-match)))
+                                 (no-match)))
+                           (matches '() offset offset)
+                           compiled)))
+        (if (matches? result)
+            (matches (reverse (match-match result))
+                     (match-start result)
+                     (match-end result))
+            result)))))
 
 ;; (/ ...)
 (define (compile-or subrules all-rules)
