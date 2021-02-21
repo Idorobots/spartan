@@ -38,14 +38,11 @@
 (define (match-end m)
   (vector-ref m 2))
 
-(define (map-match f m)
-  (if (matches? m)
-      (f (match-match m)
-         (match-start m)
-         (match-end m))
-      m))
+;; Rules
+(define terminal? string?)
+(define nonterminal? symbol?)
 
-;; Grammar
+;; Grammar compiler
 (define (grammar . rules)
   (let* ((all-rules (ref '()))
          (compiled (map (lambda (r)
@@ -60,9 +57,10 @@
                             (list name
                                   (memoize-input
                                    (lambda (hash input offset)
-                                     (map-match (lambda (m start end)
-                                                  (transform input (matches m start end)))
-                                                (compiled hash input offset)))))))
+                                     (let ((result (compiled hash input offset)))
+                                       (if (matches? result)
+                                           (transform input result)
+                                           result)))))))
                         rules)))
     (assign! all-rules compiled)
     (lambda (input)
@@ -72,27 +70,24 @@
        input
        0))))
 
-;; Rules
-(define terminal? string?)
-(define nonterminal? symbol?)
-
 (define compile-rule-pattern
   (memoize
    (lambda (rule all-rules)
      (memoize-input
       (cond ((nonterminal? rule)      (compile-nonterminal rule all-rules))
-           ((terminal? rule)         (compile-matcher rule all-rules))
-           ((equal? (length rule) 1) (compile-rule-pattern (car rule) all-rules))
-           ((tagged-list? '/ rule)   (compile-or rule all-rules))
-           ((tagged-list? '* rule)   (compile-zero-or-more rule all-rules))
-           ((tagged-list? '+ rule)   (compile-one-or-more rule all-rules))
-           ((tagged-list? ': rule)   (compile-drop rule all-rules))
-           ((tagged-list? '? rule)   (compile-optional rule all-rules))
-           ((tagged-list? '! rule)   (compile-not rule all-rules))
-           ((tagged-list? '& rule)   (compile-and rule all-rules))
-           ((tagged-list? '~ rule)   (compile-concat rule all-rules))
-           (else                     (compile-sequence rule all-rules)))))))
+            ((terminal? rule)         (compile-matcher rule all-rules))
+            ((equal? (length rule) 1) (compile-rule-pattern (car rule) all-rules))
+            ((tagged-list? '/ rule)   (compile-or rule all-rules))
+            ((tagged-list? '* rule)   (compile-zero-or-more rule all-rules))
+            ((tagged-list? '+ rule)   (compile-one-or-more rule all-rules))
+            ((tagged-list? ': rule)   (compile-drop rule all-rules))
+            ((tagged-list? '? rule)   (compile-optional rule all-rules))
+            ((tagged-list? '! rule)   (compile-not rule all-rules))
+            ((tagged-list? '& rule)   (compile-and rule all-rules))
+            ((tagged-list? '~ rule)   (compile-concat rule all-rules))
+            (else                     (compile-sequence rule all-rules)))))))
 
+;; Nonterminal
 (define find-rule
   (memoize
    (lambda (name all-rules)
@@ -101,7 +96,6 @@
            (cadr r)
            (error (format "Invalid rule name used: ~a" name)))))))
 
-;; Nonterminal
 (define (compile-nonterminal rule-name all-rules)
   (lambda (hash input offset)
     ((find-rule rule-name (deref all-rules)) hash input offset)))
@@ -129,11 +123,15 @@
                        subrules)))
     (lambda (hash input offset)
       (foldl (lambda (r acc)
-               (map-match (lambda (ms s e)
-                            (map-match (lambda (m new-s new-e)
-                                         (matches (append ms (list m)) s new-e))
-                                       (r hash input e)))
-                          acc))
+               (if (matches? acc)
+                   (let ((result (r hash input (match-end acc))))
+                     (if (matches? result)
+                         (matches (append (match-match acc) ;; FIXME Slow.
+                                          (list (match-match result)))
+                                  (match-start acc)
+                                  (match-end result))
+                         (no-match)))
+                   (no-match)))
              (matches '() offset offset)
              compiled))))
 
@@ -159,9 +157,10 @@
                  (ms '()))
         (let ((result (compiled hash input e)))
           (if (matches? result)
-              (map-match (lambda (m _ new-e)
-                           (loop s new-e (cons m ms)))
-                         result)
+              (loop s
+                    (match-end result)
+                    (cons (match-match result)
+                          ms))
               (matches (reverse ms) s e)))))))
 
 ;; (+ ...)
@@ -173,9 +172,10 @@
                  (ms '()))
         (let ((result (compiled hash input e)))
           (if (matches? result)
-              (map-match (lambda (m new-s new-e)
-                           (loop s new-e (cons m ms)))
-                         result)
+              (loop s
+                    (match-end result)
+                    (cons (match-match result)
+                          ms))
               (if (> (length ms) 0)
                   (matches (reverse ms) s e)
                   (no-match))))))))
@@ -203,26 +203,28 @@
   (let ((compiled (compile-rule-pattern (cdr subrules) all-rules)))
     (lambda (hash input offset)
       (let ((result (compiled hash input offset)))
-        (map-match (lambda (m s e)
-                     ;; NOTE Doesn't advance the scan.
-                     (matches m offset offset))
-                   result)))))
+        (if (matches? result)
+            (matches (match-match result) offset offset)
+            (no-match))))))
 
 ;; (: ...)
 (define (compile-drop subrules all-rules)
   (let ((compiled (compile-rule-pattern (cdr subrules) all-rules)))
     (lambda (hash input offset)
       (let ((result (compiled hash input offset)))
-        (map-match (lambda (m s e)
-                     ;; NOTE Skips the scan.
-                     (matches '() e e))
-                   result)))))
+        (if (matches? result)
+            (let ((end (match-end result)))
+              ;; NOTE Skips the scan.
+              (matches '() end end))
+            (no-match))))))
 
 ;; (~ ...)
 (define (compile-concat subrules all-rules)
   (let ((compiled (compile-rule-pattern (cdr subrules) all-rules)))
     (lambda (hash input offset)
-          (let ((result (compiled hash input offset)))
-            (map-match (lambda (ms s e)
-                         (matches (foldr string-append-immutable "" ms) s e))
-                       result)))))
+      (let ((result (compiled hash input offset)))
+        (if (matches? result)
+            (matches (foldr string-append-immutable "" (match-match result))
+                     (match-start result)
+                     (match-end result))
+            (no-match))))))

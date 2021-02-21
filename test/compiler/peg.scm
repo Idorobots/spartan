@@ -211,6 +211,13 @@
 (define (ast . properties)
   properties)
 
+(define (map-match f m)
+  (if (matches? m)
+      (f (match-match m)
+         (match-start m)
+         (match-end m))
+      m))
+
 (define simple-lisp
   (grammar
    '(Expression
