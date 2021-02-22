@@ -1,10 +1,45 @@
 ;; PEG parser source generator
 
 (load "compiler/utils.scm")
-(load "compiler/peg.scm")
+
+;; Some optimization
+(define (memoize-input f)
+  (let* ((previous-runs (make-hasheq)))
+    (lambda (hash input offset)
+      (hash-ref! previous-runs
+                 (+ hash offset)
+                 (lambda ()
+                   (f hash input offset))))))
+
+;; Matches
+(define (no-match)
+  '())
+
+(define (matches m start end)
+  (vector m start end))
+
+(define matches? vector?)
+
+(define (match-match m)
+  (vector-ref m 0))
+
+(define (match-start m)
+  (vector-ref m 1))
+
+(define (match-end m)
+  (vector-ref m 2))
 
 ;; Parser generator
 (define (generate-parser . rules)
+  (let ((temp-file (make-temporary-file "~a.scm")))
+    (with-output-to-file temp-file
+      (lambda ()
+        (write
+         (generate-grammar rules)))
+      #:exists 'replace)
+    (load temp-file)))
+
+(define (generate-grammar rules)
   (let ((top-name (caar rules))
         (hash (gensym 'hash))
         (input (gensym 'input)))
@@ -38,6 +73,9 @@
                                                 (,(car transform) ,input ,result)
                                                 ,result)))))))))))
 
+(define terminal? string?)
+(define nonterminal? symbol?)
+
 (define (generate-rule-pattern rule hash input offset cont)
   (cond ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
         ((terminal? rule)         (generate-matcher rule hash input offset cont))
@@ -58,7 +96,7 @@
 
 ;; "terminal"
 (define (generate-matcher regex hash input offset cont)
-  (cont (if (equal? 1 (string-length regex))
+  (cont (if (equal? 1 (string-length regex)) ;; FIXME Won't work for "." and other single char regexps.
             (let ((char (string-ref regex 0)))
               `(if (equal? (string-ref ,input ,offset) ,char)
                    (matches ,regex ,offset (+ 1 ,offset))

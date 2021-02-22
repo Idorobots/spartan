@@ -1,9 +1,9 @@
 ;; PEG parser generator
 
 (load "compiler/utils.scm")
+(load "compiler/peggen.scm")
 
 ;; Some optimizations
-
 (define (memoize f)
   (let* ((previous-runs (make-hash)))
     (lambda args
@@ -11,36 +11,6 @@
                  args
                  (lambda ()
                    (apply f args))))))
-
-(define (memoize-input f)
-  (let* ((previous-runs (make-hasheq)))
-    (lambda (hash input offset)
-      (hash-ref! previous-runs
-                 (+ hash offset)
-                 (lambda ()
-                   (f hash input offset))))))
-
-;; Matches
-(define (no-match)
-  '())
-
-(define (matches m start end)
-  (vector m start end))
-
-(define matches? vector?)
-
-(define (match-match m)
-  (vector-ref m 0))
-
-(define (match-start m)
-  (vector-ref m 1))
-
-(define (match-end m)
-  (vector-ref m 2))
-
-;; Rules
-(define terminal? string?)
-(define nonterminal? symbol?)
 
 ;; Grammar compiler
 (define (grammar . rules)
