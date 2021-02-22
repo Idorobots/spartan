@@ -29,7 +29,7 @@
 
 (gensym-reset!)
 (assert (generate-matcher "foo" 'h 'input 'off id)
-        '(let ((result1 (regexp-match "^foo" input off)))
+        '(let ((result1 (regexp-match #rx"^foo" input off)))
            (if result1
                (matches (car result1) off (+ off (string-length (car result1))))
                (no-match))))
@@ -37,7 +37,7 @@
 (gensym-reset!)
 (assert (generate-matcher "foo" 'h 'input 'off stripper)
         '(strip
-          (let ((result1 (regexp-match "^foo" input off)))
+          (let ((result1 (regexp-match #rx"^foo" input off)))
             (if result1
                 (matches (car result1) off (+ off (string-length (car result1))))
                 (no-match)))))
