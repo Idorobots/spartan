@@ -63,7 +63,7 @@
               `(if (equal? (string-ref ,input ,offset) ,char)
                    (matches ,regex ,offset (+ 1 ,offset))
                    (no-match)))
-            (let ((r (string-append-immutable "^" regex))
+            (let ((r (regexp (string-append-immutable "^" regex)))
                   (result (gensym 'result)))
               `(let ((,result (regexp-match ,r ,input ,offset)))
                  (if ,result
