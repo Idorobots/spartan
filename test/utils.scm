@@ -78,6 +78,7 @@
                  (run-file filename))))
     ((_ filename factor body ...)
      (let ((test (lambda ()
+                   (collect-garbage)
                    body
                    ...)))
        (if (file-exists? filename)
