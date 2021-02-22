@@ -69,3 +69,22 @@
 (test-file "../test/foof/rbs2.foo")
 (test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
 (test-file "../test/foof/cep.foo")
+
+;; Some benchmarks:
+(test-perf "../test/foof/fibonacci.foo" 1.5)
+
+(test-perf
+ "../test/compiler/parser.perf" 1.5
+ (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
+ (map (lambda (reps)
+        (collect-garbage)
+        (let* ((expr (slurp "../test/foof/coroutines2.foo"))
+               (input (format "(begin ~a)"
+                              (foldl string-append
+                                     ""
+                                     (make-list reps expr))))
+               (size (+ 1 (count (partial equal? #\newline) (string->list input))))
+               (time (time-execution (parse input))))
+          (apply printf "~a, ~a, ~a, ~a~n" size time)
+          time))
+      (iota 0 50 5)))

@@ -32,11 +32,7 @@
 ;; Parser generator
 (define (generate-parser . rules)
   (let ((temp-file (make-temporary-file "~a.scm")))
-    (with-output-to-file temp-file
-      (lambda ()
-        (write
-         (generate-grammar rules)))
-      #:exists 'replace)
+    (spit temp-file (generate-grammar rules))
     (load temp-file)))
 
 (define (generate-grammar rules)
