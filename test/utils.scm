@@ -38,7 +38,7 @@
                      (preprocess expected)))
            (with-output-to-file expected-file
              (lambda ()
-               (run (parse (slurp filename))))))))))
+               (write (run-file filename)))))))))
 
 (define-syntax time-execution
   (syntax-rules ()
@@ -48,3 +48,45 @@
                                       body ...)
                                     '())))
        (list cpu real gc)))))
+
+(define (compare-perf actual expected factor)
+  (cond ((and (number? actual)
+              (number? expected))
+         (cond ((> actual (* factor expected))
+                1)
+               ((< actual expected)
+                -1)
+               (else 0)))
+        ((and (pair? actual)
+              (pair? expected))
+         (max (compare-perf (car actual)
+                            (car expected)
+                            factor)
+              (compare-perf (cdr actual)
+                            (cdr expected)
+                            factor)))
+        ((and (null? actual)
+              (null? expected)
+              -1))
+        (else (error "Invalid performance values supplied: " actual expected))))
+
+(define-syntax test-perf
+  (syntax-rules ()
+    ((_ filename factor)
+     (test-perf (string-append filename ".perf") factor
+                (time-execution
+                 (run-file filename))))
+    ((_ filename factor body ...)
+     (let ((test (lambda ()
+                   (collect-garbage)
+                   body
+                   ...)))
+       (if (file-exists? filename)
+           (let* ((actual (test))
+                  (expected (parse (slurp filename)))
+                  (result (compare-perf actual expected factor)))
+             (assert (begin filename
+                            (< result 1)))
+             (when (< 0 result)
+               (spit filename actual)))
+           (spit filename (test)))))))

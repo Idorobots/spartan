@@ -31,24 +31,3 @@
       "../test/foof/rbs2.foo"
       "../test/foof/rbs.foo"
       "../test/foof/cep.foo"))
-
-;; Some benchmarks
-
-(define (iota from to step)
-  (if (> from to)
-      '()
-      (cons from (iota (+ from step) to step))))
-
-(printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
-(map (lambda (reps)
-       (collect-garbage)
-       (let* ((expr (slurp "../test/foof/coroutines2.foo"))
-              (input (format "(begin ~a)"
-                             (foldl string-append
-                                    ""
-                                    (make-list reps expr))))
-              (size (+ 1 (count (partial equal? #\newline) (string->list input))))
-              (time (time-execution (parse (string->immutable-string input)))))
-         (apply printf "~a, ~a, ~a, ~a~n" size time)
-         time))
-     (iota 0 50 5))

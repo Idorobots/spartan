@@ -1,16 +1,7 @@
 ;; A very simple parser.
 
+(load "compiler/utils.scm")
 (load "compiler/peggen.scm")
-
-(define (slurp file-name)
-  (with-input-from-file file-name
-    (lambda ()
-      (list->string
-       (reverse (let loop ((char (read-char))
-                           (result '()))
-                  (if (eof-object? char)
-                      result
-                      (loop (read-char) (cons char result)))))))))
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
