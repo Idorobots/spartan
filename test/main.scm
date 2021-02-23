@@ -48,45 +48,47 @@
                                     (set! *random* 0.05))
                                 r))))
 
-;; Basic language features:
-(test-file "../test/foof/hello.foo")
-(test-file "../test/foof/fibonacci.foo")
-;; (test-file "../test/foof/logger.foo") ;; FIXME Makes no sense to run it untill proper module handling is implemented.
+(describe
+ "FOOF"
+ (it "should support basic language features"
+     (test-file "../test/foof/hello.foo")
+     (test-file "../test/foof/fibonacci.foo")
+     ;; (test-file "../test/foof/logger.foo") ;; FIXME Makes no sense to run it untill proper module handling is implemented.
+     )
+ (it "should support continuations"
+     (test-file "../test/foof/errors.foo")
+     (test-file "../test/foof/coroutines.foo")
+     (test-file "../test/foof/coroutines2.foo"))
+ (it "should support Actor Model"
+     (test-file "../test/foof/uprocs.foo")
+     (test-file "../test/foof/uprocs2.foo" sort-lines)
+     (test-file "../test/foof/msgwait.foo") ;; FIXME Sometimes broken.
+     (test-file "../test/foof/fibonacci2.foo")
+     (test-file "../test/foof/errors2.foo"))
+ (it "should support the RBS"
+     (test-file "../test/foof/rbs2.foo")
+     (test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
+     (test-file "../test/foof/cep.foo")))
 
-;; Continuations:
-(test-file "../test/foof/errors.foo")
-(test-file "../test/foof/coroutines.foo")
-(test-file "../test/foof/coroutines2.foo")
-
-;; Actor model:
-(test-file "../test/foof/uprocs.foo")
-(test-file "../test/foof/uprocs2.foo" sort-lines)
-(test-file "../test/foof/msgwait.foo") ;; FIXME Sometimes broken.
-(test-file "../test/foof/fibonacci2.foo")
-(test-file "../test/foof/errors2.foo")
-
-;; Rule based system:
-(test-file "../test/foof/rbs2.foo")
-(test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
-(test-file "../test/foof/cep.foo")
-
-;; Some benchmarks:
-(test-perf "../test/foof/fibonacci.foo" 1.5)
-
-(test-perf
- "../test/compiler/parser.scm.perf" 1.5
- (let ((inputs (map (lambda (reps)
-                      (let* ((expr (slurp "../test/foof/coroutines2.foo")))
-                        (format "(begin ~a)"
-                                (foldl string-append
-                                       ""
-                                       (make-list reps expr)))))
-                    (iota 0 50 5))))
-   (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
-   (map (lambda (input)
-          (collect-garbage)
-          (let ((size (+ 1 (count (partial equal? #\newline) (string->list input))))
-                (time (time-execution (parse input))))
-            (apply printf "~a, ~a, ~a, ~a~n" size time)
-            (car time)))
-        inputs)))
+(describe
+ "performance"
+ (it "fibonacci"
+     (test-perf "../test/foof/fibonacci.foo" 1.5))
+ (it "parser"
+     (test-perf
+      "../test/compiler/parser.scm.perf" 1.5
+      (let ((inputs (map (lambda (reps)
+                           (let* ((expr (slurp "../test/foof/coroutines2.foo")))
+                             (format "(begin ~a)"
+                                     (foldl string-append
+                                            ""
+                                            (make-list reps expr)))))
+                         (iota 0 50 5))))
+        (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
+        (map (lambda (input)
+               (collect-garbage)
+               (let ((size (+ 1 (count (partial equal? #\newline) (string->list input))))
+                     (time (time-execution (parse input))))
+                 (apply printf "~a, ~a, ~a, ~a~n" size time)
+                 (car time)))
+             inputs)))))
