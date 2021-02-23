@@ -1,15 +1,30 @@
 ;; Utilities tests.
 
-(define x (ref 0))
-(assert (deref x) 0)
+(describe
+ "Mutable refs"
+ (it "should dereference a value without modification"
+     (define x (ref 0))
+     (assert (deref x) 0)
+     (assert (deref x) 0))
+ (it "should allow modification of values"
+     (define x (ref 0))
+     (assert (deref x) 0)
 
-(assign! x 1)
-(assert (deref x) 1)
-(assign! x 2)
-(assert (deref x) 2)
+     (assign! x 1)
+     (assert (deref x) 1)
+     (assign! x 2)
+     (assert (deref x) 2)))
 
-(gensym-reset!)
-(assert (gensym 'a) 'a1)
-(assert (gensym 'b) 'b2)
-(gensym-reset!)
-(assert (gensym 'c) 'c1)
+(describe
+ "gensym"
+ (it "should incrementally name variables"
+     (gensym-reset!)
+     (assert (gensym 'a) 'a1)
+     (assert (gensym 'a) 'a2)
+     (assert (gensym 'b) 'b3))
+ (it "should allow resetting"
+     (gensym-reset!)
+     (assert (gensym 'a) 'a1)
+     (assert (gensym 'b) 'b2)
+     (gensym-reset!)
+     (assert (gensym 'a) 'a1)))
