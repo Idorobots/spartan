@@ -1,18 +1,62 @@
 ;; Testing shenanigans.
 
+(define-struct test-failed-exception (msg))
+
+(define-struct assert-exception (predicate expression value expected))
+
+(define (assert->string e)
+  (format "~a did not satisfy ~a\n\texpected: ~a\n\treceived: ~a\n"
+          (assert-exception-expression e)
+          (assert-exception-predicate e)
+          (assert-exception-expected e)
+          (assert-exception-value e)))
+
+(define-syntax describe
+  (syntax-rules ()
+    ((describe what body ...)
+     (begin
+       (display what)
+       (newline)
+       (map (lambda (thunk)
+              (with-handlers ((test-failed-exception?
+                               (lambda (e)
+                                 (display "FAILURE:") (newline)
+                                 (display (test-failed-exception-msg e))
+                                 (newline))))
+                (thunk)))
+            (list body ...))))))
+
+(define-syntax ignore
+  (syntax-rules ()
+    ((ignore what body ...)
+     (lambda ()
+       (display (string-append "- !!!IGNORED!!!" what))
+       (newline)))))
+
+(define-syntax it
+  (syntax-rules ()
+    ((it what body ...)
+     (lambda ()
+       (display (string-append "- " what))
+       (newline)
+       (with-handlers ((assert-exception?
+                        (lambda (e)
+                          (raise
+                           (make-test-failed-exception
+                            (assert->string e))))))
+         body ...)))))
+
 (define-syntax assert
   (syntax-rules ()
-    ((_ actual expected)
-     (let ((a actual)
+    ((assert value)
+     (assert value #t))
+    ((assert value expected)
+     (assert equal? value expected))
+    ((assert predicate value expected)
+     (let ((v value)
            (e expected))
-       (when (not (equal? a e))
-         (display "FAILURE: ") (newline)
-         (display "  expression: ") (newline) (pretty-print 'actual) (newline)
-         (display "  expected:   ") (newline) (pretty-print e) (newline)
-         (display "  actual:     ") (newline) (pretty-print a) (newline)
-         (error "Assertion failed: " a "did not equal" e))))
-    ((_ actual)
-     (assert actual #t))))
+       (unless (predicate v e)
+         (raise (make-assert-exception predicate 'value v e)))))))
 
 (define (run-file filename)
   (with-output-to-string
@@ -85,8 +129,10 @@
            (let* ((actual (test))
                   (expected (parse (slurp filename)))
                   (result (compare-perf actual expected factor)))
-             (assert (begin filename
-                            (< result 1)))
+             (assert <
+                     (begin filename
+                            result)
+                     1)
              (when (< 0 result)
                (spit filename actual)))
            (spit filename (test)))))))
