@@ -23,10 +23,10 @@
 (load "../test/rt/continuations.scm")
 (load "../test/rt/exception.scm")
 (load "../test/rt/actor.scm")
-(load "../test/rt/modules.scm")
 
 ;; Some integration tests:
 (load "../test/recurse.scm")
+(load "../test/modules.scm")
 (load "../test/integration.scm")
 
 ;; Performance tests:
