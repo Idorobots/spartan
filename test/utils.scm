@@ -27,11 +27,12 @@
                                  (newline)
                                  (display ";;;;;;;;;;;;;;;;;;;;;")
                                  (newline)
-                                 (display "Test log:")
+                                 (display "Test log: ")
+                                 (display (test-failed-exception-log e))
                                  (newline)
                                  (display ";;;;;;;;;;;;;;;;;;;;;")
                                  (newline)
-                                 (display (test-failed-exception-log e))
+                                 (display (slurp (test-failed-exception-log e)))
                                  (newline)
                                  (display ";;;;;;;;;;;;;;;;;;;;;")
                                  (newline))))
@@ -57,14 +58,15 @@
                                           (raise
                                            (make-test-failed-exception
                                             (assert->string e)
-                                            (slurp output-file))))))
+                                            output-file)))))
                          (with-output-to-file output-file
                            (lambda ()
                              body
                              ...)
                            #:exists 'replace)))))
          (display (format " (~a ms)" (car result)))
-         (newline))))))
+         (newline)
+         (delete-file output-file))))))
 
 (define-syntax assert
   (syntax-rules ()
