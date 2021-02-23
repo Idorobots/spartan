@@ -1,6 +1,6 @@
 ;; Testing shenanigans.
 
-(define-struct test-failed-exception (msg))
+(define-struct test-failed-exception (msg log))
 
 (define-struct assert-exception (predicate expression value expected))
 
@@ -18,12 +18,24 @@
        (display what)
        (newline)
        (map (lambda (thunk)
-              (with-handlers ((test-failed-exception?
+              (let ()
+                (with-handlers ((test-failed-exception?
                                (lambda (e)
-                                 (display "FAILURE:") (newline)
+                                 (display " !!!FAILURE!!!")
+                                 (newline)
                                  (display (test-failed-exception-msg e))
+                                 (newline)
+                                 (display ";;;;;;;;;;;;;;;;;;;;;")
+                                 (newline)
+                                 (display "Test log:")
+                                 (newline)
+                                 (display ";;;;;;;;;;;;;;;;;;;;;")
+                                 (newline)
+                                 (display (test-failed-exception-log e))
+                                 (newline)
+                                 (display ";;;;;;;;;;;;;;;;;;;;;")
                                  (newline))))
-                (thunk)))
+                  (thunk))))
             (list body ...))))))
 
 (define-syntax ignore
@@ -38,13 +50,21 @@
     ((it what body ...)
      (lambda ()
        (display (string-append "- " what))
-       (newline)
-       (with-handlers ((assert-exception?
-                        (lambda (e)
-                          (raise
-                           (make-test-failed-exception
-                            (assert->string e))))))
-         body ...)))))
+       (let* ((output-file (make-temporary-file "~a.log"))
+              (result (time-execution
+                       (with-handlers ((assert-exception?
+                                        (lambda (e)
+                                          (raise
+                                           (make-test-failed-exception
+                                            (assert->string e)
+                                            (slurp output-file))))))
+                         (with-output-to-file output-file
+                           (lambda ()
+                             body
+                             ...)
+                           #:exists 'replace)))))
+         (display (format " (~a ms)" (car result)))
+         (newline))))))
 
 (define-syntax assert
   (syntax-rules ()
