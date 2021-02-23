@@ -21,7 +21,7 @@
               (let ()
                 (with-handlers ((test-failed-exception?
                                (lambda (e)
-                                 (display " !!!FAILURE!!!")
+                                 (display " - !!!FAILURE!!!")
                                  (newline)
                                  (display (test-failed-exception-msg e))
                                  (newline)
@@ -43,7 +43,7 @@
   (syntax-rules ()
     ((ignore what body ...)
      (lambda ()
-       (display (string-append "- !!!IGNORED!!!" what))
+       (display (format "- ~a - !!!IGNORED!!!" what))
        (newline)))))
 
 (define-syntax it
