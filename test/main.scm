@@ -31,3 +31,5 @@
 
 ;; Performance tests:
 (load "../test/performance.scm")
+
+(run-all-tests)

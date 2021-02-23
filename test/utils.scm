@@ -1,72 +1,22 @@
 ;; Testing shenanigans.
 
-(define-struct test-failed-exception (msg log))
-
 (define-struct assert-exception (predicate expression value expected))
-
-(define (assert->string e)
-  (format "~a did not satisfy ~a\n\texpected: ~a\n\treceived: ~a\n"
-          (assert-exception-expression e)
-          (assert-exception-predicate e)
-          (assert-exception-expected e)
-          (assert-exception-value e)))
 
 (define-syntax describe
   (syntax-rules ()
-    ((describe what body ...)
-     (begin
-       (display what)
-       (newline)
-       (map (lambda (thunk)
-              (let ()
-                (with-handlers ((test-failed-exception?
-                               (lambda (e)
-                                 (display " - !!!FAILURE!!!")
-                                 (newline)
-                                 (display (test-failed-exception-msg e))
-                                 (newline)
-                                 (display ";;;;;;;;;;;;;;;;;;;;;")
-                                 (newline)
-                                 (display "Test log: ")
-                                 (display (test-failed-exception-log e))
-                                 (newline)
-                                 (display ";;;;;;;;;;;;;;;;;;;;;")
-                                 (newline)
-                                 (display (slurp (test-failed-exception-log e)))
-                                 (newline)
-                                 (display ";;;;;;;;;;;;;;;;;;;;;")
-                                 (newline))))
-                  (thunk))))
-            (list body ...))))))
+    ((_ what body ...)
+     (register-test-suite! what
+                           (list body ...)))))
 
 (define-syntax ignore
   (syntax-rules ()
-    ((ignore what body ...)
-     (lambda ()
-       (display (format "- ~a - !!!IGNORED!!!" what))
-       (newline)))))
+    ((_ what body ...)
+     (list 'ignored what (lambda () body ...)))))
 
 (define-syntax it
   (syntax-rules ()
-    ((it what body ...)
-     (lambda ()
-       (display (string-append "- " what))
-       (let* ((output-file (make-temporary-file "~a.log"))
-              (result (time-execution
-                       (with-handlers ((assert-exception?
-                                        (lambda (e)
-                                          (raise
-                                           (make-test-failed-exception
-                                            (assert->string e)
-                                            output-file)))))
-                         (with-output-to-file output-file
-                           (lambda ()
-                             body
-                             ...)
-                           #:exists 'replace)))))
-         (display (format " (~a ms)" (car result)))
-         (newline)
-         (delete-file output-file))))))
+    ((_ what body ...)
+     (list 'it what (lambda () body ...)))))
 
 (define-syntax assert
   (syntax-rules ()
@@ -79,18 +29,6 @@
            (e expected))
        (unless (predicate v e)
          (raise (make-assert-exception predicate 'value v e)))))))
-
-(define (run-file filename)
-  (with-output-to-string
-    (lambda ()
-      filename
-      (run (parse (slurp filename))))))
-
-(define (sort-lines contents)
-  (string-join
-         (sort (string-split contents "\n")
-               string>?)
-         "\n"))
 
 (define-syntax test-file
   (syntax-rules ()
@@ -115,27 +53,6 @@
                                     '())))
        (list cpu real gc)))))
 
-(define (compare-perf actual expected factor)
-  (cond ((and (number? actual)
-              (number? expected))
-         (cond ((> actual (* factor expected))
-                1)
-               ((< actual expected)
-                -1)
-               (else 0)))
-        ((and (pair? actual)
-              (pair? expected))
-         (max (compare-perf (car actual)
-                            (car expected)
-                            factor)
-              (compare-perf (cdr actual)
-                            (cdr expected)
-                            factor)))
-        ((and (null? actual)
-              (null? expected)
-              -1))
-        (else (error "Invalid performance values supplied: " actual expected))))
-
 (define-syntax test-perf
   (syntax-rules ()
     ((_ filename factor)
@@ -158,3 +75,111 @@
              (when (< 0 result)
                (spit filename actual)))
            (spit filename (test)))))))
+
+(define-syntax with-test-bindings
+  (syntax-rules ()
+    ((_ () body ...)
+     (begin body ...))
+    ((_ ((var val) bindings ...) body ...)
+     (let ((tmp var))
+       (set! var val)
+       (with-test-bindings (bindings ...) body ...)
+       (set! var tmp)))))
+
+(define (assert->string e)
+  (format "~a did not satisfy ~a\n\texpected: ~a\n\treceived: ~a\n"
+          (assert-exception-expression e)
+          (assert-exception-predicate e)
+          (assert-exception-expected e)
+          (assert-exception-value e)))
+
+(define *registered-test-suites* (ref '()))
+
+(define (register-test-suite! name test-cases)
+  (assign! *registered-test-suites*
+           (cons (list name test-cases)
+                 (deref *registered-test-suites*))))
+
+(define (run-all-tests)
+  (let ((failed-tests (ref '()))
+        (tests (reverse (deref *registered-test-suites*))))
+    (map (lambda (test)
+           (let ((test-name (car test))
+                 (test-cases (cadr test)))
+             (display test-name)
+             (newline)
+             (map (lambda (test-case)
+                    (let ((test-case-type (car test-case))
+                          (test-case-name (cadr test-case))
+                          (test-case-thunk (caddr test-case)))
+                      (if (equal? test-case-type 'ignored)
+                          (display (format "- ~a - !!!IGNORED!!!~n" test-case-name))
+                          (let* ((output-file (make-temporary-file "~a.log"))
+                                 (timing (time-execution
+                                          (with-handlers ((assert-exception?
+                                                           (lambda (e)
+                                                             (display (format "- ~a - !!!FAILURE!!!~n" test-case-name))
+                                                             (display (assert->string e))
+                                                             (newline)
+                                                             (display ";;;;;;;;;;;;;;;;;;;;;")
+                                                             (newline)
+                                                             (display "Test log: ")
+                                                             (display output-file)
+                                                             (newline)
+                                                             (display ";;;;;;;;;;;;;;;;;;;;;")
+                                                             (newline)
+                                                             (display (slurp output-file))
+                                                             (newline)
+                                                             (display ";;;;;;;;;;;;;;;;;;;;;")
+                                                             (newline)
+                                                             (assign! failed-tests
+                                                                      (cons (format "~a - ~a" test-name test-case-name)
+                                                                            (deref failed-tests))))))
+                                            (with-output-to-file output-file
+                                              test-case-thunk
+                                              #:exists 'replace)))))
+                            (display (format "- ~a (~a ms)~n" test-case-name (car timing)))
+                            (delete-file output-file)))))
+                  test-cases)))
+         tests)
+    (unless (empty? (deref failed-tests))
+      (display "Tests failed:")
+      (newline)
+      (map (lambda (fail)
+             (display fail)
+             (newline))
+           (deref failed-tests))
+      (error "Some tests have failed!"))))
+
+(define (run-file filename)
+  (with-output-to-string
+    (lambda ()
+      filename
+      (run (parse (slurp filename))))))
+
+(define (sort-lines contents)
+  (string-join
+         (sort (string-split contents "\n")
+               string>?)
+         "\n"))
+
+(define (compare-perf actual expected factor)
+  (cond ((and (number? actual)
+              (number? expected))
+         (cond ((> actual (* factor expected))
+                1)
+               ((< actual expected)
+                -1)
+               (else 0)))
+        ((and (pair? actual)
+              (pair? expected))
+         (max (compare-perf (car actual)
+                            (car expected)
+                            factor)
+              (compare-perf (cdr actual)
+                            (cdr expected)
+                            factor)))
+        ((and (null? actual)
+              (null? expected)
+              -1))
+        (else (error "Invalid performance values supplied: " actual expected))))
