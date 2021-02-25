@@ -100,6 +100,9 @@
            (cons (list name test-cases)
                  (deref *registered-test-suites*))))
 
+(define (clear-tests!)
+  (assign! *registered-test-suites* '()))
+
 (define (run-all-tests)
   (let ((failed-tests (ref '()))
         (tests (reverse (deref *registered-test-suites*))))
