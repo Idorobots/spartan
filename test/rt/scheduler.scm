@@ -22,13 +22,23 @@
                  (next-task))
                t2)))
 
+ (it "Can as easily resume stuff."
+     (assert (resume
+              (resume
+               (resume
+                (&apply __MULT 3 2 (&make-closure
+                                    (&make-env)
+                                    (lambda (_ mult)
+                                      (&apply __PLUS 3 3 (&make-closure
+                                                          (&make-env mult)
+                                                          (lambda (e plus)
+                                                            (&apply __EQUAL (&env-ref e 0) plus (&make-closure
+                                                                                                 (&make-env)
+                                                                                                 (lambda (_ v) v))))))))))))))
+
  (it "Can run compiled code."
      (assert (run '23) 23)
      (assert (run '(= (* 3 2) (+ 3 3)))))
-
- (it "Can as easily resume stuff."
-     (assert (resume (resume (resume (do-expr '(= (* 3 2) (+ 3 3)))))))
-     (assert (resume (resume (resume (do-string "(= (* 3 2) (+ 3 3))"))))))
 
  (it "Runing stuff changes state."
      (let ((p (uproc 100 nil nil 0 'waiting)))

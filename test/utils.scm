@@ -38,11 +38,11 @@
      (let ((expected-file (string-append filename ".output")))
        (if (file-exists? expected-file)
            (let ((expected (slurp expected-file)))
-             (assert (preprocess (run-file filename))
+             (assert (preprocess (run-test-file filename))
                      (preprocess expected)))
            (with-output-to-file expected-file
              (lambda ()
-               (write (run-file filename)))))))))
+               (write (run-test-file filename)))))))))
 
 (define-syntax time-execution
   (syntax-rules ()
@@ -58,7 +58,7 @@
     ((_ filename factor)
      (test-perf (string-append filename ".perf") factor
                 (time-execution
-                 (run-file filename))))
+                 (run-test-file filename))))
     ((_ filename factor body ...)
      (let ((test (lambda ()
                    (collect-garbage)
@@ -159,11 +159,10 @@
            (deref failed-tests))
       (error "Some tests have failed!"))))
 
-(define (run-file filename)
+(define (run-test-file filename)
   (with-output-to-string
     (lambda ()
-      filename
-      (run (parse (slurp filename))))))
+      (run-string (slurp filename)))))
 
 (define (sort-lines contents)
   (string-join
