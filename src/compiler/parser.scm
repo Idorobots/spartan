@@ -104,19 +104,8 @@
  '(Comment
    (: ";[^\n]*\n")))
 
-(define (ast->plain expr)
-  (map-ast id
-           (lambda (expr)
-             (case (ast-get expr 'type 'undefined)
-               ('plain-quote (list 'quote (ast-get expr 'value '())))
-               ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
-               ('unquote (list 'unquote (ast-get expr 'value '())))
-               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
-               (else (ast-get expr 'value '()))))
-           expr))
-
 (define (parse input)
   (let ((result (Expression input)))
     (if (matches? result)
-        (ast->plain (match-match result))
+        (match-match result)
         (error (format "Could not parse input: ~a" input)))))
