@@ -57,24 +57,25 @@
   (syntax-rules ()
     ((_ filename factor)
      (test-perf (string-append filename ".perf") factor
+                (collect-garbage 'major)
                 (time-execution
                  (run-test-file filename))))
     ((_ filename factor body ...)
-     (let ((test (lambda ()
-                   (collect-garbage 'major)
-                   body
-                   ...)))
-       (if (file-exists? filename)
-           (let* ((actual (test))
-                  (expected (with-input-from-string (slurp filename) read))
-                  (result (compare-perf actual expected factor)))
-             (assert <
-                     (begin filename
-                            result)
-                     1)
-             (when (< 0 result)
-               (spit filename actual)))
-           (spit filename (test)))))))
+     (if (file-exists? filename)
+         (let ((actual (begin body ...))
+               (expected (with-input-from-string (slurp filename) read))
+               (not-worse-performance (lambda (a e)
+                                        (< (compare-perf a e factor)
+                                           1)))
+               (better-performance (lambda (a e)
+                                        (< (compare-perf a e factor)
+                                           0))))
+           (assert not-worse-performance
+                   actual
+                   expected)
+           (when (better-performance actual expected)
+             (spit filename actual)))
+         (spit filename (begin body ...))))))
 
 (define-syntax with-test-bindings
   (syntax-rules ()
