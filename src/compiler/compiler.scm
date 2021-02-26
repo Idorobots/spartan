@@ -1,6 +1,7 @@
 ;; Tha compiler.
 
 (load "compiler/utils.scm")
+(load "compiler/lint.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
@@ -23,10 +24,6 @@
                optimize
                (flip mangle (make-internal-applicatives))
                generate)))
-
-(define (validate expr)
-  ;; TODO Validate the AST.
-  expr)
 
 (define (optimize expr)
   ;; TOOD Optimize redundant bindings etc.

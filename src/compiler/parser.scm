@@ -2,6 +2,7 @@
 
 (load "compiler/utils.scm")
 (load "compiler/peggen.scm")
+(load "compiler/tree-ast.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
@@ -15,7 +16,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'quote (caddr matching))
+       (matches (at (parse-location start end)
+                    (make-quote-node (caddr matching)))
                 start
                 end))))
  '(Quasiquote
@@ -24,7 +26,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'quasiquote (caddr matching))
+       (matches (at (parse-location start end)
+                    (make-quasiquote-node (caddr matching)))
                 start
                 end))))
  '(Unquote
@@ -33,7 +36,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'unquote (caddr matching))
+       (matches (at (parse-location start end)
+                    (make-unquote-node (caddr matching)))
                 start
                 end))))
  '(UnquoteSplicing
@@ -42,7 +46,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'unquote-splicing (caddr matching))
+       (matches (at (parse-location start end)
+                    (make-unquote-splicing-node (caddr matching)))
                 start
                 end))))
  '(String
@@ -52,7 +57,8 @@
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (substring content 1 (- (string-length content) 1))
+       (matches (at (parse-location start end)
+                    (make-string-node (substring content 1 (- (string-length content) 1))))
                 start
                 end))))
  '(List
@@ -61,7 +67,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (caddr matching)
+       (matches (at (parse-location start end)
+                    (make-list-node (caddr matching)))
                 start
                 end))))
  '(Atom
@@ -73,7 +80,8 @@
             (spacing-start (match-start result))
             (start (car matching))
             (end (match-end result)))
-       (matches (string->number (cadr matching))
+       (matches (at (parse-location start end)
+                    (make-number-node (string->number (cadr matching))))
                 start
                 end))))
  '(Symbol
@@ -82,7 +90,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (string->symbol (caddr matching))
+       (matches (at (parse-location start end)
+                    (make-symbol-node (string->symbol (caddr matching))))
                 start
                 end))))
  '(Spacing
@@ -95,8 +104,19 @@
  '(Comment
    (: ";[^\n]*\n")))
 
+(define (ast->plain expr)
+  (map-ast id
+           (lambda (expr)
+             (case (ast-get expr 'type 'undefined)
+               ('plain-quote (list 'quote (ast-get expr 'value '())))
+               ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
+               ('unquote (list 'unquote (ast-get expr 'value '())))
+               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
+               (else (ast-get expr 'value '()))))
+           expr))
+
 (define (parse input)
   (let ((result (Expression input)))
     (if (matches? result)
-        (match-match result)
+        (ast->plain (match-match result))
         (error (format "Could not parse input: ~a" input)))))

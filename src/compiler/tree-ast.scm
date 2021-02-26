@@ -1,5 +1,8 @@
 ;; AST
 
+(define (ast-node? node)
+  (hash? node))
+
 (define (ast-node . properties)
   (apply hasheq properties))
 
@@ -39,10 +42,10 @@
   (ast-node 'type 'symbol 'value value))
 
 (define (make-string-node value)
-  (ast-node 'type 'unquote-splicing 'value value))
+  (ast-node 'type 'string 'value value))
 
 (define (make-quote-node value)
-  (ast-node 'type 'quote 'value value))
+  (ast-node 'type 'plain-quote 'value value))
 
 (define (make-quasiquote-node value)
   (ast-node 'type 'quasiquote 'value value))
@@ -57,16 +60,18 @@
   (ast-node 'type 'list 'value value))
 
 (define (map-ast pre post expr)
-  (let ((m (partial map-ast pre post))
-        (expr (pre expr)))
-    (post
-     (case (ast-get expr 'type 'undefined)
-      ('number expr)
-      ('symbol expr)
-      ('string expr)
-      ('quote (ast-update expr 'value m))
-      ('quasiquote (ast-update expr 'value m))
-      ('unquote (ast-update expr 'value m))
-      ('unquote-splicing (ast-update expr 'value m))
-      ('list (ast-update expr 'value (partial map m)))
-      (else (error "Unexpected expression: " expr))))))
+  (if (ast-node? expr)
+      (let ((m (partial map-ast pre post))
+            (expr (pre expr)))
+        (post
+         (case (ast-get expr 'type 'undefined)
+           ('number expr)
+           ('symbol expr)
+           ('string expr)
+           ('plain-quote (ast-update expr 'value m))
+           ('quasiquote (ast-update expr 'value m))
+           ('unquote (ast-update expr 'value m))
+           ('unquote-splicing (ast-update expr 'value m))
+           ('list (ast-update expr 'value (partial map m)))
+           (else (error "Unexpected expression: " expr)))))
+      (error "Unexpected value: " expr)))
