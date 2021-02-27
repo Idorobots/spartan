@@ -44,9 +44,6 @@
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
 
-(define (make-unterminated-string-node value)
-  (ast-node 'type 'unterminated-string 'value value))
-
 (define (make-quote-node value)
   (ast-node 'type 'plain-quote 'value value))
 
@@ -62,8 +59,14 @@
 (define (make-list-node value)
   (ast-node 'type 'list 'value value))
 
+(define (make-unterminated-string-node value)
+  (ast-node 'type 'unterminated-string 'value value))
+
 (define (make-unterminated-list-node value)
   (ast-node 'type 'unterminated-list 'value value))
+
+(define (make-unterminated-quote-node value)
+  (ast-node 'type 'unterminated-quote 'value value))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)
@@ -79,6 +82,7 @@
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
            ('unquote-splicing (ast-update expr 'value m))
+           ('unterminated-quote (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
            ('unterminated-list (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))

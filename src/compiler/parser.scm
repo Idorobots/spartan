@@ -9,7 +9,7 @@
  '(Expression
    (/ List Atom String Quote))
  '(Quote
-   (/ PlainQuote Quasiquote UnquoteSplicing Unquote))
+   (/ PlainQuote Quasiquote UnquoteSplicing Unquote UnterminatedQuote))
  '(PlainQuote
    (Spacing "'" Expression)
    (lambda (input result)
@@ -48,6 +48,16 @@
             (end (match-end result)))
        (matches (at (parse-location start end)
                     (make-unquote-splicing-node (caddr matching)))
+                start
+                end))))
+ '(UnterminatedQuote
+   (Spacing (/ "'" "`" ",@" ","))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (at (parse-location start end)
+                    (make-unterminated-quote-node (cadr matching)))
                 start
                 end))))
 
