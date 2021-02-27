@@ -26,13 +26,15 @@
  (it "\"terminal\" handles single character patterns efficiently"
      (gensym-reset!)
      (assert (generate-matcher "f" 'h 'in 'off id)
-             '(if (equal? (string-ref in off) #\f)
+             '(if (and (< off (string-length in))
+                       (equal? (string-ref in off) #\f))
                   (matches "f" off (+ 1 off))
                   (no-match)))
      (gensym-reset!)
      (assert (generate-matcher "f" 'h 'in 'off stripper)
              '(strip
-               (if (equal? (string-ref in off) #\f)
+               (if (and (< off (string-length in))
+                       (equal? (string-ref in off) #\f))
                    (matches "f" off (+ 1 off))
                    (no-match)))))
  (it "\"terminal\" uses compiled regexps for multi-char patterns"
@@ -49,10 +51,11 @@
                  (if result1
                      (matches (car result1) off (+ off (string-length (car result1))))
                      (no-match))))))
- (it "\"terminal\"handles synatx characters fine"
+ (it "\"terminal\" handles synatx characters fine"
      (gensym-reset!)
      (assert (generate-matcher "'" 'h 'in 'off id)
-             '(if (equal? (string-ref in off) #\')
+             '(if (and (< off (string-length in))
+                       (equal? (string-ref in off) #\'))
                   (matches "'" off (+ 1 off))
                   (no-match))))
 
@@ -337,6 +340,51 @@
  '(Comment
    (: ";[^\n]*\n")))
 
+(generate-parser
+ '(Weird
+   (/ List Foo))
+ '(Foo
+   (Spacing "foo")
+   (lambda (input result)
+     (map-match (lambda (matching start end)
+                  (matches (ast ':type 'symbol
+                                ':value (cadr matching)
+                                ':start start
+                                ':end end)
+                           start
+                           end))
+                result)))
+ '(List
+   (/ ProperList UnterminatedList))
+ '(ProperList
+   (Spacing "(" ListContents Spacing ")")
+   (lambda (input result)
+     (map-match (lambda (matching start end)
+                  (matches (ast ':type 'list
+                                ':value (caddr matching)
+                                ':start start
+                                ':end end)
+                           start
+                           end))
+                result)))
+ '(UnterminatedList
+   (Spacing "(" ListContents Spacing EOF)
+   (lambda (input result)
+     (map-match (lambda (matching start end)
+                  (matches (ast ':type 'invalid-list
+                                ':value (caddr matching)
+                                ':start start
+                                ':end end)
+                           start
+                           end))
+                result)))
+ '(ListContents
+   (* Weird))
+ '(Spacing
+   (* " "))
+ '(EOF
+   ()))
+
 (describe
  "Generated grammar"
  (it "parses simple expressions"
@@ -406,6 +454,25 @@
                       8)))
 
  (it "handles EOF correctly"
+     (assert (Weird "(foo")
+             (matches '(:type invalid-list
+                              :value ((:type symbol :value "foo" :start 1 :end 4))
+                              :start 0
+                              :end 4)
+                      0
+                      4))
+     (assert (Weird "(foo (foo foo)")
+             (matches '(:type invalid-list
+                              :value ((:type symbol :value "foo" :start 1 :end 4)
+                                      (:type list
+                                             :value ((:type symbol :value "foo" :start 6 :end 9)
+                                                     (:type symbol :value "foo" :start 9 :end 13))
+                                             :start 4
+                                             :end 14))
+                              :start 0
+                              :end 14)
+                      0
+                      14))
      (assert (with-handlers ((string?
                               (lambda (e)
                                 e)))

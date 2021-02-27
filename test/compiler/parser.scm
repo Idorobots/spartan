@@ -56,10 +56,53 @@
                                        (at (parse-location 65 69)
                                            (make-symbol-node 'true)))))))
 
+ (it "handles unterminated lists gracefully"
+     (assert (parse "(")
+             (at (parse-location 0 1)
+                 (make-unterminated-list-node '())))
+     (assert (parse "(()")
+            (at (parse-location 0 3)
+                (make-unterminated-list-node
+                 (list (at (parse-location 1 3)
+                           (make-list-node '()))))))
+     (assert (parse "(define (foo x) 23")
+             (at (parse-location 0 18)
+                 (make-unterminated-list-node
+                  (list (at (parse-location 1 7)
+                            (make-symbol-node 'define))
+                        (at (parse-location 8 15)
+                            (make-list-node (list (at (parse-location 9 12)
+                                                      (make-symbol-node 'foo))
+                                                  (at (parse-location 13 14)
+                                                      (make-symbol-node 'x)))))
+                        (at (parse-location 16 18)
+                            (make-number-node 23))))))
+     (assert (parse "(define (foo x 23)")
+             (at (parse-location 0 18)
+                 (make-unterminated-list-node
+                  (list (at (parse-location 1 7)
+                            (make-symbol-node 'define))
+                        (at (parse-location 8 18)
+                            (make-list-node (list (at (parse-location 9 12)
+                                                      (make-symbol-node 'foo))
+                                                  (at (parse-location 13 14)
+                                                      (make-symbol-node 'x))
+                                                  (at (parse-location 15 17)
+                                                      (make-number-node 23))))))))))
+
  (it "handles unterminated strings gracefully"
      (assert (parse "\"This is an unterminated string")
              (at (parse-location 0 31)
-                 (make-unterminated-string-node "This is an unterminated string"))))
+                 (make-unterminated-string-node "This is an unterminated string")))
+     (assert (parse "(define foo \"This is an unterminated string)")
+             (at (parse-location 0 44)
+                 (make-unterminated-list-node
+                  (list (at (parse-location 1 7)
+                            (make-symbol-node 'define))
+                        (at (parse-location 8 11)
+                            (make-symbol-node 'foo))
+                        (at (parse-location 12 44)
+                            (make-unterminated-string-node "This is an unterminated string)")))))))
 
  (it "parses all the examples"
      (define (expected-read input)

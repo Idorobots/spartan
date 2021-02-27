@@ -83,7 +83,9 @@
    "\"")
 
  '(List
-   (Spacing "(" (* Expression) Spacing ")")
+   (/ ProperList UnterminatedList))
+ '(ProperList
+   (Spacing "(" ListContents Spacing ")")
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
@@ -92,6 +94,18 @@
                     (make-list-node (caddr matching)))
                 start
                 end))))
+ '(UnterminatedList
+   (Spacing "(" ListContents Spacing EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (at (parse-location start end)
+                    (make-unterminated-list-node (caddr matching)))
+                start
+                end))))
+ '(ListContents
+   (* Expression))
 
  '(Atom
    (/ Symbol Number))
@@ -116,6 +130,7 @@
                     (make-symbol-node (string->symbol (caddr matching))))
                 start
                 end))))
+
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))
    (lambda (input result)

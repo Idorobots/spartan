@@ -62,6 +62,9 @@
 (define (make-list-node value)
   (ast-node 'type 'list 'value value))
 
+(define (make-unterminated-list-node value)
+  (ast-node 'type 'unterminated-list 'value value))
+
 (define (map-ast pre post expr)
   (if (ast-node? expr)
       (let ((m (partial map-ast pre post))
@@ -77,5 +80,6 @@
            ('unquote (ast-update expr 'value m))
            ('unquote-splicing (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
+           ('unterminated-list (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))

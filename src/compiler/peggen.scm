@@ -101,7 +101,8 @@
 (define (generate-matcher regex hash input offset cont)
   (cont (if (equal? 1 (string-length regex)) ;; FIXME Won't work for "." and other single char regexps.
             (let ((char (string-ref regex 0)))
-              `(if (equal? (string-ref ,input ,offset) ,char)
+              `(if (and (< ,offset (string-length ,input))
+                        (equal? (string-ref ,input ,offset) ,char))
                    (matches ,regex ,offset (+ 1 ,offset))
                    (no-match)))
             (let ((r (regexp (string-append-immutable "^" regex)))

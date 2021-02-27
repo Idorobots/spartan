@@ -88,7 +88,7 @@
        (set! var tmp)))))
 
 (define (assert->string e)
-  (format "~a did not satisfy ~a\n\texpected: ~a\n\treceived: ~a\n"
+  (format "~a did not satisfy ~a\n\texpected: ~s\n\treceived: ~s\n"
           (assert-exception-expression e)
           (assert-exception-predicate e)
           (assert-exception-expected e)
