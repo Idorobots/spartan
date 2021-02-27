@@ -104,6 +104,18 @@
                         (at (parse-location 12 44)
                             (make-unterminated-string-node "This is an unterminated string)")))))))
 
+ (it "handles unterminated comments"
+     (assert (parse "(define (foo x) ;; Coments should be removed!")
+             (at (parse-location 0 45)
+                 (make-unterminated-list-node
+                  (list (at (parse-location 1 7)
+                            (make-symbol-node 'define))
+                        (at (parse-location 8 15)
+                            (make-list-node (list (at (parse-location 9 12)
+                                                      (make-symbol-node 'foo))
+                                                  (at (parse-location 13 14)
+                                                      (make-symbol-node 'x))))))))))
+
  (it "parses all the examples"
      (define (expected-read input)
        (with-input-from-string input

@@ -135,7 +135,7 @@
        ;; NOTE So that we can skip the spacing later.
        (matches end start end))))
  '(Comment
-   (: ";[^\n]*\n"))
+   (: ";[^\n]*" (/ "\n" EOF)))
  '(EOF
    ()))
 
