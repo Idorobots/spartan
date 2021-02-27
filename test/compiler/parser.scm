@@ -29,6 +29,19 @@
                                        (at (parse-location 16 18)
                                            (make-number-node 32)))))))
 
+ (it "parses strings"
+     (assert (parse "\"this is a string\"")
+             (at (parse-location 0 18)
+                 (make-string-node "this is a string")))
+     (assert (parse "(define foo \"this is a string\")")
+             (at (parse-location 0 31)
+                 (make-list-node (list (at (parse-location 1 7)
+                                           (make-symbol-node 'define))
+                                       (at (parse-location 8 11)
+                                           (make-symbol-node 'foo))
+                                       (at (parse-location 12 30)
+                                           (make-string-node "this is a string")))))))
+
  (it "parses comments"
      (assert (parse "(define (foo x) ;; Coments should be removed!
                    true)")
@@ -42,6 +55,11 @@
                                                                      (make-symbol-node 'x)))))
                                        (at (parse-location 65 69)
                                            (make-symbol-node 'true)))))))
+
+ (it "handles unterminated strings gracefully"
+     (assert (parse "\"This is an unterminated string")
+             (at (parse-location 0 31)
+                 (make-unterminated-string-node "This is an unterminated string"))))
 
  (it "parses all the examples"
      (define (expected-read input)

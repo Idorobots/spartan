@@ -50,17 +50,38 @@
                     (make-unquote-splicing-node (caddr matching)))
                 start
                 end))))
+
  '(String
-   (Spacing (& "\"") "\"[^\"]*\"")
+   (/ UnterminatedString ProperString))
+ '(UnterminatedString
+   (Spacing StringBeginning StringContents EOF)
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
        (matches (at (parse-location start end)
-                    (make-string-node (substring content 1 (- (string-length content) 1))))
+                    (make-unterminated-string-node (substring content 1 (string-length content))))
                 start
                 end))))
+ '(ProperString
+   (Spacing StringBeginning StringContents StringTermination)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result))
+            (content (caddr matching)))
+       (matches (at (parse-location start end)
+                    (make-string-node (substring content 1 (string-length content))))
+                start
+                end))))
+ '(StringBeginning
+   (& "\""))
+ '(StringContents
+   "\"[^\"]*")
+ '(StringTermination
+   "\"")
+
  '(List
    (Spacing "(" (* Expression) Spacing ")")
    (lambda (input result)
@@ -71,6 +92,7 @@
                     (make-list-node (caddr matching)))
                 start
                 end))))
+
  '(Atom
    (/ Symbol Number))
  '(Number
@@ -102,7 +124,9 @@
        ;; NOTE So that we can skip the spacing later.
        (matches end start end))))
  '(Comment
-   (: ";[^\n]*\n")))
+   (: ";[^\n]*\n"))
+ '(EOF
+   ()))
 
 (define (parse input)
   (let ((result (Expression input)))

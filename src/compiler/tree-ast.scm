@@ -44,6 +44,9 @@
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
 
+(define (make-unterminated-string-node value)
+  (ast-node 'type 'unterminated-string 'value value))
+
 (define (make-quote-node value)
   (ast-node 'type 'plain-quote 'value value))
 
@@ -68,6 +71,7 @@
            ('number expr)
            ('symbol expr)
            ('string expr)
+           ('unterminated-string expr)
            ('plain-quote (ast-update expr 'value m))
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
