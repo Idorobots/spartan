@@ -143,7 +143,7 @@
                                                              (log-failure (assert->string e))))
                                                           (exn:fail?
                                                            (lambda (e)
-                                                             (log-failure e))))
+                                                             (log-failure (format "~s~n" e)))))
                                             (with-output-to-file output-file
                                               test-case-thunk
                                               #:exists 'replace)))))

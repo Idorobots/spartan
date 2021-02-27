@@ -6,6 +6,17 @@
 
 (describe
  "PEG generator"
+ (it "EOF matches just the end of file"
+     (assert (generate-eof '() 'h 'in 'off id)
+             '(if (equal? off (string-length in))
+                  (matches '() off off)
+                  (no-match)))
+     (assert (generate-eof '() 'h 'in 'off stripper)
+             '(strip
+               (if (equal? off (string-length in))
+                   (matches '() off off)
+                   (no-match)))))
+
  (it "Nonterminal forwards to the correct rule"
      (assert (generate-nonterminal 'Foo 'h 'in 'off id)
              '(Foo h in off))
@@ -24,7 +35,7 @@
                (if (equal? (string-ref in off) #\f)
                    (matches "f" off (+ 1 off))
                    (no-match)))))
- (it "\"terminal\"uses compiled regexps for multi-char patterns"
+ (it "\"terminal\" uses compiled regexps for multi-char patterns"
      (gensym-reset!)
      (assert (generate-matcher "foo" 'h 'in 'off id)
              '(let ((result1 (regexp-match #rx"^foo" in off)))
@@ -256,6 +267,14 @@
                              end)))
                 result)))
  '(String
+   (/ UnterminatedString ProperString))
+ '(UnterminatedString
+   (Spacing (: "\"") "[^\"]*" ())
+   (lambda (input result)
+     (map-match (lambda (matching spacing-start end)
+                  (raise (format "Unterminated string at location: ~a" (car matching))))
+                result)))
+ '(ProperString
    (Spacing (: "\"") "[^\"]*" (: "\""))
    (lambda (input result)
      (map-match (lambda (matching spacing-start end)
@@ -384,4 +403,16 @@
                               :start 0
                               :end 8)
                       0
-                      8))))
+                      8)))
+
+ (it "handles EOF correctly"
+     (assert (with-handlers ((string?
+                              (lambda (e)
+                                e)))
+               (SimpleLisp "\"This string will fail to parse, but in a controlled way"))
+             "Unterminated string at location: 0")
+     (assert (with-handlers ((string?
+                              (lambda (e)
+                                e)))
+               (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))"))
+             "Unterminated string at location: 13")))

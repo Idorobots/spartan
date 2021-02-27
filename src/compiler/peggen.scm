@@ -73,7 +73,8 @@
 (define nonterminal? symbol?)
 
 (define (generate-rule-pattern rule hash input offset cont)
-  (cond ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
+  (cond ((empty? rule)            (generate-eof rule hash input offset cont))
+        ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
         ((terminal? rule)         (generate-matcher rule hash input offset cont))
         ((equal? (length rule) 1) (generate-rule-pattern (car rule) hash input offset cont))
         ((tagged-list? '/ rule)   (generate-or rule hash input offset cont))
@@ -85,6 +86,12 @@
         ((tagged-list? '& rule)   (generate-and rule hash input offset cont))
         ((tagged-list? '~ rule)   (generate-concat rule hash input offset cont))
         (else                     (generate-sequence rule hash input offset cont))))
+
+;; EOF
+(define (generate-eof rule hash input offset cont)
+  (cont `(if (equal? ,offset (string-length ,input))
+             (matches '() ,offset ,offset)
+             (no-match))))
 
 ;; Nonterminal
 (define (generate-nonterminal rule-name hash input offset cont)
