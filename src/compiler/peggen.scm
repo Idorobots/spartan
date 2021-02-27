@@ -35,6 +35,12 @@
     (spit temp-file (generate-grammar rules))
     (load temp-file)))
 
+(require file/md5)
+(define (hash-input input)
+  (* (eq-hash-code (md5 input))
+     (eq-hash-code input)
+     (string-length input)))
+
 (define (generate-grammar rules)
   (let ((top-name (caar rules))
         (hash (gensym 'hash))
@@ -42,8 +48,7 @@
     `(define ,top-name
        (letrec ,(map generate-rule rules)
          (lambda (,input)
-           (let ((,hash (* (eq-hash-code ,input)
-                           (string-length ,input))))
+           (let ((,hash (hash-input ,input)))
              (,top-name ,hash ,input 0)))))))
 
 (define (generate-rule rule)
