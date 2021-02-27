@@ -52,35 +52,31 @@
                 end))))
 
  '(String
-   (/ UnterminatedString ProperString))
- '(UnterminatedString
-   (Spacing StringBeginning StringContents EOF)
-   (lambda (input result)
-     (let* ((matching (match-match result))
-            (start (car matching))
-            (end (match-end result))
-            (content (caddr matching)))
-       (matches (at (parse-location start end)
-                    (make-unterminated-string-node (substring content 1 (string-length content))))
-                start
-                end))))
+   (/ ProperString UnterminatedString))
  '(ProperString
-   (Spacing StringBeginning StringContents StringTermination)
+   (Spacing "\"" StringContents "\"")
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
        (matches (at (parse-location start end)
-                    (make-string-node (substring content 1 (string-length content))))
+                    (make-string-node content))
                 start
                 end))))
- '(StringBeginning
-   (& "\""))
+ '(UnterminatedString
+   (Spacing "\"" StringContents EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result))
+            (content (caddr matching)))
+       (matches (at (parse-location start end)
+                    (make-unterminated-string-node content))
+                start
+                end))))
  '(StringContents
-   "\"[^\"]*")
- '(StringTermination
-   "\"")
+   "[^\"]*")
 
  '(List
    (/ ProperList UnterminatedList))
