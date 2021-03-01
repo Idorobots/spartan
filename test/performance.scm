@@ -3,11 +3,17 @@
 (describe
  "performance"
  (it "fibonacci"
-     (test-perf "../test/foof/fibonacci.foo" 1.5))
+     (test-perf "../test/foof/fibonacci.foo.perf" 1.5
+                (collect-garbage 'major)
+                (let ((time (time-execution
+                             (run-test-file "../test/foof/fibonacci.foo"))))
+                  ;; NOTE The GC time makes this test very flakey.
+                  (list (car time)
+                        (cadr time)))))
 
  (it "parser"
      (test-perf
-      "../test/compiler/parser.scm.perf" 1.5
+      "../test/compiler/parser.scm.perf" 2
       (let ((inputs (map (lambda (reps)
                            (let* ((expr (slurp "../test/foof/coroutines2.foo")))
                              (format "(begin ~a)"
