@@ -19,7 +19,7 @@
   (last (execute!)))
 
 (define (run-string input)
-  (run-code (compile (parse input))))
+  (run-code (compile input)))
 
 (define (run expr)
   (run-string

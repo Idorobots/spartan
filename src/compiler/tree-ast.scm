@@ -59,6 +59,10 @@
 (define (make-list-node value)
   (ast-node 'type 'list 'value value))
 
+(define (make-error-node)
+  (generated
+   (ast-node 'type 'error 'value "<error>")))
+
 (define (make-unterminated-string-node value)
   (ast-node 'type 'unterminated-string 'value value))
 
@@ -77,13 +81,14 @@
            ('number expr)
            ('symbol expr)
            ('string expr)
-           ('unterminated-string expr)
            ('plain-quote (ast-update expr 'value m))
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
            ('unquote-splicing (ast-update expr 'value m))
-           ('unterminated-quote (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
+           ('error expr)
+           ('unterminated-string expr)
+           ('unterminated-quote (ast-update expr 'value m))
            ('unterminated-list (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))

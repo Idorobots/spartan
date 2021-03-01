@@ -1,7 +1,8 @@
 ;; Tha compiler.
 
 (load "compiler/utils.scm")
-(load "compiler/lint.scm")
+(load "compiler/tree-ast.scm")
+(load "compiler/validate.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
@@ -10,13 +11,16 @@
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
 
-(define (compile expr)
+(define (compile input)
   (foldl (lambda (phase expr)
            (phase expr))
-         expr
-         (list validate
+         input
+         (list parse
+               (flip validate input)
+               ast->plain
                syntax-expand
                (flip macro-expand (make-builtin-macros))
+               lint
                letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
@@ -24,6 +28,22 @@
                optimize
                (flip mangle (make-internal-applicatives))
                generate)))
+
+;; FIXME Ideally this is no longer needed.
+(define (ast->plain expr)
+  (map-ast id
+           (lambda (expr)
+             (case (ast-get expr 'type 'undefined)
+               ('plain-quote (list 'quote (ast-get expr 'value '())))
+               ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
+               ('unquote (list 'unquote (ast-get expr 'value '())))
+               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
+               (else (ast-get expr 'value '()))))
+           expr))
+
+(define (lint expr)
+  ;; TODO Lint the code
+  expr)
 
 (define (optimize expr)
   ;; TOOD Optimize redundant bindings etc.
