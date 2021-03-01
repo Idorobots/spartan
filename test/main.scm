@@ -8,6 +8,8 @@
 (load "../test/compiler/substitute.scm")
 (load "../test/compiler/peggen.scm")
 (load "../test/compiler/parser.scm")
+(load "../test/compiler/errors.scm")
+(load "../test/compiler/validate.scm")
 (load "../test/compiler/tree-ast.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/syntax.scm")

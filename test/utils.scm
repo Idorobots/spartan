@@ -42,7 +42,7 @@
                      (preprocess expected)))
            (with-output-to-file expected-file
              (lambda ()
-               (write (run-test-file filename)))))))))
+               (display (run-test-file filename)))))))))
 
 (define-syntax time-execution
   (syntax-rules ()

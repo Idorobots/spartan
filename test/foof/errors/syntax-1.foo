@@ -1,0 +1,4 @@
+(define (foo x)
+  `(this unquote is invalid ,@)
+  (display "Hello world!)
+  (newline))
