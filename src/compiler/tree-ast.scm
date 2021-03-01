@@ -88,7 +88,7 @@
            ('list (ast-update expr 'value (partial map m)))
            ('error expr)
            ('unterminated-string expr)
-           ('unterminated-quote (ast-update expr 'value m))
+           ('unterminated-quote expr)
            ('unterminated-list (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))

@@ -19,26 +19,38 @@
     (map-ast id
              (lambda (expr)
                (case (ast-get expr 'type 'undefined)
-                 ('unterminated-string (raise-syntax-error expr "Unterminated string literal"))
-                 ('unterminated-list (raise-syntax-error expr "Unterminated list"))
+                 ('unterminated-string (raise-syntax-error expr "Unterminated string literal - expected a closing `\"` to follow:"))
+                 ('unterminated-list (raise-syntax-error expr "Unterminated list - expected a closing `)` to follow:"))
                  ('unterminated-quote (raise-syntax-error expr
-                                                          (format "No expression following `~a`"
-                                                                  (ast-get expr 'value (lambda ()
-                                                                                         (error "There really isn't a default..."))))))
+                                                          (format "No expression following `~a`:"
+                                                                  (ast-get expr 'value compiler-bug))))
                  (else expr)))
              expr)))
 
-(define (format-error input location what)
-  (let* ((position (offset-to-line-and-col input (ast-get location 'start 0)))
-         (line (car position))
-         (column (cadr position)))
-    (format "~a(~a,~a): ~a"
-            (ast-get location 'filename "stdin")
-            (+ line 1)
-            column
-            what)))
+(define (compiler-bug)
+  (error "Likely a compiler bug!"))
 
-(define (offset-to-line-and-col input offset)
+(define (format-error input location what)
+  (let* ((position (offset->line-and-col input (ast-get location 'start compiler-bug)))
+         (line (+ 1 (car position)))
+         (line-number (number->string line))
+         (line-content (get-line input line))
+         (column (cadr position))
+         (line-number-spacing (make-string (string-length line-number) #\space))
+         (column-spacing (make-string column #\space)))
+    (format (string-append "~a(~a,~a): ~a~n"
+                           "~a |~a"
+                           "~a  ~a^~~~~~~~~~~~n")
+            (ast-get location 'filename "stdin")
+            line
+            column
+            what
+            line-number
+            line-content
+            line-number-spacing
+            column-spacing)))
+
+(define (offset->line-and-col input offset)
   (let loop ((line 0)
              (col 0)
              (i 0))
@@ -48,6 +60,16 @@
            (loop (+ 1 line) 0 (+ 1 i)))
           (else
            (loop line (+ 1 col) (+ 1 i))))))
+
+(define (get-line input line)
+  (let loop ((offset 0)
+             (i 1))
+    (cond ((equal? i line)
+           (car (regexp-match #rx"^[^\n]*\n" input offset)))
+          ((equal? (string-ref input offset) #\newline)
+           (loop (+ 1 offset) (+ 1 i)))
+          (else
+           (loop (+ 1 offset) i)))))
 
 (define (syntax-error? e)
   (tagged-list? 'syntax-error e))
