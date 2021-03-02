@@ -9,7 +9,7 @@
   (let* ((position (offset->line-and-col input (ast-get location 'start compiler-bug)))
          (line (+ 1 (car position)))
          (line-number (number->string line))
-         (line-content (get-line input (car position)))
+         (line-content (normalize-for-display (get-line input (car position))))
          (column (cadr position))
          (line-number-spacing (make-string (string-length line-number) #\space))
          (column-spacing (make-string column #\space)))
@@ -47,6 +47,16 @@
            (loop (+ 1 offset) (+ 1 i)))
           (else
            (loop (+ 1 offset) i)))))
+
+(define (normalize-for-display line)
+  (cond ((equal? (string-length line) 0)
+         "\n")
+        ((equal? (string-ref line
+                             (- (string-length line) 1))
+                 #\newline)
+         line)
+        (else
+         (string-append line "\n"))))
 
 (define (syntax-error? e)
   (tagged-list? 'syntax-error e))
