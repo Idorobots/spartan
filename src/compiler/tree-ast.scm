@@ -72,6 +72,9 @@
 (define (make-unterminated-quote-node value)
   (ast-node 'type 'unterminated-quote 'value value))
 
+(define (make-unmatched-token-node value)
+  (ast-node 'type 'unmatched-token 'value value))
+
 (define (map-ast pre post expr)
   (if (ast-node? expr)
       (let ((m (partial map-ast pre post))
@@ -87,6 +90,7 @@
            ('unquote-splicing (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
            ('error expr)
+           ('unmatched-token expr)
            ('unterminated-string expr)
            ('unterminated-quote expr)
            ('unterminated-list (ast-update expr 'value (partial map m)))

@@ -6,8 +6,41 @@
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
+ '(Program
+   ;; FIXME This is pretty awkward, since the "full program" is still a single expression and the rest
+   ;; FIXME of the compiler still expects to receive that instead of a list of top level expressions.
+   ((? Expression) (* (/ UnmatchedParen Expression)) Spacing EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (expr (car matching))
+            (trailing (cadr matching))
+            (start (match-start result))
+            (end (match-end result)))
+       (matches (cond ((empty? trailing)
+                       expr)
+                      ((empty? expr)
+                       (at (parse-location start end)
+                           (make-list-node trailing)))
+                      (else
+                       (at (parse-location start end)
+                           (make-list-node (cons expr trailing)))))
+                start
+                end))))
+
  '(Expression
    (/ List Atom String Quote))
+
+ '(UnmatchedParen
+   (Spacing ")")
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (at (parse-location start end)
+                    (make-unmatched-token-node (cadr matching)))
+                start
+                end))))
+
  '(Quote
    (/ PlainQuote Quasiquote UnquoteSplicing Unquote UnterminatedQuote))
  '(PlainQuote
@@ -150,7 +183,7 @@
    ()))
 
 (define (parse input)
-  (let ((result (Expression input)))
+  (let ((result (Program input)))
     (if (matches? result)
         (match-match result)
         (error (format "Could not parse input: ~a" input)))))
