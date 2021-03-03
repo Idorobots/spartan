@@ -24,16 +24,16 @@
                             (lambda (expr)
                               (case (ast-get expr 'type 'undefined)
                                 ('unmatched-token (raise-syntax-error
-                                                   expr
+                                                   (get-location expr)
                                                    "Unmatched parentheses - expected an opening `(` to come before:"))
                                 ('unterminated-list (raise-syntax-error
-                                                     expr
+                                                     (get-location expr)
                                                      "Unterminated list - expected a closing `)` to follow:"))
                                 ('unterminated-string (raise-syntax-error
-                                                       expr
+                                                       (get-location expr)
                                                        "Unterminated string literal - expected a closing `\"` to follow:"))
                                 ('unterminated-quote (raise-syntax-error
-                                                      expr
+                                                      (get-location expr)
                                                       (format "No expression following `~a`:"
                                                               (ast-get expr 'value compiler-bug))))
                                 (else expr)))

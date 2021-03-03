@@ -21,6 +21,10 @@
 (define (location module start-line start-col end-line end-col)
   (ast-node 'start-line start-line 'start-col start-col 'end-line end-line 'end-col end-col))
 
+(define (get-location node)
+  ;; NODE Location is flat within the node.
+  node)
+
 (define (location-errorer location)
   (lambda ()
     (error "Invalid location specified: " location)))
