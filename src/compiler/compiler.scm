@@ -19,6 +19,7 @@
          env
          (list parse
                validate
+               report-errors
                ast->plain
                syntax-expand
                (flip macro-expand (make-builtin-macros))

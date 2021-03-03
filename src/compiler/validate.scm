@@ -18,17 +18,8 @@
                                (make-error-node)))))))
                    (validate-correct-parse (env-get env 'ast)))))
     (env-set env
-             'ast
-             (if (empty? (deref errors))
-                 result
-                 (begin
-                   (map (partial report-error env)
-                        (sort (deref errors)
-                              (lambda (a b)
-                                (location<? (syntax-error-location a)
-                                            (syntax-error-location b)))))
-                   ;; FIXME Properly stop the compiler pipeline.
-                   (make-error-node))))))
+             'ast result
+             'errors (deref errors))))
 
 (define (validate-correct-parse expr)
   (map-ast id
@@ -49,6 +40,17 @@
                                              (ast-get expr 'value compiler-bug))))
                (else expr)))
            expr))
+
+(define (report-errors env)
+  (let ((errors (env-get env 'errors)))
+    (unless (empty? errors)
+        (map (partial report-error env)
+             (sort errors
+                   (lambda (a b)
+                     (location<? (syntax-error-location a)
+                                 (syntax-error-location b)))))
+        (error "Compilation aborted due to errors."))
+    env))
 
 (define (report-error env error)
   (let* ((location (syntax-error-location error))

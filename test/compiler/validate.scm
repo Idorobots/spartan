@@ -4,7 +4,9 @@
  "validation"
  (it "finds the expected errors"
      (map (lambda (filename)
-            (test-file filename))
+            ;; NOTE Ignores the compilation abort.
+            (with-handlers ((exn:fail? id))
+              (test-file filename)))
           (filter (lambda (filename)
                     (string-suffix? filename ".foo"))
                   (map (lambda (path)
