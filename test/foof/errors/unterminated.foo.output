@@ -1,16 +1,16 @@
+stdin(1,0): Unterminated list - expected a closing `)` to follow:
+1 |(define (foo x)
+   ^~~~~~
+
 stdin(2,28): No expression following `,@`:
 2 |  `(this unquote is invalid ,@)
                                ^~~~~~
-
-stdin(3,11): Unterminated string literal - expected a closing `"` to follow:
-3 |  (display "Hello world!)
-              ^~~~~~
 
 stdin(3,2): Unterminated list - expected a closing `)` to follow:
 3 |  (display "Hello world!)
      ^~~~~~
 
-stdin(1,0): Unterminated list - expected a closing `)` to follow:
-1 |(define (foo x)
-   ^~~~~~
+stdin(3,11): Unterminated string literal - expected a closing `"` to follow:
+3 |  (display "Hello world!)
+              ^~~~~~
 

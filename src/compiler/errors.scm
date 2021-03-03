@@ -1,9 +1,27 @@
 ;; Error handling within the compiler.
 
-(load "compiler/tree-ast.scm")
+(define (make-syntax-error location what restart)
+  (list 'syntax-error location what restart))
 
-(define (format-error input location what)
-  (let* ((position (offset->line-and-col input (ast-get location 'start compiler-bug)))
+(define (syntax-error? e)
+  (tagged-list? 'syntax-error e))
+
+(define (syntax-error-location e)
+  (cadr e))
+
+(define (syntax-error-what e)
+  (caddr e))
+
+(define (syntax-error-restart e)
+  (cadddr e))
+
+(define (raise-syntax-error location what)
+  (call/cc
+   (lambda (cont)
+     (raise (make-syntax-error location what cont)))))
+
+(define (format-error module input location what)
+  (let* ((position (offset->line-and-col input (location-start location)))
          (line (+ 1 (car position)))
          (line-number (number->string line))
          (line-content (normalize-for-display (get-line input (car position))))
@@ -13,7 +31,7 @@
     (format (string-append "~a(~a,~a): ~a~n"
                            "~a |~a"
                            "~a  ~a^~~~~~~~~~~~n")
-            (ast-get location 'filename "stdin")
+            module
             line
             column
             what
@@ -54,23 +72,3 @@
          line)
         (else
          (string-append line "\n"))))
-
-(define (syntax-error? e)
-  (tagged-list? 'syntax-error e))
-
-(define (make-syntax-error location what restart)
-  (list 'syntax-error location what restart))
-
-(define (syntax-error-location e)
-  (cadr e))
-
-(define (syntax-error-what e)
-  (caddr e))
-
-(define (syntax-error-restart e)
-  (cadddr e))
-
-(define (raise-syntax-error location what)
-  (call/cc
-   (lambda (cont)
-     (raise (make-syntax-error location what cont)))))

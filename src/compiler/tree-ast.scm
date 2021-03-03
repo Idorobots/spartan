@@ -65,6 +65,16 @@
 (define (location start end)
   (ast-node 'start start 'end end))
 
+(define (location-start loc)
+  (ast-get loc 'start compiler-bug))
+
+(define (location-end loc)
+  (ast-get loc 'end compiler-bug))
+
+(define (location<? a b)
+  (< (location-start a)
+     (location-start b)))
+
 (define (get-location node)
   (ast-get node 'location compiler-bug))
 

@@ -27,7 +27,19 @@
  (it "`at` preserves artificial state"
      (assert (at (location 5 23)
                  (generated (ast-node 'value 'value)))
-             (ast-node 'value 'value 'location (location 5 23) 'generated #t))))
+             (ast-node 'value 'value 'location (location 5 23) 'generated #t)))
+
+ (it "`location<?` correctly compares locations"
+     (assert (location<? (location 0 0)
+                         (location 0 0))
+             #f)
+     (assert (location<? (location 0 0)
+                         (location 5 0)))
+     (assert (location<? (location 23 0)
+                         (location 5 0))
+             #f)
+     (assert (location<? (location 0 23)
+                         (location 5 23)))))
 
 (describe
  "AST map"

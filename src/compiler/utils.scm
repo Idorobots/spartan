@@ -23,6 +23,14 @@
 (define (assign! ref x)
   (vector-set! ref 0 x))
 
+(define (push! ref x)
+  (assign! ref (cons x (deref ref))))
+
+(define (pop! ref x)
+  (let ((x (deref ref)))
+    (assign! ref (cdr x))
+    (car x)))
+
 ;; Mutable arrays:
 (define (array n x)
   (make-vector n x))
