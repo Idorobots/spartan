@@ -63,13 +63,13 @@
 ;; AST utils
 
 (define (location start end)
-  (ast-node 'start start 'end end))
+  (cons start end))
 
 (define (location-start loc)
-  (ast-get loc 'start compiler-bug))
+  (car loc))
 
 (define (location-end loc)
-  (ast-get loc 'end compiler-bug))
+  (cdr loc))
 
 (define (location<? a b)
   (< (location-start a)
