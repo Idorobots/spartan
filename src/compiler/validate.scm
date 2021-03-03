@@ -1,10 +1,11 @@
 ;; Parse tree linting.
 
 (load "compiler/utils.scm")
+(load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
 
-(define (validate expr input)
+(define (validate env)
   (let* ((errors (ref '()))
          (result (with-handlers
                      ((syntax-error?
@@ -15,17 +16,19 @@
                           (at (syntax-error-location error)
                               (generated
                                (make-error-node)))))))
-                   (validate-correct-parse expr))))
-    (if (empty? (deref errors))
-        result
-        (begin
-          (map (partial report-error input)
-               (sort (deref errors)
-                     (lambda (a b)
-                       (location<? (syntax-error-location a)
-                                   (syntax-error-location b)))))
-          ;; FIXME Properly stop the compiler pipeline.
-          (make-error-node)))))
+                   (validate-correct-parse (env-get env 'ast)))))
+    (env-set env
+             'ast
+             (if (empty? (deref errors))
+                 result
+                 (begin
+                   (map (partial report-error env)
+                        (sort (deref errors)
+                              (lambda (a b)
+                                (location<? (syntax-error-location a)
+                                            (syntax-error-location b)))))
+                   ;; FIXME Properly stop the compiler pipeline.
+                   (make-error-node))))))
 
 (define (validate-correct-parse expr)
   (map-ast id
@@ -47,8 +50,11 @@
                (else expr)))
            expr))
 
-(define (report-error input error)
+(define (report-error env error)
   (let* ((location (syntax-error-location error))
          (what (syntax-error-what error)))
-    (display (format-error "stdin" input location what))
+    (display (format-error (env-get env 'module)
+                           (env-get env 'input)
+                           location
+                           what))
     (newline)))

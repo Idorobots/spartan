@@ -177,7 +177,7 @@
 (define (run-test-file filename)
   (with-output-to-string
     (lambda ()
-      (run-string (slurp filename)))))
+      (run-file filename))))
 
 (define (sort-lines contents)
   (string-join

@@ -1,7 +1,7 @@
 ;; The main entry point.
 
+(load "compiler/env.scm")
 (load "compiler/compiler.scm")
-(load "compiler/parser.scm")
 (load "runtime/bootstrap.scm")
 (load "rete/rete.scm")
 
@@ -19,13 +19,21 @@
   (last (execute!)))
 
 (define (run-string input)
-  (run-code (compile input)))
+  (run-code
+   (compile
+    (env 'input input
+         'module 'string))))
 
 (define (run expr)
-  (run-string
-   (with-output-to-string
-     (lambda ()
-       (pretty-write expr)))))
+  (run-code
+   (compile
+    (env 'input (with-output-to-string
+                  (lambda ()
+                    (pretty-write expr)))
+         'module 'expr))))
 
 (define (run-file filename)
-  (run-string (slurp filename)))
+  (run-code
+   (compile
+    (env 'input (slurp filename)
+         'module filename))))

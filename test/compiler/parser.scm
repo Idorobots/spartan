@@ -1,12 +1,17 @@
 ;; Parser tests.
 
+(define (p string)
+  (env-get (parse (env 'input string
+                       'module 'test))
+           'ast))
+
 (describe
  "parser"
  (it "parses simple expressions"
-     (assert (parse "foo")
+     (assert (p "foo")
              (at (location 0 3)
                  (make-symbol-node 'foo)))
-     (assert (parse "(define (foo x) 23)")
+     (assert (p "(define (foo x) 23)")
              (at (location 0 19)
                  (make-list-node (list (at (location 1 7)
                                            (make-symbol-node 'define))
@@ -17,7 +22,7 @@
                                                                      (make-symbol-node 'x)))))
                                        (at (location 16 18)
                                            (make-number-node 23))))))
-     (assert (parse "(define (oof x) 32)")
+     (assert (p "(define (oof x) 32)")
              (at (location 0 19)
                  (make-list-node (list (at (location 1 7)
                                            (make-symbol-node 'define))
@@ -30,10 +35,10 @@
                                            (make-number-node 32)))))))
 
  (it "parses strings"
-     (assert (parse "\"this is a string\"")
+     (assert (p "\"this is a string\"")
              (at (location 0 18)
                  (make-string-node "this is a string")))
-     (assert (parse "(define foo \"this is a string\")")
+     (assert (p "(define foo \"this is a string\")")
              (at (location 0 31)
                  (make-list-node (list (at (location 1 7)
                                            (make-symbol-node 'define))
@@ -43,7 +48,7 @@
                                            (make-string-node "this is a string")))))))
 
  (it "parses comments"
-     (assert (parse "(define (foo x) ;; Coments should be removed!
+     (assert (p "(define (foo x) ;; Coments should be removed!
                    true)")
              (at (location 0 70)
                  (make-list-node (list (at (location 1 7)
@@ -57,15 +62,15 @@
                                            (make-symbol-node 'true)))))))
 
  (it "handles unterminated lists gracefully"
-     (assert (parse "(")
+     (assert (p "(")
              (at (location 0 1)
                  (make-unterminated-list-node '())))
-     (assert (parse "(()")
+     (assert (p "(()")
             (at (location 0 3)
                 (make-unterminated-list-node
                  (list (at (location 1 3)
                            (make-list-node '()))))))
-     (assert (parse "(define (foo x) 23")
+     (assert (p "(define (foo x) 23")
              (at (location 0 18)
                  (make-unterminated-list-node
                   (list (at (location 1 7)
@@ -77,7 +82,7 @@
                                                       (make-symbol-node 'x)))))
                         (at (location 16 18)
                             (make-number-node 23))))))
-     (assert (parse "(define (foo x 23)")
+     (assert (p "(define (foo x 23)")
              (at (location 0 18)
                  (make-unterminated-list-node
                   (list (at (location 1 7)
@@ -91,10 +96,10 @@
                                                       (make-number-node 23))))))))))
 
  (it "handles unterminated strings gracefully"
-     (assert (parse "\"This is an unterminated string")
+     (assert (p "\"This is an unterminated string")
              (at (location 0 31)
                  (make-unterminated-string-node "This is an unterminated string")))
-     (assert (parse "(define foo \"This is an unterminated string)")
+     (assert (p "(define foo \"This is an unterminated string)")
              (at (location 0 44)
                  (make-unterminated-list-node
                   (list (at (location 1 7)
@@ -105,7 +110,7 @@
                             (make-unterminated-string-node "This is an unterminated string)")))))))
 
  (it "handles unterminated comments"
-     (assert (parse "(define (foo x) ;; Coments should be removed!")
+     (assert (p "(define (foo x) ;; Coments should be removed!")
              (at (location 0 45)
                  (make-unterminated-list-node
                   (list (at (location 1 7)
@@ -117,19 +122,19 @@
                                                       (make-symbol-node 'x))))))))))
 
  (it "handles unterminated quotation"
-     (assert (parse "'")
+     (assert (p "'")
              (at (location 0 1)
                  (make-unterminated-quote-node "'")))
-     (assert (parse "`")
+     (assert (p "`")
              (at (location 0 1)
                  (make-unterminated-quote-node "`")))
-     (assert (parse ",")
+     (assert (p ",")
              (at (location 0 1)
                  (make-unterminated-quote-node ",")))
-     (assert (parse ",@")
+     (assert (p ",@")
              (at (location 0 2)
                  (make-unterminated-quote-node ",@")))
-     (assert (parse "(define (foo x) ')")
+     (assert (p "(define (foo x) ')")
              (at (location 0 18)
                  (make-list-node (list (at (location 1 7)
                                            (make-symbol-node 'define))
@@ -142,12 +147,12 @@
                                            (make-unterminated-quote-node "'")))))))
 
  (it "handles extra unmatched tokens"
-     (assert (parse ")")
+     (assert (p ")")
              (at (location 0 1)
                  (make-list-node
                   (list (at (location 0 1)
                             (make-unmatched-token-node ")"))))))
-     (assert (parse "(define (foo x) x))")
+     (assert (p "(define (foo x) x))")
              (at (location 0 19)
                  (make-list-node
                   (list (at (location 0 18)
@@ -162,7 +167,7 @@
                                                       (make-symbol-node 'x)))))
                         (at (location 18 19)
                             (make-unmatched-token-node ")"))))))
-     (assert (parse "(define (foo x)) x)")
+     (assert (p "(define (foo x)) x)")
              (at (location 0 19)
                  (make-list-node
                   (list (at (location 0 16)
@@ -185,7 +190,7 @@
            (read))))
      (map (lambda (filename)
             (let ((contents (slurp filename)))
-              (assert (ast->plain (parse contents))
+              (assert (ast->plain (p contents))
                       (expected-read contents))))
           (filter (compose (lambda (filename)
                              ;; FIXME This now somewhat parses the full file, while previously it only parsed the first expr.

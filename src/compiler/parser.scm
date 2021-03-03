@@ -2,6 +2,7 @@
 
 (load "compiler/utils.scm")
 (load "compiler/peggen.scm")
+(load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
@@ -182,8 +183,9 @@
  '(EOF
    ()))
 
-(define (parse input)
-  (let ((result (Program input)))
+(define (parse env)
+  (let* ((input (env-get env 'input))
+         (result (Program input)))
     (if (matches? result)
-        (match-match result)
+        (env-set env 'ast (match-match result))
         (error (format "Could not parse input: ~a" input)))))

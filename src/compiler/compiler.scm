@@ -1,7 +1,9 @@
 ;; Tha compiler.
 
 (load "compiler/utils.scm")
+(load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
+(load "compiler/parser.scm")
 (load "compiler/validate.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
@@ -11,12 +13,12 @@
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
 
-(define (compile input)
+(define (compile env)
   (foldl (lambda (phase expr)
            (phase expr))
-         input
+         env
          (list parse
-               (flip validate input)
+               validate
                ast->plain
                syntax-expand
                (flip macro-expand (make-builtin-macros))
@@ -39,7 +41,7 @@
                ('unquote (list 'unquote (ast-get expr 'value '())))
                ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
                (else (ast-get expr 'value '()))))
-           expr))
+           (env-get expr 'ast)))
 
 (define (lint expr)
   ;; TODO Lint the code
