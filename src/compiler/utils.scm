@@ -89,3 +89,8 @@
                   (if (eof-object? char)
                       result
                       (loop (read-char) (cons char result)))))))))
+
+;; Internal errors
+
+(define (compiler-bug)
+  (error "Likely a compiler bug!"))

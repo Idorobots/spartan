@@ -13,10 +13,10 @@
  (it "`at` can add location"
      (assert (at (location 5 23)
                  (ast-node 'value 'value))
-             (ast-node 'value 'value 'start 5 'end 23))
+             (ast-node 'value 'value 'location (location 5 23)))
      (assert (at (location 5 23)
-                 (ast-node 'value 'value 'start 10 'end 15))
-             (ast-node 'value 'value 'start 5 'end 23)))
+                 (ast-node 'value 'value 'location (location 10 15)))
+             (ast-node 'value 'value 'location (location 5 23))))
 
  (it "`generate` can mark node artificial"
      (assert (generated (ast-node 'value 'value))
@@ -27,10 +27,7 @@
  (it "`at` preserves artificial state"
      (assert (at (location 5 23)
                  (generated (ast-node 'value 'value)))
-             (ast-node 'value 'value 'start 5 'end 23 'generated #t))
-     (assert (at (generated (location 5 23))
-                 (ast-node 'value 'value))
-             (ast-node 'value 'value 'start 5 'end 23 'generated #t))))
+             (ast-node 'value 'value 'location (location 5 23) 'generated #t))))
 
 (describe
  "AST map"

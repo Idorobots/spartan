@@ -2,9 +2,6 @@
 
 (load "compiler/tree-ast.scm")
 
-(define (compiler-bug)
-  (error "Likely a compiler bug!"))
-
 (define (format-error input location what)
   (let* ((position (offset->line-and-col input (ast-get location 'start compiler-bug)))
          (line (+ 1 (car position)))

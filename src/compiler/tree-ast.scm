@@ -1,5 +1,9 @@
 ;; AST
 
+(load "compiler/utils.scm")
+
+;; Basic definitions
+
 (define (ast-node? node)
   (hash? node))
 
@@ -15,26 +19,7 @@
 (define (ast-update node property f)
   (ast-set node property (f (ast-get node property '()))))
 
-(define (location start end)
-  (ast-node 'start start 'end end))
-
-(define (get-location node)
-  ;; NODE Location is flat within the node.
-  node)
-
-(define (location-errorer location)
-  (lambda ()
-    (error "Invalid location specified: " location)))
-
-(define (at location object)
-  (let* ((start (ast-set object 'start (ast-get location 'start (location-errorer location))))
-         (end (ast-set start 'end (ast-get location 'end (location-errorer location)))))
-    (if (ast-get location 'generated #f)
-        (generated end)
-        end)))
-
-(define (generated object)
-  (ast-set object 'generated #t))
+;; AST nodes
 
 (define (make-number-node value)
   (ast-node 'type 'number 'value value))
@@ -61,8 +46,7 @@
   (ast-node 'type 'list 'value value))
 
 (define (make-error-node)
-  (generated
-   (ast-node 'type 'error 'value "<error>")))
+  (ast-node 'type 'error 'value "<error>"))
 
 (define (make-unterminated-string-node value)
   (ast-node 'type 'unterminated-string 'value value))
@@ -75,6 +59,20 @@
 
 (define (make-unmatched-token-node value)
   (ast-node 'type 'unmatched-token 'value value))
+
+;; AST utils
+
+(define (location start end)
+  (ast-node 'start start 'end end))
+
+(define (get-location node)
+  (ast-get node 'location compiler-bug))
+
+(define (at location object)
+  (ast-set object 'location location))
+
+(define (generated object)
+  (ast-set object 'generated #t))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)
