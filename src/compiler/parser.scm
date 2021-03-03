@@ -19,10 +19,10 @@
        (matches (cond ((empty? trailing)
                        expr)
                       ((empty? expr)
-                       (at (parse-location start end)
+                       (at (location start end)
                            (make-list-node trailing)))
                       (else
-                       (at (parse-location start end)
+                       (at (location start end)
                            (make-list-node (cons expr trailing)))))
                 start
                 end))))
@@ -36,7 +36,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unmatched-token-node (cadr matching)))
                 start
                 end))))
@@ -49,7 +49,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-quote-node (caddr matching)))
                 start
                 end))))
@@ -59,7 +59,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-quasiquote-node (caddr matching)))
                 start
                 end))))
@@ -69,7 +69,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unquote-node (caddr matching)))
                 start
                 end))))
@@ -79,7 +79,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unquote-splicing-node (caddr matching)))
                 start
                 end))))
@@ -89,7 +89,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unterminated-quote-node (cadr matching)))
                 start
                 end))))
@@ -103,7 +103,7 @@
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-string-node content))
                 start
                 end))))
@@ -114,7 +114,7 @@
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unterminated-string-node content))
                 start
                 end))))
@@ -129,7 +129,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-list-node (caddr matching)))
                 start
                 end))))
@@ -139,7 +139,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-unterminated-list-node (caddr matching)))
                 start
                 end))))
@@ -155,7 +155,7 @@
             (spacing-start (match-start result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-number-node (string->number (cadr matching))))
                 start
                 end))))
@@ -165,7 +165,7 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (parse-location start end)
+       (matches (at (location start end)
                     (make-symbol-node (string->symbol (caddr matching))))
                 start
                 end))))

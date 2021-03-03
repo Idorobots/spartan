@@ -11,10 +11,10 @@
              (ast-node 'value 23 'other-value 5)))
 
  (it "`at` can add location"
-     (assert (at (parse-location 5 23)
+     (assert (at (location 5 23)
                  (ast-node 'value 'value))
              (ast-node 'value 'value 'start 5 'end 23))
-     (assert (at (parse-location 5 23)
+     (assert (at (location 5 23)
                  (ast-node 'value 'value 'start 10 'end 15))
              (ast-node 'value 'value 'start 5 'end 23)))
 
@@ -25,10 +25,10 @@
              (ast-node 'value 'value 'generated #t)))
 
  (it "`at` preserves artificial state"
-     (assert (at (parse-location 5 23)
+     (assert (at (location 5 23)
                  (generated (ast-node 'value 'value)))
              (ast-node 'value 'value 'start 5 'end 23 'generated #t))
-     (assert (at (generated (parse-location 5 23))
+     (assert (at (generated (location 5 23))
                  (ast-node 'value 'value))
              (ast-node 'value 'value 'start 5 'end 23 'generated #t))))
 
@@ -55,7 +55,7 @@
 
  (it "preserves property values"
      (define ast (make-list-node
-                  (list (at (parse-location 5 23)
+                  (list (at (location 5 23)
                             (make-symbol-node 'foo))
                         (generated (make-number-node 23)))))
      (assert (map-ast id id ast)

@@ -15,11 +15,8 @@
 (define (ast-update node property f)
   (ast-set node property (f (ast-get node property '()))))
 
-(define (parse-location start end)
+(define (location start end)
   (ast-node 'start start 'end end))
-
-(define (location module start-line start-col end-line end-col)
-  (ast-node 'start-line start-line 'start-col start-col 'end-line end-line 'end-col end-col))
 
 (define (get-location node)
   ;; NODE Location is flat within the node.
