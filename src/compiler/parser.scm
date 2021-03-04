@@ -148,9 +148,9 @@
    (* Expression))
 
  '(Atom
-   (/ Symbol Number))
+   (/ Number Symbol))
  '(Number
-   (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
+   (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
    (lambda (input result)
      (let* ((matching (match-match result))
             (spacing-start (match-start result))
@@ -161,13 +161,13 @@
                 start
                 end))))
  '(Symbol
-   (Spacing (! Number) "[^\\(\\)\"'`,@; \t\v\r\n]+")
+   (Spacing "[^\\(\\)\"'`,@; \t\v\r\n]+")
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-symbol-node (string->symbol (caddr matching))))
+                    (make-symbol-node (string->symbol (cadr matching))))
                 start
                 end))))
 
