@@ -1,7 +1,7 @@
 ;; Parse tree validation tests.
 
 (describe
- "validation"
+ "syntax-elaboration"
  (it "finds the expected errors"
      (map (lambda (filename)
             ;; NOTE Ignores the compilation abort.

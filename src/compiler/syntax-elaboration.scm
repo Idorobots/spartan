@@ -5,7 +5,7 @@
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
 
-(define (validate env)
+(define (elaborate-syntax env)
   (let* ((errors (ref '()))
          (result (with-handlers
                      ((syntax-error?
@@ -16,12 +16,12 @@
                           (at (syntax-error-location error)
                               (generated
                                (make-error-node)))))))
-                   (validate-correct-parse (env-get env 'ast)))))
+                   (validate-parse-tree (env-get env 'ast)))))
     (env-set env
              'ast result
              'errors (deref errors))))
 
-(define (validate-correct-parse expr)
+(define (validate-parse-tree expr)
   (map-ast id
            (lambda (expr)
              (case (ast-get expr 'type 'undefined)
@@ -40,23 +40,3 @@
                                              (ast-get expr 'value compiler-bug))))
                (else expr)))
            expr))
-
-(define (report-errors env)
-  (let ((errors (env-get env 'errors)))
-    (unless (empty? errors)
-        (map (partial report-error env)
-             (sort errors
-                   (lambda (a b)
-                     (location<? (syntax-error-location a)
-                                 (syntax-error-location b)))))
-        (error "Compilation aborted due to errors."))
-    env))
-
-(define (report-error env error)
-  (let* ((location (syntax-error-location error))
-         (what (syntax-error-what error)))
-    (display (format-error (env-get env 'module)
-                           (env-get env 'input)
-                           location
-                           what))
-    (newline)))

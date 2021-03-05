@@ -190,7 +190,7 @@
            (read))))
      (map (lambda (filename)
             (let ((contents (slurp filename)))
-              (assert (ast->plain (p contents))
+              (assert (ast->plain (env-get (p contents) 'ast))
                       (expected-read contents))))
           (filter (compose (lambda (filename)
                              ;; FIXME This now somewhat parses the full file, while previously it only parsed the first expr.

@@ -105,3 +105,14 @@
            ('unterminated-list (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))
+
+(define (ast->plain ast)
+  (map-ast id
+           (lambda (expr)
+             (case (ast-get expr 'type 'undefined)
+               ('plain-quote (list 'quote (ast-get expr 'value '())))
+               ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
+               ('unquote (list 'unquote (ast-get expr 'value '())))
+               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
+               (else (ast-get expr 'value '()))))
+           ast))

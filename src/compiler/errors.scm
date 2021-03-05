@@ -1,5 +1,18 @@
 ;; Error handling within the compiler.
 
+(define (report-errors env)
+  (let ((errors (env-get env 'errors)))
+    (unless (empty? errors)
+        (map (partial report-error env)
+             (sort errors
+                   (lambda (a b)
+                     (location<? (syntax-error-location a)
+                                 (syntax-error-location b)))))
+        (error "Compilation aborted due to errors."))
+    env))
+
+;; Syntax error
+
 (define (make-syntax-error location what restart)
   (list 'syntax-error location what restart))
 
@@ -19,6 +32,17 @@
   (call/cc
    (lambda (cont)
      (raise (make-syntax-error location what cont)))))
+
+;; Error reporting
+
+(define (report-error env error)
+  (let* ((location (syntax-error-location error))
+         (what (syntax-error-what error)))
+    (display (format-error (env-get env 'module)
+                           (env-get env 'input)
+                           location
+                           what))
+    (newline)))
 
 (define (format-error module input location what)
   (let* ((position (offset->line-and-col input (location-start location)))
