@@ -16,15 +16,15 @@
                           (at (syntax-error-location error)
                               (generated
                                (make-error-node)))))))
-                   (validate-parse-tree (env-get env 'ast)))))
+                   (map-ast expand-quote
+                            validate-parse-tree
+                            (env-get env 'ast)))))
     (env-set env
              'ast result
              'errors (deref errors))))
 
 (define (validate-parse-tree expr)
-  (map-ast id
-           (lambda (expr)
-             (case (ast-get expr 'type 'undefined)
+  (case (ast-get expr 'type 'undefined)
                ('unmatched-token (raise-syntax-error
                                   (get-location expr)
                                   "Unmatched parentheses - expected an opening `(` to come before:"))
@@ -39,4 +39,21 @@
                                      (format "No expression following `~a`:"
                                              (ast-get expr 'value compiler-bug))))
                (else expr)))
-           expr))
+
+(define (expand-quote expr)
+  (case (ast-get expr 'type 'undefined)
+    ('plain-quote (tag-contents 'quote expr))
+    ('quasiquote (tag-contents 'quasiquote expr))
+    ('unquote (tag-contents 'unquote expr))
+    ('unquote-splicing (tag-contents 'unquote-splicing expr))
+    (else expr)))
+
+(define (tag-contents tag expr)
+  (let ((loc (get-location expr)))
+    (at loc
+        (generated
+         (make-list-node
+          (list (at loc
+                    (generated (make-symbol-node tag)))
+                (ast-get expr 'value compiler-bug)))))))
+
