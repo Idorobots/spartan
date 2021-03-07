@@ -6,3 +6,4 @@
 4 |  (newline)))
                ^~~~~~
 
+Test file run terminated due to error: #(struct:exn:fail Compilation aborted due to errors. #<continuation-mark-set>)

@@ -177,7 +177,11 @@
 (define (run-test-file filename)
   (with-output-to-string
     (lambda ()
-      (run-file filename))))
+      ;; NOTE Ignores the compilation abort.
+      (with-handlers ((exn:fail?
+                       (lambda (e)
+                         (display (format "Test file run terminated due to error: ~a~n" e)))))
+        (run-file filename)))))
 
 (define (sort-lines contents)
   (string-join

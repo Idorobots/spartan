@@ -1,0 +1,29 @@
+../test/foof/errors/symbol-format.foo(3,3): Invalid symbol `this.wont.fly.though.` specified at:
+3 |   this.wont.fly.though.
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(4,3): Invalid symbol `its-not-a-sentence.` specified at:
+4 |   its-not-a-sentence.
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(5,3): Invalid symbol `.neitherIsItJava` specified at:
+5 |   .neitherIsItJava
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(6,3): Invalid symbol `.` specified at:
+6 |   .
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(7,3): Invalid symbol `..` specified at:
+7 |   ..
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(8,3): Invalid symbol `...` specified at:
+8 |   ...
+      ^~~~~~
+
+../test/foof/errors/symbol-format.foo(9,3): Invalid symbol `from..to` specified at:
+9 |   from..to
+      ^~~~~~
+
+Test file run terminated due to error: #(struct:exn:fail Compilation aborted due to errors. #<continuation-mark-set>)
