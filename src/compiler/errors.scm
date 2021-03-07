@@ -6,44 +6,44 @@
         (map (partial report-error env)
              (sort errors
                    (lambda (a b)
-                     (location<? (syntax-error-location a)
-                                 (syntax-error-location b)))))
+                     (location<? (compilation-error-location a)
+                                 (compilation-error-location b)))))
         (error "Compilation aborted due to errors."))
     env))
 
 ;; Syntax error
 
-(define (make-syntax-error location what restart)
-  (list 'syntax-error location what restart))
+(define (make-compilation-error location what restart)
+  (list 'compilation-error location what restart))
 
-(define (syntax-error? e)
-  (tagged-list? 'syntax-error e))
+(define (compilation-error? e)
+  (tagged-list? 'compilation-error e))
 
-(define (syntax-error-location e)
+(define (compilation-error-location e)
   (cadr e))
 
-(define (syntax-error-what e)
+(define (compilation-error-what e)
   (caddr e))
 
-(define (syntax-error-restart e)
+(define (compilation-error-restart e)
   (cadddr e))
 
-(define (raise-syntax-error location what)
+(define (raise-compilation-error location what)
   (call/cc
    (lambda (cont)
-     (raise (make-syntax-error location what cont)))))
+     (raise (make-compilation-error location what cont)))))
 
 ;; Error gathering
 
 (define (collect-errors initial-errors thunk)
   (let* ((errors (ref initial-errors))
          (result (with-handlers
-                     ((syntax-error?
+                     ((compilation-error?
                        (lambda (error)
                          (push! errors error)
                          ;; NOTE Continue analysis with a special "error" object.
-                         ((syntax-error-restart error)
-                          (at (syntax-error-location error)
+                         ((compilation-error-restart error)
+                          (at (compilation-error-location error)
                               (generated
                                (make-error-node)))))))
                    (thunk))))
@@ -52,8 +52,8 @@
 ;; Error reporting
 
 (define (report-error env error)
-  (let* ((location (syntax-error-location error))
-         (what (syntax-error-what error)))
+  (let* ((location (compilation-error-location error))
+         (what (compilation-error-what error)))
     (display (format-error (env-get env 'module)
                            (env-get env 'input)
                            location

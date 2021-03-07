@@ -17,20 +17,20 @@
 
 (define (validate-parse-tree expr)
   (case (ast-get expr 'type compiler-bug)
-    ('invalid-symbol (raise-syntax-error
+    ('invalid-symbol (raise-compilation-error
                       (get-location expr)
                       (format "Invalid symbol `~a` specified at:"
                               (ast-get expr 'value compiler-bug))))
-    ('unmatched-token (raise-syntax-error
+    ('unmatched-token (raise-compilation-error
                        (get-location expr)
                        "Unmatched parentheses - expected an opening `(` to come before:"))
-    ('unterminated-list (raise-syntax-error
+    ('unterminated-list (raise-compilation-error
                          (get-location expr)
                          "Unterminated list - expected a closing `)` to follow:"))
-    ('unterminated-string (raise-syntax-error
+    ('unterminated-string (raise-compilation-error
                            (get-location expr)
                            "Unterminated string literal - expected a closing `\"` to follow:"))
-    ('unterminated-quote (raise-syntax-error
+    ('unterminated-quote (raise-compilation-error
                           (get-location expr)
                           (format "No expression following `~a`:"
                                   (ast-get expr 'value compiler-bug))))
