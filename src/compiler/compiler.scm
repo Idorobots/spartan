@@ -17,7 +17,8 @@
 (define (compile env)
   (foldl (lambda (phase expr)
            (phase expr))
-         env
+         (env-set env
+                  'errors '())
          (list parse
                elaborate-syntax
                report-errors

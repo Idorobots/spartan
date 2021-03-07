@@ -33,6 +33,22 @@
    (lambda (cont)
      (raise (make-syntax-error location what cont)))))
 
+;; Error gathering
+
+(define (collect-errors initial-errors thunk)
+  (let* ((errors (ref initial-errors))
+         (result (with-handlers
+                     ((syntax-error?
+                       (lambda (error)
+                         (push! errors error)
+                         ;; NOTE Continue analysis with a special "error" object.
+                         ((syntax-error-restart error)
+                          (at (syntax-error-location error)
+                              (generated
+                               (make-error-node)))))))
+                   (thunk))))
+    (list result (deref errors))))
+
 ;; Error reporting
 
 (define (report-error env error)

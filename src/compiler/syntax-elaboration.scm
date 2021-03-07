@@ -6,22 +6,14 @@
 (load "compiler/tree-ast.scm")
 
 (define (elaborate-syntax env)
-  (let* ((errors (ref '()))
-         (result (with-handlers
-                     ((syntax-error?
-                       (lambda (error)
-                         (push! errors error)
-                         ;; NOTE Continue analysis with a special "error" object.
-                         ((syntax-error-restart error)
-                          (at (syntax-error-location error)
-                              (generated
-                               (make-error-node)))))))
-                   (map-ast (compose expand-quote expand-structure-refs)
-                            validate-parse-tree
-                            (env-get env 'ast)))))
+  (let ((result (collect-errors (env-get env 'errors)
+                                (lambda ()
+                                  (map-ast (compose expand-quote expand-structure-refs)
+                                           validate-parse-tree
+                                           (env-get env 'ast))))))
     (env-set env
-             'ast result
-             'errors (deref errors))))
+             'ast (car result)
+             'errors (cadr result))))
 
 (define (validate-parse-tree expr)
   (case (ast-get expr 'type compiler-bug)
