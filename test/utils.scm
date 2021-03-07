@@ -178,9 +178,10 @@
   (with-output-to-string
     (lambda ()
       ;; NOTE Ignores the compilation abort.
-      (with-handlers ((exn:fail?
+      (with-handlers ((compilation-error?
                        (lambda (e)
-                         (display (format "Test file run terminated due to error: ~a~n" e)))))
+                         (display (compilation-error-what e))
+                         (newline))))
         (run-file filename)))))
 
 (define (sort-lines contents)

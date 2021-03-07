@@ -14,4 +14,4 @@
 3 |  (display "Hello world!)
               ^~~~~~
 
-Test file run terminated due to error: #(struct:exn:fail Compilation aborted due to errors. #<continuation-mark-set>)
+Compilation aborted due to errors.

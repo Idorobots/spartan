@@ -8,7 +8,7 @@
                    (lambda (a b)
                      (location<? (compilation-error-location a)
                                  (compilation-error-location b)))))
-        (error "Compilation aborted due to errors."))
+        (raise-compilation-error (location 0 0) "Compilation aborted due to errors."))
     env))
 
 ;; Syntax error
