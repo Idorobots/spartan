@@ -2,12 +2,6 @@
 
 (describe
  "syntax-expand"
- (it "expanding structure accessor paths works"
-     (assert (syntax-expand 'foo) 'foo)
-     (assert (syntax-expand 'foo.bar) '(&structure-ref foo 'bar))
-     (assert (syntax-expand 'foo.bar.baz) '(&structure-ref (&structure-ref foo 'bar) 'baz))
-     (assert (syntax-expand '(if a (lambda (b) b.c) d))
-             '(if a (lambda (b) (&structure-ref b 'c)) d)))
 
  (it "wrapping lambda body works"
      (assert (syntax-expand '(lambda (x) x))
