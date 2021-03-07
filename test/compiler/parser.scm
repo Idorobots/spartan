@@ -34,6 +34,16 @@
                                        (at (location 16 18)
                                            (make-number-node 32)))))))
 
+ (it "parses structure refs"
+     (assert (p "foo.bar")
+             (at (location 0 7)
+                 (make-structure-ref-node
+                  (list 'foo 'bar))))
+     (assert (p "foo.bar.baz.faz")
+             (at (location 0 15)
+                 (make-structure-ref-node
+                  (list 'foo 'bar 'baz 'faz)))))
+
  (it "parses strings"
      (assert (p "\"this is a string\"")
              (at (location 0 18)
@@ -60,6 +70,26 @@
                                                                      (make-symbol-node 'x)))))
                                        (at (location 65 69)
                                            (make-symbol-node 'true)))))))
+
+ (it "handles invalid symbols gracefully"
+     (assert (p "foo.")
+             (at (location 0 4)
+                 (make-invalid-symbol-node "foo.")))
+     (assert (p "foo.bar.")
+             (at (location 0 8)
+                 (make-invalid-symbol-node "foo.bar.")))
+     (assert (p ".foo")
+             (at (location 0 4)
+                 (make-invalid-symbol-node ".foo")))
+     (assert (p "foo..bar")
+             (at (location 0 8)
+                 (make-invalid-symbol-node "foo..bar")))
+     (assert (p "...")
+             (at (location 0 3)
+                 (make-invalid-symbol-node "...")))
+     (assert (p ".")
+             (at (location 0 1)
+                 (make-invalid-symbol-node "."))))
 
  (it "handles unterminated lists gracefully"
      (assert (p "(")

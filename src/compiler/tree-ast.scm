@@ -21,15 +21,28 @@
 
 ;; AST nodes
 
+;; Number
 (define (make-number-node value)
   (ast-node 'type 'number 'value value))
 
+;; Symbol
 (define (make-symbol-node value)
   (ast-node 'type 'symbol 'value value))
 
+(define (make-structure-ref-node value)
+  (ast-node 'type 'structure-ref 'value value))
+
+(define (make-invalid-symbol-node value)
+  (ast-node 'type 'invalid-symbol 'value value))
+
+;; String
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
 
+(define (make-unterminated-string-node value)
+  (ast-node 'type 'unterminated-string 'value value))
+
+;; Quotation
 (define (make-quote-node value)
   (ast-node 'type 'plain-quote 'value value))
 
@@ -42,20 +55,19 @@
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
 
+(define (make-unterminated-quote-node value)
+  (ast-node 'type 'unterminated-quote 'value value))
+
+;; List
 (define (make-list-node value)
   (ast-node 'type 'list 'value value))
-
-(define (make-error-node)
-  (ast-node 'type 'error 'value "<error>"))
-
-(define (make-unterminated-string-node value)
-  (ast-node 'type 'unterminated-string 'value value))
 
 (define (make-unterminated-list-node value)
   (ast-node 'type 'unterminated-list 'value value))
 
-(define (make-unterminated-quote-node value)
-  (ast-node 'type 'unterminated-quote 'value value))
+;; Other errors
+(define (make-error-node)
+  (ast-node 'type 'error 'value "<error>"))
 
 (define (make-unmatched-token-node value)
   (ast-node 'type 'unmatched-token 'value value))
@@ -92,6 +104,7 @@
          (case (ast-get expr 'type 'undefined)
            ('number expr)
            ('symbol expr)
+           ('structure-ref expr)
            ('string expr)
            ('plain-quote (ast-update expr 'value m))
            ('quasiquote (ast-update expr 'value m))
@@ -99,6 +112,7 @@
            ('unquote-splicing (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
            ('error expr)
+           ('invalid-symbol expr)
            ('unmatched-token expr)
            ('unterminated-string expr)
            ('unterminated-quote expr)

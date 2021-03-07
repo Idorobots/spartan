@@ -266,7 +266,7 @@
                            (let ((result (gensym 'result)))
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
-                                          (matches (foldl string-append-immutable "" (match-match ,result))
+                                          (matches (foldr string-append-immutable "" (match-match ,result))
                                                    (match-start ,result)
                                                    (match-end ,result))
                                           (no-match))))))))

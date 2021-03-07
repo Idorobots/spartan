@@ -149,6 +149,7 @@
 
  '(Atom
    (/ Number Symbol))
+
  '(Number
    (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
    (lambda (input result)
@@ -160,8 +161,11 @@
                     (make-number-node (string->number (cadr matching))))
                 start
                 end))))
+
  '(Symbol
-   (Spacing "[^\\(\\)\"'`,@; \t\v\r\n]+")
+   (/ PlainSymbol StructureRef InvalidSymbol))
+ '(PlainSymbol
+   (Spacing SymbolContents (! "."))
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
@@ -170,6 +174,33 @@
                     (make-symbol-node (string->symbol (cadr matching))))
                 start
                 end))))
+ '(StructureRef
+   (Spacing SymbolContents (+ (: ".") SymbolContents) (! "."))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result))
+            (head (cadr matching))
+            (rest (map cadr (caddr matching))))
+       (matches (at (location start end)
+                    (make-structure-ref-node
+                     ;; FIXME Could preserve individual part location for better error handling later.
+                     (map string->symbol
+                          (cons head rest))))
+                start
+                end))))
+ '(InvalidSymbol
+   (Spacing (~ (+ (/ "." SymbolContents))))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (at (location start end)
+                    (make-invalid-symbol-node (cadr matching)))
+                start
+                end))))
+ '(SymbolContents
+   "[^\\(\\)\"'`,\\.@; \t\v\r\n]+")
 
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))

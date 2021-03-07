@@ -229,7 +229,7 @@
              '(let ((result1 (Foo h in off)))
                 (if (matches? result1)
                     (matches
-                     (foldl string-append-immutable "" (match-match result1))
+                     (foldr string-append-immutable "" (match-match result1))
                      (match-start result1)
                      (match-end result1))
                     (no-match))))
@@ -239,7 +239,7 @@
                (let ((result1 (Foo h in off)))
                  (if (matches? result1)
                      (matches
-                      (foldl string-append-immutable "" (match-match result1))
+                      (foldr string-append-immutable "" (match-match result1))
                       (match-start result1)
                       (match-end result1))
                      (no-match)))))))
@@ -385,6 +385,10 @@
  '(EOF
    ()))
 
+(generate-parser
+ `(Concat
+   (~ "foo" "bar" "baz")))
+
 (describe
  "Generated grammar"
  (it "parses simple expressions"
@@ -482,4 +486,10 @@
                               (lambda (e)
                                 e)))
                (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))"))
-             "Unterminated string at location: 13")))
+             "Unterminated string at location: 13"))
+
+ (it "handles concatenation correctly"
+     (assert (Concat "foobarbaz")
+             (matches "foobarbaz"
+                      0
+                      9))))
