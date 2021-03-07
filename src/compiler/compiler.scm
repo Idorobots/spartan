@@ -24,27 +24,12 @@
                adapt-ast
                syntax-expand
                (flip macro-expand (make-builtin-macros))
-               lint
                letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
                (flip closure-convert (make-internal-applicatives))
-               optimize
-               (flip mangle (make-internal-applicatives))
-               generate)))
+               (flip mangle (make-internal-applicatives)))))
 
 ;; FIXME This should be removed once all the phases use the new AST.
 (define (adapt-ast env)
   (ast->plain (env-get env 'ast)))
-
-(define (lint expr)
-  ;; TODO Lint the code
-  expr)
-
-(define (optimize expr)
-  ;; TOOD Optimize redundant bindings etc.
-  expr)
-
-(define (generate expr)
-  ;; TODO Generate target-specific code.
-  expr)
