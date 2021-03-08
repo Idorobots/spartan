@@ -9,7 +9,7 @@
 (define (elaborate-syntax env)
   (let ((result (collect-errors (env-get env 'errors)
                                 (lambda ()
-                                  (map-ast (compose expand-quote expand-structure-refs)
+                                  (map-ast expand-structure-refs
                                            validate-parse-tree
                                            (env-get env 'ast))))))
     (env-set env
@@ -36,23 +36,6 @@
                           (format "No expression following `~a`:"
                                   (ast-get expr 'value compiler-bug))))
     (else expr)))
-
-(define (expand-quote expr)
-  (case (get-type expr)
-    ('plain-quote (tag-contents 'quote expr))
-    ('quasiquote (tag-contents 'quasiquote expr))
-    ('unquote (tag-contents 'unquote expr))
-    ('unquote-splicing (tag-contents 'unquote-splicing expr))
-    (else expr)))
-
-(define (tag-contents tag expr)
-  (let ((loc (get-location expr)))
-    (at loc
-        (generated
-         (make-list-node
-          (list (at loc
-                    (generated (make-symbol-node tag)))
-                (ast-get expr 'value compiler-bug)))))))
 
 (define (expand-structure-refs expr)
   (case (get-type expr)
