@@ -1,0 +1,9 @@
+(begin
+  (quote)
+  (quasiquote)
+  (unquote)
+  (unquote-splicing)
+  (quote 23 5)
+  (quasiquote foo bar baz)
+  (unquote 23 4)
+  (unquote-splicing test test test))

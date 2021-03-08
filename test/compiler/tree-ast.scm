@@ -69,3 +69,71 @@
                         (generated (make-number-node 23)))))
      (assert (map-ast id id ast)
              ast)))
+
+(describe
+ "ast-matches?"
+ (it "underscore matches anything"
+     (assert (ast-matches? (make-symbol-node 'foo) '_))
+     (assert (ast-matches? (make-number-node 23) '_))
+     (assert (ast-matches? (make-list-node (list)) '_)))
+
+ (it "symbols match only the same symbol nodes"
+     (assert (ast-matches? (make-symbol-node 'foo) 'foo))
+     (assert (not (ast-matches? (make-symbol-node 'bar) 'foo)))
+     (assert (not (ast-matches? (make-number-node 23) 'foo)))
+     (assert (not (ast-matches? (make-list-node (list)) 'foo))))
+
+ (it "lists map the same length list nodes"
+     (assert (ast-list-matches? '() '()))
+     (assert (ast-list-matches? (list (make-symbol-node 'foo)
+                                      (make-symbol-node 'bar))
+                                '(_ _)))
+     (assert (not (ast-list-matches? (list (make-symbol-node 'foo)
+                                           (make-symbol-node 'bar))
+                                     '(_))))
+     (assert (not (ast-list-matches? (list (make-symbol-node 'foo)
+                                           (make-symbol-node 'bar))
+                                     '(_ _ _))))
+     (assert (ast-matches? (make-list-node
+                            (list (make-symbol-node 'foo)
+                                  (make-symbol-node 'bar)))
+                           '(_ _)))
+     (assert (ast-matches? (make-list-node '())
+                           '()))
+     (assert (not (ast-matches? (make-list-node
+                                 (list (make-symbol-node 'foo)
+                                       (make-symbol-node 'bar)))
+                                '(_))))
+     (assert (not (ast-matches? (make-list-node
+                                 (list (make-symbol-node 'foo)
+                                       (make-symbol-node 'bar)))
+                                '(_ _ _))))
+     (assert (not (ast-matches? (make-symbol-node 'foo)
+                                '(_ _)))))
+
+ (it "allows matching multiple subexpressions"
+     (assert (ast-list-matches? (list (make-symbol-node 'foo)
+                                      (make-symbol-node 'bar))
+                                '(_ . _)))
+     (assert (ast-list-matches? (list (make-symbol-node 'foo)
+                                      (make-symbol-node 'bar)
+                                      (make-symbol-node 'baz)
+                                      (make-symbol-node 'faz))
+                                '(_ . _)))
+     (assert (ast-matches? (make-list-node
+                            (list (make-symbol-node 'foo)
+                                  (make-symbol-node 'bar)))
+                           '(_ . _)))
+     (assert (ast-matches? (make-list-node
+                            (list (make-symbol-node 'foo)
+                                  (make-symbol-node 'bar)
+                                  (make-symbol-node 'baz)
+                                  (make-symbol-node 'faz)))
+                           '(_ . _)))
+     (assert (ast-matches? (make-list-node
+                            (list (make-symbol-node 'foo)))
+                           '(_ . _)))
+     (assert (not (ast-matches? (make-list-node '())
+                                '(_ . _))))
+     (assert (not (ast-matches? (make-symbol-node 'foo)
+                                '(_ . _))))))

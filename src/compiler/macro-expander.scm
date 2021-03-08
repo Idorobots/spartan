@@ -27,7 +27,7 @@
         (cons 'or or-macro)
         (cons 'let let-macro)
         (cons 'let* let*-macro)
-        ;; FIXME These should be moved to syntax expansion phase.
+        ;; FIXME These should be moved to semantic expansion phase.
         (cons 'quasiquote quasiquote-macro)
         (cons 'structure structure-macro)
         (cons 'module module-macro)))

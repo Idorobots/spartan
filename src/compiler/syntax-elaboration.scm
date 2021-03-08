@@ -1,4 +1,5 @@
-;; Parse tree linting.
+;; Syntax elaboration.
+;; This phase checks parse tree well-formedness - if all lists and strings are terminated properly, quote syntax is properly formatted, etc. It doesn't check if the parsed tree makes sense yet.
 
 (load "compiler/utils.scm")
 (load "compiler/env.scm")
@@ -16,7 +17,7 @@
              'errors (cadr result))))
 
 (define (validate-parse-tree expr)
-  (case (ast-get expr 'type compiler-bug)
+  (case (get-type expr)
     ('invalid-symbol (raise-compilation-error
                       (get-location expr)
                       (format "Invalid symbol `~a` specified at:"
@@ -37,7 +38,7 @@
     (else expr)))
 
 (define (expand-quote expr)
-  (case (ast-get expr 'type compiler-bug)
+  (case (get-type expr)
     ('plain-quote (tag-contents 'quote expr))
     ('quasiquote (tag-contents 'quasiquote expr))
     ('unquote (tag-contents 'unquote expr))
@@ -54,7 +55,7 @@
                 (ast-get expr 'value compiler-bug)))))))
 
 (define (expand-structure-refs expr)
-  (case (ast-get expr 'type compiler-bug)
+  (case (get-type expr)
     ('structure-ref (let ((parts (ast-get expr 'value compiler-bug))
                           (loc (get-location expr)))
                       (foldl (lambda (part acc)

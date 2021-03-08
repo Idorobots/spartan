@@ -1,0 +1,33 @@
+../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly 1 value to follow:
+2 |  (quote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly 1 value to follow:
+3 |  (quasiquote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly 1 value to follow:
+4 |  (unquote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly 1 value to follow:
+5 |  (unquote-splicing)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(6,3): Bad `quote` syntax, expected exactly 1 value to follow:
+6 |  (quote 23 5)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(7,3): Bad `quasiquote` syntax, expected exactly 1 value to follow:
+7 |  (quasiquote foo bar baz)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(8,3): Bad `unquote` syntax, expected exactly 1 value to follow:
+8 |  (unquote 23 4)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(9,3): Bad `unquote-splicing` syntax, expected exactly 1 value to follow:
+9 |  (unquote-splicing test test test))
+      ^~~~~~
+
+Compilation aborted due to errors.

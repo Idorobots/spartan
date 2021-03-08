@@ -90,18 +90,28 @@
 (define (get-location node)
   (ast-get node 'location compiler-bug))
 
-(define (at location object)
-  (ast-set object 'location location))
+(define (at location node)
+  (ast-set node 'location location))
 
-(define (generated object)
-  (ast-set object 'generated #t))
+(define (generated node)
+  (ast-set node 'generated #t))
+
+(define (get-type node)
+  (ast-get node 'type compiler-bug))
+
+(define (is-type? node type)
+  (equal? (get-type node)
+          type))
+
+(define (ast-list-nth expr nth)
+  (list-ref (ast-get expr 'value compiler-bug) nth))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)
       (let ((m (partial map-ast pre post))
             (expr (pre expr)))
         (post
-         (case (ast-get expr 'type 'undefined)
+         (case (get-type expr)
            ('number expr)
            ('symbol expr)
            ('structure-ref expr)
@@ -120,10 +130,39 @@
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))
 
+(define (ast-matches? expr pattern)
+  (cond ((and (or (empty? pattern)
+                  (pair? pattern))
+              (is-type? expr 'list))
+         (ast-list-matches? (ast-get expr 'value compiler-bug) pattern))
+        ((equal? pattern '_)
+         #t)
+        ((and (symbol? pattern)
+              (is-type? expr 'symbol))
+         (equal? pattern
+                 (ast-get expr 'value compiler-bug)))
+        (else
+         #f)))
+
+(define (ast-list-matches? subexprs pattern)
+  (cond ((and (empty? subexprs)
+              (empty? pattern))
+         #t)
+        ((equal? pattern '_)
+         #t)
+        ((and (pair? pattern)
+              (pair? subexprs))
+         (and (ast-matches? (car subexprs)
+                            (car pattern))
+              (ast-list-matches? (cdr subexprs)
+                                 (cdr pattern))))
+        (else
+         #f)))
+
 (define (ast->plain ast)
   (map-ast id
            (lambda (expr)
-             (case (ast-get expr 'type 'undefined)
+             (case (get-type expr)
                ('plain-quote (list 'quote (ast-get expr 'value '())))
                ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
                ('unquote (list 'unquote (ast-get expr 'value '())))

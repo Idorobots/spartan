@@ -6,6 +6,7 @@
 (load "compiler/parser.scm")
 (load "compiler/errors.scm")
 (load "compiler/syntax-elaboration.scm")
+(load "compiler/semantic-elaboration.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
@@ -21,6 +22,7 @@
                   'errors '())
          (list parse
                elaborate-syntax
+               elaborate-semantics
                report-errors
                adapt-ast
                syntax-expand
