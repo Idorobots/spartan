@@ -24,6 +24,8 @@
             (case (ast-get (car values) 'value)
               ((if)
                (elaborate-if expr))
+              ((do)
+               (elaborate-do expr))
               ((quote quasiquote unquote unquote-splicing)
                (elaborate-quote expr))
               (else expr))
@@ -41,6 +43,16 @@
            (raise-compilation-error
             (get-location node)
             "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
+
+(define (elaborate-do expr)
+  (cond ((ast-matches? expr '(do _ . _))
+         (at (get-location expr)
+             (make-do-node (cdr (ast-get expr 'value)))))
+        (else
+         (let* ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad `do` syntax, expected at least one expression to follow:")))))
 
 (define (elaborate-quote expr)
   (cond ((ast-matches? expr ''_)

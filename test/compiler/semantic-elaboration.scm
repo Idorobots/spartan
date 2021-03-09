@@ -58,6 +58,26 @@
                                                       (make-symbol-node '???)))))))
              "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:"))
 
+ (it "elaborates valid dos"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'do)
+                                                (make-number-node 23)
+                                                (make-number-node 5)))))
+             (at (location 5 23)
+                 (make-do-node
+                  (list (make-number-node 23)
+                        (make-number-node 5))))))
+
+ (it "disallows bad do syntax"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'do)))))))
+             "Bad `do` syntax, expected at least one expression to follow:"))
+
  (it "elaborates valid quotes"
      (assert (elaborate-syntax-forms (at (location 5 23)
                                          (make-list-node

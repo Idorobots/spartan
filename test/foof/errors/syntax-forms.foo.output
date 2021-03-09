@@ -43,7 +43,11 @@
        ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(18,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
-18 |  (if cond then else whats going on ???))
+18 |  (if cond then else whats going on ???)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(19,3): Bad `do` syntax, expected at least one expression to follow:
+19 |  (do)
        ^~~~~~
 
 Compilation aborted due to errors.

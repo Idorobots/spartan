@@ -32,26 +32,21 @@
 (define (make-structure-ref-node value)
   (ast-node 'type 'structure-ref 'value value))
 
-(define (make-invalid-symbol-node value)
-  (ast-node 'type 'invalid-symbol 'value value))
-
 ;; String
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
 
-(define (make-unterminated-string-node value)
-  (ast-node 'type 'unterminated-string 'value value))
-
 ;; List
-(define (make-list-node value)
-  (ast-node 'type 'list 'value value))
-
-(define (make-unterminated-list-node value)
-  (ast-node 'type 'unterminated-list 'value value))
+(define (make-list-node values)
+  (ast-node 'type 'list 'value values))
 
 ;; If
 (define (make-if-node condition then else)
   (ast-node 'type 'if 'condition condition 'then then 'else else))
+
+;; Do
+(define (make-do-node exprs)
+  (ast-node 'type 'do 'exprs exprs))
 
 ;; Quotation
 (define (make-quote-node value)
@@ -66,15 +61,25 @@
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
 
+;; Syntax error recognized by the parser
+(define (make-invalid-symbol-node value)
+  (ast-node 'type 'invalid-symbol 'value value))
+
+(define (make-unterminated-string-node value)
+  (ast-node 'type 'unterminated-string 'value value))
+
+(define (make-unterminated-list-node value)
+  (ast-node 'type 'unterminated-list 'value value))
+
 (define (make-unterminated-quote-node value)
   (ast-node 'type 'unterminated-quote 'value value))
+
+(define (make-unmatched-token-node value)
+  (ast-node 'type 'unmatched-token 'value value))
 
 ;; Other errors
 (define (make-error-node)
   (ast-node 'type 'error 'value "<error>"))
-
-(define (make-unmatched-token-node value)
-  (ast-node 'type 'unmatched-token 'value value))
 
 ;; AST utils
 
@@ -124,6 +129,7 @@
                          (ast-update acc field m))
                        expr
                        '(condition then else)))
+           ('do (ast-update expr 'exprs (partial map m)))
            ('plain-quote (ast-update expr 'value m))
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
@@ -169,6 +175,7 @@
                ('if `(if ,(ast-get expr 'condition)
                          ,(ast-get expr 'then)
                          ,(ast-get expr 'else)))
+               ('do (cons 'do (ast-get expr 'exprs)))
                ('plain-quote (list 'quote (ast-get expr 'value)))
                ('quasiquote (list 'quasiquote (ast-get expr 'value)))
                ('unquote (list 'unquote (ast-get expr 'value)))

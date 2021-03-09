@@ -69,7 +69,20 @@
                                     (make-number-node 0)))
              (make-if-node (make-number-node 25)
                            (make-number-node 7)
-                           (make-number-node 2))))
+                           (make-number-node 2)))
+     (assert (map-ast id
+                      (lambda (e)
+                        (if (equal? 'number (ast-get e 'type))
+                            (ast-update e 'value (lambda (x) (+ 2 x)))
+                            e))
+                      (make-do-node
+                       (list (make-number-node 23)
+                             (make-number-node 5)
+                             (make-number-node 0))))
+             (make-do-node
+              (list (make-number-node 25)
+                    (make-number-node 7)
+                    (make-number-node 2)))))
 
  (it "preserves property values"
      (define ast (make-list-node

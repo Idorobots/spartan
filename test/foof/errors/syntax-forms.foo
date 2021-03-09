@@ -15,4 +15,6 @@
   (if cond)
   (if cond then)
   (if cond then else)
-  (if cond then else whats going on ???))
+  (if cond then else whats going on ???)
+  (do)
+  (do some things))
