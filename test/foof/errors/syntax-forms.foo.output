@@ -1,33 +1,49 @@
-../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly 1 value to follow:
+../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly 1 expression to follow:
 2 |  (quote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly 1 value to follow:
+../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly 1 expression to follow:
 3 |  (quasiquote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly 1 value to follow:
+../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly 1 expression to follow:
 4 |  (unquote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly 1 value to follow:
+../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly 1 expression to follow:
 5 |  (unquote-splicing)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(6,3): Bad `quote` syntax, expected exactly 1 value to follow:
-6 |  (quote 23 5)
-      ^~~~~~
+../test/foof/errors/syntax-forms.foo(10,3): Bad `quote` syntax, expected exactly 1 expression to follow:
+10 |  (quote 23 5)
+       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(7,3): Bad `quasiquote` syntax, expected exactly 1 value to follow:
-7 |  (quasiquote foo bar baz)
-      ^~~~~~
+../test/foof/errors/syntax-forms.foo(11,3): Bad `quasiquote` syntax, expected exactly 1 expression to follow:
+11 |  (quasiquote foo bar baz)
+       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(8,3): Bad `unquote` syntax, expected exactly 1 value to follow:
-8 |  (unquote 23 4)
-      ^~~~~~
+../test/foof/errors/syntax-forms.foo(12,3): Bad `unquote` syntax, expected exactly 1 expression to follow:
+12 |  (unquote 23 4)
+       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(9,3): Bad `unquote-splicing` syntax, expected exactly 1 value to follow:
-9 |  (unquote-splicing test test test))
-      ^~~~~~
+../test/foof/errors/syntax-forms.foo(13,3): Bad `unquote-splicing` syntax, expected exactly 1 expression to follow:
+13 |  (unquote-splicing test test test)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(14,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+14 |  (if)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(15,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+15 |  (if cond)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(16,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+16 |  (if cond then)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(18,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+18 |  (if cond then else whats going on ???))
+       ^~~~~~
 
 Compilation aborted due to errors.

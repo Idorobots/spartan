@@ -10,14 +10,14 @@
 (define (ast-node . properties)
   (apply hasheq properties))
 
-(define (ast-get node property default)
-  (hash-ref node property default))
+(define (ast-get node property)
+  (hash-ref node property compiler-bug))
 
 (define (ast-set node property value)
   (hash-set node property value))
 
 (define (ast-update node property f)
-  (ast-set node property (f (ast-get node property '()))))
+  (ast-set node property (f (hash-ref node property '()))))
 
 ;; AST nodes
 
@@ -42,6 +42,17 @@
 (define (make-unterminated-string-node value)
   (ast-node 'type 'unterminated-string 'value value))
 
+;; List
+(define (make-list-node value)
+  (ast-node 'type 'list 'value value))
+
+(define (make-unterminated-list-node value)
+  (ast-node 'type 'unterminated-list 'value value))
+
+;; If
+(define (make-if-node condition then else)
+  (ast-node 'type 'if 'condition condition 'then then 'else else))
+
 ;; Quotation
 (define (make-quote-node value)
   (ast-node 'type 'plain-quote 'value value))
@@ -57,13 +68,6 @@
 
 (define (make-unterminated-quote-node value)
   (ast-node 'type 'unterminated-quote 'value value))
-
-;; List
-(define (make-list-node value)
-  (ast-node 'type 'list 'value value))
-
-(define (make-unterminated-list-node value)
-  (ast-node 'type 'unterminated-list 'value value))
 
 ;; Other errors
 (define (make-error-node)
@@ -88,7 +92,7 @@
      (location-start b)))
 
 (define (get-location node)
-  (ast-get node 'location compiler-bug))
+  (ast-get node 'location))
 
 (define (at location node)
   (ast-set node 'location location))
@@ -97,14 +101,14 @@
   (ast-set node 'generated #t))
 
 (define (get-type node)
-  (ast-get node 'type compiler-bug))
+  (ast-get node 'type))
 
 (define (is-type? node type)
   (equal? (get-type node)
           type))
 
 (define (ast-list-nth expr nth)
-  (list-ref (ast-get expr 'value compiler-bug) nth))
+  (list-ref (ast-get expr 'value) nth))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)
@@ -116,6 +120,10 @@
            ('symbol expr)
            ('structure-ref expr)
            ('string expr)
+           ('if (foldl (lambda (field acc)
+                         (ast-update acc field m))
+                       expr
+                       '(condition then else)))
            ('plain-quote (ast-update expr 'value m))
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
@@ -131,16 +139,13 @@
       (error "Unexpected value: " expr)))
 
 (define (ast-matches? expr pattern)
-  (cond ((and (or (empty? pattern)
-                  (pair? pattern))
+  (cond ((and (or (empty? pattern) (pair? pattern))
               (is-type? expr 'list))
-         (ast-list-matches? (ast-get expr 'value compiler-bug) pattern))
+         (ast-list-matches? (ast-get expr 'value) pattern))
         ((equal? pattern '_)
          #t)
-        ((and (symbol? pattern)
-              (is-type? expr 'symbol))
-         (equal? pattern
-                 (ast-get expr 'value compiler-bug)))
+        ((and (symbol? pattern) (is-type? expr 'symbol))
+         (equal? pattern (ast-get expr 'value)))
         (else
          #f)))
 
@@ -152,10 +157,8 @@
          #t)
         ((and (pair? pattern)
               (pair? subexprs))
-         (and (ast-matches? (car subexprs)
-                            (car pattern))
-              (ast-list-matches? (cdr subexprs)
-                                 (cdr pattern))))
+         (and (ast-matches? (car subexprs) (car pattern))
+              (ast-list-matches? (cdr subexprs) (cdr pattern))))
         (else
          #f)))
 
@@ -163,9 +166,12 @@
   (map-ast id
            (lambda (expr)
              (case (get-type expr)
-               ('plain-quote (list 'quote (ast-get expr 'value '())))
-               ('quasiquote (list 'quasiquote (ast-get expr 'value '())))
-               ('unquote (list 'unquote (ast-get expr 'value '())))
-               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value '())))
-               (else (ast-get expr 'value '()))))
+               ('if `(if ,(ast-get expr 'condition)
+                         ,(ast-get expr 'then)
+                         ,(ast-get expr 'else)))
+               ('plain-quote (list 'quote (ast-get expr 'value)))
+               ('quasiquote (list 'quasiquote (ast-get expr 'value)))
+               ('unquote (list 'unquote (ast-get expr 'value)))
+               ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value)))
+               (else (ast-get expr 'value))))
            ast))

@@ -3,10 +3,8 @@
 (describe
  "AST node"
  (it "allows setting and getting arbitrary properties"
-     (assert (ast-get (ast-node 'value 23) 'value '())
+     (assert (ast-get (ast-node 'value 23) 'value)
              23)
-     (assert (ast-get (ast-node 'value 23) 'other-value '())
-             '())
      (assert (ast-set (ast-node 'value 23) 'other-value 5)
              (ast-node 'value 23 'other-value 5)))
 
@@ -55,12 +53,23 @@
              (make-number-node 23))
      (assert (map-ast id
                       (lambda (e)
-                        (if (equal? 'number (ast-get e 'type #f))
+                        (if (equal? 'number (ast-get e 'type))
                             (ast-update e 'value (lambda (x) (* 2 x)))
                             e))
                       ast)
              (make-list-node (list (make-symbol-node 'foo)
-                                   (make-number-node 46)))))
+                                   (make-number-node 46))))
+     (assert (map-ast id
+                      (lambda (e)
+                        (if (equal? 'number (ast-get e 'type))
+                            (ast-update e 'value (lambda (x) (+ 2 x)))
+                            e))
+                      (make-if-node (make-number-node 23)
+                                    (make-number-node 5)
+                                    (make-number-node 0)))
+             (make-if-node (make-number-node 25)
+                           (make-number-node 7)
+                           (make-number-node 2))))
 
  (it "preserves property values"
      (define ast (make-list-node

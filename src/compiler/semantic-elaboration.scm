@@ -17,35 +17,51 @@
              'errors (cadr result))))
 
 (define (elaborate-syntax-forms expr)
+  (if (is-type? expr 'list)
+      (let ((values (ast-get expr 'value)))
+        (if (and (not (empty? values))
+                 (is-type? (car values) 'symbol))
+            (case (ast-get (car values) 'value)
+              ((if)
+               (elaborate-if expr))
+              ((quote quasiquote unquote unquote-splicing)
+               (elaborate-quote expr))
+              (else expr))
+            expr))
+      expr))
+
+(define (elaborate-if expr)
+  (cond ((ast-matches? expr '(if _ _ _))
+         (at (get-location expr)
+             (make-if-node (ast-list-nth expr 1)
+                           (ast-list-nth expr 2)
+                           (ast-list-nth expr 3))))
+        (else
+         (let* ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
+
+(define (elaborate-quote expr)
   (cond ((ast-matches? expr ''_)
          (let ((value (ast-list-nth expr 1)))
            (at (get-location expr)
                (make-quote-node value))))
-
         ((ast-matches? expr '`_)
          (let ((value (ast-list-nth expr 1)))
            (at (get-location expr)
                (make-quasiquote-node value))))
-
         ((ast-matches? expr ',_)
          (let ((value (ast-list-nth expr 1)))
            (at (get-location expr)
                (make-unquote-node value))))
-
         ((ast-matches? expr ',@_)
          (let ((value (ast-list-nth expr 1)))
            (at (get-location expr)
                (make-unquote-splicing-node value))))
-
-        ((or (ast-matches? expr (cons 'quote '_))
-             (ast-matches? expr (cons 'quasiquote '_))
-             (ast-matches? expr (cons 'unquote '_))
-             (ast-matches? expr (cons 'unquote-splicing '_)))
+        (else
          (let* ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
-            (format "Bad `~a` syntax, expected exactly 1 value to follow:"
-                    (ast-get node 'value 'quote)))))
-
-        (else
-         expr)))
+            (format "Bad `~a` syntax, expected exactly 1 expression to follow:"
+                    (ast-get node 'value)))))))

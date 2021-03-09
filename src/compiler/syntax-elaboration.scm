@@ -18,43 +18,43 @@
 
 (define (validate-parse-tree expr)
   (case (get-type expr)
-    ('invalid-symbol (raise-compilation-error
+    ((invalid-symbol) (raise-compilation-error
                       (get-location expr)
                       (format "Invalid symbol `~a` specified at:"
-                              (ast-get expr 'value compiler-bug))))
-    ('unmatched-token (raise-compilation-error
+                              (ast-get expr 'value))))
+    ((unmatched-token) (raise-compilation-error
                        (get-location expr)
                        "Unmatched parentheses - expected an opening `(` to come before:"))
-    ('unterminated-list (raise-compilation-error
+    ((unterminated-list) (raise-compilation-error
                          (get-location expr)
                          "Unterminated list - expected a closing `)` to follow:"))
-    ('unterminated-string (raise-compilation-error
+    ((unterminated-string) (raise-compilation-error
                            (get-location expr)
                            "Unterminated string literal - expected a closing `\"` to follow:"))
-    ('unterminated-quote (raise-compilation-error
+    ((unterminated-quote) (raise-compilation-error
                           (get-location expr)
                           (format "No expression following `~a`:"
-                                  (ast-get expr 'value compiler-bug))))
+                                  (ast-get expr 'value))))
     (else expr)))
 
 (define (expand-structure-refs expr)
-  (case (get-type expr)
-    ('structure-ref (let ((parts (ast-get expr 'value compiler-bug))
-                          (loc (get-location expr)))
-                      (foldl (lambda (part acc)
-                               (at loc
-                                   (generated
-                                    ;; FIXME This ought to be a primop application instead.
-                                    (make-list-node
-                                     (list (generated (wrap-symbol loc '&structure-ref))
-                                           acc
-                                           (at loc
-                                               (generated
-                                                (make-quote-node part))))))))
-                             (wrap-symbol loc (car parts))
-                             (map (partial wrap-symbol loc)
-                                  (cdr parts)))))
-    (else expr)))
+  (if (is-type? expr 'structure-ref)
+      (let ((parts (ast-get expr 'value))
+            (loc (get-location expr)))
+        (foldl (lambda (part acc)
+                 (at loc
+                     (generated
+                      ;; FIXME This ought to be a primop application instead.
+                      (make-list-node
+                       (list (generated (wrap-symbol loc '&structure-ref))
+                             acc
+                             (at loc
+                                 (generated
+                                  (make-quote-node part))))))))
+               (wrap-symbol loc (car parts))
+               (map (partial wrap-symbol loc)
+                    (cdr parts))))
+      expr))
 
 (define (wrap-symbol loc s)
   (at loc
