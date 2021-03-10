@@ -152,59 +152,6 @@
                       (&set-env! env3 0 bar)
                     (&apply foo))))))
 
- (it "Converting letcc works."
-     (assert (closure-convert '(letcc k k) '()) '(letcc k k))
-     (gensym-reset!)
-     (assert (closure-convert '(letcc k (lambda (x) k)) '(&apply))
-             '(letcc k
-                     (&make-closure (&make-env k)
-                                    (lambda (env1 x)
-                                      (&env-ref env1 0))))))
-
- (it "Converting shift/reset works."
-     (assert (closure-convert '(shift k (reset k)) '()) '(shift k (reset k)))
-     (gensym-reset!)
-     (assert (closure-convert '(shift k (lambda (x) (k x))) '(&apply))
-             '(shift k
-                     (&make-closure (&make-env k)
-                                    (lambda (env1 x)
-                                      (&apply
-                                       (&env-ref env1 0)
-                                       x)))))
-     (gensym-reset!)
-     (assert (closure-convert '(reset (lambda (x) x)) '(&apply))
-             '(reset
-               (&make-closure (&make-env)
-                              (lambda (env1 x) x))))
-     (gensym-reset!)
-     (assert (closure-convert '(shift k (reset (lambda (x) (k x)))) '(&apply))
-             '(shift k
-                     (reset (&make-closure (&make-env k)
-                                           (lambda (env1 x)
-                                             (&apply
-                                              (&env-ref env1 0)
-                                              x)))))))
-
- (it "Converting raise works."
-     (assert (closure-convert '(raise e) '()) '(raise e))
-     (gensym-reset!)
-     (assert (closure-convert '(raise (lambda (x) x)) '())
-             '(raise (&make-closure (&make-env)
-                                    (lambda (env1 x) x)))))
-
- (it "Converting handle works."
-     (assert (closure-convert '(handle e h) '()) '(handle e h))
-     (gensym-reset!)
-     (assert (closure-convert '(handle (lambda (x) x) h) '())
-             '(handle (&make-closure (&make-env)
-                                     (lambda (env1 x) x))
-                      h))
-     (gensym-reset!)
-     (assert (closure-convert '(handle x (lambda (e) e)) '())
-             '(handle x
-                      (&make-closure (&make-env)
-                                     (lambda (env1 e) e)))))
-
  (it "Complex examples work."
      (gensym-reset!)
      (assert (closure-convert

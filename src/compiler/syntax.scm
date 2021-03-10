@@ -26,10 +26,6 @@
                  (make-letrec (letrec-bindings expr)
                               (make-do (let-body* expr))))
 
-                ((letcc? expr)
-                 (make-letcc (letcc-var expr)
-                             (make-do (let-body* expr))))
-
                 ('else
                  expr)))
         id

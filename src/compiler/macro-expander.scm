@@ -27,7 +27,11 @@
         (cons 'or or-macro)
         (cons 'let let-macro)
         (cons 'let* let*-macro)
-        ;; FIXME These should be moved to semantic expansion phase.
+        (cons 'letcc letcc-macro)
+        (cons 'handle handle-macro)
+        (cons 'shift shift-macro)
+        (cons 'reset reset-macro)
+        ;; FIXME These should be moved to semantic elaboration phase.
         (cons 'quasiquote quasiquote-macro)
         (cons 'structure structure-macro)
         (cons 'module module-macro)))
@@ -113,6 +117,48 @@
              ,(cadr b)))
          (let-body expr)
          (let-bindings expr)))
+
+(define (letcc-macro expr)
+  `(call/current-continuation
+    (lambda (,(letcc-cont expr))
+      (do ,@(letcc-body expr)))))
+
+(define (letcc-cont expr)
+  (cadr expr))
+
+(define (letcc-body expr)
+  (cddr expr))
+
+(define (shift-macro expr)
+  `(call/shift
+    (lambda (,(shift-cont expr))
+      ,(shift-expr expr))))
+
+(define (shift-cont expr)
+  (cadr expr))
+
+(define (shift-expr expr)
+  (caddr expr))
+
+(define (reset-macro expr)
+  `(call/reset
+    (lambda ()
+      ,(reset-expr expr))))
+
+(define (reset-expr expr)
+  (cadr expr))
+
+(define (handle-macro expr)
+  `(call/handler
+    ,(handle-handler expr)
+    (lambda ()
+      ,(handle-expr expr))))
+
+(define (handle-handler expr)
+  (caddr expr))
+
+(define (handle-expr expr)
+  (cadr expr))
 
 (define (structure-macro expr)
   (let* ((lambdas (map (lambda (def)

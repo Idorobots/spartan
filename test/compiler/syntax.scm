@@ -25,6 +25,4 @@
      (assert (syntax-expand '(let ((x 23)) x y))
              '(let ((x 23)) (do x y)))
      (assert (syntax-expand '(letrec ((x 23)) x y))
-             '(letrec ((x 23)) (do x y)))
-     (assert (syntax-expand '(letcc x x y))
-             '(letcc x (do x y)))))
+             '(letrec ((x 23)) (do x y)))))

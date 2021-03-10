@@ -35,14 +35,6 @@
            ((fix? expr) (make-fix (map (partial map w)
                                        (fix-bindings expr))
                                   (w (fix-body expr))))
-           ((letcc? expr) (make-letcc (w (letcc-var expr))
-                                      (w (letcc-body expr))))
-           ((reset? expr) (make-reset (w (reset-expr expr))))
-           ((shift? expr) (make-shift (w (shift-cont expr))
-                                      (w (shift-expr expr))))
-           ((handle? expr) (make-handle (w (handle-expr expr))
-                                        (w (handle-handler expr))))
-           ((raise? expr) (make-raise (w (raise-expr expr))))
            ((module? expr) (make-module (w (module-name expr))
                                         (map w (module-deps expr))
                                         (map w (module-body expr))))
@@ -61,12 +53,7 @@
     let
     letrec
     fix
-    letcc
     set!
-    reset
-    shift
-    handle
-    raise
     module
     structure))
 
@@ -269,18 +256,6 @@
 
 (define fix-body let-body)
 
-;; (letcc continuation body)
-(define (letcc? expr)
-  (tagged-list? 'letcc expr))
-
-(define (make-letcc variable body)
-  `(letcc ,variable
-     ,body))
-
-(define letcc-var let-bindings)
-
-(define letcc-body let-body)
-
 ;; Mutation:
 (define (set!? expr)
   (tagged-list? 'set! expr))
@@ -292,30 +267,6 @@
   (cadr expr))
 
 (define (set!-val expr)
-  (caddr expr))
-
-;; (reset expression)
-(define (reset? expr)
-  (tagged-list? 'reset expr))
-
-(define (make-reset expression)
-  `(reset ,expression))
-
-(define (reset-expr expr)
-  (cadr expr))
-
-;; (shift continuation expression)
-(define (shift? expr)
-  (tagged-list? 'shift expr))
-
-(define (make-shift variable expression)
-  `(shift ,variable
-          ,expression))
-
-(define (shift-cont expr)
-  (cadr expr))
-
-(define (shift-expr expr)
   (caddr expr))
 
 ;; (operator args ...)
@@ -344,30 +295,6 @@
 
 (define (app-args expr)
   (cdr expr))
-
-;; (handle expr hadler)
-(define (handle? expr)
-  (tagged-list? 'handle expr))
-
-(define (make-handle expr handler)
-  `(handle ,expr
-           ,handler))
-
-(define (handle-expr expr)
-  (cadr expr))
-
-(define (handle-handler expr)
-  (caddr expr))
-
-;; (raise error)
-(define (raise? expr)
-  (tagged-list? 'raise expr))
-
-(define (make-raise expr)
-  `(raise ,expr))
-
-(define (raise-expr expr)
-  (cadr expr))
 
 ;; (module (name deps ...) body ...)
 (define (module? expr)
