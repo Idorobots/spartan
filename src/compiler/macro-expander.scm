@@ -27,6 +27,10 @@
         (cons 'or or-macro)
         (cons 'let let-macro)
         (cons 'let* let*-macro)
+        (cons 'letcc letcc-macro)
+        (cons 'handle handle-macro)
+        (cons 'shift shift-macro)
+        (cons 'reset reset-macro)
         ;; FIXME These should be moved to syntax expansion phase.
         (cons 'quasiquote quasiquote-macro)
         (cons 'structure structure-macro)
@@ -113,6 +117,27 @@
              ,(cadr b)))
          (let-body expr)
          (let-bindings expr)))
+
+(define (letcc-macro expr)
+  `(call/current-continuation
+    (lambda (,(let-bindings expr))
+      ,(let-body expr))))
+
+(define (shift-macro expr)
+  `(call/shift
+    (lambda (,(shift-cont expr))
+      ,(shift-expr expr))))
+
+(define (reset-macro expr)
+  `(call/reset
+    (lambda ()
+      ,(reset-expr expr))))
+
+(define (handle-macro expr)
+  `(call/handler
+    ,(handle-handler expr)
+    (lambda ()
+      ,(handle-expr expr))))
 
 (define (structure-macro expr)
   (let* ((lambdas (map (lambda (def)

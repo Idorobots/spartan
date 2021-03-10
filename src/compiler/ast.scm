@@ -35,14 +35,6 @@
            ((fix? expr) (make-fix (map (partial map w)
                                        (fix-bindings expr))
                                   (w (fix-body expr))))
-           ((letcc? expr) (make-letcc (w (letcc-var expr))
-                                      (w (letcc-body expr))))
-           ((reset? expr) (make-reset (w (reset-expr expr))))
-           ((shift? expr) (make-shift (w (shift-cont expr))
-                                      (w (shift-expr expr))))
-           ((handle? expr) (make-handle (w (handle-expr expr))
-                                        (w (handle-handler expr))))
-           ((raise? expr) (make-raise (w (raise-expr expr))))
            ((module? expr) (make-module (w (module-name expr))
                                         (map w (module-deps expr))
                                         (map w (module-body expr))))
@@ -61,12 +53,7 @@
     let
     letrec
     fix
-    letcc
     set!
-    reset
-    shift
-    handle
-    raise
     module
     structure))
 

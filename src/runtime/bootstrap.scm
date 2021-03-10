@@ -93,15 +93,15 @@
                                          (&set-error-handler! curr-handler)
                                          (&apply cont v))))))))
 
-(define __raise_error (closurize
-                       (lambda (e cont)
-                         (let ((curr-handler (&error-handler)))
-                           (&apply curr-handler
-                                   e
-                                   (closurize
-                                    (lambda (v _)
-                                      (&set-error-handler! curr-handler)
-                                      (&apply cont v))))))))
+(define __raise (closurize
+                 (lambda (e cont)
+                   (let ((curr-handler (&error-handler)))
+                     (&apply curr-handler
+                             e
+                             (closurize
+                              (lambda (v _)
+                                (&set-error-handler! curr-handler)
+                                (&apply cont v))))))))
 
 ;; Actor model:
 (define __sleep (bootstrap wait))

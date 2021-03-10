@@ -2,6 +2,18 @@
 
 (describe
  "delimited continuations"
+ (it "Letcc works."
+     (assert (run '(letcc k 23))
+             23)
+     (assert (run '(letcc k (k 23)))
+             23)
+     (assert (run '(letcc k (* 2 (k 23))))
+             23)
+     (assert (run '(* 3 (letcc k (* 2 (k 23)))))
+             69)
+     (assert (run '(* 3 (letcc k (* 2 (k (k 23))))))
+             69))
+
  (it "Shift & Reset work."
      (assert (run '(reset 23))
              23)

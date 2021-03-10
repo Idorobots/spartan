@@ -2,7 +2,7 @@
                 (display "Counter: ")
                 (display c)
                 (newline)
-                (foo (raise-error c)))))
+                (foo (raise c)))))
   (call/handler (lambda (e r)
                   (task-info)
                   (sleep 1000)

@@ -69,30 +69,4 @@
 
  (it "Renaming set! works."
      (assert (mangle '(set! foo bar) '())
-             '(set! __foo __bar)))
-
- (it "Renaming letcc works."
-     (assert (mangle '(letcc k k) '())
-             '(letcc __k __k))
-     (assert (mangle '(letcc k (k bar)) '())
-             '(letcc __k (__k __bar))))
-
- (it "Renaming shift/reset works."
-     (assert (mangle '(shift k k) '())
-             '(shift __k __k))
-     (assert (mangle '(reset foo) '())
-             '(reset __foo))
-     (assert (mangle '(shift k (k (reset (k 23)))) '())
-             '(shift __k (__k (reset (__k 23))))))
-
- (it "Renaming handle/raise works."
-     (assert (mangle '(raise error) '())
-             '(raise __error))
-     (assert (mangle '(handle expr handler) '())
-             '(handle __expr __handler))
-     (assert (mangle '(handle (raise error)
-                              (lambda (e r) (r e)))
-                     '())
-             '(handle (raise __error)
-                      (lambda (__e __r)
-                        (__r __e))))))
+             '(set! __foo __bar))))
