@@ -82,6 +82,35 @@
                                        (lambda (b)
                                          (send who b))))))
 
+;; Alternate continuations:
+(define __callDIVcurrent_continuation (closurize
+                                       (lambda (f cont)
+                                         (&apply f (closurize
+                                                    (lambda (v _)
+                                                      (&apply cont v)))
+                                                 cont))))
+
+(define __callDIVreset (closurize
+                        (lambda (f cont)
+                          (&push-delimited-continuation! cont)
+                          (&apply f
+                                  (closurize
+                                   (lambda (v)
+                                     (&apply (&pop-delimited-continuation!)
+                                             v)))))))
+
+(define __callDIVshift (closurize
+                        (lambda (f cont)
+                          (&apply f
+                                  (closurize
+                                     (lambda (v ct2)
+                                       (&push-delimited-continuation! ct2)
+                                       (&apply cont v)))
+                                  (closurize
+                                   (lambda (v)
+                                     (&apply (&pop-delimited-continuation!)
+                                             v)))))))
+
 ;; Misc:
 (define __display (bootstrap display))
 (define __newline (bootstrap newline))

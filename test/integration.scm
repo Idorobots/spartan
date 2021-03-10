@@ -18,7 +18,8 @@
                              (wait 25)))))
       (test-file "../test/foof/errors.foo")
       (test-file "../test/foof/coroutines.foo")
-      (test-file "../test/foof/coroutines2.foo")))
+      (test-file "../test/foof/coroutines2.foo")
+      (test-file "../test/foof/coroutines3.foo")))
  (it "should support Actor Model"
      (with-test-bindings
       (;; Silence task info logs since these might vary in the specific timings.
