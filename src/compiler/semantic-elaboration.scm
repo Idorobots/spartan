@@ -75,5 +75,5 @@
          (let* ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
-            (format "Bad `~a` syntax, expected exactly 1 expression to follow:"
+            (format "Bad `~a` syntax, expected exactly one expression to follow:"
                     (ast-get node 'value)))))))

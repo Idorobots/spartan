@@ -1,32 +1,32 @@
-../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly one expression to follow:
 2 |  (quote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly one expression to follow:
 3 |  (quasiquote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly one expression to follow:
 4 |  (unquote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
 5 |  (unquote-splicing)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(10,3): Bad `quote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(10,3): Bad `quote` syntax, expected exactly one expression to follow:
 10 |  (quote 23 5)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(11,3): Bad `quasiquote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(11,3): Bad `quasiquote` syntax, expected exactly one expression to follow:
 11 |  (quasiquote foo bar baz)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(12,3): Bad `unquote` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(12,3): Bad `unquote` syntax, expected exactly one expression to follow:
 12 |  (unquote 23 4)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(13,3): Bad `unquote-splicing` syntax, expected exactly 1 expression to follow:
+../test/foof/errors/syntax-forms.foo(13,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
 13 |  (unquote-splicing test test test)
        ^~~~~~
 

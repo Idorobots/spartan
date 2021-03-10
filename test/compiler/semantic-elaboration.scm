@@ -118,12 +118,12 @@
                                                              (make-symbol-node q))
                                                          (make-number-node 23)
                                                          (make-number-node 5))))))
-                    (format "Bad `~a` syntax, expected exactly 1 expression to follow:" q))
+                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
                       (elaborate-syntax-forms (at (location 5 23)
                                                   (make-list-node
                                                    (list (at (location 7 13)
                                                              (make-symbol-node q)))))))
-                    (format "Bad `~a` syntax, expected exactly 1 expression to follow:" q)))
+                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q)))
           (list 'quote 'quasiquote 'unquote 'unquote-splicing))))
