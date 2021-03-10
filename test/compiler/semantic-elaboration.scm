@@ -118,40 +118,12 @@
                                                              (make-symbol-node q))
                                                          (make-number-node 23)
                                                          (make-number-node 5))))))
-                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q))
+                    (format "Bad `~a` syntax, expected exactly 1 expression to follow:" q))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
                       (elaborate-syntax-forms (at (location 5 23)
                                                   (make-list-node
                                                    (list (at (location 7 13)
                                                              (make-symbol-node q)))))))
-                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q)))
-          (list 'quote 'quasiquote 'unquote 'unquote-splicing)))
-
- (it "elaborates valid raise"
-     (assert (elaborate-syntax-forms (at (location 5 23)
-                                         (make-list-node
-                                          (list (make-symbol-node 'raise)
-                                                (make-symbol-node 'error)))))
-             (at (location 5 23)
-                 (make-raise-node
-                  (make-symbol-node 'error)))))
-
- (it "disallows bad raise syntax"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-syntax-forms (at (location 5 23)
-                                           (make-list-node
-                                            (list (at (location 7 13)
-                                                      (make-symbol-node 'raise)))))))
-             "Bad `raise` syntax, expected exactly one expression to follow:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-syntax-forms (at (location 5 23)
-                                           (make-list-node
-                                            (list (at (location 7 13)
-                                                      (make-symbol-node 'raise))
-                                                  (make-symbol-node 'some)
-                                                  (make-symbol-node 'more)
-                                                  (make-symbol-node 'values))))))
-             "Bad `raise` syntax, expected exactly one expression to follow:")))
+                    (format "Bad `~a` syntax, expected exactly 1 expression to follow:" q)))
+          (list 'quote 'quasiquote 'unquote 'unquote-splicing))))

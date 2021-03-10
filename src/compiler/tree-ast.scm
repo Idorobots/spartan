@@ -61,11 +61,7 @@
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
 
-;; Raise
-(define (make-raise-node value)
-  (ast-node 'type 'raise 'value value))
-
-;; Syntax errors recognized by the parser
+;; Syntax error recognized by the parser
 (define (make-invalid-symbol-node value)
   (ast-node 'type 'invalid-symbol 'value value))
 
@@ -138,7 +134,6 @@
            ('quasiquote (ast-update expr 'value m))
            ('unquote (ast-update expr 'value m))
            ('unquote-splicing (ast-update expr 'value m))
-           ('raise (ast-update expr 'value m))
            ('list (ast-update expr 'value (partial map m)))
            ('error expr)
            ('invalid-symbol expr)
@@ -185,6 +180,5 @@
                ('quasiquote (list 'quasiquote (ast-get expr 'value)))
                ('unquote (list 'unquote (ast-get expr 'value)))
                ('unquote-splicing (list 'unquote-splicing (ast-get expr 'value)))
-               ('raise (list 'raise (ast-get expr 'value)))
                (else (ast-get expr 'value))))
            ast))
