@@ -1,4 +1,4 @@
-(begin
+(do
   (quote)
   (quasiquote)
   (unquote)
@@ -17,4 +17,7 @@
   (if cond then else)
   (if cond then else whats going on ???)
   (do)
-  (do some things))
+  (do some things)
+  (raise)
+  (raise error)
+  (raise more errors))

@@ -28,6 +28,8 @@
                (elaborate-do expr))
               ((quote quasiquote unquote unquote-splicing)
                (elaborate-quote expr))
+              ((raise)
+               (elaborate-raise expr))
               (else expr))
             expr))
       expr))
@@ -75,5 +77,15 @@
          (let* ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
-            (format "Bad `~a` syntax, expected exactly 1 expression to follow:"
+            (format "Bad `~a` syntax, expected exactly one expression to follow:"
                     (ast-get node 'value)))))))
+
+(define (elaborate-raise expr)
+  (cond ((ast-matches? expr '(raise _))
+         (at (get-location expr)
+             (make-raise-node (ast-list-nth expr 1))))
+        (else
+         (let* ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad `raise` syntax, expected exactly one expression to follow:")))))
