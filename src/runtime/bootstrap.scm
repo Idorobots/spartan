@@ -49,6 +49,60 @@
 (define __deref (bootstrap deref))
 (define __assignBANG (bootstrap assign!))
 
+;; Continuations:
+(define __callDIVcurrent_continuation (closurize
+                                       (lambda (f cont)
+                                         (&apply f (closurize
+                                                    (lambda (v _)
+                                                      (&apply cont v)))
+                                                 cont))))
+
+(define __callDIVreset (closurize
+                        (lambda (f cont)
+                          (&push-delimited-continuation! cont)
+                          (&apply f
+                                  (closurize
+                                   (lambda (v)
+                                     (&apply (&pop-delimited-continuation!)
+                                             v)))))))
+
+(define __callDIVshift (closurize
+                        (lambda (f cont)
+                          (&apply f
+                                  (closurize
+                                     (lambda (v ct2)
+                                       (&push-delimited-continuation! ct2)
+                                       (&apply cont v)))
+                                  (closurize
+                                   (lambda (v)
+                                     (&apply (&pop-delimited-continuation!)
+                                             v)))))))
+
+;; Exceptions:
+(define __callDIVhandler (closurize
+                          (lambda (handler f cont)
+                            (let* ((curr-handler (&error-handler))
+                                   (new-handler (closurize
+                                                 (lambda (error restart)
+                                                   (&set-error-handler! curr-handler)
+                                                   (&apply handler error restart cont)))))
+                              (&set-error-handler! new-handler)
+                              (&apply f
+                                      (closurize
+                                       (lambda (v)
+                                         (&set-error-handler! curr-handler)
+                                         (&apply cont v))))))))
+
+(define __raise (closurize
+                 (lambda (e cont)
+                   (let ((curr-handler (&error-handler)))
+                     (&apply curr-handler
+                             e
+                             (closurize
+                              (lambda (v _)
+                                (&set-error-handler! curr-handler)
+                                (&apply cont v))))))))
+
 ;; Actor model:
 (define __sleep (bootstrap wait))
 (define __self (bootstrap self))

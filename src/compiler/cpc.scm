@@ -18,12 +18,6 @@
         ((lambda? expr) (cpc-lambda expr kont))
         ((fix? expr) (cpc-fix expr kont))
         ((application? expr) (cpc-app expr kont))
-        ;; These shouldn't be there after the phase.
-        ((letcc? expr) (cpc-letcc expr kont))
-        ((reset? expr) (cpc-reset expr kont))
-        ((shift? expr) (cpc-shift expr kont))
-        ((handle? expr) (cpc-handle expr kont))
-        ((raise? expr) (cpc-raise expr kont))
         ;; FIXME These shouldn't be here.
         ((define? expr) (cpc-define expr kont))
         ;; --
@@ -110,18 +104,6 @@
                    (cpc (let-body expr)
                         kont))))
 
-(define (cpc-letcc expr kont)
-  (let ((cc (letcc-var expr))
-        (v1 (gensym 'value))
-        (v2 (gensym 'value))
-        (ct (gensym 'cont)))
-    (make-let-1 ct (make-lambda-1 v1 (kont v1))
-                (make-let-1 cc (make-lambda-2 v2 (gensym 'ignored)
-                                              (make-yield (make-app-1 ct v2)))
-                            (cpc (let-body expr)
-                                 (lambda (v)
-                                   (make-yield (make-app-1 ct v))))))))
-
 (define (cpc-app expr kont)
   (if (primop-application? expr)
       (kont (make-app (app-op expr)
@@ -135,66 +117,3 @@
                                (make-app op
                                          (append args (list (make-lambda-1 value
                                                                            (kont value))))))))))))
-
-(define (cpc-reset expr kont)
-  (let ((ct (gensym 'cont))
-        (v1 (gensym 'value)))
-    (make-let-1 ct (make-lambda-1 v1 (kont v1))
-                (make-do (list (make-app-1 '&push-delimited-continuation! ct)
-                               (cpc (reset-expr expr)
-                                    (lambda (v)
-                                      (make-app-1 (make-app-0 '&pop-delimited-continuation!)
-                                                  v))))))))
-
-(define (cpc-shift expr kont)
-  (let ((ct1 (gensym 'cont))
-        (ct2 (gensym 'cont))
-        (v1 (gensym 'value))
-        (v2 (gensym 'value)))
-    (make-let-1 ct1 (make-lambda-1 v1 (kont v1))
-                (make-let-1 (shift-cont expr) (make-lambda-2 v2 ct2
-                                                             (make-do (list (make-app-1 '&push-delimited-continuation! ct2)
-                                                                            (make-yield (make-app-1 ct1 v2)))))
-                            (cpc (shift-expr expr)
-                                 (lambda (v)
-                                   (make-app-1 (make-app-0 '&pop-delimited-continuation!)
-                                               v)))))))
-
-(define (with-handler h next)
-  (make-do (list (make-app-1 '&set-error-handler! h)
-                 next)))
-
-(define (cpc-handle expr kont)
-  (let ((ct (gensym 'cont))
-        (handler (gensym 'handler))
-        (value (gensym 'value))
-        (restart (gensym 'restart))
-        (error (gensym 'error)))
-    (make-let (list (list handler (make-app '&error-handler nil))
-                    (list ct (make-lambda-1 value (kont value))))
-              (cpc (handle-handler expr)
-                   (lambda (h)
-                     (let ((wrap (make-lambda-2 error restart
-                                                (with-handler handler
-                                                              (make-app h
-                                                                        (list error
-                                                                              restart
-                                                                              ct))))))
-                       (with-handler wrap
-                                     (cpc (handle-expr expr)
-                                          (lambda (v)
-                                            (with-handler handler
-                                                          (make-yield (make-app-1 ct v))))))))))))
-
-(define (cpc-raise expr kont)
-  (let ((value (gensym 'value))
-        (ignored (gensym 'ignored))
-        (h (gensym 'handler)))
-    (make-let-1 h
-                (make-app '&error-handler nil)
-                (cpc (raise-expr expr)
-                     (lambda (v)
-                       (make-app h
-                                 (list v (make-lambda-2 value ignored
-                                                        (with-handler h
-                                                                      (kont value))))))))))
