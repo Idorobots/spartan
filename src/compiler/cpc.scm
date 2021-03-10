@@ -191,7 +191,7 @@
         (ignored (gensym 'ignored))
         (h (gensym 'handler)))
     (make-let-1 h
-                (make-app '&error-handler nil)
+                (make-app-0 '&error-handler)
                 (cpc (raise-expr expr)
                      (lambda (v)
                        (make-app h

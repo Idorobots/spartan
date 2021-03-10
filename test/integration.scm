@@ -17,6 +17,7 @@
        (__sleep (bootstrap (lambda (time)
                              (wait 25)))))
       (test-file "../test/foof/errors.foo")
+      (test-file "../test/foof/errors3.foo")
       (test-file "../test/foof/coroutines.foo")
       (test-file "../test/foof/coroutines2.foo")
       (test-file "../test/foof/coroutines3.foo")))
