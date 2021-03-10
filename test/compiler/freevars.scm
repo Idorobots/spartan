@@ -15,7 +15,6 @@
      (assert (set-union (set 'b 'c 'd) (set 'a)) '(a b c d))
      (assert (set-union (set 'b 'c) (set 'a 'd)) '(a b c d))))
 
-
 (describe
  "freevars"
  (it "handles values correctly"
@@ -35,21 +34,14 @@
      (assert (free-vars '(do a b c)) '(a b c))
      (assert (free-vars '(if foo bar baz)) '(bar baz foo))
      (assert (free-vars '(do a b (do c d))) '(a b c d))
-     (assert (free-vars '(set! foo bar)) '(bar))
-     (assert (free-vars '(reset bar)) '(bar))
-     (assert (free-vars '(raise error)) '(error))
-     (assert (free-vars '(handle expression handler)) '(expression handler))
-     (assert (free-vars '(handle (raise foo) bar)) '(bar foo)))
+     (assert (free-vars '(set! foo bar)) '(bar)))
  (it "handles bindings correctly"
      (assert (free-vars '(letrec ((a 23) (bar a)) (* 2 bar))) '(*))
      (assert (free-vars '(letrec ((a 23) (bar foo)) (* a bar))) '(* foo))
      (assert (free-vars '(lambda (x y) (+ x y))) '(+))
      (assert (free-vars '(lambda (x) x)) '())
      (assert (free-vars '(lambda (foo) (list 23 foo))) '(list))
-     (assert (free-vars '(lambda (bar) (list 23 foo))) '(foo list))
-     (assert (free-vars '(letcc cont (foo bar cont))) '(bar foo))
-     (assert (free-vars '(shift k (foo (k bar)))) '(bar foo))
-     (assert (free-vars '(shift k (reset (* foo k)))) '(* foo)))
+     (assert (free-vars '(lambda (bar) (list 23 foo))) '(foo list)))
  (it "handles complex forms correctly"
      (assert (free-vars '(let ((f (lambda ()
                                     (even? 5))))

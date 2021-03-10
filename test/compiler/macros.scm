@@ -36,4 +36,7 @@
  (it "letcc macro works"
      (assert (macro-expand '(letcc k (k 23)) bm)
              '(call/current-continuation
-               (lambda (k) (k 23))))))
+               (lambda (k) (do (k 23)))))
+     (assert (macro-expand '(letcc k (k 23) (k 5)) bm)
+             '(call/current-continuation
+               (lambda (k) (do (k 23) (k 5)))))))
