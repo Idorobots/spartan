@@ -50,4 +50,108 @@
 19 |  (do)
        ^~~~~~
 
+../test/foof/errors/syntax-forms.foo(21,3): Bad `let` syntax, expected a list of bindings followed by a body:
+21 |  (let)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(22,3): Bad `let` syntax, expected a list of bindings followed by a body:
+22 |  (let x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(23,3): Bad `let` syntax, expected a list of bindings followed by a body:
+23 |  (let ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(25,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+25 |  (let x 23)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(26,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+26 |  (let (x) 23)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(27,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+27 |  (let ((23 x)) 23)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(28,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+28 |  (let (()) 23)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(30,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+30 |  (let ((x 23) y) x)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(31,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+31 |  (let ((x 23) y z) x)
+           ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(32,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+32 |  (letrec)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(33,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+33 |  (letrec x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(34,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+34 |  (letrec ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(36,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+36 |  (letrec x 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(37,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+37 |  (letrec (x) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(38,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+38 |  (letrec ((23 x)) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(39,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+39 |  (letrec (()) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(41,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+41 |  (letrec ((x 23) y) x)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(42,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+42 |  (letrec ((x 23) y z) x)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(43,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+43 |  (lambda)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(44,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+44 |  (lambda x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(45,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+45 |  (lambda ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(46,10): Bad formal arguments specification, expected a list of identifiers:
+46 |  (lambda x 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(49,10): Bad formal arguments specification, expected a list of identifiers:
+49 |  (lambda ((x y)) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(50,10): Bad formal arguments specification, expected a list of identifiers:
+50 |  (lambda ((x y)) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(51,10): Bad formal arguments specification, expected a list of identifiers:
+51 |  (lambda (23) 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(52,10): Bad formal arguments specification, expected a list of identifiers:
+52 |  (lambda ("some arg I dunno might delete") 23))
+              ^~~~~~
+
 Compilation aborted due to errors.

@@ -26,6 +26,10 @@
                (elaborate-if expr))
               ((do)
                (elaborate-do expr))
+              ((lambda)
+               (elaborate-lambda expr))
+              ((let letrec)
+               (elaborate-let expr))
               ((quote quasiquote unquote unquote-splicing)
                (elaborate-quote expr))
               (else expr))
@@ -39,7 +43,7 @@
                            (ast-list-nth expr 2)
                            (ast-list-nth expr 3))))
         (else
-         (let* ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
@@ -49,10 +53,72 @@
          (at (get-location expr)
              (make-do-node (cdr (ast-get expr 'value)))))
         (else
-         (let* ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             "Bad `do` syntax, expected at least one expression to follow:")))))
+
+(define (elaborate-lambda expr)
+  (cond ((and (ast-matches? expr '(lambda _ _ . _))
+              (valid-formals? (ast-list-nth expr 1)))
+         (at (get-location expr)
+             (make-lambda-node (ast-list-nth expr 1)
+                               (cddr (ast-get expr 'value)))))
+        ((ast-matches? expr '(lambda _ _ . _))
+         (let ((node (ast-list-nth expr 1)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad formal arguments specification, expected a list of identifiers:")))
+        (else
+         (let ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
+
+(define (valid-formals? args)
+  (and (is-type? args 'list)
+       (foldl (lambda (arg acc)
+                (and acc (is-type? arg 'symbol)))
+              #t
+              (ast-get args 'value))))
+
+(define (elaborate-let expr)
+  (cond ((and (ast-matches? expr '(let (_ . _) _ . _))
+              (valid-bindings? (ast-list-nth expr 1)))
+         (at (get-location expr)
+             (make-let-node (ast-list-nth expr 1)
+                            (cddr (ast-get expr 'value)))))
+        ((and (ast-matches? expr '(letrec (_ . _) _ . _))
+              (valid-bindings? (ast-list-nth expr 1)))
+         (at (get-location expr)
+             (make-letrec-node (ast-list-nth expr 1)
+                               (cddr (ast-get expr 'value)))))
+        ((ast-matches? expr '(_ () _ . _))
+         (at (get-location expr)
+             (make-do-node (cddr (ast-get expr 'value)))))
+        ((ast-matches? expr '(_ _ _ . _))
+         (let ((node (ast-list-nth expr 1)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad bindings format, expected a list of (identifier <value>) pairs:")))
+        (else
+         (let ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
+                    (ast-get node 'value)))))))
+
+(define (valid-bindings? args)
+  (and (is-type? args 'list)
+       (foldl (lambda (arg acc)
+                (and acc (valid-binding? arg)))
+              #t
+              (ast-get args 'value))))
+
+(define (valid-binding? arg)
+  (and (is-type? arg 'list)
+       (equal? (length (ast-get arg 'value)) 2)
+       (is-type? (ast-list-nth arg 0) 'symbol)))
 
 (define (elaborate-quote expr)
   (cond ((ast-matches? expr ''_)
@@ -72,7 +138,7 @@
            (at (get-location expr)
                (make-unquote-splicing-node value))))
         (else
-         (let* ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             (format "Bad `~a` syntax, expected exactly one expression to follow:"

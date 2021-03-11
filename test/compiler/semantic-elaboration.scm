@@ -78,6 +78,158 @@
                                                       (make-symbol-node 'do)))))))
              "Bad `do` syntax, expected at least one expression to follow:"))
 
+ (it "elaborates valid lambdas"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'lambda)
+                                                (make-list-node
+                                                 (list (make-symbol-node 'x)))
+                                                (make-symbol-node 'x)))))
+             (at (location 5 23)
+                 (make-lambda-node
+                  (make-list-node
+                   (list (make-symbol-node 'x)))
+                  (list (make-symbol-node 'x))))))
+
+ (it "disallows bad lambda syntax"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'lambda)))))))
+             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'lambda))
+                                                  (make-symbol-node 'x))))))
+             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (make-symbol-node 'lambda)
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-number-node 23))))
+                                                  (make-symbol-node 'x))))))
+             "Bad formal arguments specification, expected a list of identifiers:"))
+
+ (it "elaborates valid let"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'let)
+                                                (make-list-node
+                                                 (list (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23)))))
+                                                (make-symbol-node 'x)))))
+             (at (location 5 23)
+                 (make-let-node
+                  (make-list-node
+                   (list (make-list-node
+                          (list (make-symbol-node 'x)
+                                (make-number-node 23)))))
+                  (list (make-symbol-node 'x))))))
+
+ (it "disallows bad let syntax"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'let)))))))
+             "Bad `let` syntax, expected a list of bindings followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'let))
+                                                  (make-symbol-node 'x))))))
+             "Bad `let` syntax, expected a list of bindings followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (make-symbol-node 'let)
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-number-node 23))))
+                                                  (make-symbol-node 'x))))))
+             "Bad bindings format, expected a list of (identifier <value>) pairs:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (make-symbol-node 'let)
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-list-node
+                                                              (list (make-number-node 23)
+                                                                    (make-number-node 23))))))
+                                                  (make-symbol-node 'x))))))
+             "Bad bindings format, expected a list of (identifier <value>) pairs:"))
+
+ (it "elaborates valid letrec"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'letrec)
+                                                (make-list-node
+                                                 (list (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23)))))
+                                                (make-symbol-node 'x)))))
+             (at (location 5 23)
+                 (make-letrec-node
+                  (make-list-node
+                   (list (make-list-node
+                          (list (make-symbol-node 'x)
+                                (make-number-node 23)))))
+                  (list (make-symbol-node 'x))))))
+
+ (it "disallows bad letrec syntax"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'letrec)))))))
+             "Bad `letrec` syntax, expected a list of bindings followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'letrec))
+                                                  (make-symbol-node 'x))))))
+             "Bad `letrec` syntax, expected a list of bindings followed by a body:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (make-symbol-node 'letrec)
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-number-node 23))))
+                                                  (make-symbol-node 'x))))))
+             "Bad bindings format, expected a list of (identifier <value>) pairs:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (make-symbol-node 'letrec)
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-list-node
+                                                              (list (make-number-node 23)
+                                                                    (make-number-node 23))))))
+                                                  (make-symbol-node 'x))))))
+             "Bad bindings format, expected a list of (identifier <value>) pairs:"))
+
  (it "elaborates valid quotes"
      (assert (elaborate-syntax-forms (at (location 5 23)
                                          (make-list-node
