@@ -1,7 +1,7 @@
 ;; Semantic elaboration.
 
 (describe
- "expand-syntax-forms"
+ "elaboration"
  (it "elaborates valid ifs"
      (assert (elaborate-syntax-forms (at (location 5 23)
                                          (make-list-node

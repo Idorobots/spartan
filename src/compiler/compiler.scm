@@ -5,7 +5,7 @@
 (load "compiler/tree-ast.scm")
 (load "compiler/parser.scm")
 (load "compiler/errors.scm")
-(load "compiler/semantic-elaboration.scm")
+(load "compiler/elaboration.scm")
 (load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
@@ -20,7 +20,7 @@
          (env-set env
                   'errors '())
          (list parse
-               elaborate-semantics
+               elaborate
                report-errors
                adapt-ast
                syntax-expand

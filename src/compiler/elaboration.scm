@@ -6,7 +6,7 @@
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
 
-(define (elaborate-semantics env)
+(define (elaborate env)
   (let ((result (collect-errors (env-get env 'errors)
                                 (lambda ()
                                   (map-ast elaborate-syntax-forms

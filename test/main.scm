@@ -10,7 +10,7 @@
 (load "../test/compiler/tree-ast.scm")
 (load "../test/compiler/parser.scm")
 (load "../test/compiler/errors.scm")
-(load "../test/compiler/semantic-elaboration.scm")
+(load "../test/compiler/elaboration.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/syntax.scm")
 (load "../test/compiler/macros.scm")
