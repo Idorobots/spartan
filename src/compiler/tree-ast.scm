@@ -10,14 +10,17 @@
 (define (ast-node . properties)
   (apply hasheq properties))
 
+(define (ast-get* node property default)
+  (hash-ref node property default))
+
 (define (ast-get node property)
-  (hash-ref node property compiler-bug))
+  (ast-get* node property compiler-bug))
 
 (define (ast-set node property value)
   (hash-set node property value))
 
 (define (ast-update node property f)
-  (ast-set node property (f (hash-ref node property '()))))
+  (ast-set node property (f (ast-get* node property '()))))
 
 ;; AST nodes
 
@@ -95,8 +98,18 @@
 (define (at location node)
   (ast-set node 'location location))
 
+(define (replace old new)
+  (at (get-location old)
+      ((if (generated? old)
+           generated
+           id)
+       new)))
+
 (define (generated node)
   (ast-set node 'generated #t))
+
+(define (generated? node)
+  (ast-get* node 'generated #f))
 
 (define (get-type node)
   (ast-get node 'type))

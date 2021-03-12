@@ -38,10 +38,10 @@
 
 (define (elaborate-if expr)
   (cond ((ast-matches? expr '(if _ _ _))
-         (at (get-location expr)
-             (make-if-node (ast-list-nth expr 1)
-                           (ast-list-nth expr 2)
-                           (ast-list-nth expr 3))))
+         (replace expr
+                  (make-if-node (ast-list-nth expr 1)
+                                (ast-list-nth expr 2)
+                                (ast-list-nth expr 3))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -50,8 +50,8 @@
 
 (define (elaborate-do expr)
   (cond ((ast-matches? expr '(do _ . _))
-         (at (get-location expr)
-             (make-do-node (cdr (ast-get expr 'value)))))
+         (replace expr
+                  (make-do-node (cdr (ast-get expr 'value)))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -61,9 +61,9 @@
 (define (elaborate-lambda expr)
   (cond ((and (ast-matches? expr '(lambda _ _ . _))
               (valid-formals? (ast-list-nth expr 1)))
-         (at (get-location expr)
-             (make-lambda-node (ast-list-nth expr 1)
-                               (cddr (ast-get expr 'value)))))
+         (replace expr
+                  (make-lambda-node (ast-list-nth expr 1)
+                                    (cddr (ast-get expr 'value)))))
         ((ast-matches? expr '(lambda _ _ . _))
          (let ((node (ast-list-nth expr 1)))
            (raise-compilation-error
@@ -85,17 +85,17 @@
 (define (elaborate-let expr)
   (cond ((and (ast-matches? expr '(let (_ . _) _ . _))
               (valid-bindings? (ast-list-nth expr 1)))
-         (at (get-location expr)
-             (make-let-node (ast-list-nth expr 1)
-                            (cddr (ast-get expr 'value)))))
+         (replace expr
+                  (make-let-node (ast-list-nth expr 1)
+                                 (cddr (ast-get expr 'value)))))
         ((and (ast-matches? expr '(letrec (_ . _) _ . _))
               (valid-bindings? (ast-list-nth expr 1)))
-         (at (get-location expr)
-             (make-letrec-node (ast-list-nth expr 1)
-                               (cddr (ast-get expr 'value)))))
+         (replace expr
+                  (make-letrec-node (ast-list-nth expr 1)
+                                    (cddr (ast-get expr 'value)))))
         ((ast-matches? expr '(_ () _ . _))
-         (at (get-location expr)
-             (make-do-node (cddr (ast-get expr 'value)))))
+         (replace expr
+                  (make-do-node (cddr (ast-get expr 'value)))))
         ((ast-matches? expr '(_ _ _ . _))
          (let ((node (ast-list-nth expr 1)))
            (raise-compilation-error
@@ -123,19 +123,19 @@
 (define (elaborate-quote expr)
   (cond ((ast-matches? expr ''_)
          (let ((value (ast-list-nth expr 1)))
-           (at (get-location expr)
+           (replace expr
                (make-quote-node value))))
         ((ast-matches? expr '`_)
          (let ((value (ast-list-nth expr 1)))
-           (at (get-location expr)
+           (replace expr
                (make-quasiquote-node value))))
         ((ast-matches? expr ',_)
          (let ((value (ast-list-nth expr 1)))
-           (at (get-location expr)
+           (replace expr
                (make-unquote-node value))))
         ((ast-matches? expr ',@_)
          (let ((value (ast-list-nth expr 1)))
-           (at (get-location expr)
+           (replace expr
                (make-unquote-splicing-node value))))
         (else
          (let ((node (ast-list-nth expr 0)))

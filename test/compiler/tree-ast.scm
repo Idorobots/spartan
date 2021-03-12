@@ -27,6 +27,17 @@
                  (generated (ast-node 'value 'value)))
              (ast-node 'value 'value 'location (location 5 23) 'generated #t)))
 
+ (it "`replace` preserves location & generated state"
+     (let ((node (at (location 5 23)
+                     (generated (ast-node 'value 'value)))))
+       (assert (replace node
+                        (ast-node 'value 'another-value))
+               (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))
+       (assert (replace node
+                        (at (location 23 5)
+                            (ast-node 'value 'another-value)))
+               (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))))
+
  (it "`location<?` correctly compares locations"
      (assert (location<? (location 0 0)
                          (location 0 0))
