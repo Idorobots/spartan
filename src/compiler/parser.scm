@@ -3,6 +3,7 @@
 (load "compiler/utils.scm")
 (load "compiler/peggen.scm")
 (load "compiler/env.scm")
+(load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
@@ -37,8 +38,9 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-unmatched-token-node (cadr matching)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unmatched `)` - expected an opening `(` to come before:")
                 start
                 end))))
 
@@ -90,8 +92,10 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-unterminated-quote-node (cadr matching)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 (format "No expression following `~a`:"
+                         (cadr matching)))
                 start
                 end))))
 
@@ -115,8 +119,9 @@
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (at (location start end)
-                    (make-unterminated-string-node content))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unterminated string literal - expected a closing `\"` to follow:")
                 start
                 end))))
  '(StringContents
@@ -140,8 +145,9 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-unterminated-list-node (caddr matching)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unterminated list - expected a closing `)` to follow:")
                 start
                 end))))
  '(ListContents
@@ -179,14 +185,10 @@
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
-            (end (match-end result))
-            (head (cadr matching))
-            (rest (map cadr (caddr matching))))
-       (matches (at (location start end)
-                    (make-structure-ref-node
-                     ;; FIXME Could preserve individual part location for better error handling later.
-                     (map string->symbol
-                          (cons head rest))))
+            (end (match-end result)))
+       (matches (expand-structure-refs (location start end)
+                                       (string->symbol (cadr matching))
+                                       (map (compose string->symbol cadr) (caddr matching)))
                 start
                 end))))
  '(InvalidSymbol
@@ -195,8 +197,10 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-invalid-symbol-node (cadr matching)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 (format "Invalid symbol `~a` specified at:"
+                         (cadr matching)))
                 start
                 end))))
  '(SymbolContents
@@ -214,9 +218,35 @@
  '(EOF
    ()))
 
+(define (expand-structure-refs loc head rest)
+  (foldl (lambda (part acc)
+           (at loc
+               (generated
+                ;; FIXME This ought to be a primop application instead.
+                (make-list-node
+                 (list (generated (wrap-symbol loc '&structure-ref))
+                       acc
+                       (at loc
+                           (generated
+                            (make-quote-node part))))))))
+         (wrap-symbol loc head)
+         (map (partial wrap-symbol loc)
+              rest)))
+
+(define (wrap-symbol loc s)
+  (at loc
+      (make-symbol-node s)))
+
 (define (parse env)
-  (let* ((input (env-get env 'input))
-         (result (Program input)))
-    (if (matches? result)
-        (env-set env 'ast (match-match result))
-        (error (format "Could not parse input: ~a" input)))))
+  (let ((result (collect-errors (env-get env 'errors)
+                                (lambda ()
+                                  (let* ((input (env-get env 'input))
+                                         (parsed (Program input)))
+                                    (if (matches? parsed)
+                                        (match-match parsed)
+                                        (raise-compilation-error
+                                         (location 0 (string-length input))
+                                         "Not a valid FOOF file:")))))))
+    (env-set env
+             'ast (car result)
+             'errors (cadr result))))

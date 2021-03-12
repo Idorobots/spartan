@@ -10,7 +10,6 @@
 (load "../test/compiler/tree-ast.scm")
 (load "../test/compiler/parser.scm")
 (load "../test/compiler/errors.scm")
-(load "../test/compiler/syntax-elaboration.scm")
 (load "../test/compiler/semantic-elaboration.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/syntax.scm")
@@ -20,6 +19,7 @@
 (load "../test/compiler/cpc.scm")
 (load "../test/compiler/closures.scm")
 (load "../test/compiler/rename.scm")
+(load "../test/compiler/compiler.scm")
 
 ;; Runtime unit tests:
 (load "../test/rt/queue.scm")

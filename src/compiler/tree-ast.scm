@@ -29,9 +29,6 @@
 (define (make-symbol-node value)
   (ast-node 'type 'symbol 'value value))
 
-(define (make-structure-ref-node value)
-  (ast-node 'type 'structure-ref 'value value))
-
 ;; String
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
@@ -73,23 +70,7 @@
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
 
-;; Syntax error recognized by the parser
-(define (make-invalid-symbol-node value)
-  (ast-node 'type 'invalid-symbol 'value value))
-
-(define (make-unterminated-string-node value)
-  (ast-node 'type 'unterminated-string 'value value))
-
-(define (make-unterminated-list-node value)
-  (ast-node 'type 'unterminated-list 'value value))
-
-(define (make-unterminated-quote-node value)
-  (ast-node 'type 'unterminated-quote 'value value))
-
-(define (make-unmatched-token-node value)
-  (ast-node 'type 'unmatched-token 'value value))
-
-;; Other errors
+;; Error within parse tree
 (define (make-error-node)
   (ast-node 'type 'error 'value "<error>"))
 
@@ -135,7 +116,6 @@
          (case (get-type expr)
            ((number) expr)
            ((symbol) expr)
-           ((structure-ref) expr)
            ((string) expr)
            ((if) (foldl (lambda (field acc)
                          (ast-update acc field m))
@@ -157,11 +137,6 @@
            ((unquote-splicing) (ast-update expr 'value m))
            ((list) (ast-update expr 'value (partial map m)))
            ((error) expr)
-           ((invalid-symbol) expr)
-           ((unmatched-token) expr)
-           ((unterminated-string) expr)
-           ((unterminated-quote) expr)
-           ((unterminated-list) (ast-update expr 'value (partial map m)))
            (else (error "Unexpected expression: " expr)))))
       (error "Unexpected value: " expr)))
 
@@ -195,7 +170,6 @@
              (case (get-type expr)
                ((number) (ast-get expr 'value))
                ((symbol) (ast-get expr 'value))
-               ((structure-ref) (ast-get expr 'value))
                ((string) (ast-get expr 'value))
                ((if) (list 'if
                           (ast-get expr 'condition)

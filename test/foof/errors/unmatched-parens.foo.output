@@ -1,8 +1,8 @@
-../test/foof/errors/unmatched-parens.foo(4,11): Unmatched parentheses - expected an opening `(` to come before:
+../test/foof/errors/unmatched-parens.foo(4,11): Unmatched `)` - expected an opening `(` to come before:
 4 |  (newline)))
               ^~~~~~
 
-../test/foof/errors/unmatched-parens.foo(4,12): Unmatched parentheses - expected an opening `(` to come before:
+../test/foof/errors/unmatched-parens.foo(4,12): Unmatched `)` - expected an opening `(` to come before:
 4 |  (newline)))
                ^~~~~~
 
