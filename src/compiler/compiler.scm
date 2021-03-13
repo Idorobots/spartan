@@ -6,7 +6,6 @@
 (load "compiler/parser.scm")
 (load "compiler/errors.scm")
 (load "compiler/elaboration.scm")
-(load "compiler/syntax.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
 (load "compiler/anormal.scm")
@@ -23,7 +22,6 @@
                elaborate
                report-errors
                adapt-ast
-               syntax-expand
                (flip macro-expand (make-builtin-macros))
                letrec-expand
                (flip normalize (make-identity-continuation))

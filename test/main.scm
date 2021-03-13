@@ -12,7 +12,6 @@
 (load "../test/compiler/errors.scm")
 (load "../test/compiler/elaboration.scm")
 (load "../test/compiler/ast.scm")
-(load "../test/compiler/syntax.scm")
 (load "../test/compiler/macros.scm")
 (load "../test/compiler/letrec.scm")
 (load "../test/compiler/anormal.scm")
