@@ -32,6 +32,8 @@
                (elaborate-let expr))
               ((quote quasiquote unquote unquote-splicing)
                (elaborate-quote expr))
+              ((define)
+               (elaborate-define expr))
               (else expr))
             expr))
       expr))
@@ -159,3 +161,36 @@
             (get-location node)
             (format "Bad `~a` syntax, expected exactly one expression to follow:"
                     (ast-get node 'value)))))))
+
+(define (elaborate-define expr)
+  (cond ((ast-matches? expr '(define (_ . _) _ . _))
+         (let* ((func-def (ast-list-nth expr 1))
+                (name (ast-list-nth func-def 0))
+                (formals (cdr (ast-get func-def 'value)))
+                (body (cddr (ast-get expr 'value))))
+           (elaborate-define
+            (replace expr
+                     (make-list-node
+                      (list (ast-list-nth expr 0)
+                            name
+                            (elaborate-lambda
+                             (at (get-location expr)
+                                 (generated
+                                  (make-list-node
+                                   (list* (generated
+                                           ;; NOTE Location on this thing doesn't really matter.
+                                           (make-symbol-node 'lambda))
+                                          (at (get-location func-def)
+                                              (generated
+                                               (make-list-node formals)))
+                                          body)))))))))))
+        ((and (ast-matches? expr '(define _ _))
+              (is-type? (ast-list-nth expr 1) 'symbol))
+         (replace expr
+                  (make-def-node (ast-list-nth expr 1)
+                                 (ast-list-nth expr 2))))
+        (else
+         (let ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            "Bad `define` syntax, expected either a value or a function definition to follow:")))))

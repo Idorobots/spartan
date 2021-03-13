@@ -73,6 +73,10 @@
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
 
+;; Definition
+(define (make-def-node name value)
+  (ast-node 'type 'def 'name name 'value value))
+
 ;; Error within parse tree
 (define (make-error-node)
   (ast-node 'type 'error 'value "<error>"))
@@ -156,6 +160,7 @@
            ((quasiquote) (ast-update expr 'value m))
            ((unquote) (ast-update expr 'value m))
            ((unquote-splicing) (ast-update expr 'value m))
+           ((def) (ast-update (ast-update expr 'name m) 'value m))
            ((list) (ast-update expr 'value (partial map m)))
            ((error) expr)
            (else (error "Unexpected expression: " expr)))))
@@ -208,10 +213,11 @@
                                               (cdr b)))
                                             (ast-get expr 'bindings))
                                (ast-get expr 'body)))
-               ((list) (ast-get expr 'value))
                ((plain-quote) (list 'quote (ast-get expr 'value)))
                ((quasiquote) (list 'quasiquote (ast-get expr 'value)))
                ((unquote) (list 'unquote (ast-get expr 'value)))
                ((unquote-splicing) (list 'unquote-splicing (ast-get expr 'value)))
+               ((def) (list 'define (ast-get expr 'name) (ast-get expr 'value)))
+               ((list) (ast-get expr 'value))
                (else (error "Unexpected expression: " expr))))
            ast))

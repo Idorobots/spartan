@@ -372,4 +372,107 @@
                                                    (list (at (location 7 13)
                                                              (make-symbol-node q)))))))
                     (format "Bad `~a` syntax, expected exactly one expression to follow:" q)))
-          (list 'quote 'quasiquote 'unquote 'unquote-splicing))))
+          (list 'quote 'quasiquote 'unquote 'unquote-splicing)))
+
+ (it "handles valid defines"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'define)
+                                                (make-symbol-node 'foo)
+                                                (make-number-node 23)))))
+             (at (location 5 23)
+                 (make-def-node
+                  (make-symbol-node 'foo)
+                  (make-number-node 23))))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'define)
+                                                (at (location 7 13)
+                                                    (make-list-node
+                                                     (list (make-symbol-node 'foo))))
+                                                (make-number-node 23)))))
+             (at (location 5 23)
+                 (make-def-node
+                  (make-symbol-node 'foo)
+                  (at (location 5 23)
+                      (generated
+                       (make-lambda-node
+                        '()
+                        (make-number-node 23)))))))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'define)
+                                                (at (location 7 13)
+                                                    (make-list-node
+                                                     (list (make-symbol-node 'foo)
+                                                           (make-symbol-node 'x))))
+                                                (make-symbol-node 'x)))))
+             (at (location 5 23)
+                 (make-def-node
+                  (make-symbol-node 'foo)
+                  (at (location 5 23)
+                      (generated
+                       (make-lambda-node
+                        (list (make-symbol-node 'x))
+                        (make-symbol-node 'x))))))))
+
+ (it "disallows invalid defines"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list
+                                             (at (location 7 13)
+                                                 (make-symbol-node 'define)))))))
+             "Bad `define` syntax, expected either a value or a function definition to follow:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'define))
+                                                  (make-symbol-node 'foo))))))
+             "Bad `define` syntax, expected either a value or a function definition to follow:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'define))
+                                                  (make-number-node 23)
+                                                  (make-symbol-node 'foo))))))
+             "Bad `define` syntax, expected either a value or a function definition to follow:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-symbol-node 'define))
+                                                  (make-list-node
+                                                   (list (make-symbol-node 'foo)
+                                                         (make-number-node 23))))))))
+             "Bad `define` syntax, expected either a value or a function definition to follow:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 5 7)
+                                                      (make-symbol-node 'define))
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-symbol-node 'foo)
+                                                             (make-number-node 23))))
+                                                  (make-number-node 23))))))
+             "Bad formal arguments specification, expected a list of identifiers:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 5 7)
+                                                      (make-symbol-node 'define))
+                                                  (at (location 7 13)
+                                                      (make-list-node
+                                                       (list (make-number-node 23)
+                                                             (make-symbol-node 'foo))))
+                                                  (make-number-node 23))))))
+             "Bad `define` syntax, expected either a value or a function definition to follow:")))
