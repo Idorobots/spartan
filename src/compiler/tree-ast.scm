@@ -135,15 +135,23 @@
                        expr
                        '(condition then else)))
            ((do) (ast-update expr 'exprs (partial map m)))
-           ((lambda) (ast-update (ast-update expr 'formals m)
+           ((lambda) (ast-update (ast-update expr 'formals (partial map m))
                                 'body
-                                (partial map m)))
-           ((let) (ast-update (ast-update expr 'bindings m)
+                                m))
+           ((let) (ast-update (ast-update expr
+                                          'bindings
+                                          (partial map (lambda (b)
+                                                         (cons (m (car b))
+                                                               (m (cdr b))))))
                              'body
-                             (partial map m)))
-           ((letrec) (ast-update (ast-update expr 'bindings m)
+                             m))
+           ((letrec) (ast-update (ast-update expr
+                                             'bindings
+                                             (partial map (lambda (b)
+                                                         (cons (m (car b))
+                                                               (m (cdr b))))))
                                 'body
-                                (partial map m)))
+                                m))
            ((plain-quote) (ast-update expr 'value m))
            ((quasiquote) (ast-update expr 'value m))
            ((unquote) (ast-update expr 'value m))
@@ -189,9 +197,17 @@
                           (ast-get expr 'then)
                           (ast-get expr 'else)))
                ((do) (cons 'do (ast-get expr 'exprs)))
-               ((lambda) (list* 'lambda (ast-get expr 'formals) (ast-get expr 'body)))
-               ((let) (list* 'let (ast-get expr 'bindings) (ast-get expr 'body)))
-               ((letrec) (list* 'letrec (ast-get expr 'bindings) (ast-get expr 'body)))
+               ((lambda) (list 'lambda (ast-get expr 'formals) (ast-get expr 'body)))
+               ((let) (list 'let (map (lambda (b)
+                                        (list (car b)
+                                              (cdr b)))
+                                      (ast-get expr 'bindings))
+                            (ast-get expr 'body)))
+               ((letrec) (list 'letrec (map (lambda (b)
+                                        (list (car b)
+                                              (cdr b)))
+                                            (ast-get expr 'bindings))
+                               (ast-get expr 'body)))
                ((list) (ast-get expr 'value))
                ((plain-quote) (list 'quote (ast-get expr 'value)))
                ((quasiquote) (list 'quasiquote (ast-get expr 'value)))

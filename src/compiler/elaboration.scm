@@ -62,8 +62,8 @@
   (cond ((and (ast-matches? expr '(lambda _ _ . _))
               (valid-formals? (ast-list-nth expr 1)))
          (replace expr
-                  (make-lambda-node (ast-list-nth expr 1)
-                                    (cddr (ast-get expr 'value)))))
+                  (make-lambda-node (ast-get (ast-list-nth expr 1) 'value)
+                                    (wrap-body (cddr (ast-get expr 'value))))))
         ((ast-matches? expr '(lambda _ _ . _))
          (let ((node (ast-list-nth expr 1)))
            (raise-compilation-error
@@ -74,6 +74,15 @@
            (raise-compilation-error
             (get-location node)
             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
+
+(define (wrap-body exprs)
+  (if (> (length exprs) 1)
+      ;; NOTE The body spans all the expressions within it.
+      (at (location (car (get-location (car exprs)))
+                    (cdr (get-location (list-ref exprs (- (length exprs) 1)))))
+          (generated
+           (make-do-node exprs)))
+      (car exprs)))
 
 (define (valid-formals? args)
   (and (is-type? args 'list)
@@ -86,13 +95,13 @@
   (cond ((and (ast-matches? expr '(let (_ . _) _ . _))
               (valid-bindings? (ast-list-nth expr 1)))
          (replace expr
-                  (make-let-node (ast-list-nth expr 1)
-                                 (cddr (ast-get expr 'value)))))
+                  (make-let-node (unwrap-bindings (ast-list-nth expr 1))
+                                 (wrap-body (cddr (ast-get expr 'value))))))
         ((and (ast-matches? expr '(letrec (_ . _) _ . _))
               (valid-bindings? (ast-list-nth expr 1)))
          (replace expr
-                  (make-letrec-node (ast-list-nth expr 1)
-                                    (cddr (ast-get expr 'value)))))
+                  (make-letrec-node (unwrap-bindings (ast-list-nth expr 1))
+                                    (wrap-body (cddr (ast-get expr 'value))))))
         ((ast-matches? expr '(_ () _ . _))
          (replace expr
                   (make-do-node (cddr (ast-get expr 'value)))))
@@ -107,6 +116,13 @@
             (get-location node)
             (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
                     (ast-get node 'value)))))))
+
+(define (unwrap-bindings list)
+  (map (lambda (sublist)
+         (let ((exprs (ast-get sublist 'value)))
+           (cons (car exprs)
+                 (cadr exprs))))
+       (ast-get list 'value)))
 
 (define (valid-bindings? args)
   (and (is-type? args 'list)
