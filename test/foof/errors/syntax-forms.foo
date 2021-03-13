@@ -47,7 +47,7 @@
   (lambda () 23)
   (lambda (x) 23)
   (lambda ((x y)) 23)
-  (lambda ((x y)) 23)
+  (lambda ((x) (y)) 23)
   (lambda (23) 23)
   (lambda ("some arg I dunno might delete") 23)
   (define)

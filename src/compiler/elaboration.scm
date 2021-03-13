@@ -61,21 +61,32 @@
             "Bad `do` syntax, expected at least one expression to follow:")))))
 
 (define (elaborate-lambda expr)
-  (cond ((and (ast-matches? expr '(lambda _ _ . _))
-              (valid-formals? (ast-list-nth expr 1)))
+  (cond ((and (ast-matches? expr '(lambda _ _ . _)))
          (replace expr
-                  (make-lambda-node (ast-get (ast-list-nth expr 1) 'value)
+                  (make-lambda-node (valid-formals (ast-list-nth expr 1)
+                                                   "Bad `lambda` formal arguments syntax")
                                     (wrap-body (cddr (ast-get expr 'value))))))
-        ((ast-matches? expr '(lambda _ _ . _))
-         (let ((node (ast-list-nth expr 1)))
-           (raise-compilation-error
-            (get-location node)
-            "Bad formal arguments specification, expected a list of identifiers:")))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
+
+(define (valid-formals args prefix)
+  (if (is-type? args 'list)
+      (map (lambda (e)
+             (valid-symbol e prefix))
+           (ast-get args 'value))
+      (list (raise-compilation-error
+             (get-location args)
+             (format "~a, expected a list of identifiers:" prefix)))))
+
+(define (valid-symbol symbol prefix)
+  (if (is-type? symbol 'symbol)
+      symbol
+      (raise-compilation-error
+       (get-location symbol)
+       (format "~a, expected a symbol but got a ~a instead:" prefix (ast-get symbol 'type)))))
 
 (define (wrap-body exprs)
   (if (> (length exprs) 1)
@@ -85,13 +96,6 @@
           (generated
            (make-do-node exprs)))
       (car exprs)))
-
-(define (valid-formals? args)
-  (and (is-type? args 'list)
-       (foldl (lambda (arg acc)
-                (and acc (is-type? arg 'symbol)))
-              #t
-              (ast-get args 'value))))
 
 (define (elaborate-let expr)
   (cond ((and (ast-matches? expr '(let (_ . _) _ . _))
@@ -168,29 +172,22 @@
                 (name (ast-list-nth func-def 0))
                 (formals (cdr (ast-get func-def 'value)))
                 (body (cddr (ast-get expr 'value))))
-           (elaborate-define
-            (replace expr
-                     (make-list-node
-                      (list (ast-list-nth expr 0)
-                            name
-                            (elaborate-lambda
-                             (at (get-location expr)
-                                 (generated
-                                  (make-list-node
-                                   (list* (generated
-                                           ;; NOTE Location on this thing doesn't really matter.
-                                           (make-symbol-node 'lambda))
-                                          (at (get-location func-def)
-                                              (generated
-                                               (make-list-node formals)))
-                                          body)))))))))))
-        ((and (ast-matches? expr '(define _ _))
-              (is-type? (ast-list-nth expr 1) 'symbol))
+           (replace expr
+                    (make-def-node (valid-symbol name "Bad `define` syntax")
+                                   (at (get-location expr)
+                                       (generated
+                                        (make-lambda-node (valid-formals (at (get-location func-def)
+                                                                             (generated
+                                                                              (make-list-node formals)))
+                                                                         "Bad `define` function signature syntax")
+                                                          (wrap-body body))))))))
+        ((and (ast-matches? expr '(define _ _)))
          (replace expr
-                  (make-def-node (ast-list-nth expr 1)
+                  (make-def-node (valid-symbol (ast-list-nth expr 1)
+                                               "Bad `define` syntax")
                                  (ast-list-nth expr 2))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
-            "Bad `define` syntax, expected either a value or a function definition to follow:")))))
+            "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))

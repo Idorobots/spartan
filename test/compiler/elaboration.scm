@@ -132,9 +132,11 @@
                                             (list (make-symbol-node 'lambda)
                                                   (at (location 7 13)
                                                       (make-list-node
-                                                       (list (make-number-node 23))))
+                                                       (list (make-symbol-node 'x)
+                                                             (at (location 10 11)
+                                                                 (make-number-node 23)))))
                                                   (make-symbol-node 'x))))))
-             "Bad formal arguments specification, expected a list of identifiers:"))
+             "Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:"))
 
  (it "elaborates valid let"
      (assert (elaborate-syntax-forms (at (location 5 23)
@@ -424,7 +426,7 @@
                                             (list
                                              (at (location 7 13)
                                                  (make-symbol-node 'define)))))))
-             "Bad `define` syntax, expected either a value or a function definition to follow:")
+             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
@@ -432,16 +434,17 @@
                                             (list (at (location 7 13)
                                                       (make-symbol-node 'define))
                                                   (make-symbol-node 'foo))))))
-             "Bad `define` syntax, expected either a value or a function definition to follow:")
+             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
                                            (make-list-node
                                             (list (at (location 7 13)
                                                       (make-symbol-node 'define))
-                                                  (make-number-node 23)
+                                                  (at (location 9 10)
+                                                      (make-number-node 23))
                                                   (make-symbol-node 'foo))))))
-             "Bad `define` syntax, expected either a value or a function definition to follow:")
+             "Bad `define` syntax, expected a symbol but got a number instead:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
@@ -451,7 +454,7 @@
                                                   (make-list-node
                                                    (list (make-symbol-node 'foo)
                                                          (make-number-node 23))))))))
-             "Bad `define` syntax, expected either a value or a function definition to follow:")
+             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
@@ -461,9 +464,10 @@
                                                   (at (location 7 13)
                                                       (make-list-node
                                                        (list (make-symbol-node 'foo)
-                                                             (make-number-node 23))))
+                                                             (at (location 9 10)
+                                                                 (make-number-node 23)))))
                                                   (make-number-node 23))))))
-             "Bad formal arguments specification, expected a list of identifiers:")
+             "Bad `define` function signature syntax, expected a symbol but got a number instead:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
@@ -472,7 +476,8 @@
                                                       (make-symbol-node 'define))
                                                   (at (location 7 13)
                                                       (make-list-node
-                                                       (list (make-number-node 23)
+                                                       (list (at (location 9 10)
+                                                                 (make-number-node 23))
                                                              (make-symbol-node 'foo))))
                                                   (make-number-node 23))))))
-             "Bad `define` syntax, expected either a value or a function definition to follow:")))
+            "Bad `define` syntax, expected a symbol but got a number instead:")))

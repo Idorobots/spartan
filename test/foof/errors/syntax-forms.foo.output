@@ -134,48 +134,52 @@
 45 |  (lambda ())
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(46,10): Bad formal arguments specification, expected a list of identifiers:
+../test/foof/errors/syntax-forms.foo(46,10): Bad `lambda` formal arguments syntax, expected a list of identifiers:
 46 |  (lambda x 23)
               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(49,10): Bad formal arguments specification, expected a list of identifiers:
+../test/foof/errors/syntax-forms.foo(49,11): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
 49 |  (lambda ((x y)) 23)
-              ^~~~~~
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(50,10): Bad formal arguments specification, expected a list of identifiers:
-50 |  (lambda ((x y)) 23)
-              ^~~~~~
+../test/foof/errors/syntax-forms.foo(50,11): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+50 |  (lambda ((x) (y)) 23)
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(51,10): Bad formal arguments specification, expected a list of identifiers:
+../test/foof/errors/syntax-forms.foo(50,15): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+50 |  (lambda ((x) (y)) 23)
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(51,11): Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:
 51 |  (lambda (23) 23)
-              ^~~~~~
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(52,10): Bad formal arguments specification, expected a list of identifiers:
+../test/foof/errors/syntax-forms.foo(52,11): Bad `lambda` formal arguments syntax, expected a symbol but got a string instead:
 52 |  (lambda ("some arg I dunno might delete") 23)
-              ^~~~~~
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(53,3): Bad `define` syntax, expected either a value or a function definition to follow:
+../test/foof/errors/syntax-forms.foo(53,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
 53 |  (define)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(54,3): Bad `define` syntax, expected either a value or a function definition to follow:
+../test/foof/errors/syntax-forms.foo(54,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
 54 |  (define foo)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(55,3): Bad `define` syntax, expected either a value or a function definition to follow:
+../test/foof/errors/syntax-forms.foo(55,10): Bad `define` syntax, expected a symbol but got a number instead:
 55 |  (define 23 foo)
-       ^~~~~~
+              ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(57,3): Bad `define` syntax, expected either a value or a function definition to follow:
+../test/foof/errors/syntax-forms.foo(57,10): Bad `define` syntax, expected a symbol but got a list instead:
 57 |  (define () 23)
-       ^~~~~~
+              ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(60,3): Bad `define` syntax, expected either a value or a function definition to follow:
+../test/foof/errors/syntax-forms.foo(60,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
 60 |  (define (foo))
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(61,10): Bad formal arguments specification, expected a list of identifiers:
+../test/foof/errors/syntax-forms.foo(61,15): Bad `define` function signature syntax, expected a symbol but got a number instead:
 61 |  (define (foo 23) x))
-              ^~~~~~
+                   ^~~~~~
 
-Compilation aborted due to 45 errors.
+Compilation aborted due to 46 errors.
