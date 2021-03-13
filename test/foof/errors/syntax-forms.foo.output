@@ -151,7 +151,31 @@
               ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(52,10): Bad formal arguments specification, expected a list of identifiers:
-52 |  (lambda ("some arg I dunno might delete") 23))
+52 |  (lambda ("some arg I dunno might delete") 23)
               ^~~~~~
 
-Compilation aborted due to 39 errors.
+../test/foof/errors/syntax-forms.foo(53,3): Bad `define` syntax, expected either a value or a function definition to follow:
+53 |  (define)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(54,3): Bad `define` syntax, expected either a value or a function definition to follow:
+54 |  (define foo)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(55,3): Bad `define` syntax, expected either a value or a function definition to follow:
+55 |  (define 23 foo)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(57,3): Bad `define` syntax, expected either a value or a function definition to follow:
+57 |  (define () 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(60,3): Bad `define` syntax, expected either a value or a function definition to follow:
+60 |  (define (foo))
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(61,10): Bad formal arguments specification, expected a list of identifiers:
+61 |  (define (foo 23) x))
+              ^~~~~~
+
+Compilation aborted due to 45 errors.
