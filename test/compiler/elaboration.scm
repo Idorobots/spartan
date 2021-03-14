@@ -214,23 +214,23 @@
                (elaborate-syntax-forms (at (location 5 23)
                                            (make-list-node
                                             (list (make-symbol-node 'let)
-                                                  (at (location 7 13)
-                                                      (make-list-node
-                                                       (list (make-number-node 23))))
+                                                  (make-list-node
+                                                   (list (at (location 7 13)
+                                                             (make-number-node 23))))
                                                   (make-symbol-node 'x))))))
-             "Bad bindings format, expected a list of (identifier <value>) pairs:")
+             "Bad `let` bindings syntax, expected a pair of an identifier and a value:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
                                            (make-list-node
                                             (list (make-symbol-node 'let)
-                                                  (at (location 7 13)
-                                                      (make-list-node
-                                                       (list (make-list-node
-                                                              (list (make-number-node 23)
-                                                                    (make-number-node 23))))))
+                                                  (make-list-node
+                                                   (list (make-list-node
+                                                          (list (at (location 7 13)
+                                                                    (make-number-node 23))
+                                                                (make-number-node 23)))))
                                                   (make-symbol-node 'x))))))
-             "Bad bindings format, expected a list of (identifier <value>) pairs:"))
+             "Bad `let` bindings syntax, expected a symbol but got a number instead:"))
 
  (it "elaborates valid letrec"
      (assert (elaborate-syntax-forms (at (location 5 23)
@@ -308,23 +308,23 @@
                (elaborate-syntax-forms (at (location 5 23)
                                            (make-list-node
                                             (list (make-symbol-node 'letrec)
-                                                  (at (location 7 13)
-                                                      (make-list-node
-                                                       (list (make-number-node 23))))
+                                                  (make-list-node
+                                                   (list (at (location 7 13)
+                                                             (make-number-node 23))))
                                                   (make-symbol-node 'x))))))
-             "Bad bindings format, expected a list of (identifier <value>) pairs:")
+             "Bad `letrec` bindings syntax, expected a pair of an identifier and a value:")
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-syntax-forms (at (location 5 23)
                                            (make-list-node
                                             (list (make-symbol-node 'letrec)
-                                                  (at (location 7 13)
-                                                      (make-list-node
-                                                       (list (make-list-node
-                                                              (list (make-number-node 23)
-                                                                    (make-number-node 23))))))
+                                                  (make-list-node
+                                                   (list (make-list-node
+                                                          (list (at (location 7 13)
+                                                                    (make-number-node 23))
+                                                                (make-number-node 23)))))
                                                   (make-symbol-node 'x))))))
-             "Bad bindings format, expected a list of (identifier <value>) pairs:"))
+             "Bad `letrec` bindings syntax, expected a symbol but got a number instead:"))
 
  (it "elaborates valid quotes"
      (assert (elaborate-syntax-forms (at (location 5 23)

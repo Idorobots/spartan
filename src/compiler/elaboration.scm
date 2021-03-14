@@ -61,7 +61,7 @@
             "Bad `do` syntax, expected at least one expression to follow:")))))
 
 (define (elaborate-lambda expr)
-  (cond ((and (ast-matches? expr '(lambda _ _ . _)))
+  (cond ((ast-matches? expr '(lambda _ _ . _))
          (replace expr
                   (make-lambda-node (valid-formals (ast-list-nth expr 1)
                                                    "Bad `lambda` formal arguments syntax")
@@ -77,9 +77,10 @@
       (map (lambda (e)
              (valid-symbol e prefix))
            (ast-get args 'value))
-      (list (raise-compilation-error
-             (get-location args)
-             (format "~a, expected a list of identifiers:" prefix)))))
+      (list
+       (raise-compilation-error
+        (get-location args)
+        (format "~a, expected a list of identifiers:" prefix)))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
@@ -98,24 +99,17 @@
       (car exprs)))
 
 (define (elaborate-let expr)
-  (cond ((and (ast-matches? expr '(let (_ . _) _ . _))
-              (valid-bindings? (ast-list-nth expr 1)))
+  (cond ((ast-matches? expr '(let (_ . _) _ . _))
          (replace expr
-                  (make-let-node (unwrap-bindings (ast-list-nth expr 1))
+                  (make-let-node (valid-bindings (ast-list-nth expr 1) "Bad `let` bindings syntax")
                                  (wrap-body (cddr (ast-get expr 'value))))))
-        ((and (ast-matches? expr '(letrec (_ . _) _ . _))
-              (valid-bindings? (ast-list-nth expr 1)))
+        ((ast-matches? expr '(letrec (_ . _) _ . _))
          (replace expr
-                  (make-letrec-node (unwrap-bindings (ast-list-nth expr 1))
+                  (make-letrec-node (valid-bindings (ast-list-nth expr 1) "Bad `letrec` bindings syntax")
                                     (wrap-body (cddr (ast-get expr 'value))))))
         ((ast-matches? expr '(_ () _ . _))
          (replace expr
                   (make-do-node (cddr (ast-get expr 'value)))))
-        ((ast-matches? expr '(_ _ _ . _))
-         (let ((node (ast-list-nth expr 1)))
-           (raise-compilation-error
-            (get-location node)
-            "Bad bindings format, expected a list of (identifier <value>) pairs:")))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -123,24 +117,20 @@
             (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
                     (ast-get node 'value)))))))
 
-(define (unwrap-bindings list)
-  (map (lambda (sublist)
-         (let ((exprs (ast-get sublist 'value)))
-           (cons (car exprs)
-                 (cadr exprs))))
-       (ast-get list 'value)))
+(define (valid-bindings bindings prefix)
+  (map (lambda (b)
+         (valid-binding b prefix))
+       (ast-get bindings 'value)))
 
-(define (valid-bindings? args)
-  (and (is-type? args 'list)
-       (foldl (lambda (arg acc)
-                (and acc (valid-binding? arg)))
-              #t
-              (ast-get args 'value))))
-
-(define (valid-binding? arg)
-  (and (is-type? arg 'list)
-       (equal? (length (ast-get arg 'value)) 2)
-       (is-type? (ast-list-nth arg 0) 'symbol)))
+(define (valid-binding binding prefix)
+  (if (and (is-type? binding 'list)
+           (equal? (length (ast-get binding 'value)) 2))
+      (cons (valid-symbol (ast-list-nth binding 0) prefix)
+            (ast-list-nth binding 1))
+      (cons (make-error-node)
+            (raise-compilation-error
+             (get-location binding)
+             (format "~a, expected a pair of an identifier and a value:" prefix)))))
 
 (define (elaborate-quote expr)
   (cond ((ast-matches? expr ''_)

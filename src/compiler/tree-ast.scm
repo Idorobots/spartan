@@ -135,27 +135,29 @@
            ((symbol) expr)
            ((string) expr)
            ((if) (foldl (lambda (field acc)
-                         (ast-update acc field m))
-                       expr
-                       '(condition then else)))
+                          (ast-update acc field m))
+                        expr
+                        '(condition then else)))
            ((do) (ast-update expr 'exprs (partial map m)))
            ((lambda) (ast-update (ast-update expr 'formals (partial map m))
-                                'body
-                                m))
+                                 'body
+                                 m))
            ((let) (ast-update (ast-update expr
                                           'bindings
-                                          (partial map (lambda (b)
-                                                         (cons (m (car b))
-                                                               (m (cdr b))))))
-                             'body
-                             m))
+                                          (partial map
+                                                   (lambda (b)
+                                                     (cons (m (car b))
+                                                           (m (cdr b))))))
+                              'body
+                              m))
            ((letrec) (ast-update (ast-update expr
                                              'bindings
-                                             (partial map (lambda (b)
-                                                         (cons (m (car b))
-                                                               (m (cdr b))))))
-                                'body
-                                m))
+                                             (partial map
+                                                      (lambda (b)
+                                                        (cons (m (car b))
+                                                              (m (cdr b))))))
+                                 'body
+                                 m))
            ((plain-quote) (ast-update expr 'value m))
            ((quasiquote) (ast-update expr 'value m))
            ((unquote) (ast-update expr 'value m))
@@ -164,7 +166,7 @@
            ((list) (ast-update expr 'value (partial map m)))
            ((error) expr)
            (else (error "Unexpected expression: " expr)))))
-      (error "Unexpected value: " expr)))
+      (compiler-bug)))
 
 (define (ast-matches? expr pattern)
   (cond ((and (or (empty? pattern) (pair? pattern))

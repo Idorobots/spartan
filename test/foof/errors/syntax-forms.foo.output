@@ -62,29 +62,33 @@
 23 |  (let ())
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(25,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(25,3): Bad `let` syntax, expected a list of bindings followed by a body:
 25 |  (let x 23)
-           ^~~~~~
+       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(26,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(26,8): Bad `let` bindings syntax, expected a pair of an identifier and a value:
 26 |  (let (x) 23)
-           ^~~~~~
+            ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(27,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(27,9): Bad `let` bindings syntax, expected a symbol but got a number instead:
 27 |  (let ((23 x)) 23)
-           ^~~~~~
+             ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(28,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(28,8): Bad `let` bindings syntax, expected a pair of an identifier and a value:
 28 |  (let (()) 23)
-           ^~~~~~
+            ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(30,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(30,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
 30 |  (let ((x 23) y) x)
-           ^~~~~~
+                   ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(31,7): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(31,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
 31 |  (let ((x 23) y z) x)
-           ^~~~~~
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(31,17): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+31 |  (let ((x 23) y z) x)
+                     ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(32,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
 32 |  (letrec)
@@ -98,29 +102,33 @@
 34 |  (letrec ())
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(36,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(36,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
 36 |  (letrec x 23)
-              ^~~~~~
+       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(37,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(37,11): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
 37 |  (letrec (x) 23)
-              ^~~~~~
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(38,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(38,12): Bad `letrec` bindings syntax, expected a symbol but got a number instead:
 38 |  (letrec ((23 x)) 23)
-              ^~~~~~
+                ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(39,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(39,11): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
 39 |  (letrec (()) 23)
-              ^~~~~~
+               ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(41,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(41,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
 41 |  (letrec ((x 23) y) x)
-              ^~~~~~
+                      ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(42,10): Bad bindings format, expected a list of (identifier <value>) pairs:
+../test/foof/errors/syntax-forms.foo(42,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
 42 |  (letrec ((x 23) y z) x)
-              ^~~~~~
+                      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(42,20): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+42 |  (letrec ((x 23) y z) x)
+                        ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(43,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
 43 |  (lambda)
@@ -182,4 +190,4 @@
 61 |  (define (foo 23) x))
                    ^~~~~~
 
-Compilation aborted due to 46 errors.
+Compilation aborted due to 48 errors.
