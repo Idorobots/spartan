@@ -391,7 +391,7 @@
                                                (list (at (location 7 13)
                                                          (make-symbol-node q)))))))
                     (format "Bad `~a` syntax, expected exactly one expression to follow:" q)))
-          (list 'quote 'quasiquote))
+          (list 'quote 'quasiquote 'unquote 'unquote-splicing))
      (map (lambda (q)
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
@@ -399,40 +399,8 @@
                                               (make-list-node
                                                (list (at (location 7 13)
                                                          (make-symbol-node q))
-                                                     (make-number-node 23)
-                                                     (make-number-node 5))))))
-                    (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" q))
-            (assert (with-handlers ((compilation-error?
-                                     compilation-error-what))
-                      (elaborate-unquoted (at (location 5 23)
-                                              (make-list-node
-                                               (list (at (location 7 13)
-                                                         (make-symbol-node q)))))))
+                                                     (make-number-node 23))))))
                     (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" q)))
-          (list 'unquote 'unquote-splicing))
-     (map (lambda (q)
-            (assert (with-handlers ((compilation-error?
-                                     compilation-error-what))
-                      (elaborate-unquoted (at (location 0 30)
-                                              (make-list-node
-                                               (list (make-symbol-node 'quasiquote)
-                                                     (at (location 5 23)
-                                                         (make-list-node
-                                                          (list (at (location 7 13)
-                                                                    (make-symbol-node q))
-                                                                (make-number-node 23)
-                                                                (make-number-node 5)))))))))
-                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q))
-            (assert (with-handlers ((compilation-error?
-                                     compilation-error-what))
-                      (elaborate-unquoted (at (location 0 30)
-                                              (make-list-node
-                                               (list (make-symbol-node 'quasiquote)
-                                                     (at (location 5 23)
-                                                         (make-list-node
-                                                          (list (at (location 7 13)
-                                                                    (make-symbol-node q))))))))))
-                    (format "Bad `~a` syntax, expected exactly one expression to follow:" q)))
           (list 'unquote 'unquote-splicing)))
 
  (it "handles valid defines"

@@ -4,7 +4,7 @@
   (let ((errors (env-get env 'errors)))
     (unless (empty? errors)
         (map (partial report-error env)
-             (sort errors
+             (sort (reverse errors)
                    (lambda (a b)
                      (location<? (compilation-error-location a)
                                  (compilation-error-location b)))))

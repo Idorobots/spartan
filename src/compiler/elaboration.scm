@@ -18,45 +18,68 @@
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
     ((do)
-     (elaborate-do expr))
+     (ast-update expr 'exprs (partial map elaborate-unquoted)))
+    ((if)
+     (foldl (lambda (field acc)
+                   (ast-update acc field elaborate-unquoted))
+                 expr
+                 '(condition then else)))
+    ((lambda) (ast-update expr 'body elaborate-unquoted))
+    ((let) (ast-update (ast-update expr
+                                   'bindings
+                                   (partial map
+                                            (lambda (b)
+                                              (cons (car b)
+                                                    (elaborate-unquoted (cdr b))))))
+                       'body
+                       elaborate-unquoted))
+    ((letrec) (ast-update (ast-update expr
+                                      'bindings
+                                      (partial map
+                                               (lambda (b)
+                                                 (cons (car b)
+                                                       (elaborate-unquoted (cdr b))))))
+                          'body
+                          elaborate-unquoted))
+    ((def)
+     (ast-update expr 'value elaborate-unquoted))
     ((quasiquote)
-     (elaborate-quasiquote expr))
-    ((primop-app)
-     (elaborate-primop expr))
+     (ast-update expr 'value elaborate-quoted))
     ((unquote unquote-splicing)
-     (fail-unquote expr (get-type expr)))
+     (fail-unquote expr))
+    ((primop-app)
+     (ast-update expr 'args (partial map elaborate-unquoted)))
+    ((app)
+     (elaborate-app expr))
     ((list)
-     (reconstruct-syntax-forms expr))
+     (elaborate-unquoted
+      (reconstruct-syntax-forms expr)))
     (else (compiler-bug))))
-
-(define (elaborate-do expr)
-  (ast-update expr 'exprs (partial map elaborate-unquoted)))
-
-(define (elaborate-quasiquote expr)
-  (ast-update expr 'value elaborate-quoted))
-
-(define (elaborate-primop expr)
-  (ast-update expr 'args (partial map elaborate-unquoted)))
 
 (define (elaborate-quoted expr)
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
-    ((list)
-     (maybe-reconstruct-syntax-forms expr))
     ((unquote unquote-splicing)
-     (elaborate-unquote expr))
+     (ast-update expr 'value elaborate-unquoted))
+    ((list)
+     (let ((rec (maybe-reconstruct-syntax-forms expr)))
+       (if rec
+           (elaborate-quoted rec)
+           (ast-update expr 'value (partial map elaborate-quoted)))))
     (else (compiler-bug))))
 
-(define (elaborate-unquote expr)
-  (ast-update expr 'value elaborate-unquoted))
+(define (elaborate-app expr)
+  (ast-update (ast-update expr 'op (lambda (op)
+                                     (valid-app-procedure (elaborate-unquoted op)
+                                                          "Bad call syntax")))
+              'args
+              (partial map elaborate-unquoted)))
 
-(define (elaborate-list expr)
-  (ast-update expr 'value (partial map elaborate-quoted)))
-
-(define (fail-unquote expr type)
+(define (fail-unquote expr)
   (raise-compilation-error
    (get-location expr)
-   (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" type)))
+   ;; NOTE Misplaced `<error>`, haha.
+   (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
 
 (define (reconstruct-syntax-forms expr)
   (let ((values (ast-get expr 'value)))
@@ -74,27 +97,27 @@
           ((quote quasiquote)
            (reconstruct-quote expr))
           ((unquote unquote-splicing)
-           (fail-unquote expr (ast-get (car values) 'value)))
+           (fail-unquote
+            (reconstruct-unquote expr)))
           ((define)
            (reconstruct-def expr))
           (else
-           (elaborate-app expr)))
-        (elaborate-app expr))))
+           (reconstruct-app expr)))
+        (reconstruct-app expr))))
 
 (define (maybe-reconstruct-syntax-forms expr)
   (let ((values (ast-get expr 'value)))
-    (if (and (not (empty? values))
-             (is-type? (car values) 'symbol)
-             (member (ast-get (car values) 'value) '(unquote unquote-splicing)))
-        (reconstruct-unquote expr)
-        (elaborate-list expr))))
+    (and (not (empty? values))
+         (is-type? (car values) 'symbol)
+         (member (ast-get (car values) 'value) '(unquote unquote-splicing))
+         (reconstruct-unquote expr))))
 
 (define (reconstruct-if expr)
   (cond ((ast-matches? expr '(if _ _ _))
          (replace expr
-                  (make-if-node (elaborate-unquoted (ast-list-nth expr 1))
-                                (elaborate-unquoted (ast-list-nth expr 2))
-                                (elaborate-unquoted (ast-list-nth expr 3)))))
+                  (make-if-node (ast-list-nth expr 1)
+                                (ast-list-nth expr 2)
+                                (ast-list-nth expr 3))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -103,9 +126,8 @@
 
 (define (reconstruct-do expr)
   (cond ((ast-matches? expr '(do _ . _))
-         (elaborate-do
-          (replace expr
-                   (make-do-node (cdr (ast-get expr 'value))))))
+         (replace expr
+                  (make-do-node (cdr (ast-get expr 'value)))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -147,10 +169,8 @@
       (at (location (car (get-location (car exprs)))
                     (cdr (get-location (list-ref exprs (- (length exprs) 1)))))
           (generated
-           (make-do-node (map elaborate-unquoted
-                              exprs))))
-      (elaborate-unquoted
-       (car exprs))))
+           (make-do-node exprs)))
+      (car exprs)))
 
 (define (reconstruct-let expr)
   (cond ((ast-matches? expr '(let (_ . _) _ . _))
@@ -163,8 +183,7 @@
                                     (wrap-body (cddr (ast-get expr 'value))))))
         ((ast-matches? expr '(_ () _ . _))
          (replace expr
-                  (make-do-node (map elaborate-unquoted
-                                     (cddr (ast-get expr 'value))))))
+                  (make-do-node (cddr (ast-get expr 'value)))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -181,7 +200,7 @@
   (if (and (is-type? binding 'list)
            (equal? (length (ast-get binding 'value)) 2))
       (cons (valid-symbol (ast-list-nth binding 0) prefix)
-            (elaborate-unquoted (ast-list-nth binding 1)))
+            (ast-list-nth binding 1))
       (cons (make-error-node)
             (raise-compilation-error
              (get-location binding)
@@ -192,9 +211,8 @@
          (replace expr
                   (make-quote-node (ast-list-nth expr 1))))
         ((ast-matches? expr '`_)
-         (elaborate-quasiquote
-          (replace expr
-                   (make-quasiquote-node (ast-list-nth expr 1)))))
+         (replace expr
+                   (make-quasiquote-node (ast-list-nth expr 1))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -204,13 +222,11 @@
 
 (define (reconstruct-unquote expr)
   (cond ((ast-matches? expr ',_)
-         (elaborate-unquote
-          (replace expr
-                   (make-unquote-node (ast-list-nth expr 1)))))
+         (replace expr
+                  (make-unquote-node (ast-list-nth expr 1))))
         ((ast-matches? expr ',@_)
-         (elaborate-unquote
-          (replace expr
-                   (make-unquote-splicing-node (ast-list-nth expr 1)))))
+         (replace expr
+                  (make-unquote-splicing-node (ast-list-nth expr 1))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -237,20 +253,18 @@
          (replace expr
                   (make-def-node (valid-symbol (ast-list-nth expr 1)
                                                "Bad `define` syntax")
-                                 (elaborate-unquoted
-                                  (ast-list-nth expr 2)))))
+                                 (ast-list-nth expr 2))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
-(define (elaborate-app expr)
+(define (reconstruct-app expr)
   (cond ((ast-matches? expr '(_ . _))
          (replace expr
-                  (make-app-node (valid-app-procedure (elaborate-unquoted (ast-list-nth expr 0)) "Bad call syntax")
-                                 (map elaborate-unquoted
-                                      (cdr (ast-get expr 'value))))))
+                  (make-app-node (ast-list-nth expr 0)
+                                 (cdr (ast-get expr 'value)))))
         (else
          (raise-compilation-error
           (get-location expr)
