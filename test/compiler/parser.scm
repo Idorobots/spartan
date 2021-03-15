@@ -24,11 +24,11 @@
        (assert (expand-structure-refs loc 'foo '(bar))
                (at loc
                    (generated
-                    (make-list-node
+                    (make-primop-app-node
+                     (at loc
+                         (generated
+                          (make-symbol-node '&structure-ref)))
                      (list (at loc
-                               (generated
-                                (make-symbol-node '&structure-ref)))
-                           (at loc
                                (make-symbol-node 'foo))
                            (at loc
                                (generated
@@ -38,23 +38,23 @@
        (assert (expand-structure-refs loc 'foo '(bar baz faz))
                (at loc
                    (generated
-                    (make-list-node
+                    (make-primop-app-node
+                     (at loc
+                         (generated
+                          (make-symbol-node '&structure-ref)))
                      (list (at loc
                                (generated
-                                (make-symbol-node '&structure-ref)))
-                           (at loc
-                               (generated
-                                (make-list-node
+                                (make-primop-app-node
+                                 (at loc
+                                     (generated
+                                      (make-symbol-node '&structure-ref)))
                                  (list (at loc
                                            (generated
-                                            (make-symbol-node '&structure-ref)))
-                                       (at loc
-                                           (generated
-                                            (make-list-node
+                                            (make-primop-app-node
+                                             (at loc
+                                                 (generated
+                                                  (make-symbol-node '&structure-ref)))
                                              (list (at loc
-                                                       (generated
-                                                        (make-symbol-node '&structure-ref)))
-                                                   (at loc
                                                        (make-symbol-node 'foo))
                                                    (at loc
                                                        (generated

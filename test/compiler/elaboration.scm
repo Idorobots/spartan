@@ -336,6 +336,13 @@
                   (make-number-node 23))))
      (assert (elaborate-syntax-forms (at (location 5 23)
                                          (make-list-node
+                                          (list (make-symbol-node 'quote)
+                                                (make-list-node '())))))
+             (at (location 5 23)
+                 (make-quote-node
+                  (make-list-node '()))))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
                                           (list (make-symbol-node 'unquote)
                                                 (make-number-node 23)))))
              (at (location 5 23)
@@ -480,4 +487,64 @@
                                                                  (make-number-node 23))
                                                              (make-symbol-node 'foo))))
                                                   (make-number-node 23))))))
-            "Bad `define` syntax, expected a symbol but got a number instead:")))
+             "Bad `define` syntax, expected a symbol but got a number instead:"))
+
+ (it "elaborates valid applications"
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node (list (make-symbol-node 'foo)))))
+             (at (location 5 23)
+                 (make-app-node (make-symbol-node 'foo) '())))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (make-symbol-node 'foo)
+                                                (make-symbol-node 'bar)))))
+             (at (location 5 23)
+                 (make-app-node (make-symbol-node 'foo)
+                                (list (make-symbol-node 'bar)))))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (at (location 7 13)
+                                                    (make-list-node
+                                                     (list (make-symbol-node 'do)
+                                                           (make-number-node 23)
+                                                           (make-symbol-node 'foo))))
+                                                (make-symbol-node 'bar)))))
+             (at (location 5 23)
+                 (make-app-node
+                  (at (location 7 13)
+                      (make-do-node
+                       (list (make-number-node 23)
+                             (make-symbol-node 'foo))))
+                  (list (make-symbol-node 'bar)))))
+     (assert (elaborate-syntax-forms (at (location 5 23)
+                                         (make-list-node
+                                          (list (at (location 7 13)
+                                                    (make-list-node
+                                                     (list (make-symbol-node 'foo))))))))
+             (at (location 5 23)
+                 (make-app-node
+                  (at (location 7 13)
+                      (make-app-node (make-symbol-node 'foo) '()))
+                  '()))))
+
+ (it "doesn't allow bad applications"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node '()))))
+             "Bad call syntax, expected at least one expression within the call:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-number-node 23)))))))
+             "Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:")
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (elaborate-syntax-forms (at (location 5 23)
+                                           (make-list-node
+                                            (list (at (location 7 13)
+                                                      (make-quote-node
+                                                       (make-number-node 23))))))))
+             "Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:")))

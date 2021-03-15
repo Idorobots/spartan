@@ -88,7 +88,7 @@
        (set! var tmp)))))
 
 (define (assert->string e)
-  (format "~a did not satisfy ~a\n\texpected: ~s\n\treceived: ~s\n"
+  (format "~a did not satisfy ~a\nexpected:\n~a\nreceived:\n~a\n"
           (assert-exception-expression e)
           (assert-exception-predicate e)
           (assert-exception-expected e)
@@ -141,6 +141,9 @@
                                           (with-handlers ((assert-exception?
                                                            (lambda (e)
                                                              (log-failure (assert->string e))))
+                                                          (compilation-error?
+                                                           (lambda (e)
+                                                             (log-failure (compilation-error-what e))))
                                                           (exn:fail?
                                                            (lambda (e)
                                                              (log-failure (format "~s~n" e)))))

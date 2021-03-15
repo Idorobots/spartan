@@ -187,7 +187,31 @@
        ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(61,15): Bad `define` function signature syntax, expected a symbol but got a number instead:
-61 |  (define (foo 23) x))
+61 |  (define (foo 23) x)
                    ^~~~~~
 
-Compilation aborted due to 48 errors.
+../test/foof/errors/syntax-forms.foo(62,2): Bad call syntax, expected at least one expression within the call:
+62 |  ()
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(65,3): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+65 |  (23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(66,4): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+66 |  ((23))
+        ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(68,3): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
+68 |  ((define (foo x) x) 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(71,3): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
+71 |  ("some function")
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(72,3): Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:
+72 |  ('foo 23)
+       ^~~~~~
+
+Compilation aborted due to 54 errors.

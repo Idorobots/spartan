@@ -22,10 +22,10 @@
                        expr)
                       ((empty? expr)
                        (at (location start end)
-                           (make-list-node trailing)))
+                           (make-do-node trailing)))
                       (else
                        (at (location start end)
-                           (make-list-node (cons expr trailing)))))
+                           (make-do-node (cons expr trailing)))))
                 start
                 end))))
 
@@ -222,13 +222,11 @@
   (foldl (lambda (part acc)
            (at loc
                (generated
-                ;; FIXME This ought to be a primop application instead.
-                (make-list-node
-                 (list (generated (wrap-symbol loc '&structure-ref))
-                       acc
-                       (at loc
-                           (generated
-                            (make-quote-node part))))))))
+                (make-primop-app-node (generated (wrap-symbol loc '&structure-ref))
+                                      (list acc
+                                            (at loc
+                                                (generated
+                                                 (make-quote-node part))))))))
          (wrap-symbol loc head)
          (map (partial wrap-symbol loc)
               rest)))

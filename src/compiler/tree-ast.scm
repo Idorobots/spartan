@@ -62,7 +62,7 @@
 
 ;; Quotation
 (define (make-quote-node value)
-  (ast-node 'type 'plain-quote 'value value))
+  (ast-node 'type 'quote 'value value))
 
 (define (make-quasiquote-node value)
   (ast-node 'type 'quasiquote 'value value))
@@ -77,9 +77,17 @@
 (define (make-def-node name value)
   (ast-node 'type 'def 'name name 'value value))
 
+;; Application
+
+(define (make-app-node op args)
+  (ast-node 'type 'app 'op op 'args args))
+
+(define (make-primop-app-node op args)
+  (ast-node 'type 'primop-app 'op op 'args args))
+
 ;; Error within parse tree
 (define (make-error-node)
-  (ast-node 'type 'error 'value "<error>"))
+  (ast-node 'type '<error> 'value "<error>"))
 
 ;; AST utils
 
@@ -131,9 +139,7 @@
             (expr (pre expr)))
         (post
          (case (get-type expr)
-           ((number) expr)
-           ((symbol) expr)
-           ((string) expr)
+           ((number symbol string) expr)
            ((if) (foldl (lambda (field acc)
                           (ast-update acc field m))
                         expr
@@ -158,13 +164,11 @@
                                                               (m (cdr b))))))
                                  'body
                                  m))
-           ((plain-quote) (ast-update expr 'value m))
-           ((quasiquote) (ast-update expr 'value m))
-           ((unquote) (ast-update expr 'value m))
-           ((unquote-splicing) (ast-update expr 'value m))
+           ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value m))
            ((def) (ast-update (ast-update expr 'name m) 'value m))
+           ((app primop-app) (ast-update (ast-update expr 'op m) 'args (partial map m)))
            ((list) (ast-update expr 'value (partial map m)))
-           ((error) expr)
+           ((<error>) expr)
            (else (error "Unexpected expression: " expr)))))
       (compiler-bug)))
 
@@ -196,9 +200,7 @@
   (map-ast id
            (lambda (expr)
              (case (get-type expr)
-               ((number) (ast-get expr 'value))
-               ((symbol) (ast-get expr 'value))
-               ((string) (ast-get expr 'value))
+               ((number symbol string list) (ast-get expr 'value))
                ((if) (list 'if
                           (ast-get expr 'condition)
                           (ast-get expr 'then)
@@ -215,11 +217,11 @@
                                               (cdr b)))
                                             (ast-get expr 'bindings))
                                (ast-get expr 'body)))
-               ((plain-quote) (list 'quote (ast-get expr 'value)))
+               ((quote) (list 'quote (ast-get expr 'value)))
                ((quasiquote) (list 'quasiquote (ast-get expr 'value)))
                ((unquote) (list 'unquote (ast-get expr 'value)))
                ((unquote-splicing) (list 'unquote-splicing (ast-get expr 'value)))
                ((def) (list 'define (ast-get expr 'name) (ast-get expr 'value)))
-               ((list) (ast-get expr 'value))
+               ((app primop-app) (list* (ast-get expr 'op) (ast-get expr 'args)))
                (else (error "Unexpected expression: " expr))))
            ast))
