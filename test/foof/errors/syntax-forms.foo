@@ -70,4 +70,12 @@
   ((if x foo bar) 23)
   ("some function")
   ('foo 23)
-  ((lambda (x) x) 23))
+  ((lambda (x) x) 23)
+  'x
+  `y
+  ,z
+  ,@wat
+  '(,z)
+  '(,@wat)
+  `,x
+  `,@wat)

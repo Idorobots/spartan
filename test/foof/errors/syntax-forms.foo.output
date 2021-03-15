@@ -6,13 +6,21 @@
 3 |  (quasiquote)
       ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly one expression to follow:
+../test/foof/errors/syntax-forms.foo(4,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
 4 |  (unquote)
-      ^~~~~~
+     ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+../test/foof/errors/syntax-forms.foo(5,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
 5 |  (unquote-splicing)
-      ^~~~~~
+     ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(8,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+8 |  (unquote 23)
+     ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(9,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+9 |  (unquote-splicing 23)
+     ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(10,3): Bad `quote` syntax, expected exactly one expression to follow:
 10 |  (quote 23 5)
@@ -22,13 +30,13 @@
 11 |  (quasiquote foo bar baz)
        ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(12,3): Bad `unquote` syntax, expected exactly one expression to follow:
+../test/foof/errors/syntax-forms.foo(12,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
 12 |  (unquote 23 4)
-       ^~~~~~
+      ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(13,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+../test/foof/errors/syntax-forms.foo(13,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
 13 |  (unquote-splicing test test test)
-       ^~~~~~
+      ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(14,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
 14 |  (if)
@@ -214,4 +222,12 @@
 72 |  ('foo 23)
        ^~~~~~
 
-Compilation aborted due to 54 errors.
+../test/foof/errors/syntax-forms.foo(76,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+76 |  ,z
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(77,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+77 |  ,@wat
+      ^~~~~~
+
+Compilation aborted due to 58 errors.

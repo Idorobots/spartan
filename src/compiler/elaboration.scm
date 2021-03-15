@@ -18,72 +18,78 @@
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
     ((do)
-     (elaborate-sequence expr))
-    ((list)
-     (elaborate-syntax-forms expr))
+     (elaborate-do expr))
     ((quasiquote)
      (elaborate-quasiquote expr))
     ((primop-app)
      (elaborate-primop expr))
     ((unquote unquote-splicing)
-     (raise-compilation-error
-      (get-location expr)
-      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
+     (fail-unquote expr (get-type expr)))
+    ((list)
+     (reconstruct-syntax-forms expr))
     (else (compiler-bug))))
 
-(define (elaborate-quoted expr)
-  (case (get-type expr)
-    ((<error> quote number symbol string) expr)
-    ((list)
-     (maybe-elaborate-syntax-forms expr))
-    ((unquote unquote-splicing)
-     (elaborate-unquote expr))
-    (else (compiler-bug))))
+(define (elaborate-do expr)
+  (ast-update expr 'exprs (partial map elaborate-unquoted)))
 
 (define (elaborate-quasiquote expr)
   (ast-update expr 'value elaborate-quoted))
 
 (define (elaborate-primop expr)
-  (ast-update (ast-update expr 'op elaborate-unquoted)
-              'args
-              (partial map elaborate-unquoted)))
+  (ast-update expr 'args (partial map elaborate-unquoted)))
 
-(define (elaborate-sequence expr)
-  (ast-update expr 'exprs (partial map elaborate-unquoted)))
+(define (elaborate-quoted expr)
+  (case (get-type expr)
+    ((<error> quote number symbol string) expr)
+    ((list)
+     (maybe-reconstruct-syntax-forms expr))
+    ((unquote unquote-splicing)
+     (elaborate-unquote expr))
+    (else (compiler-bug))))
 
 (define (elaborate-unquote expr)
   (ast-update expr 'value elaborate-unquoted))
 
-(define (maybe-elaborate-syntax-forms expr)
-  (let ((values (ast-get expr 'value)))
-    (if (and (not (empty? values))
-             (is-type? (car values) 'symbol)
-             (member (ast-get (car values) 'value) '(unquote unquote-splicing)))
-        (elaborate-quote expr)
-        (ast-update expr 'value (partial map elaborate-quoted)))))
+(define (elaborate-list expr)
+  (ast-update expr 'value (partial map elaborate-quoted)))
 
-(define (elaborate-syntax-forms expr)
+(define (fail-unquote expr type)
+  (raise-compilation-error
+   (get-location expr)
+   (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" type)))
+
+(define (reconstruct-syntax-forms expr)
   (let ((values (ast-get expr 'value)))
     (if (and (not (empty? values))
              (is-type? (car values) 'symbol))
         (case (ast-get (car values) 'value)
           ((if)
-           (elaborate-if expr))
+           (reconstruct-if expr))
           ((do)
-           (elaborate-do expr))
+           (reconstruct-do expr))
           ((lambda)
-           (elaborate-lambda expr))
+           (reconstruct-lambda expr))
           ((let letrec)
-           (elaborate-let expr))
-          ((quote quasiquote unquote unquote-splicing)
-           (elaborate-quote expr))
+           (reconstruct-let expr))
+          ((quote quasiquote)
+           (reconstruct-quote expr))
+          ((unquote unquote-splicing)
+           (fail-unquote expr (ast-get (car values) 'value)))
           ((define)
-           (elaborate-def expr))
+           (reconstruct-def expr))
           (else
            (elaborate-app expr)))
         (elaborate-app expr))))
 
-(define (elaborate-if expr)
+(define (maybe-reconstruct-syntax-forms expr)
+  (let ((values (ast-get expr 'value)))
+    (if (and (not (empty? values))
+             (is-type? (car values) 'symbol)
+             (member (ast-get (car values) 'value) '(unquote unquote-splicing)))
+        (reconstruct-unquote expr)
+        (elaborate-list expr))))
+
+(define (reconstruct-if expr)
   (cond ((ast-matches? expr '(if _ _ _))
          (replace expr
                   (make-if-node (elaborate-unquoted (ast-list-nth expr 1))
@@ -95,18 +101,18 @@
             (get-location node)
             "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
 
-(define (elaborate-do expr)
+(define (reconstruct-do expr)
   (cond ((ast-matches? expr '(do _ . _))
-         (elaborate-sequence
+         (elaborate-do
           (replace expr
-                  (make-do-node (cdr (ast-get expr 'value))))))
+                   (make-do-node (cdr (ast-get expr 'value))))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
             (get-location node)
             "Bad `do` syntax, expected at least one expression to follow:")))))
 
-(define (elaborate-lambda expr)
+(define (reconstruct-lambda expr)
   (cond ((ast-matches? expr '(lambda _ _ . _))
          (replace expr
                   (make-lambda-node (valid-formals (ast-list-nth expr 1)
@@ -146,7 +152,7 @@
       (elaborate-unquoted
        (car exprs))))
 
-(define (elaborate-let expr)
+(define (reconstruct-let expr)
   (cond ((ast-matches? expr '(let (_ . _) _ . _))
          (replace expr
                   (make-let-node (valid-bindings (ast-list-nth expr 1) "Bad `let` bindings syntax")
@@ -181,7 +187,7 @@
              (get-location binding)
              (format "~a, expected a pair of an identifier and a value:" prefix)))))
 
-(define (elaborate-quote expr)
+(define (reconstruct-quote expr)
   (cond ((ast-matches? expr ''_)
          (replace expr
                   (make-quote-node (ast-list-nth expr 1))))
@@ -189,14 +195,6 @@
          (elaborate-quasiquote
           (replace expr
                    (make-quasiquote-node (ast-list-nth expr 1)))))
-        ((ast-matches? expr ',_)
-         (elaborate-unquote
-          (replace expr
-                  (make-unquote-node (ast-list-nth expr 1)))))
-        ((ast-matches? expr ',@_)
-         (elaborate-unquote
-          (replace expr
-                  (make-unquote-splicing-node (ast-list-nth expr 1)))))
         (else
          (let ((node (ast-list-nth expr 0)))
            (raise-compilation-error
@@ -204,7 +202,23 @@
             (format "Bad `~a` syntax, expected exactly one expression to follow:"
                     (ast-get node 'value)))))))
 
-(define (elaborate-def expr)
+(define (reconstruct-unquote expr)
+  (cond ((ast-matches? expr ',_)
+         (elaborate-unquote
+          (replace expr
+                   (make-unquote-node (ast-list-nth expr 1)))))
+        ((ast-matches? expr ',@_)
+         (elaborate-unquote
+          (replace expr
+                   (make-unquote-splicing-node (ast-list-nth expr 1)))))
+        (else
+         (let ((node (ast-list-nth expr 0)))
+           (raise-compilation-error
+            (get-location node)
+            (format "Bad `~a` syntax, expected exactly one expression to follow:"
+                    (ast-get node 'value)))))))
+
+(define (reconstruct-def expr)
   (cond ((ast-matches? expr '(define (_ . _) _ . _))
          (let* ((func-def (ast-list-nth expr 1))
                 (name (ast-list-nth func-def 0))
@@ -245,7 +259,7 @@
 (define (valid-app-procedure op prefix)
   (let ((type (get-type op)))
     (if (member type '(symbol if do lambda let letrec app primop-app))
-      op
-      (raise-compilation-error
-       (get-location op)
-       (format "~a, expected an expression that evaluates to a procedure but got a ~a instead:" prefix type)))))
+        op
+        (raise-compilation-error
+         (get-location op)
+         (format "~a, expected an expression that evaluates to a procedure but got a ~a instead:" prefix type)))))
