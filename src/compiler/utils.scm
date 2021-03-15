@@ -13,6 +13,9 @@
 (define (empty? lst)
   (nil? lst))
 
+(define (last lst)
+  (list-ref lst (- (length lst) 1)))
+
 ;; Mutable references:
 (define (ref x)
   (make-vector 1 x))

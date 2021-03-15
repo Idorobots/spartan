@@ -32,6 +32,9 @@
 (define (make-symbol-node value)
   (ast-node 'type 'symbol 'value value))
 
+(define (ast-symbol-value node)
+  (ast-get node 'value))
+
 ;; String
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
@@ -56,6 +59,18 @@
 (define (make-let-node bindings body)
   (ast-node 'type 'let 'bindings bindings 'body body))
 
+(define (ast-list-nth expr nth)
+  (list-ref (ast-get expr 'value) nth))
+
+(define (ast-list-values expr)
+  (ast-get expr 'value))
+
+(define (ast-list-car expr)
+  (list-ref (ast-get expr 'value) 0))
+
+(define (ast-list-cdr expr)
+  (cdr (ast-get expr 'value)))
+
 ;; Letrec
 (define (make-letrec-node bindings body)
   (ast-node 'type 'letrec 'bindings bindings 'body body))
@@ -78,7 +93,6 @@
   (ast-node 'type 'def 'name name 'value value))
 
 ;; Application
-
 (define (make-app-node op args)
   (ast-node 'type 'app 'op op 'args args))
 
@@ -107,6 +121,12 @@
 (define (get-location node)
   (ast-get node 'location))
 
+(define (get-location-start node)
+  (car (get-location node)))
+
+(define (get-location-end node)
+  (cdr (get-location node)))
+
 (define (at location node)
   (ast-set node 'location location))
 
@@ -129,9 +149,6 @@
 (define (is-type? node type)
   (equal? (get-type node)
           type))
-
-(define (ast-list-nth expr nth)
-  (list-ref (ast-get expr 'value) nth))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)

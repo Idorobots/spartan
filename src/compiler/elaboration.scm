@@ -70,8 +70,7 @@
 
 (define (elaborate-app expr)
   (ast-update (ast-update expr 'op (lambda (op)
-                                     (valid-app-procedure (elaborate-unquoted op)
-                                                          "Bad call syntax")))
+                                     (valid-app-procedure (elaborate-unquoted op))))
               'args
               (partial map elaborate-unquoted)))
 
@@ -82,10 +81,10 @@
    (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
 
 (define (reconstruct-syntax-forms expr)
-  (let ((values (ast-get expr 'value)))
+  (let ((values (ast-list-values expr)))
     (if (and (not (empty? values))
              (is-type? (car values) 'symbol))
-        (case (ast-get (car values) 'value)
+        (case (ast-symbol-value (car values))
           ((if)
            (reconstruct-if expr))
           ((do)
@@ -106,10 +105,10 @@
         (reconstruct-app expr))))
 
 (define (maybe-reconstruct-syntax-forms expr)
-  (let ((values (ast-get expr 'value)))
+  (let ((values (ast-list-values expr)))
     (and (not (empty? values))
          (is-type? (car values) 'symbol)
-         (member (ast-get (car values) 'value) '(unquote unquote-splicing))
+         (member (ast-symbol-value (car values)) '(unquote unquote-splicing))
          (reconstruct-unquote expr))))
 
 (define (reconstruct-if expr)
@@ -119,7 +118,7 @@
                                 (ast-list-nth expr 2)
                                 (ast-list-nth expr 3))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
@@ -127,9 +126,9 @@
 (define (reconstruct-do expr)
   (cond ((ast-matches? expr '(do _ . _))
          (replace expr
-                  (make-do-node (cdr (ast-get expr 'value)))))
+                  (make-do-node (ast-list-cdr expr))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             "Bad `do` syntax, expected at least one expression to follow:")))))
@@ -139,9 +138,9 @@
          (replace expr
                   (make-lambda-node (valid-formals (ast-list-nth expr 1)
                                                    "Bad `lambda` formal arguments syntax")
-                                    (wrap-body (cddr (ast-get expr 'value))))))
+                                    (wrap-body (cdr (ast-list-cdr expr))))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
@@ -150,7 +149,7 @@
   (if (is-type? args 'list)
       (map (lambda (e)
              (valid-symbol e prefix))
-           (ast-get args 'value))
+           (ast-list-values args))
       (list
        (raise-compilation-error
         (get-location args)
@@ -161,13 +160,13 @@
       symbol
       (raise-compilation-error
        (get-location symbol)
-       (format "~a, expected a symbol but got a ~a instead:" prefix (ast-get symbol 'type)))))
+       (format "~a, expected a symbol but got a ~a instead:" prefix (get-type symbol)))))
 
 (define (wrap-body exprs)
   (if (> (length exprs) 1)
       ;; NOTE The body spans all the expressions within it.
-      (at (location (car (get-location (car exprs)))
-                    (cdr (get-location (list-ref exprs (- (length exprs) 1)))))
+      (at (location (get-location-start (car exprs))
+                    (get-location-end (last exprs)))
           (generated
            (make-do-node exprs)))
       (car exprs)))
@@ -176,30 +175,30 @@
   (cond ((ast-matches? expr '(let (_ . _) _ . _))
          (replace expr
                   (make-let-node (valid-bindings (ast-list-nth expr 1) "Bad `let` bindings syntax")
-                                 (wrap-body (cddr (ast-get expr 'value))))))
+                                 (wrap-body (cdr (ast-list-cdr expr))))))
         ((ast-matches? expr '(letrec (_ . _) _ . _))
          (replace expr
                   (make-letrec-node (valid-bindings (ast-list-nth expr 1) "Bad `letrec` bindings syntax")
-                                    (wrap-body (cddr (ast-get expr 'value))))))
+                                    (wrap-body (cdr (ast-list-cdr expr))))))
         ((ast-matches? expr '(_ () _ . _))
          (replace expr
-                  (make-do-node (cddr (ast-get expr 'value)))))
+                  (make-do-node (cdr (ast-list-cdr expr)))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
-                    (ast-get node 'value)))))))
+                    (ast-symbol-value node)))))))
 
 (define (valid-bindings bindings prefix)
   (map (lambda (b)
          (valid-binding b prefix))
-       (ast-get bindings 'value)))
+       (ast-list-values bindings)))
 
 (define (valid-binding binding prefix)
   (if (and (is-type? binding 'list)
-           (equal? (length (ast-get binding 'value)) 2))
-      (cons (valid-symbol (ast-list-nth binding 0) prefix)
+           (equal? (length (ast-list-values binding)) 2))
+      (cons (valid-symbol (ast-list-car binding) prefix)
             (ast-list-nth binding 1))
       (cons (make-error-node)
             (raise-compilation-error
@@ -214,11 +213,11 @@
          (replace expr
                    (make-quasiquote-node (ast-list-nth expr 1))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             (format "Bad `~a` syntax, expected exactly one expression to follow:"
-                    (ast-get node 'value)))))))
+                    (ast-symbol-value node)))))))
 
 (define (reconstruct-unquote expr)
   (cond ((ast-matches? expr ',_)
@@ -228,18 +227,18 @@
          (replace expr
                   (make-unquote-splicing-node (ast-list-nth expr 1))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             (format "Bad `~a` syntax, expected exactly one expression to follow:"
-                    (ast-get node 'value)))))))
+                    (ast-symbol-value node)))))))
 
 (define (reconstruct-def expr)
   (cond ((ast-matches? expr '(define (_ . _) _ . _))
          (let* ((func-def (ast-list-nth expr 1))
-                (name (ast-list-nth func-def 0))
-                (formals (cdr (ast-get func-def 'value)))
-                (body (cddr (ast-get expr 'value))))
+                (name (ast-list-car func-def))
+                (formals (ast-list-cdr func-def))
+                (body (cdr (ast-list-cdr expr))))
            (replace expr
                     (make-def-node (valid-symbol name "Bad `define` syntax")
                                    (at (get-location expr)
@@ -255,7 +254,7 @@
                                                "Bad `define` syntax")
                                  (ast-list-nth expr 2))))
         (else
-         (let ((node (ast-list-nth expr 0)))
+         (let ((node (ast-list-car expr)))
            (raise-compilation-error
             (get-location node)
             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
@@ -263,17 +262,17 @@
 (define (reconstruct-app expr)
   (cond ((ast-matches? expr '(_ . _))
          (replace expr
-                  (make-app-node (ast-list-nth expr 0)
-                                 (cdr (ast-get expr 'value)))))
+                  (make-app-node (ast-list-car expr)
+                                 (ast-list-cdr expr))))
         (else
          (raise-compilation-error
           (get-location expr)
           "Bad call syntax, expected at least one expression within the call:"))))
 
-(define (valid-app-procedure op prefix)
+(define (valid-app-procedure op)
   (let ((type (get-type op)))
     (if (member type '(symbol if do lambda let letrec app primop-app))
         op
         (raise-compilation-error
          (get-location op)
-         (format "~a, expected an expression that evaluates to a procedure but got a ~a instead:" prefix type)))))
+         (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:" type)))))
