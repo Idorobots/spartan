@@ -1,6 +1,5 @@
 ;; Pseudo macro-expander for convenience
 
-(load "compiler/qq.scm")
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
 
@@ -32,12 +31,8 @@
         (cons 'shift shift-macro)
         (cons 'reset reset-macro)
         ;; FIXME These should be moved to semantic elaboration phase.
-        (cons 'quasiquote quasiquote-macro)
         (cons 'structure structure-macro)
         (cons 'module module-macro)))
-
-(define (quasiquote-macro expr)
-  (quasiquote-expand (cadr expr)))
 
 (define (when-macro expr)
   `(if ,(conditional-predicate expr)

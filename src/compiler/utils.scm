@@ -16,6 +16,11 @@
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
 
+(define (concat a b)
+  (if (empty? a)
+      b
+      (cons (car a) (concat (cdr a) b))))
+
 ;; Mutable references:
 (define (ref x)
   (make-vector 1 x))

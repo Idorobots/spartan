@@ -11,6 +11,7 @@
   (quasiquote foo bar baz)
   (unquote 23 4)
   (unquote-splicing test test test)
+  (quasiquote (unquote-splicing foo))
   (if)
   (if cond)
   (if cond then)

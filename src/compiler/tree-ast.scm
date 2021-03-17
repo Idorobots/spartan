@@ -28,9 +28,15 @@
 (define (make-number-node value)
   (ast-node 'type 'number 'value value))
 
+(define (number-node? node)
+  (is-type? node 'number))
+
 ;; Symbol
 (define (make-symbol-node value)
   (ast-node 'type 'symbol 'value value))
+
+(define (symbol-node? node)
+  (is-type? node 'symbol))
 
 (define (ast-symbol-value node)
   (ast-get node 'value))
@@ -39,25 +45,15 @@
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
 
+(define (string-node? node)
+  (is-type? node 'string))
+
 ;; List
 (define (make-list-node values)
   (ast-node 'type 'list 'value values))
 
-;; If
-(define (make-if-node condition then else)
-  (ast-node 'type 'if 'condition condition 'then then 'else else))
-
-;; Do
-(define (make-do-node exprs)
-  (ast-node 'type 'do 'exprs exprs))
-
-;; Lambda
-(define (make-lambda-node formals body)
-  (ast-node 'type 'lambda 'formals formals 'body body))
-
-;; Let
-(define (make-let-node bindings body)
-  (ast-node 'type 'let 'bindings bindings 'body body))
+(define (list-node? node)
+  (is-type? node 'list))
 
 (define (ast-list-nth expr nth)
   (list-ref (ast-get expr 'value) nth))
@@ -71,37 +67,95 @@
 (define (ast-list-cdr expr)
   (cdr (ast-get expr 'value)))
 
+;; If
+(define (make-if-node condition then else)
+  (ast-node 'type 'if 'condition condition 'then then 'else else))
+
+(define (if-node? node)
+  (is-type? node 'if))
+
+;; Do
+(define (make-do-node exprs)
+  (ast-node 'type 'do 'exprs exprs))
+
+(define (do-node? node)
+  (is-type? node 'do))
+
+;; Lambda
+(define (make-lambda-node formals body)
+  (ast-node 'type 'lambda 'formals formals 'body body))
+
+(define (lambda-node? node)
+  (is-type? node 'lambda))
+
+;; Let
+(define (make-let-node bindings body)
+  (ast-node 'type 'let 'bindings bindings 'body body))
+
+(define (let-node? node)
+  (is-type? node 'let))
+
 ;; Letrec
 (define (make-letrec-node bindings body)
   (ast-node 'type 'letrec 'bindings bindings 'body body))
+
+(define (letrec-node? node)
+  (is-type? node 'letrec))
 
 ;; Quotation
 (define (make-quote-node value)
   (ast-node 'type 'quote 'value value))
 
+(define (quote-node? node)
+  (is-type? node 'quote))
+
 (define (make-quasiquote-node value)
   (ast-node 'type 'quasiquote 'value value))
+
+(define (quasiquote-node? node)
+  (is-type? node 'quasiquote))
 
 (define (make-unquote-node value)
   (ast-node 'type 'unquote 'value value))
 
+(define (unquote-node? node)
+  (is-type? node 'unquote))
+
 (define (make-unquote-splicing-node value)
   (ast-node 'type 'unquote-splicing 'value value))
+
+(define (unquote-splicing-node? node)
+  (is-type? node 'unquote-splicing))
+
+(define (ast-quoted-expr node)
+  (ast-get node 'value))
 
 ;; Definition
 (define (make-def-node name value)
   (ast-node 'type 'def 'name name 'value value))
 
+(define (def-node? node)
+  (is-type? node 'def))
+
 ;; Application
 (define (make-app-node op args)
   (ast-node 'type 'app 'op op 'args args))
 
+(define (app-node? node)
+  (is-type? node 'app))
+
 (define (make-primop-app-node op args)
   (ast-node 'type 'primop-app 'op op 'args args))
+
+(define (primop-app-node? node)
+  (is-type? node 'primop-app))
 
 ;; Error within parse tree
 (define (make-error-node)
   (ast-node 'type '<error> 'value "<error>"))
+
+(define (error-node? node)
+  (is-type? node '<error>))
 
 ;; AST utils
 
