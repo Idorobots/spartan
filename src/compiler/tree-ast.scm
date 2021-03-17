@@ -243,30 +243,6 @@
            (else (error "Unexpected expression: " expr)))))
       (compiler-bug)))
 
-(define (ast-matches? expr pattern)
-  (cond ((and (or (empty? pattern) (pair? pattern))
-              (is-type? expr 'list))
-         (ast-list-matches? (ast-get expr 'value) pattern))
-        ((equal? pattern '_)
-         #t)
-        ((and (symbol? pattern) (is-type? expr 'symbol))
-         (equal? pattern (ast-get expr 'value)))
-        (else
-         #f)))
-
-(define (ast-list-matches? subexprs pattern)
-  (cond ((and (empty? subexprs)
-              (empty? pattern))
-         #t)
-        ((equal? pattern '_)
-         #t)
-        ((and (pair? pattern)
-              (pair? subexprs))
-         (and (ast-matches? (car subexprs) (car pattern))
-              (ast-list-matches? (cdr subexprs) (cdr pattern))))
-        (else
-         #f)))
-
 (define (ast->plain ast)
   (map-ast id
            (lambda (expr)
@@ -296,3 +272,97 @@
                ((app primop-app) (list* (ast-get expr 'op) (ast-get expr 'args)))
                (else (error "Unexpected expression: " expr))))
            ast))
+
+;; AST destructuring
+
+(define-syntax ast-case-extract-vars
+  (syntax-rules (unquote get-var)
+    ((ast-case-extract-vars bound body)
+     body)
+    ((ast-case-extract-vars bound body (unquote var) rest ...)
+     (let ((var (get-var bound 'var)))
+       (ast-case-extract-vars bound body rest ...)))
+    ((ast-case-extract-vars bound body (quote symbol) rest ...)
+     (ast-case-extract-vars bound body rest ...))
+    ((ast-case-extract-vars bound body (parts ...) rest ...)
+     (ast-case-extract-vars bound body parts ... rest ...))
+    ((ast-case-extract-vars bound body unquote var rest ...)
+     (let ((var (get-var bound 'var)))
+       (ast-case-extract-vars bound body rest ...)))
+    ((ast-case-extract-vars bound body symbol rest ...)
+     (ast-case-extract-vars bound body rest ...))))
+
+(define-syntax ast-case-match-rule
+  (syntax-rules (ast-matches?2)
+    ((ast-case-match-rule expr (pattern body ...) rest)
+     (let ((bound (ast-matches? expr 'pattern)))
+       (if bound
+           (ast-case-extract-vars bound
+                                  (begin body ...)
+                                  pattern)
+           rest)))))
+
+(define-syntax ast-case
+  (syntax-rules (else)
+    ((ast-case expr (else v))
+     v)
+    ((ast-case expr rule rest ...)
+     (let ((tmp expr))
+       (ast-case-match-rule tmp
+                            rule
+                            (ast-case tmp rest ...))))))
+
+(define (ast-matches? expr pattern)
+  (cond ((equal? pattern '_)
+         (empty-bindings))
+        ((and (pair? pattern)
+              (equal? (car pattern) 'unquote))
+         (bindings (cadr pattern) expr))
+        ((and (pair? pattern)
+              (equal? (car pattern) 'quote))
+         (case (get-type expr)
+           ((symbol) (and (is-type? expr 'symbol)
+                          (equal? (cadr pattern) (ast-symbol-value expr))
+                          (empty-bindings)))
+           (else #f)))
+        ((and (empty? pattern)
+              (is-type? expr 'list)
+              (empty? (ast-list-values expr)))
+         (empty-bindings))
+        ((pair? pattern)
+         (case (car pattern)
+           ((list) (ast-list-matches? (ast-list-values expr) (cdr pattern)))
+           (else #f)))
+        (else #f)))
+
+(define (ast-list-matches? exprs pattern)
+  (cond ((and (empty? exprs)
+              (empty? pattern))
+         (empty-bindings))
+        ((equal? pattern '_)
+         (empty-bindings))
+        ((and (pair? pattern)
+              (equal? (car pattern) 'unquote))
+         (bindings (cadr pattern) exprs))
+        ((and (pair? exprs)
+              (pair? pattern))
+         (unify-bindings (ast-matches? (car exprs) (car pattern))
+                         (ast-list-matches? (cdr exprs) (cdr pattern))))
+        (else
+         #f)))
+
+(define (empty-bindings)
+  (hash))
+
+(define (bindings . vars)
+  (apply hash vars))
+
+(define (unify-bindings a b)
+  (if (or (false? a)
+          (false? b))
+      #f
+      (make-immutable-hash (append (hash->list a)
+                                   (hash->list b)))))
+
+(define (get-var vars var)
+  (hash-ref vars var))
