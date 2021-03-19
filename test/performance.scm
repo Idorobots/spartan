@@ -3,7 +3,7 @@
 (describe
  "performance"
  (it "fibonacci"
-     (test-perf "../test/foof/fibonacci.foo.perf" 1.5
+     (test-perf "../test/foof/fibonacci.foo.perf" 2
                 (collect-garbage 'major)
                 (let ((time (time-execution
                              (run-test-file "../test/foof/fibonacci.foo"))))
@@ -13,7 +13,7 @@
 
  (it "parser"
      (test-perf
-      "../test/compiler/parser.scm.perf" 2
+      "../test/compiler/parser.scm.perf" 2.5
       (let ((inputs (map (lambda (reps)
                            (let* ((expr (slurp "../test/foof/coroutines2.foo")))
                              (format "(begin ~a)"
