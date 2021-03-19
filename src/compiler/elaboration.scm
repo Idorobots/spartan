@@ -164,15 +164,6 @@
        (get-location symbol)
        (format "~a, expected a symbol but got a ~a instead:" prefix (get-type symbol)))))
 
-(define (wrap-body exprs)
-  (if (> (length exprs) 1)
-      ;; NOTE The body spans all the expressions within it.
-      (at (location (get-location-start (car exprs))
-                    (get-location-end (last exprs)))
-          (generated
-           (make-do-node exprs)))
-      (car exprs)))
-
 (define (reconstruct-let expr)
   (ast-case expr
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)

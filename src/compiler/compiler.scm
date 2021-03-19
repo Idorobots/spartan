@@ -18,13 +18,14 @@
   (foldl (lambda (phase expr)
            (phase expr))
          (env-set env
-                  'errors '())
+                  'errors '()
+                  'macros (make-builtin-macros))
          (list parse
+               macro-expand
                elaborate
                quasiquote-expand
                report-errors
                adapt-ast
-               (flip macro-expand (make-builtin-macros))
                letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))

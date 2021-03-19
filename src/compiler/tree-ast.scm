@@ -67,6 +67,9 @@
 (define (ast-list-cdr expr)
   (cdr (ast-get expr 'value)))
 
+(define (ast-list-length expr)
+  (length (ast-list-values expr)))
+
 ;; If
 (define (make-if-node condition then else)
   (ast-node 'type 'if 'condition condition 'then then 'else else))
@@ -204,43 +207,45 @@
   (equal? (get-type node)
           type))
 
+(define (walk-ast f expr)
+  (let ((mf (partial map f)))
+    (case (get-type expr)
+      ((number symbol string) expr)
+      ((if) (foldl (lambda (field acc)
+                     (ast-update acc field f))
+                   expr
+                   '(condition then else)))
+      ((do) (ast-update expr 'exprs mf))
+      ((lambda) (ast-update (ast-update expr 'formals mf)
+                            'body
+                            f))
+      ((let) (ast-update (ast-update expr
+                                     'bindings
+                                     (partial map
+                                              (lambda (b)
+                                                (cons (f (car b))
+                                                      (f (cdr b))))))
+                         'body
+                         f))
+      ((letrec) (ast-update (ast-update expr
+                                        'bindings
+                                        (partial map
+                                                 (lambda (b)
+                                                   (cons (f (car b))
+                                                         (f (cdr b))))))
+                            'body
+                            f))
+      ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value f))
+      ((def) (ast-update (ast-update expr 'name f) 'value f))
+      ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
+      ((list) (ast-update expr 'value mf))
+      ((<error>) expr)
+      (else (error "Unexpected expression: " expr)))))
+
 (define (map-ast pre post expr)
   (if (ast-node? expr)
-      (let ((m (partial map-ast pre post))
-            (expr (pre expr)))
-        (post
-         (case (get-type expr)
-           ((number symbol string) expr)
-           ((if) (foldl (lambda (field acc)
-                          (ast-update acc field m))
-                        expr
-                        '(condition then else)))
-           ((do) (ast-update expr 'exprs (partial map m)))
-           ((lambda) (ast-update (ast-update expr 'formals (partial map m))
-                                 'body
-                                 m))
-           ((let) (ast-update (ast-update expr
-                                          'bindings
-                                          (partial map
-                                                   (lambda (b)
-                                                     (cons (m (car b))
-                                                           (m (cdr b))))))
-                              'body
-                              m))
-           ((letrec) (ast-update (ast-update expr
-                                             'bindings
-                                             (partial map
-                                                      (lambda (b)
-                                                        (cons (m (car b))
-                                                              (m (cdr b))))))
-                                 'body
-                                 m))
-           ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value m))
-           ((def) (ast-update (ast-update expr 'name m) 'value m))
-           ((app primop-app) (ast-update (ast-update expr 'op m) 'args (partial map m)))
-           ((list) (ast-update expr 'value (partial map m)))
-           ((<error>) expr)
-           (else (error "Unexpected expression: " expr)))))
+      (let ((m (partial map-ast pre post)))
+        (post (walk-ast m (pre expr))))
       (compiler-bug)))
 
 (define (ast->plain ast)

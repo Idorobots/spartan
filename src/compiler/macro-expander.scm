@@ -1,22 +1,43 @@
 ;; Pseudo macro-expander for convenience
 
-(load "compiler/ast.scm")
 (load "compiler/utils.scm")
+(load "compiler/env.scm")
+(load "compiler/tree-ast.scm")
 
-;; FIXME Implement in terms of AST walk.
-(define (macro-expand expr macros)
-  (if (and (pair? expr) (not (quote? expr)))
-      (let ((r ((macro-expander (car expr) macros) expr)))
-        (if (pair? r)
-            (map (flip macro-expand macros) r)
-            (macro-expand r macros)))
-      expr))
+(define (macro-expand env)
+  (let ((result (collect-errors (env-get env 'errors)
+                                (lambda ()
+                                  (expand-macros (env-get env 'ast)
+                                                 (env-get env 'macros))))))
+    (env-set env
+             'ast (car result)
+             'errors (cadr result))))
 
-(define (macro-expander name macros)
-  (let ((macro (assoc name macros)))
+(define (expand-macros expr macros)
+  (walk-ast (lambda (subexpr)
+              (if (is-quoted? subexpr)
+                  subexpr
+                  (expand-macros subexpr macros)))
+            (if (and (is-type? expr 'list)
+                     (> (ast-list-length expr) 0)
+                     (is-type? (ast-list-car expr) 'symbol))
+                (expand-macro expr macros)
+                expr)))
+
+(define (is-quoted? expr)
+  (case (get-type expr)
+    ((quote quasiquote) #t)
+    ((list) (and (> (ast-list-length expr) 0)
+                 (is-type? (ast-list-car expr) 'symbol)
+                 (equal? (ast-symbol-value (ast-list-car expr)) 'quote)))
+    (else #f)))
+
+(define (expand-macro expr macros)
+  (let ((macro (assoc (ast-symbol-value (ast-list-car expr)) macros)))
     (if macro
-        (cdr macro)
-        id)))
+        (expand-macros ((cdr macro) expr)
+                       macros)
+        expr)))
 
 (define (make-builtin-macros)
   (list (cons 'when when-macro)
@@ -24,7 +45,6 @@
         (cons 'cond cond-macro)
         (cons 'and and-macro)
         (cons 'or or-macro)
-        (cons 'let let-macro)
         (cons 'let* let*-macro)
         (cons 'letcc letcc-macro)
         (cons 'handle handle-macro)
@@ -35,138 +55,229 @@
         (cons 'module module-macro)))
 
 (define (when-macro expr)
-  `(if ,(conditional-predicate expr)
-       (do ,@(conditional-body expr))
-       nil))
+  (ast-case expr
+   ((list 'when ,cond ,first . ,rest)
+    (replace expr
+             (make-if-node cond
+                           (wrap-body (cons first rest))
+                           (at (get-location expr)
+                               (make-symbol-node 'nil)))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `when` syntax, expected a condition and a body to follow:")))))
 
-(define (conditional-predicate expr)
-  (cadr expr))
-
-(define (conditional-body expr)
-  (cddr expr))
+(define (wrap-body exprs)
+  (if (> (length exprs) 1)
+      ;; NOTE The body spans all the expressions within it.
+      (at (location (get-location-start (car exprs))
+                    (get-location-end (last exprs)))
+          (generated
+           (make-do-node exprs)))
+      (car exprs)))
 
 (define (unless-macro expr)
-  `(if ,(conditional-predicate expr)
-       nil
-       (do ,@(conditional-body expr))))
+  (ast-case expr
+   ((list 'unless ,cond ,first . ,rest)
+    (replace expr
+             (make-if-node cond
+                           (at (get-location expr)
+                               (make-symbol-node 'nil))
+                           (wrap-body (cons first rest)))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `unless` syntax, expected a condition and a body to follow:")))))
 
 (define (cond-macro expr)
-  (build-cond (cond-clauses expr)))
-
-(define (build-cond clauses)
-  (if (empty? clauses)
-      'nil
-      `(if ,(clause-predicate (first-clause clauses))
-           (do ,@(clause-body (first-clause clauses)))
-           ,(build-cond (rest-clauses clauses)))))
-
-(define (cond-clauses expr)
-  (cdr expr))
-
-(define (clause-predicate clause)
-  (car clause))
-
-(define (clause-body clause)
-  (cdr clause))
+  (ast-case expr
+   ((list 'cond (list 'else ,else-first . ,else-rest))
+    (wrap-body (cons else-first else-rest)))
+   ((list 'cond (list ,cond ,branch-first . ,branch-rest) . ,rest)
+    (replace expr
+             (make-if-node cond
+                           (wrap-body (cons branch-first branch-rest))
+                           (at (get-location expr)
+                               (make-list-node
+                                (cons (at (get-location expr)
+                                          (make-symbol-node 'cond))
+                                      res))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
 
 (define (and-macro expr)
-  (build-and (short-circuit-clauses expr)))
-
-(define (build-and clauses)
-  (if (empty? (rest-clauses clauses))
-      (first-clause clauses)
-      `(if ,(first-clause clauses)
-           ,(build-and (rest-clauses clauses))
-           false)))
-
-(define (short-circuit-clauses expr)
-  (cdr expr))
-
-(define (first-clause clauses)
-  (car clauses))
-
-(define (rest-clauses clauses)
-  (cdr clauses))
+  (ast-case expr
+   ((list 'and ,last)
+    last)
+   ((list ,and ,first . ,rest)
+    (replace expr
+             (make-if-node first
+                           (at (get-location expr)
+                               (make-list-node
+                                (cons and rest)))
+                           (at (get-location expr)
+                               (make-symbol-node 'false)))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `and` syntax, expected a list of expressions to follow:")))))
 
 (define (or-macro expr)
-  (build-or (short-circuit-clauses expr)))
-
-(define (build-or clauses)
-  (if (empty? (rest-clauses clauses))
-      (first-clause clauses)
-      `(if ,(first-clause clauses)
-           true
-           ,(build-or (rest-clauses clauses)))))
-
-(define (let-macro expr)
-  (let ((args (map car (let-bindings expr)))
-        (vals (map cadr (let-bindings expr)))
-        (body (let-body expr)))
-    `((lambda (,@args) ,body)
-      ,@vals)))
+  (ast-case expr
+   ((list 'or ,last)
+    last)
+   ((list ,or ,first . ,rest)
+    (replace expr
+             (make-if-node first
+                           (at (get-location expr)
+                               (make-symbol-node 'true))
+                           (at (get-location expr)
+                               (make-list-node
+                                (cons or rest))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `or` syntax, expected a list of expressions to follow:")))))
 
 (define (let*-macro expr)
-  (foldr (lambda (b acc)
-           `((lambda (,(car b))
-               ,acc)
-             ,(cadr b)))
-         (let-body expr)
-         (let-bindings expr)))
+  (ast-case expr
+   ((list 'let* () ,first . ,rest)
+    (wrap-body (cons first rest)))
+   ((list 'let* (list ,first-binding . ,rest-bindings) . ,body)
+    (replace expr
+             (make-let-node (list (apply cons (ast-list-values first-binding)))
+                           (at (get-location expr)
+                               (make-list-node
+                                (list* (at (get-location expr)
+                                           (make-symbol-node 'let*))
+                                       (at (get-location expr) ;; FIXME Could use a better location.
+                                           (make-list-node rest-bindings))
+                                       body))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
 
 (define (letcc-macro expr)
-  `(call/current-continuation
-    (lambda (,(letcc-cont expr))
-      (do ,@(letcc-body expr)))))
-
-(define (letcc-cont expr)
-  (cadr expr))
-
-(define (letcc-body expr)
-  (cddr expr))
+  (ast-case expr
+   ((list 'letcc ,name ,first . ,rest)
+    (replace expr
+             (make-app-node (at (get-location expr)
+                                (make-symbol-node 'call/current-continuation))
+                            (list (at (get-location expr)
+                                      (make-lambda-node (list name)
+                                                        (wrap-body (cons first rest))))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
 
 (define (shift-macro expr)
-  `(call/shift
-    (lambda (,(shift-cont expr))
-      ,(shift-expr expr))))
-
-(define (shift-cont expr)
-  (cadr expr))
-
-(define (shift-expr expr)
-  (caddr expr))
+  (ast-case expr
+   ((list 'shift ,name ,first . ,rest)
+    (replace expr
+             (make-app-node (at (get-location expr)
+                                (make-symbol-node 'call/shift))
+                            (list (at (get-location expr)
+                                      (make-lambda-node (list name)
+                                                        (wrap-body (cons first rest))))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `shift` syntax, expected an identifier and a body to follow:")))))
 
 (define (reset-macro expr)
-  `(call/reset
-    (lambda ()
-      ,(reset-expr expr))))
-
-(define (reset-expr expr)
-  (cadr expr))
+  (ast-case expr
+   ((list 'reset ,subexpr)
+    (replace expr
+             (make-app-node (at (get-location expr)
+                                (make-symbol-node 'call/reset))
+                            (list (at (get-location expr)
+                                      (make-lambda-node '()
+                                                        subexpr))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `reset` syntax, expected exactly one expression to follow:")))))
 
 (define (handle-macro expr)
-  `(call/handler
-    ,(handle-handler expr)
-    (lambda ()
-      ,(handle-expr expr))))
-
-(define (handle-handler expr)
-  (caddr expr))
-
-(define (handle-expr expr)
-  (cadr expr))
+  (ast-case expr
+   ((list 'handle ,subexpr ,handler)
+    (replace expr
+             (make-app-node (at (get-location expr)
+                                (make-symbol-node 'call/handler))
+                            (list handler
+                                  (at (get-location expr)
+                                      (make-lambda-node '()
+                                                        subexpr))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `handle` syntax, expected exactly two expressions to follow:")))))
 
 (define (structure-macro expr)
-  (let* ((lambdas (map (lambda (def)
-                         `(,(define-name def)
-                           ,(define-value def)))
-                       (structure-defs expr)))
-         (names (map car lambdas)))
-    `(letrec (,@lambdas)
-       (&make-structure ,@(map (lambda (n)
-                                 `(&structure-binding ',n ,n))
-                               names)))))
+  (ast-case expr
+   ((list 'structure . ,defs)
+    (let ((bindings (map extract-definition defs)))
+      (replace expr
+             (make-letrec-node bindings
+                               (at (get-location expr)
+                                   (make-primop-app-node
+                                    (at (get-location expr)
+                                        (make-symbol-node '&make-structure))
+                                    (map (lambda (n)
+                                           (at (get-location n)
+                                               (make-primop-app-node
+                                                (at (get-location n)
+                                                    (make-symbol-node '&structure-binding))
+                                                (list (at (get-location n)
+                                                          (make-quote-node n))
+                                                      n))))
+                                         (map car bindings))))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `structure` syntax, expected a module specification followed by a body:")))))
+
+(define (extract-definition expr)
+  (ast-case expr
+   ((list 'define (list ,name . ,formals) . ,body)
+    (cons name
+          (replace expr
+                   (make-lambda-node formals
+                                     (wrap-body body)))))
+   (else
+    (raise-compilation-error
+     (get-location expr)
+     "Bad `structure` syntax, expected a definition:"))))
 
 (define (module-macro expr)
-  `(define ,(module-name expr)
-     (lambda ,(module-deps expr)
-       (structure ,@(module-body expr)))))
+  (ast-case expr
+   ((list 'module (list ,name . ,deps) . ,body)
+    (replace expr
+             (make-def-node name
+                            (at (get-location expr)
+                                (make-lambda-node deps
+                                                  (at (get-location expr)
+                                                      (make-list-node
+                                                       (cons (at (get-location expr)
+                                                                 (make-symbol-node 'structure))
+                                                             body))))))))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       (get-location node)
+       "Bad `module` syntax, expected a module specification followed by a body:")))))
