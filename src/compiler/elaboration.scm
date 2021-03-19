@@ -147,6 +147,15 @@
        (get-location node)
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
 
+(define (wrap-body exprs)
+  (if (> (length exprs) 1)
+      ;; NOTE The body spans all the expressions within it.
+      (at (location (get-location-start (car exprs))
+                    (get-location-end (last exprs)))
+          (generated
+           (make-do-node exprs)))
+      (car exprs)))
+
 (define (valid-formals args prefix)
   (if (is-type? args 'list)
       (map (lambda (e)

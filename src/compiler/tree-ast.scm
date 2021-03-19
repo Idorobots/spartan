@@ -140,6 +140,12 @@
 (define (def-node? node)
   (is-type? node 'def))
 
+(define (ast-def-name node)
+  (ast-get node 'name))
+
+(define (ast-def-value node)
+  (ast-get node 'value))
+
 ;; Application
 (define (make-app-node op args)
   (ast-node 'type 'app 'op op 'args args))
