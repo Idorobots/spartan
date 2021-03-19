@@ -20,9 +20,9 @@ See [here](test/foof) for some usage examples.
 The compiler is far from being useful, it doesn't even have a code generator yet, and it definitely doesn't optimize anything. It loosely follows the nanopass framework, with currently implemented passes being:
 
 - parsing,
-- syntax tree validation,
-- syntax desugaring,
 - built-in macro expansion,
+- syntax tree validation,
+- quasiquote expansion,
 - `letrec` conversion,
 - normalization,
 - continuation passing style transformation,
