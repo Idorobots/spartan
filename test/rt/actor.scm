@@ -22,7 +22,7 @@
 
  (it "Can retrieve own pid."
      (gensym-reset!)
-     (assert (run '(self)) 'pid1))
+     (assert (run '(self)) 'pid3))
 
  (ignore "Can retrieve current node."
           ;; There is no notion of a node yet.

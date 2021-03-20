@@ -1,0 +1,257 @@
+../test/foof/errors/syntax-forms.foo(2,3): Bad `quote` syntax, expected exactly one expression to follow:
+2 |  (quote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(3,3): Bad `quasiquote` syntax, expected exactly one expression to follow:
+3 |  (quasiquote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(4,3): Bad `unquote` syntax, expected exactly one expression to follow:
+4 |  (unquote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(4,3): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
+4 |  (unquote)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(5,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+5 |  (unquote-splicing)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(5,3): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
+5 |  (unquote-splicing)
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(8,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+8 |  (unquote 23)
+     ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(9,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+9 |  (unquote-splicing 23)
+     ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(10,3): Bad `quote` syntax, expected exactly one expression to follow:
+10 |  (quote 23 5)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(11,3): Bad `quasiquote` syntax, expected exactly one expression to follow:
+11 |  (quasiquote foo bar baz)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(12,3): Bad `unquote` syntax, expected exactly one expression to follow:
+12 |  (unquote 23 4)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(12,3): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
+12 |  (unquote 23 4)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(13,3): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+13 |  (unquote-splicing test test test)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(13,3): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
+13 |  (unquote-splicing test test test)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(14,14): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
+14 |  (quasiquote (unquote-splicing foo))
+                  ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(15,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+15 |  (if)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(16,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+16 |  (if cond)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(17,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+17 |  (if cond then)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(19,3): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+19 |  (if cond then else whats going on ???)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(20,3): Bad `do` syntax, expected at least one expression to follow:
+20 |  (do)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(22,3): Bad `let` syntax, expected a list of bindings followed by a body:
+22 |  (let)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(23,3): Bad `let` syntax, expected a list of bindings followed by a body:
+23 |  (let x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(24,3): Bad `let` syntax, expected a list of bindings followed by a body:
+24 |  (let ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(26,3): Bad `let` syntax, expected a list of bindings followed by a body:
+26 |  (let x 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(27,8): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+27 |  (let (x) 23)
+            ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(28,9): Bad `let` bindings syntax, expected a symbol but got a number instead:
+28 |  (let ((23 x)) 23)
+             ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(29,8): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+29 |  (let (()) 23)
+            ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(31,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+31 |  (let ((x 23) y) x)
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(32,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+32 |  (let ((x 23) y z) x)
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(32,17): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+32 |  (let ((x 23) y z) x)
+                     ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(33,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+33 |  (letrec)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(34,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+34 |  (letrec x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(35,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+35 |  (letrec ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(37,3): Bad `letrec` syntax, expected a list of bindings followed by a body:
+37 |  (letrec x 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(38,11): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+38 |  (letrec (x) 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(39,12): Bad `letrec` bindings syntax, expected a symbol but got a number instead:
+39 |  (letrec ((23 x)) 23)
+                ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(40,11): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+40 |  (letrec (()) 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(42,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+42 |  (letrec ((x 23) y) x)
+                      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(43,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+43 |  (letrec ((x 23) y z) x)
+                      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(43,20): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+43 |  (letrec ((x 23) y z) x)
+                        ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(44,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+44 |  (lambda)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(45,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+45 |  (lambda x)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(46,3): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+46 |  (lambda ())
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(47,10): Bad `lambda` formal arguments syntax, expected a list of identifiers:
+47 |  (lambda x 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(50,11): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+50 |  (lambda ((x y)) 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(51,11): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+51 |  (lambda ((x) (y)) 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(51,15): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+51 |  (lambda ((x) (y)) 23)
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(52,11): Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:
+52 |  (lambda (23) 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(53,11): Bad `lambda` formal arguments syntax, expected a symbol but got a string instead:
+53 |  (lambda ("some arg I dunno might delete") 23)
+               ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(54,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+54 |  (define)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(55,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+55 |  (define foo)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(56,10): Bad `define` syntax, expected a symbol but got a number instead:
+56 |  (define 23 foo)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(58,10): Bad `define` syntax, expected a symbol but got a list instead:
+58 |  (define () 23)
+              ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(61,3): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+61 |  (define (foo))
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(62,15): Bad `define` function signature syntax, expected a symbol but got a number instead:
+62 |  (define (foo 23) x)
+                   ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(63,2): Bad call syntax, expected at least one expression within the call:
+63 |  ()
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(66,3): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+66 |  (23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(67,4): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+67 |  ((23))
+        ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(69,3): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
+69 |  ((define (foo x) x) 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(72,3): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
+72 |  ("some function")
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(73,3): Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:
+73 |  ('foo 23)
+       ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(77,2): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+77 |  ,z
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(78,2): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+78 |  ,@wat
+      ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(82,3): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
+82 |  `,@wat)
+       ^~~~~~
+
+Compilation aborted due to 64 errors.

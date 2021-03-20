@@ -2,20 +2,58 @@
 
 (load "compiler/utils.scm")
 (load "compiler/peggen.scm")
+(load "compiler/env.scm")
+(load "compiler/errors.scm")
+(load "compiler/tree-ast.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
+ '(Program
+   ;; FIXME This is pretty awkward, since the "full program" is still a single expression and the rest
+   ;; FIXME of the compiler still expects to receive that instead of a list of top level expressions.
+   ((? Expression) (* (/ UnmatchedParen Expression)) Spacing EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (expr (car matching))
+            (trailing (cadr matching))
+            (start (match-start result))
+            (end (match-end result)))
+       (matches (cond ((empty? trailing)
+                       expr)
+                      ((empty? expr)
+                       (at (location start end)
+                           (make-do-node trailing)))
+                      (else
+                       (at (location start end)
+                           (make-do-node (cons expr trailing)))))
+                start
+                end))))
+
  '(Expression
    (/ List Atom String Quote))
+
+ '(UnmatchedParen
+   (Spacing ")")
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unmatched `)`, expected an opening `(` to come before:")
+                start
+                end))))
+
  '(Quote
-   (/ PlainQuote Quasiquote UnquoteSplicing Unquote))
+   (/ PlainQuote Quasiquote UnquoteSplicing Unquote UnterminatedQuote))
  '(PlainQuote
    (Spacing "'" Expression)
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'quote (caddr matching))
+       (matches (at (location start end)
+                    (make-quote-node (caddr matching)))
                 start
                 end))))
  '(Quasiquote
@@ -24,7 +62,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'quasiquote (caddr matching))
+       (matches (at (location start end)
+                    (make-quasiquote-node (caddr matching)))
                 start
                 end))))
  '(Unquote
@@ -33,7 +72,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'unquote (caddr matching))
+       (matches (at (location start end)
+                    (make-unquote-node (caddr matching)))
                 start
                 end))))
  '(UnquoteSplicing
@@ -42,49 +82,130 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (list 'unquote-splicing (caddr matching))
+       (matches (at (location start end)
+                    (make-unquote-splicing-node (caddr matching)))
                 start
                 end))))
+ '(UnterminatedQuote
+   (Spacing (/ "'" "`" ",@" ","))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 (format "No expression following `~a`:"
+                         (cadr matching)))
+                start
+                end))))
+
  '(String
-   (Spacing (& "\"") "\"[^\"]*\"")
+   (/ ProperString UnterminatedString))
+ '(ProperString
+   (Spacing "\"" StringContents "\"")
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (substring content 1 (- (string-length content) 1))
+       (matches (at (location start end)
+                    (make-string-node content))
                 start
                 end))))
+ '(UnterminatedString
+   (Spacing "\"" StringContents EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result))
+            (content (caddr matching)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unterminated string literal, expected a closing `\"` to follow:")
+                start
+                end))))
+ '(StringContents
+   "[^\"]*")
+
  '(List
-   (Spacing "(" (* Expression) Spacing ")")
+   (/ ProperList UnterminatedList))
+ '(ProperList
+   (Spacing "(" ListContents Spacing ")")
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (caddr matching)
+       (matches (at (location start end)
+                    (make-list-node (caddr matching)))
                 start
                 end))))
+ '(UnterminatedList
+   (Spacing "(" ListContents Spacing EOF)
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 "Unterminated list, expected a closing `)` to follow:")
+                start
+                end))))
+ '(ListContents
+   (* Expression))
+
  '(Atom
-   (/ Symbol Number))
+   (/ Number Symbol))
+
  '(Number
-   (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
+   (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
    (lambda (input result)
      (let* ((matching (match-match result))
             (spacing-start (match-start result))
             (start (car matching))
             (end (match-end result)))
-       (matches (string->number (cadr matching))
+       (matches (at (location start end)
+                    (make-number-node (string->number (cadr matching))))
                 start
                 end))))
+
  '(Symbol
-   (Spacing (! Number) "[^\\(\\)\"'`,@; \t\v\r\n]+")
+   (/ PlainSymbol StructureRef InvalidSymbol))
+ '(PlainSymbol
+   (Spacing SymbolContents (! "."))
    (lambda (input result)
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (string->symbol (caddr matching))
+       (matches (at (location start end)
+                    (make-symbol-node (string->symbol (cadr matching))))
                 start
                 end))))
+ '(StructureRef
+   (Spacing SymbolContents (+ (: ".") SymbolContents) (! "."))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (expand-structure-refs (location start end)
+                                       (string->symbol (cadr matching))
+                                       (map (compose string->symbol cadr) (caddr matching)))
+                start
+                end))))
+ '(InvalidSymbol
+   (Spacing (~ (+ (/ "." SymbolContents))))
+   (lambda (input result)
+     (let* ((matching (match-match result))
+            (start (car matching))
+            (end (match-end result)))
+       (matches (raise-compilation-error
+                 (location start end)
+                 (format "Invalid symbol `~a` specified at:"
+                         (cadr matching)))
+                start
+                end))))
+ '(SymbolContents
+   "[^\\(\\)\"'`,\\.@; \t\v\r\n]+")
+
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))
    (lambda (input result)
@@ -93,10 +214,37 @@
        ;; NOTE So that we can skip the spacing later.
        (matches end start end))))
  '(Comment
-   (: ";[^\n]*\n")))
+   (: ";[^\n]*" (/ "\n" EOF)))
+ '(EOF
+   ()))
 
-(define (parse input)
-  (let ((result (Expression input)))
-    (if (matches? result)
-        (match-match result)
-        (error (format "Could not parse input: ~a" input)))))
+(define (expand-structure-refs loc head rest)
+  (foldl (lambda (part acc)
+           (at loc
+               (generated
+                (make-primop-app-node (generated (wrap-symbol loc '&structure-ref))
+                                      (list acc
+                                            (at loc
+                                                (generated
+                                                 (make-quote-node part))))))))
+         (wrap-symbol loc head)
+         (map (partial wrap-symbol loc)
+              rest)))
+
+(define (wrap-symbol loc s)
+  (at loc
+      (make-symbol-node s)))
+
+(define (parse env)
+  (let ((result (collect-errors (env-get env 'errors)
+                                (lambda ()
+                                  (let* ((input (env-get env 'input))
+                                         (parsed (Program input)))
+                                    (if (matches? parsed)
+                                        (match-match parsed)
+                                        (raise-compilation-error
+                                         (location 0 (string-length input))
+                                         "Not a valid FOOF file:")))))))
+    (env-set env
+             'ast (car result)
+             'errors (cadr result))))

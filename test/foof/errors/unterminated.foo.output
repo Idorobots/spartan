@@ -1,0 +1,17 @@
+../test/foof/errors/unterminated.foo(1,0): Unterminated list, expected a closing `)` to follow:
+1 |(define (foo x)
+   ^~~~~~
+
+../test/foof/errors/unterminated.foo(2,28): No expression following `,@`:
+2 |  `(this unquote is invalid ,@)
+                               ^~~~~~
+
+../test/foof/errors/unterminated.foo(3,2): Unterminated list, expected a closing `)` to follow:
+3 |  (display "Hello world!)
+     ^~~~~~
+
+../test/foof/errors/unterminated.foo(3,11): Unterminated string literal, expected a closing `"` to follow:
+3 |  (display "Hello world!)
+              ^~~~~~
+
+Compilation aborted due to 4 errors.

@@ -35,6 +35,12 @@
     (spit temp-file (generate-grammar rules))
     (load temp-file)))
 
+(require file/md5)
+(define (hash-input input)
+  (* (eq-hash-code (md5 input))
+     (eq-hash-code input)
+     (string-length input)))
+
 (define (generate-grammar rules)
   (let ((top-name (caar rules))
         (hash (gensym 'hash))
@@ -42,8 +48,7 @@
     `(define ,top-name
        (letrec ,(map generate-rule rules)
          (lambda (,input)
-           (let ((,hash (* (eq-hash-code ,input)
-                           (string-length ,input))))
+           (let ((,hash (hash-input ,input)))
              (,top-name ,hash ,input 0)))))))
 
 (define (generate-rule rule)
@@ -73,7 +78,8 @@
 (define nonterminal? symbol?)
 
 (define (generate-rule-pattern rule hash input offset cont)
-  (cond ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
+  (cond ((empty? rule)            (generate-eof rule hash input offset cont))
+        ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
         ((terminal? rule)         (generate-matcher rule hash input offset cont))
         ((equal? (length rule) 1) (generate-rule-pattern (car rule) hash input offset cont))
         ((tagged-list? '/ rule)   (generate-or rule hash input offset cont))
@@ -86,6 +92,12 @@
         ((tagged-list? '~ rule)   (generate-concat rule hash input offset cont))
         (else                     (generate-sequence rule hash input offset cont))))
 
+;; EOF
+(define (generate-eof rule hash input offset cont)
+  (cont `(if (equal? ,offset (string-length ,input))
+             (matches '() ,offset ,offset)
+             (no-match))))
+
 ;; Nonterminal
 (define (generate-nonterminal rule-name hash input offset cont)
   (cont `(,rule-name ,hash ,input ,offset)))
@@ -94,7 +106,8 @@
 (define (generate-matcher regex hash input offset cont)
   (cont (if (equal? 1 (string-length regex)) ;; FIXME Won't work for "." and other single char regexps.
             (let ((char (string-ref regex 0)))
-              `(if (equal? (string-ref ,input ,offset) ,char)
+              `(if (and (< ,offset (string-length ,input))
+                        (equal? (string-ref ,input ,offset) ,char))
                    (matches ,regex ,offset (+ 1 ,offset))
                    (no-match)))
             (let ((r (regexp (string-append-immutable "^" regex)))
@@ -253,7 +266,7 @@
                            (let ((result (gensym 'result)))
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
-                                          (matches (foldl string-append-immutable "" (match-match ,result))
+                                          (matches (foldr string-append-immutable "" (match-match ,result))
                                                    (match-start ,result)
                                                    (match-end ,result))
                                           (no-match))))))))

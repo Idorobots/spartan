@@ -13,6 +13,14 @@
 (define (empty? lst)
   (nil? lst))
 
+(define (last lst)
+  (list-ref lst (- (length lst) 1)))
+
+(define (concat a b)
+  (if (empty? a)
+      b
+      (cons (car a) (concat (cdr a) b))))
+
 ;; Mutable references:
 (define (ref x)
   (make-vector 1 x))
@@ -22,6 +30,14 @@
 
 (define (assign! ref x)
   (vector-set! ref 0 x))
+
+(define (push! ref x)
+  (assign! ref (cons x (deref ref))))
+
+(define (pop! ref x)
+  (let ((x (deref ref)))
+    (assign! ref (cdr x))
+    (car x)))
 
 ;; Mutable arrays:
 (define (array n x)
@@ -89,3 +105,15 @@
                   (if (eof-object? char)
                       result
                       (loop (read-char) (cons char result)))))))))
+
+;; Internal errors
+
+(define (show-stacktrace)
+  (for ([s (continuation-mark-set->context (current-continuation-marks))]
+        [i (in-naturals)])
+    ;; show just the names, not the full source information
+    (when (car s) (printf "~s: ~s\n" i s))))
+
+(define (compiler-bug)
+  (show-stacktrace)
+  (error "Likely a compiler bug!"))
