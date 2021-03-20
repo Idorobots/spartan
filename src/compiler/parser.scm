@@ -40,7 +40,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (location start end)
-                 "Unmatched `)` - expected an opening `(` to come before:")
+                 "Unmatched `)`, expected an opening `(` to come before:")
                 start
                 end))))
 
@@ -121,7 +121,7 @@
             (content (caddr matching)))
        (matches (raise-compilation-error
                  (location start end)
-                 "Unterminated string literal - expected a closing `\"` to follow:")
+                 "Unterminated string literal, expected a closing `\"` to follow:")
                 start
                 end))))
  '(StringContents
@@ -147,7 +147,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (location start end)
-                 "Unterminated list - expected a closing `)` to follow:")
+                 "Unterminated list, expected a closing `)` to follow:")
                 start
                 end))))
  '(ListContents

@@ -148,24 +148,24 @@
 
  (it "handles unterminated lists gracefully"
      (assert (pe "(")
-             (list "Unterminated list - expected a closing `)` to follow: 0 1"))
+             (list "Unterminated list, expected a closing `)` to follow: 0 1"))
      (assert (pe "(()")
-             (list "Unterminated list - expected a closing `)` to follow: 0 3"))
+             (list "Unterminated list, expected a closing `)` to follow: 0 3"))
      (assert (pe "(define (foo x) 23")
-             (list "Unterminated list - expected a closing `)` to follow: 0 18"))
+             (list "Unterminated list, expected a closing `)` to follow: 0 18"))
      (assert (pe "(define (foo x 23)")
-             (list "Unterminated list - expected a closing `)` to follow: 0 18")))
+             (list "Unterminated list, expected a closing `)` to follow: 0 18")))
 
  (it "handles unterminated strings gracefully"
      (assert (pe "\"This is an unterminated string")
-             (list "Unterminated string literal - expected a closing `\"` to follow: 0 31"))
+             (list "Unterminated string literal, expected a closing `\"` to follow: 0 31"))
      (assert (pe "(define foo \"This is an unterminated string)")
-             (list "Unterminated list - expected a closing `)` to follow: 0 44"
-                   "Unterminated string literal - expected a closing `\"` to follow: 12 44")))
+             (list "Unterminated list, expected a closing `)` to follow: 0 44"
+                   "Unterminated string literal, expected a closing `\"` to follow: 12 44")))
 
  (it "handles unterminated comments"
      (assert (pe "(define (foo x) ;; Coments should be removed!")
-             (list "Unterminated list - expected a closing `)` to follow: 0 45")))
+             (list "Unterminated list, expected a closing `)` to follow: 0 45")))
 
  (it "handles unterminated quotation"
      (assert (pe "'")
@@ -181,11 +181,11 @@
 
  (it "handles extra unmatched tokens"
      (assert (pe ")")
-             (list "Unmatched `)` - expected an opening `(` to come before: 0 1"))
+             (list "Unmatched `)`, expected an opening `(` to come before: 0 1"))
      (assert (pe "(define (foo x) x))")
-             (list "Unmatched `)` - expected an opening `(` to come before: 18 19"))
+             (list "Unmatched `)`, expected an opening `(` to come before: 18 19"))
      (assert (pe "(define (foo x)) x)")
-             (list "Unmatched `)` - expected an opening `(` to come before: 18 19")))
+             (list "Unmatched `)`, expected an opening `(` to come before: 18 19")))
 
  (it "parses all the examples"
      (define (expected-read input)
