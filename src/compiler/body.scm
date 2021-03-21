@@ -17,14 +17,14 @@
 ;; FIXME to get more meaningful error messages. This should probably be done differently.
 (define (wrap-with-do exprs ctx)
   (if (and (list? exprs)
-           (> (length exprs) 1))
+           (> (length exprs) 0))
       ;; NOTE The body spans all the expressions within it.
       (at (location (get-location-start (car exprs))
                     (get-location-end (last exprs)))
           (generated
            (context ctx
                     (make-do-node exprs))))
-      (car exprs)))
+      (compiler-bug)))
 
 (define (expand-body expr)
   (map-ast (lambda (expr)
@@ -38,15 +38,13 @@
   (let* ((exprs (ast-do-exprs expr))
          (defs (extract-defs exprs))
          (non-defs (extract-non-defs exprs)))
-    (cond ((= (length non-defs) 0)
-           (raise-compilation-error
-            (get-location expr)
-            (format "~a, expected at least one non-definition expression within:" (extract-context expr))))
-          ((> (length defs) 0)
+    (cond ((> (length defs) 0)
            (replace expr
                     (generated
                      (make-letrec-node defs
-                                       (wrap-with-do non-defs (extract-context expr))))))
+                                       (reconstruct-simple-body non-defs expr)))))
+          ((= (length exprs) 0)
+           (car exprs))
           (else expr))))
 
 (define (extract-context expr)
@@ -65,3 +63,19 @@
 (define (extract-non-defs exprs)
   (filter (compose not (flip is-type? 'def))
           exprs))
+
+(define (reconstruct-simple-body exprs parent)
+  (cond ((= (length exprs) 0)
+         (raise-compilation-error
+          (get-location parent)
+          (format "~a, expected at least one non-definition expression within:" (extract-context parent))))
+        ((= (length exprs) 1)
+         (car exprs))
+        (else
+         ;; NOTE Reconstructed body location now has to be adjusted.
+         (at (location (get-location-start (car exprs))
+                       (get-location-end (last exprs)))
+             (generated
+              ;; However the context should be preserved.
+              (context (extract-context parent)
+                       (make-do-node exprs)))))))

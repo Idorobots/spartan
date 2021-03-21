@@ -1,6 +1,35 @@
 ;; Implicit body expansion tests.
 
 (describe
+ "wrap-with-do"
+ (it "should handle lists of expressions"
+     (assert (wrap-with-do (list (at (location 1 2)
+                                     (make-symbol-node 'x))
+                                 (make-symbol-node 'y)
+                                 (at (location 3 4)
+                                     (make-symbol-node 'z)))
+                           "Context")
+             (at (location 1 4)
+                 (generated
+                  (context "Context"
+                           (make-do-node
+                            (list (at (location 1 2)
+                                      (make-symbol-node 'x))
+                                  (make-symbol-node 'y)
+                                  (at (location 3 4)
+                                      (make-symbol-node 'z)))))))))
+ (it "should handle single expression lists"
+     (assert (wrap-with-do (list (at (location 1 2)
+                                     (make-symbol-node 'x)))
+                           "Context")
+             (at (location 1 2)
+                 (generated
+                  (context "Context"
+                           (make-do-node
+                            (list (at (location 1 2)
+                                      (make-symbol-node 'x))))))))))
+
+(describe
  "body expansion"
  (it "should only operate on `do` nodes"
      (assert (expand-body (make-lambda-node '()
