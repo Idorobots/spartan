@@ -212,8 +212,11 @@
 (define (context ctx node)
   (ast-set node 'context ctx))
 
+(define (get-context* node default)
+  (ast-get* node 'context default))
+
 (define (get-context node)
-  (ast-get* node 'context '()))
+  (get-context* node '()))
 
 (define (get-type node)
   (ast-get node 'type))

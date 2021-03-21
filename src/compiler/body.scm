@@ -47,12 +47,6 @@
            (car exprs))
           (else expr))))
 
-(define (extract-context expr)
-  (let ((ctx (get-context expr)))
-    (if (empty? ctx)
-        "Bad `do` syntax"
-        ctx)))
-
 (define (extract-defs exprs)
   (map (lambda (e)
          (cons (ast-def-name e)
@@ -65,17 +59,18 @@
           exprs))
 
 (define (reconstruct-simple-body exprs parent)
-  (cond ((= (length exprs) 0)
-         (raise-compilation-error
-          (get-location parent)
-          (format "~a, expected at least one non-definition expression within:" (extract-context parent))))
-        ((= (length exprs) 1)
-         (car exprs))
-        (else
-         ;; NOTE Reconstructed body location now has to be adjusted.
-         (at (location (get-location-start (car exprs))
-                       (get-location-end (last exprs)))
-             (generated
-              ;; However the context should be preserved.
-              (context (extract-context parent)
-                       (make-do-node exprs)))))))
+  (let ((ctx (get-context* parent "Bad `do` syntax")))
+    (cond ((= (length exprs) 0)
+           (raise-compilation-error
+            (get-location parent)
+            (format "~a, expected at least one non-definition expression within:" ctx)))
+          ((= (length exprs) 1)
+           (car exprs))
+          (else
+           ;; NOTE Reconstructed body location now has to be adjusted.
+           (at (location (get-location-start (car exprs))
+                         (get-location-end (last exprs)))
+               (generated
+                ;; However the context should be preserved.
+                (context ctx
+                         (make-do-node exprs))))))))
