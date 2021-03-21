@@ -228,10 +228,4 @@
                                      (make-symbol-node 'x)))
                            "Context")
              (at (location 1 2)
-                 (make-symbol-node 'x))))
- (it "should handle single expression"
-     (assert (wrap-with-do (at (location 1 2)
-                               (make-symbol-node 'x))
-                           "Context")
-             (at (location 1 2)
                  (make-symbol-node 'x)))))

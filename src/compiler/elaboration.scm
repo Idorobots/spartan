@@ -5,6 +5,7 @@
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
+(load "compiler/body.scm")
 
 (define (elaborate env)
   (let ((result (collect-errors (env-get env 'errors)
@@ -24,7 +25,7 @@
               (ast-update acc field elaborate-unquoted))
             expr
             '(condition then else)))
-    ((lambda) (ast-update expr 'body (partial maybe-map elaborate-unquoted)))
+    ((lambda) (ast-update expr 'body elaborate-unquoted))
     ((let) (ast-update (ast-update expr
                                    'bindings
                                    (partial map
@@ -32,7 +33,7 @@
                                               (cons (car b)
                                                     (elaborate-unquoted (cdr b))))))
                        'body
-                       (partial maybe-map elaborate-unquoted)))
+                       elaborate-unquoted))
     ((letrec) (ast-update (ast-update expr
                                       'bindings
                                       (partial map
@@ -40,7 +41,7 @@
                                                  (cons (car b)
                                                        (elaborate-unquoted (cdr b))))))
                           'body
-                          (partial maybe-map elaborate-unquoted)))
+                          elaborate-unquoted))
     ((def)
      (ast-update expr 'value elaborate-unquoted))
     ((quasiquote)

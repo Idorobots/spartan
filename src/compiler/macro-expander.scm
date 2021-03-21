@@ -2,8 +2,9 @@
 
 (load "compiler/utils.scm")
 (load "compiler/env.scm")
+(load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
-(load "compiler/elaboration.scm")
+(load "compiler/body.scm")
 
 (define (macro-expand env)
   (let ((result (collect-errors (env-get env 'errors)
@@ -221,44 +222,39 @@
 (define (structure-macro expr)
   (ast-case expr
    ((list 'structure . ,defs)
-    (let ((bindings (map extract-definition defs)))
+    (let ((names (map extract-definition-name defs)))
       (replace expr
-             (make-letrec-node bindings
-                               (at (get-location expr)
-                                   (make-primop-app-node
-                                    (at (get-location expr)
-                                        (make-symbol-node '&make-structure))
-                                    (map (lambda (n)
-                                           (at (get-location n)
+               (wrap-with-do (append defs
+                                     (list (at (get-location expr)
                                                (make-primop-app-node
-                                                (at (get-location n)
-                                                    (make-symbol-node '&structure-binding))
-                                                (list (at (get-location n)
-                                                          (make-quote-node n))
-                                                      n))))
-                                         (map car bindings))))))))
+                                                (at (get-location expr)
+                                                    (make-symbol-node '&make-structure))
+                                                (map (lambda (n)
+                                                       (at (get-location n)
+                                                           (make-primop-app-node
+                                                            (at (get-location n)
+                                                                (make-symbol-node '&structure-binding))
+                                                            (list (at (get-location n)
+                                                                      (make-quote-node n))
+                                                                  n))))
+                                                     names)))))
+                             "Bad `structure` syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        (get-location node)
        "Bad `structure` syntax, expected a module specification followed by a body:")))))
 
-(define (extract-definition expr)
+(define (extract-definition-name expr)
   (ast-case expr
    ((list 'define (list ,name . ,rest) . ,body)
-    (cons name
-          (ast-def-value
-           (reconstruct-def expr))))
+    name)
    ((list 'define ,name ,value)
-    (cons name
-          (ast-def-value
-           (reconstruct-def expr))))
+    name)
    (else
-    (cons (at (get-location expr)
-              (make-error-node))
-          (raise-compilation-error
-           (get-location expr)
-           "Bad `structure` syntax, expected a definition:")))))
+    (raise-compilation-error
+     (get-location expr)
+     "Bad `structure` syntax, expected a definition:"))))
 
 (define (module-macro expr)
   (ast-case expr

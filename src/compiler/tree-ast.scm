@@ -84,20 +84,8 @@
 (define (do-node? node)
   (is-type? node 'do))
 
-;; FIXME This is used by several different phases to store context for body expansion later on
-;; FIXME to get more meaningful error messages. This should probably be done differently.
-(define (wrap-with-do exprs ctx)
-  (cond ((and (list? exprs)
-              (> (length exprs) 1))
-         ;; NOTE The body spans all the expressions within it.
-         (at (location (get-location-start (car exprs))
-                       (get-location-end (last exprs)))
-             (generated
-              (context ctx
-                       (make-do-node exprs)))))
-        ((list? exprs)
-         (car exprs))
-        (else exprs)))
+(define (ast-do-exprs node)
+  (ast-get node 'exprs))
 
 ;; Lambda
 (define (make-lambda-node formals body)
@@ -234,15 +222,8 @@
   (equal? (get-type node)
           type))
 
-(define (maybe-map f expr)
-  ((if (list? expr)
-       (partial map f)
-       f)
-   expr))
-
 (define (walk-ast f expr)
-  (let* ((mf (partial map f))
-         (maybe-mf (partial maybe-map f)))
+  (let* ((mf (partial map f)))
     (case (get-type expr)
       ((number symbol string) expr)
       ((if) (foldl (lambda (field acc)
@@ -252,7 +233,7 @@
       ((do) (ast-update expr 'exprs mf))
       ((lambda) (ast-update (ast-update expr 'formals mf)
                             'body
-                            maybe-mf))
+                            f))
       ((let) (ast-update (ast-update expr
                                      'bindings
                                      (partial map
@@ -260,7 +241,7 @@
                                                 (cons (f (car b))
                                                       (f (cdr b))))))
                          'body
-                         maybe-mf))
+                         f))
       ((letrec) (ast-update (ast-update expr
                                         'bindings
                                         (partial map
@@ -268,7 +249,7 @@
                                                    (cons (f (car b))
                                                          (f (cdr b))))))
                             'body
-                            maybe-mf))
+                            f))
       ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value f))
       ((def) (ast-update (ast-update expr 'name f) 'value f))
       ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
