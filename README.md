@@ -21,8 +21,10 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 
 - parsing,
 - built-in macro expansion,
-- syntax tree validation,
+- syntax tree elaboration,
+- implicit body handling,
 - quasiquote expansion,
+- syntax tree validation,
 - `letrec` conversion,
 - normalization,
 - continuation passing style transformation,
