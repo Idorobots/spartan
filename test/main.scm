@@ -11,6 +11,7 @@
 (load "../test/compiler/parser.scm")
 (load "../test/compiler/errors.scm")
 (load "../test/compiler/elaboration.scm")
+(load "../test/compiler/body.scm")
 (load "../test/compiler/qq.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/macros.scm")

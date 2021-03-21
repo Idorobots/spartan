@@ -88,7 +88,7 @@
              (at (location 5 23)
                  (make-lambda-node
                   (list (make-symbol-node 'x))
-                  (make-symbol-node 'x))))
+                  (list (make-symbol-node 'x)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'lambda)
@@ -101,13 +101,10 @@
              (at (location 5 23)
                  (make-lambda-node
                   (list (make-symbol-node 'x))
-                  (at (location 7 15)
-                      (generated
-                       (make-do-node
-                        (list (at (location 7 13)
-                                  (make-symbol-node 'y))
-                              (at (location 14 15)
-                                  (make-symbol-node 'x))))))))))
+                  (list (at (location 7 13)
+                            (make-symbol-node 'y))
+                        (at (location 14 15)
+                            (make-symbol-node 'x)))))))
 
  (it "disallows bad lambda syntax"
      (assert (with-handlers ((compilation-error?
@@ -151,7 +148,7 @@
                  (make-let-node
                   (list (cons (make-symbol-node 'x)
                               (make-number-node 23)))
-                  (make-symbol-node 'x))))
+                  (list (make-symbol-node 'x)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'let)
@@ -169,7 +166,7 @@
                               (make-number-node 23))
                         (cons (make-symbol-node 'y)
                               (make-number-node 5)))
-                  (make-symbol-node 'x))))
+                  (list (make-symbol-node 'x)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'let)
@@ -185,13 +182,10 @@
                  (make-let-node
                   (list (cons (make-symbol-node 'x)
                               (make-number-node 23)))
-                  (at (location 7 15)
-                      (generated
-                       (make-do-node
-                        (list (at (location 7 13)
-                                  (make-symbol-node 'y))
-                              (at (location 14 15)
-                                  (make-symbol-node 'x))))))))))
+                  (list (at (location 7 13)
+                            (make-symbol-node 'y))
+                        (at (location 14 15)
+                            (make-symbol-node 'x)))))))
 
  (it "disallows bad let syntax"
      (assert (with-handlers ((compilation-error?
@@ -245,7 +239,7 @@
                  (make-letrec-node
                   (list (cons (make-symbol-node 'x)
                               (make-number-node 23)))
-                  (make-symbol-node 'x))))
+                  (list (make-symbol-node 'x)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
@@ -263,7 +257,7 @@
                               (make-number-node 23))
                         (cons (make-symbol-node 'y)
                               (make-number-node 5)))
-                  (make-symbol-node 'x))))
+                  (list (make-symbol-node 'x)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
@@ -279,13 +273,10 @@
                  (make-letrec-node
                   (list (cons (make-symbol-node 'x)
                               (make-number-node 23)))
-                  (at (location 7 15)
-                      (generated
-                       (make-do-node
-                        (list (at (location 7 13)
-                                  (make-symbol-node 'y))
-                              (at (location 14 15)
-                                  (make-symbol-node 'x))))))))))
+                  (list (at (location 7 13)
+                            (make-symbol-node 'y))
+                        (at (location 14 15)
+                            (make-symbol-node 'x)))))))
 
  (it "disallows bad letrec syntax"
      (assert (with-handlers ((compilation-error?
@@ -427,7 +418,7 @@
                       (generated
                        (make-lambda-node
                         '()
-                        (make-number-node 23)))))))
+                        (list (make-number-node 23))))))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'define)
@@ -443,7 +434,7 @@
                       (generated
                        (make-lambda-node
                         (list (make-symbol-node 'x))
-                        (make-symbol-node 'x))))))))
+                        (list (make-symbol-node 'x)))))))))
 
  (it "disallows invalid defines"
      (assert (with-handlers ((compilation-error?

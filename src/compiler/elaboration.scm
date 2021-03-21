@@ -21,10 +21,10 @@
      (ast-update expr 'exprs (partial map elaborate-unquoted)))
     ((if)
      (foldl (lambda (field acc)
-                   (ast-update acc field elaborate-unquoted))
-                 expr
-                 '(condition then else)))
-    ((lambda) (ast-update expr 'body elaborate-unquoted))
+              (ast-update acc field elaborate-unquoted))
+            expr
+            '(condition then else)))
+    ((lambda) (ast-update expr 'body (partial maybe-map elaborate-unquoted)))
     ((let) (ast-update (ast-update expr
                                    'bindings
                                    (partial map
@@ -32,7 +32,7 @@
                                               (cons (car b)
                                                     (elaborate-unquoted (cdr b))))))
                        'body
-                       elaborate-unquoted))
+                       (partial maybe-map elaborate-unquoted)))
     ((letrec) (ast-update (ast-update expr
                                       'bindings
                                       (partial map
@@ -40,7 +40,7 @@
                                                  (cons (car b)
                                                        (elaborate-unquoted (cdr b))))))
                           'body
-                          elaborate-unquoted))
+                          (partial maybe-map elaborate-unquoted)))
     ((def)
      (ast-update expr 'value elaborate-unquoted))
     ((quasiquote)
@@ -140,21 +140,12 @@
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
              (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
-                               (wrap-body (cons first rest)))))
+                               (cons first rest))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        (get-location node)
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
-
-(define (wrap-body exprs)
-  (if (> (length exprs) 1)
-      ;; NOTE The body spans all the expressions within it.
-      (at (location (get-location-start (car exprs))
-                    (get-location-end (last exprs)))
-          (generated
-           (make-do-node exprs)))
-      (car exprs)))
 
 (define (valid-formals args prefix)
   (if (is-type? args 'list)
@@ -178,11 +169,11 @@
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
-                            (wrap-body (cons first-body rest-body)))))
+                            (cons first-body rest-body))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
-                               (wrap-body (cons first-body rest-body)))))
+                               (cons first-body rest-body))))
    ((list _ () ,first . ,rest)
     (replace expr
              (make-do-node (cons first rest))))
@@ -250,7 +241,7 @@
                                                                         (generated
                                                                          (make-list-node formals)))
                                                                     "Bad `define` function signature syntax")
-                                                     (wrap-body (cons first rest)))))))))
+                                                     (cons first rest))))))))
    ((list 'define ,name ,value)
     (replace expr
              (make-def-node (valid-symbol name "Bad `define` syntax")

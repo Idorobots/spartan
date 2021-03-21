@@ -6,6 +6,7 @@
 (load "compiler/parser.scm")
 (load "compiler/errors.scm")
 (load "compiler/elaboration.scm")
+(load "compiler/body.scm")
 (load "compiler/qq.scm")
 (load "compiler/macro-expander.scm")
 (load "compiler/letrec.scm")
@@ -23,6 +24,7 @@
          (list parse
                macro-expand
                elaborate
+               body-expand
                quasiquote-expand
                report-errors
                adapt-ast

@@ -213,8 +213,15 @@
   (equal? (get-type node)
           type))
 
+(define (maybe-map f expr)
+  ((if (list? expr)
+       (partial map f)
+       f)
+   expr))
+
 (define (walk-ast f expr)
-  (let ((mf (partial map f)))
+  (let* ((mf (partial map f))
+         (maybe-mf (partial maybe-map f)))
     (case (get-type expr)
       ((number symbol string) expr)
       ((if) (foldl (lambda (field acc)
@@ -224,7 +231,7 @@
       ((do) (ast-update expr 'exprs mf))
       ((lambda) (ast-update (ast-update expr 'formals mf)
                             'body
-                            f))
+                            maybe-mf))
       ((let) (ast-update (ast-update expr
                                      'bindings
                                      (partial map
@@ -232,7 +239,7 @@
                                                 (cons (f (car b))
                                                       (f (cdr b))))))
                          'body
-                         f))
+                         maybe-mf))
       ((letrec) (ast-update (ast-update expr
                                         'bindings
                                         (partial map
@@ -240,7 +247,7 @@
                                                    (cons (f (car b))
                                                          (f (cdr b))))))
                             'body
-                            f))
+                            maybe-mf))
       ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value f))
       ((def) (ast-update (ast-update expr 'name f) 'value f))
       ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
