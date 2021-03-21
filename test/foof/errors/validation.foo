@@ -1,0 +1,6 @@
+(begin
+  (if (define (foo x) x)
+      'yup
+      'nope)
+  (car (module (x)
+         (define (foo x) x))))

@@ -5,6 +5,7 @@
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
+(load "compiler/body.scm")
 
 (define (elaborate env)
   (let ((result (collect-errors (env-get env 'errors)
@@ -21,9 +22,9 @@
      (ast-update expr 'exprs (partial map elaborate-unquoted)))
     ((if)
      (foldl (lambda (field acc)
-                   (ast-update acc field elaborate-unquoted))
-                 expr
-                 '(condition then else)))
+              (ast-update acc field elaborate-unquoted))
+            expr
+            '(condition then else)))
     ((lambda) (ast-update expr 'body elaborate-unquoted))
     ((let) (ast-update (ast-update expr
                                    'bindings
@@ -140,21 +141,12 @@
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
              (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
-                               (wrap-body (cons first rest)))))
+                               (wrap-with-do (cons first rest) "Bad `lambda` body syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        (get-location node)
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
-
-(define (wrap-body exprs)
-  (if (> (length exprs) 1)
-      ;; NOTE The body spans all the expressions within it.
-      (at (location (get-location-start (car exprs))
-                    (get-location-end (last exprs)))
-          (generated
-           (make-do-node exprs)))
-      (car exprs)))
 
 (define (valid-formals args prefix)
   (if (is-type? args 'list)
@@ -178,11 +170,11 @@
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
-                            (wrap-body (cons first-body rest-body)))))
+                            (wrap-with-do (cons first-body rest-body) "Bad `let` body syntax"))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
-                               (wrap-body (cons first-body rest-body)))))
+                               (wrap-with-do (cons first-body rest-body) "Bad `letrec` body syntax"))))
    ((list _ () ,first . ,rest)
     (replace expr
              (make-do-node (cons first rest))))
@@ -250,7 +242,7 @@
                                                                         (generated
                                                                          (make-list-node formals)))
                                                                     "Bad `define` function signature syntax")
-                                                     (wrap-body (cons first rest)))))))))
+                                                     (wrap-with-do (cons first rest) "Bad `define` function body syntax"))))))))
    ((list 'define ,name ,value)
     (replace expr
              (make-def-node (valid-symbol name "Bad `define` syntax")

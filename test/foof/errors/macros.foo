@@ -1,4 +1,4 @@
-(begin
+(do
   (when)
   (when #f)
   (when cond body)

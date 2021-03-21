@@ -84,6 +84,9 @@
 (define (do-node? node)
   (is-type? node 'do))
 
+(define (ast-do-exprs node)
+  (ast-get node 'exprs))
+
 ;; Lambda
 (define (make-lambda-node formals body)
   (ast-node 'type 'lambda 'formals formals 'body body))
@@ -206,6 +209,15 @@
 (define (generated? node)
   (ast-get* node 'generated #f))
 
+(define (context ctx node)
+  (ast-set node 'context ctx))
+
+(define (get-context* node default)
+  (ast-get* node 'context default))
+
+(define (get-context node)
+  (get-context* node '()))
+
 (define (get-type node)
   (ast-get node 'type))
 
@@ -214,7 +226,7 @@
           type))
 
 (define (walk-ast f expr)
-  (let ((mf (partial map f)))
+  (let* ((mf (partial map f)))
     (case (get-type expr)
       ((number symbol string) expr)
       ((if) (foldl (lambda (field acc)

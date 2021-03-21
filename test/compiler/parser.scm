@@ -194,14 +194,13 @@
            (read))))
      (map (lambda (filename)
             (let ((contents (slurp filename)))
-              (assert (ast->plain (env-get (p contents) 'ast))
+              (assert (ast->plain (p contents))
                       (expected-read contents))))
-          (filter (compose (lambda (filename)
-                             ;; FIXME This now somewhat parses the full file, while previously it only parsed the first expr.
-                             (equal? filename "../test/foof/modules.foo"))
-                           (lambda (filename)
-                    (string-suffix? filename ".foo")))
-                  (map (lambda (path)
-                         (string-append "../test/foof/"
-                                        (path->string path)))
-                       (directory-list "../test/foof/"))))))
+          (filter (lambda (filename)
+                    (not (equal? filename "../test/foof/logger.foo")))
+                  (filter (lambda (filename)
+                            (string-suffix? filename ".foo"))
+                          (map (lambda (path)
+                                 (string-append "../test/foof/"
+                                                (path->string path)))
+                               (directory-list "../test/foof/")))))))

@@ -1,4 +1,4 @@
-(begin
+(do
   (quote)
   (quasiquote)
   (unquote)

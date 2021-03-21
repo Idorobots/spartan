@@ -21,19 +21,19 @@
              23))
 
  (it "Module is a parameterized structure."
-     (assert (do (run '(module (foo x)
+     (assert (run '(do (module (foo x)
                          (define (bar)
-                           x)))
-                 (run '(let ((m (foo 23)))
+                           x))
+                       (let ((m (foo 23)))
                          (m.bar))))
              23))
 
  (it "Modules can take other modules as deps."
-     (assert (do (run '(module (foo)
-                         (define (bar) 23)))
-                 (run '(module (bar f)
-                         (define (foo) (f.bar))))
-               (run '(let* ((f (foo))
+     (assert (run '(do (module (foo)
+                         (define (bar) 23))
+                       (module (bar f)
+                         (define (foo) (f.bar)))
+                     (let* ((f (foo))
                             (b (bar f)))
                        (b.foo))))
              23)))

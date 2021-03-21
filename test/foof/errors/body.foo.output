@@ -1,0 +1,17 @@
+../test/foof/errors/body.foo(2,2): Bad `do` syntax, expected at least one non-definition expression within:
+2 |  (do (define foo 23))
+     ^~~~~~
+
+../test/foof/errors/body.foo(5,4): Bad `lambda` body syntax, expected at least one non-definition expression within:
+5 |    (define x 5))
+       ^~~~~~
+
+../test/foof/errors/body.foo(10,4): Bad `let` body syntax, expected at least one non-definition expression within:
+10 |    (define y (* 2 x)))
+        ^~~~~~
+
+../test/foof/errors/body.foo(15,4): Bad `letrec` body syntax, expected at least one non-definition expression within:
+15 |    (define y (* 2 x)))
+        ^~~~~~
+
+Compilation aborted due to 4 errors.

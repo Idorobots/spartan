@@ -3,11 +3,17 @@
 (load "compiler/utils.scm")
 (load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
+
+;; The frontend
 (load "compiler/parser.scm")
-(load "compiler/errors.scm")
-(load "compiler/elaboration.scm")
-(load "compiler/qq.scm")
 (load "compiler/macro-expander.scm")
+(load "compiler/elaboration.scm")
+(load "compiler/body.scm")
+(load "compiler/qq.scm")
+(load "compiler/validate.scm")
+(load "compiler/errors.scm")
+
+;; The backend
 (load "compiler/letrec.scm")
 (load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
@@ -23,7 +29,9 @@
          (list parse
                macro-expand
                elaborate
+               body-expand
                quasiquote-expand
+               validate
                report-errors
                adapt-ast
                letrec-expand
