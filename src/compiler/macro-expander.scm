@@ -60,7 +60,7 @@
    ((list 'when ,cond ,first . ,rest)
     (replace expr
              (make-if-node cond
-                           (wrap-sequential (cons first rest))
+                           (wrap-with-do (cons first rest) "Bad `when` body syntax")
                            (at (get-location expr)
                                (make-symbol-node 'nil)))))
    (else
@@ -76,7 +76,7 @@
              (make-if-node cond
                            (at (get-location expr)
                                (make-symbol-node 'nil))
-                           (wrap-sequential (cons first rest)))))
+                           (wrap-with-do (cons first rest) "Bad `unless` body syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -86,11 +86,11 @@
 (define (cond-macro expr)
   (ast-case expr
    ((list 'cond (list 'else ,else-first . ,else-rest))
-    (wrap-sequential (cons else-first else-rest)))
+    (wrap-with-do (cons else-first else-rest) "Bad `cond` else clause"))
    ((list 'cond (list ,cond ,branch-first . ,branch-rest) . ,rest)
     (replace expr
              (make-if-node cond
-                           (wrap-sequential (cons branch-first branch-rest))
+                           (wrap-with-do (cons branch-first branch-rest) "Bad `cond` clause")
                            (at (get-location expr)
                                (make-list-node
                                 (cons (ast-list-car expr)
@@ -140,7 +140,7 @@
 (define (let*-macro expr)
   (ast-case expr
    ((list 'let* () ,first . ,rest)
-    (wrap-sequential (cons first rest)))
+    (wrap-with-do (cons first rest) "Bad `let*` body syntax"))
    ((list 'let* (list ,first-binding . ,rest-bindings) . ,body)
     (replace expr
              (make-let-node (valid-bindings (list first-binding) "Bad `let*` bindings syntax")
@@ -165,7 +165,7 @@
                                 (make-symbol-node 'call/current-continuation))
                             (list (at (get-location expr)
                                       (make-lambda-node (list (valid-symbol name "Bad `letcc` syntax"))
-                                                        (cons first rest)))))))
+                                                        (wrap-with-do (cons first rest) "Bad `letcc` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -180,7 +180,7 @@
                                 (make-symbol-node 'call/shift))
                             (list (at (get-location expr)
                                       (make-lambda-node (list (valid-symbol name "Bad `shift` syntax"))
-                                                        (cons first rest)))))))
+                                                        (wrap-with-do (cons first rest) "Bad `shift` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -195,7 +195,7 @@
                                 (make-symbol-node 'call/reset))
                             (list (at (get-location expr)
                                       (make-lambda-node '()
-                                                        (cons first rest)))))))
+                                                        (wrap-with-do (cons first rest) "Bad `reset` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error

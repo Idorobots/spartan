@@ -140,7 +140,7 @@
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
              (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
-                               (cons first rest))))
+                               (wrap-with-do (cons first rest) "Bad `lambda` body syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -169,11 +169,11 @@
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
-                            (cons first-body rest-body))))
+                            (wrap-with-do (cons first-body rest-body) "Bad `let` body syntax"))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
-                               (cons first-body rest-body))))
+                               (wrap-with-do (cons first-body rest-body) "Bad `letrec` body syntax"))))
    ((list _ () ,first . ,rest)
     (replace expr
              (make-do-node (cons first rest))))
@@ -241,7 +241,7 @@
                                                                         (generated
                                                                          (make-list-node formals)))
                                                                     "Bad `define` function signature syntax")
-                                                     (cons first rest))))))))
+                                                     (wrap-with-do (cons first rest) "Bad `define` function body syntax"))))))))
    ((list 'define ,name ,value)
     (replace expr
              (make-def-node (valid-symbol name "Bad `define` syntax")

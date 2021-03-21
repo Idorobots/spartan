@@ -84,6 +84,21 @@
 (define (do-node? node)
   (is-type? node 'do))
 
+;; FIXME This is used by several different phases to store context for body expansion later on
+;; FIXME to get more meaningful error messages. This should probably be done differently.
+(define (wrap-with-do exprs ctx)
+  (cond ((and (list? exprs)
+              (> (length exprs) 1))
+         ;; NOTE The body spans all the expressions within it.
+         (at (location (get-location-start (car exprs))
+                       (get-location-end (last exprs)))
+             (generated
+              (context ctx
+                       (make-do-node exprs)))))
+        ((list? exprs)
+         (car exprs))
+        (else exprs)))
+
 ;; Lambda
 (define (make-lambda-node formals body)
   (ast-node 'type 'lambda 'formals formals 'body body))
@@ -205,6 +220,12 @@
 
 (define (generated? node)
   (ast-get* node 'generated #f))
+
+(define (context ctx node)
+  (ast-set node 'context ctx))
+
+(define (get-context node)
+  (ast-get* node 'context '()))
 
 (define (get-type node)
   (ast-get node 'type))

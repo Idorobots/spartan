@@ -11,18 +11,6 @@
   (map-ast id
            (lambda (expr)
              (case (get-type expr)
-               ((lambda let letrec) (ast-update expr 'body wrap-sequential))
+               ((lambda let letrec) (ast-update expr 'body (flip wrap-with-do (format "Bad `~a` body syntax" (get-type expr)))))
                (else expr)))
            expr))
-
-(define (wrap-sequential exprs)
-  (cond ((and (list? exprs)
-              (> (length exprs) 1))
-         ;; NOTE The body spans all the expressions within it.
-         (at (location (get-location-start (car exprs))
-                       (get-location-end (last exprs)))
-             (generated
-              (make-do-node exprs))))
-        ((list? exprs)
-         (car exprs))
-        (else exprs)))

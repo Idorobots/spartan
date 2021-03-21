@@ -71,7 +71,7 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/shift))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (list (at (l 4) (make-symbol-node 'expr))))))))))
+                                                                  (at (l 4) (make-symbol-node 'expr)))))))))
 
  (it "reset macro works"
      (assert (expand-macros (at (l 1) (make-list-node
@@ -81,7 +81,7 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/reset))
                                       (list (at (l 1)
                                                 (make-lambda-node '()
-                                                                  (list (at (l 3) (make-symbol-node 'expr))))))))))
+                                                                  (at (l 3) (make-symbol-node 'expr)))))))))
 
  (it "letcc macro works"
      (assert (expand-macros (at (l 1) (make-list-node
@@ -92,7 +92,7 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/current-continuation))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (list (at (l 4) (make-symbol-node 'expr)))))))))
+                                                                  (at (l 4) (make-symbol-node 'expr))))))))
      (assert (expand-macros (at (l 1) (make-list-node
                                        (list (at (l 2) (make-symbol-node 'letcc))
                                              (at (l 3) (make-symbol-node 'kont))
@@ -102,5 +102,9 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/current-continuation))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (list (at (l 4) (make-symbol-node 'expr1))
-                                                                        (at (l 5) (make-symbol-node 'expr2)))))))))))
+                                                                  (at (location 4 5)
+                                                                      (generated
+                                                                       (context "Bad `letcc` body syntax"
+                                                                                (make-do-node
+                                                                                 (list (at (l 4) (make-symbol-node 'expr1))
+                                                                                       (at (l 5) (make-symbol-node 'expr2)))))))))))))))
