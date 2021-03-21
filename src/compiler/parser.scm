@@ -5,27 +5,30 @@
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
+(load "compiler/body.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
  '(Program
-   ;; FIXME This is pretty awkward, since the "full program" is still a single expression and the rest
-   ;; FIXME of the compiler still expects to receive that instead of a list of top level expressions.
-   ((? Expression) (* (/ UnmatchedParen Expression)) Spacing EOF)
+   ((+ (/ Expression UnmatchedParen)) Spacing EOF)
    (lambda (input result)
      (let* ((matching (match-match result))
-            (expr (car matching))
-            (trailing (cadr matching))
+            (exprs (car matching))
             (start (match-start result))
             (end (match-end result)))
-       (matches (cond ((empty? trailing)
-                       expr)
-                      ((empty? expr)
-                       (at (location start end)
-                           (make-do-node trailing)))
-                      (else
-                       (at (location start end)
-                           (make-do-node (cons expr trailing)))))
+       (matches (if (= (length exprs) 1)
+                    (car exprs)
+                    (at (location start end)
+                        ;; FIXME Body needs at least one non-def expression.
+                        (wrap-with-do (cons (at (location end end)
+                                                (generated
+                                                 (make-quote-node
+                                                  (at (location end end)
+                                                      (generated
+                                                       (make-list-node
+                                                        '()))))))
+                                            exprs)
+                                      "Bad script")))
                 start
                 end))))
 

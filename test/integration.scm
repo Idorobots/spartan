@@ -7,8 +7,7 @@
  (it "should support basic language features"
      (test-file "../test/foof/hello.foo")
      (test-file "../test/foof/fibonacci.foo")
-     ;; (test-file "../test/foof/logger.foo") ;; FIXME Makes no sense to run it untill proper module handling is implemented.
-     )
+     (test-file "../test/foof/logger.foo"))
  (it "should support continuations"
      (with-test-bindings
       (;; Silence task info logs since these might vary in the specific timings.
