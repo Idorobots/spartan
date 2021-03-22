@@ -492,4 +492,16 @@
      (assert (Concat "foobarbaz")
              (matches "foobarbaz"
                       0
-                      9))))
+                      9)))
+
+ (it "doesn't have cache collisions between calls"
+     (assert (let ((original-code "foo")
+                   (original-hash-input hash-input))
+               (set! hash-input (lambda (txt)
+                                  ;; NOTE Simulate hash collision that could happen when the cache is reused between calls to parse.
+                                  (original-hash-input original-code)))
+               (let ((result (SimpleLisp "oof")))
+                 (set! hash-input original-hash-input)
+                 (list (SimpleLisp original-code) result)))
+             (list (matches '(:type symbol :value foo :original "foo" :start 0 :end 3) 0 3)
+                   (matches '(:type symbol :value oof :original "oof" :start 0 :end 3) 0 3)))))
