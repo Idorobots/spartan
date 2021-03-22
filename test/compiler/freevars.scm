@@ -47,4 +47,14 @@
                                     (even? 5))))
                            (let ((t (f)))
                              t)))
-             '(even?))))
+             '(even?))
+     (assert (free-vars '(let ((f (cons 1 f))
+                               (g 23))
+                           (* 23 g h)))
+             ;; NOTE f comes from the binding, h from the body, g is bound.
+             '(* cons f h))
+     (assert (free-vars '(letrec ((f (cons 1 f))
+                                  (g 23))
+                           (* 23 g h)))
+             ;; NOTE f and g are bound, h comes from the body.
+             '(* cons h))))

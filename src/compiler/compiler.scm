@@ -37,8 +37,8 @@
                letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
-               (flip closure-convert (make-internal-applicatives))
-               (flip mangle (make-internal-applicatives)))))
+               (flip closure-convert (make-global-definitions-list))
+               mangle)))
 
 ;; FIXME This should be removed once all the phases use the new AST.
 (define (adapt-ast env)
