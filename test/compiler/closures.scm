@@ -186,22 +186,23 @@
                  (let ((foo (foo foo bar))
                        (bar (bar foo bar)))
                    (list (foo) (bar))))
-              '(&yield-cont &make-env &apply &env-ref &make-closure))
+              '(&yield-cont &make-env &apply &env-ref &make-closure &cons &car &cdr))
              '(let ((foo (&make-closure
                           '()
                           (lambda (env2 foo bar)
                             (&make-closure
-                             foo
+                             (&cons bar foo)
                              (lambda (env1)
-                               (let ((bar (&apply bar env1 bar)))
+                               (let ((bar (&apply (&car env1) (&cdr env1) (&car env1))))
                                  bar))))))
                     (bar (&make-closure
                           '()
                           (lambda (env4 foo bar)
                             (&make-closure
-                             bar
+                             (&cons bar foo)
                              (lambda (env3)
-                               (let ((foo (&apply foo foo env3))) foo)))))))
+                               (let ((foo (&apply (&cdr env3) (&cdr env3) (&car env3))))
+                                 foo)))))))
                 (let ((foo (&apply foo foo bar))
                       (bar (&apply bar foo bar)))
                   (&apply list (&apply foo) (&apply bar)))))))
