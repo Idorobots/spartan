@@ -17,7 +17,7 @@
                                      (lambda (env1 a) a))
                       a)))
 
- (it "Convertin lambda works."
+ (it "Converting lambda works."
      (gensym-reset!)
      (assert (closure-convert '(lambda () 23) '())
              '(&make-closure '()
@@ -27,20 +27,16 @@
              '(&make-closure '()
                              (lambda (env1 foo) foo)))
      (gensym-reset!)
-     (assert (closure-convert '(lambda (foo) (+ foo 23)) '(&apply))
+     (assert (closure-convert '(lambda (foo) (+ foo 23)) '())
              '(&make-closure +
                              (lambda (env1 foo) (&apply env1 foo 23))))
      (gensym-reset!)
-     (assert (closure-convert '(lambda (foo) (+ foo 23)) '(+ &apply))
-             '(&make-closure '()
-                             (lambda (env1 foo) (+ foo 23))))
-     (gensym-reset!)
-     (assert (closure-convert '(lambda (foo) (foo bar baz)) '(&apply))
+     (assert (closure-convert '(lambda (foo) (foo bar baz)) '())
              '(&make-closure (&cons bar baz)
                              (lambda (env1 foo)
                                (&apply foo (&car env1) (&cdr env1)))))
      (gensym-reset!)
-     (assert (closure-convert '(lambda (x) (lambda (y) (+ x y))) '(&apply &env-ref &make-closure &make-env &cons &car &cdr))
+     (assert (closure-convert '(lambda (x) (lambda (y) (+ x y))) '())
              '(&make-closure +
                              (lambda (env2 x)
                                (&make-closure (&cons env2 x)
@@ -55,7 +51,7 @@
                                    (if n
                                        (&yield-cont c n)
                                        (&yield-cont c n))))
-                              (make-internal-applicatives))
+                              '())
              '(&make-closure '()
                              (lambda (env2 n cont)
                                (let ((c (&make-closure cont
@@ -97,13 +93,13 @@
  (it "Converting let works."
      (assert (closure-convert '(let ((a b)) a) '()) '(let ((a b)) a))
      (gensym-reset!)
-     (assert (closure-convert '(let ((a 23)) (lambda (x) a)) '(&apply))
+     (assert (closure-convert '(let ((a 23)) (lambda (x) a)) '())
              '(let ((a 23))
                 (&make-closure a
                                (lambda (env1 x)
                                  env1))))
      (gensym-reset!)
-     (assert (closure-convert '(let ((a (lambda (x) x))) (a 23)) '(&apply))
+     (assert (closure-convert '(let ((a (lambda (x) x))) (a 23)) '())
              '(let ((a (&make-closure '()
                                       (lambda (env1 x)
                                         x))))
@@ -112,13 +108,13 @@
  (it "Converting letrec works."
      (assert (closure-convert '(letrec ((a b)) a) '()) '(letrec ((a b)) a))
      (gensym-reset!)
-     (assert (closure-convert '(letrec ((a 23)) (lambda (x) a)) '(&apply))
+     (assert (closure-convert '(letrec ((a 23)) (lambda (x) a)) '())
              '(letrec ((a 23))
                 (&make-closure a
                                (lambda (env1 x)
                                  env1))))
      (gensym-reset!)
-     (assert (closure-convert '(letrec ((a (lambda (x) x))) (a 23)) '(&apply))
+     (assert (closure-convert '(letrec ((a (lambda (x) x))) (a 23)) '())
              '(letrec ((a (&make-closure '()
                                          (lambda (env1 x)
                                            x))))
@@ -128,7 +124,7 @@
      (gensym-reset!)
      (assert (closure-convert '(fix ((foo (lambda () (foo))))
                                     (foo 23))
-                              '(&apply))
+                              '())
              '(let ((env2 '()))
                 (let ((foo (&make-closure env2
                                           (lambda (env1)
@@ -139,7 +135,7 @@
      (assert (closure-convert '(fix ((foo (lambda () (bar)))
                                      (bar (lambda () (foo))))
                                     (foo))
-                              '(&apply))
+                              '())
              '(let ((env3 '())
                     (env4 '()))
                 (let ((foo (&make-closure env3
@@ -161,7 +157,7 @@
                   (lambda (value11)
                     (let ((fact value11))
                       23))))
-              '(&yield-cont &make-env &apply &env-ref &make-closure))
+              '())
              '(&make-closure
                fact
                (lambda (env2 n cont4)
@@ -186,7 +182,7 @@
                  (let ((foo (foo foo bar))
                        (bar (bar foo bar)))
                    (list (foo) (bar))))
-              '(&yield-cont &make-env &apply &env-ref &make-closure &cons &car &cdr))
+              '())
              '(let ((foo (&make-closure
                           '()
                           (lambda (env2 foo bar)

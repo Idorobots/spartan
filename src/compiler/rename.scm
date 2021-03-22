@@ -3,17 +3,16 @@
 (load "compiler/ast.scm")
 (load "compiler/utils.scm")
 
-(define (mangle expr globals)
+(define (mangle expr)
   (walk id
         (lambda (expr)
           (if (symbol? expr)
-              (rename-symbol expr globals)
+              (rename-symbol expr)
               expr))
         expr))
 
-(define (rename-symbol symbol globals)
-  ;; FIXME This shouldn't be here.
-  (if (member symbol globals)
+(define (rename-symbol symbol)
+  (if (primop? symbol)
       symbol
       (symbol->safe symbol)))
 

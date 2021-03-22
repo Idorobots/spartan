@@ -6,51 +6,36 @@
 (load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 
-(define (closure-convert expr internals)
+(define (closure-convert expr globals)
   (walk id
         (lambda (expr)
           (cond ((application? expr)
-                 (cc-application expr internals))
+                 (cc-application expr))
                 ((lambda? expr)
-                 (cc-lambda expr internals))
+                 (cc-lambda expr globals))
                 ((fix? expr)
-                 (cc-fix expr internals))
+                 (cc-fix expr))
                 (else expr)))
         expr))
 
-(define (make-internal-applicatives)
-  '(&apply
-    &cons
-    &car
-    &cdr
-    &env-ref
-    &error-handler
-    &make-env
-    &make-closure
-    &make-structure
-    &set-env!
-    &set-closure-env!
-    &set-error-handler!
-    &structure-binding
-    &structure-ref
-    &yield-cont
-    &push-delimited-continuation!
-    &pop-delimited-continuation!))
+(define (make-global-definitions-list)
+  '())
 
-(define (cc-application expr internals)
+(define (cc-application expr)
   (let ((op (app-op expr)))
-    (if (member op internals)
+    (if (primop? op)
         expr
         (make-app '&apply
                   (cons op
                         (app-args expr))))))
 
-(define (cc-lambda expr internals)
+(define (cc-lambda expr globals)
   (let ((env (gensym 'env))
         (args (lambda-args expr))
         (body (lambda-body expr))
-        (free (set-difference (free-vars expr)
-                              internals)))
+        (free (filter (compose not primop?)
+                      (set-difference (free-vars expr)
+                              globals))))
     (make-app '&make-closure
               (list (create-env free)
                     (make-lambda (cons env args)
@@ -84,7 +69,7 @@
                                       (offset var free)))))
               free))))
 
-(define (cc-fix expr internals)
+(define (cc-fix expr)
   ;; NOTE These lambdas have already been converted, so we can modify their envs.
   (let* ((lambdas (fix-bindings expr))
          (lambda-vars (bindings-vars lambdas))

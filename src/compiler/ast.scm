@@ -276,10 +276,13 @@
        (not (member (car expr)
                     +syntax-keys+))))
 
+(define (primop? symbol)
+  (and (symbol? symbol)
+       (equal? #\& (car (string->list (symbol->string symbol))))))
+
 (define (primop-application? expr)
   (and (application? expr)
-       ;; FIXME Don't rely on make-internal-applicatives
-       (member (app-op expr) (make-internal-applicatives))))
+       (primop? (app-op expr))))
 
 (define (make-app op args)
   `(,op ,@args))
