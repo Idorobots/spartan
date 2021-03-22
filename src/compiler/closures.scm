@@ -19,7 +19,14 @@
         expr))
 
 (define (make-global-definitions-list)
-  '())
+  '(nil car cadr cdr cddr list cons append concat
+    equal? nil?
+    * + - / = < random
+    ref deref assign!
+    call/current-continuation call/reset call/shift call/handler raise
+    sleep self send recv spawn task-info monitor
+    assert! signal! retract! select notify-whenever
+    display newline debug))
 
 (define (cc-application expr)
   (let ((op (app-op expr)))

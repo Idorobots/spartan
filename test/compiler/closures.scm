@@ -201,4 +201,18 @@
                                  foo)))))))
                 (let ((foo (&apply foo foo bar))
                       (bar (&apply bar foo bar)))
-                  (&apply list (&apply foo) (&apply bar)))))))
+                  (&apply list (&apply foo) (&apply bar))))))
+
+ (it "Respects globaly available variables"
+     (gensym-reset!)
+     (assert (closure-convert '(lambda (x) (lambda (y) (cons (* x y)
+                                                             (+ x y))))
+                              '(+ * cons))
+             '(&make-closure '()
+                             (lambda (env2 x)
+                               (&make-closure x
+                                              (lambda (env1 y)
+                                                (&apply
+                                                 cons
+                                                 (&apply * env1 y)
+                                                 (&apply + env1 y)))))))))
