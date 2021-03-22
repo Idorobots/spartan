@@ -2,15 +2,24 @@
 
 (define &make-env vector)
 
+(define &cons cons)
+
 (define &env-ref vector-ref)
+
+(define &car car)
+
+(define &cdr cdr)
 
 (define &set-env! vector-set!)
 
 (define (&make-closure env fun)
-  (list &make-closure env fun))
+  (vector &make-closure env fun))
+
+(define (&set-closure-env! closure env)
+  (vector-set! closure 1 env))
 
 (define (&apply closure . args)
-  (apply (caddr closure) (cadr closure) args))
+  (apply (vector-ref closure 2) (vector-ref closure 1) args))
 
 (define (closure? thing)
-  (equal? (car thing) &make-closure))
+  (equal? (vector-ref thing 0) &make-closure))

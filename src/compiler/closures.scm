@@ -20,12 +20,16 @@
 
 (define (make-internal-applicatives)
   '(&apply
+    &cons
+    &car
+    &cdr
     &env-ref
     &error-handler
     &make-env
     &make-closure
     &make-structure
     &set-env!
+    &set-closure-env!
     &set-error-handler!
     &structure-binding
     &structure-ref
@@ -48,15 +52,37 @@
         (free (set-difference (free-vars expr)
                               internals)))
     (make-app '&make-closure
-              (list (make-app '&make-env free)
+              (list (create-env free)
                     (make-lambda (cons env args)
-                                 (substitute (map (lambda (var)
-                                                    (cons var
-                                                          (make-app '&env-ref
-                                                                    (list env
-                                                                          (offset var free)))))
-                                                  free)
+                                 (substitute (create-ref-substitutes env free)
                                              body))))))
+
+(define (create-env free)
+  (cond ((= (length free) 0)
+         ''())
+        ((= (length free) 1)
+         (car free))
+        ((= (length free) 2)
+         (make-app '&cons free))
+        (else
+         (make-app '&make-env free))))
+
+(define (create-ref-substitutes env free)
+  (cond ((= (length free) 1)
+         (list (cons (car free)
+                     env)))
+        ((= (length free) 2)
+         (list (cons (car free)
+                     (make-app '&car (list env)))
+               (cons (cadr free)
+                     (make-app '&cdr (list env)))))
+        (else
+         (map (lambda (var)
+                (cons var
+                      (make-app '&env-ref
+                                (list env
+                                      (offset var free)))))
+              free))))
 
 (define (cc-fix expr internals)
   ;; NOTE These lambdas have already been converted, so we can modify their envs.
@@ -67,13 +93,7 @@
          (env-vars (map (lambda (b)
                           (gensym 'env))
                         lambdas))
-         (envs (map (lambda (ev e)
-                      (list ev
-                            (map (lambda (v)
-                                   (if (member v lambda-vars)
-                                       ''()
-                                       v))
-                                 e)))
+         (envs (map (partial patch-env lambda-vars)
                     env-vars
                     lambda-envs))
          (closures (map (lambda (ev b)
@@ -85,18 +105,52 @@
                         lambdas))
          (setters (foldl append
                          '()
-                         (map (lambda (ev e)
-                                (map (lambda (v)
-                                       (make-app '&set-env!
-                                                 (list ev
-                                                       (offset v (cdr e))
-                                                       v)))
-                                     (filter (lambda (v)
-                                               (member v lambda-vars))
-                                             e)))
+                         (map (partial create-env-setters lambda-vars)
                               env-vars
+                              lambda-vars
                               lambda-envs))))
     (make-let envs
               (make-let closures
                         (make-do (append setters
                                          (list (fix-body expr))))))))
+
+(define (patch-env lambda-vars env-var env)
+  (cond ((symbol? env)
+         (list env-var
+               ''()))
+        ((and (application? env)
+              (equal? (app-op env) '&cons))
+         (list env-var
+               ''()))
+        (else
+         (list env-var
+               (map (lambda (v)
+                      (if (member v lambda-vars)
+                          ''()
+                          v))
+                    env)))))
+
+(define (create-env-setters lambda-vars env-var lambda-var env)
+  (cond ((symbol? env)
+         (if (member env lambda-vars)
+             (list (make-app '&set-closure-env!
+                       (list lambda-var
+                             env)))
+             '()))
+        ((and (application? env)
+              (equal? (app-op env) '&cons))
+         (if (or (member (cadr env) lambda-vars)
+                 (member (caddr env) lambda-vars))
+             (list (make-app '&set-closure-env!
+                             (list lambda-var
+                                   env)))
+             '()))
+        (else
+         (map (lambda (v)
+                (make-app '&set-env!
+                          (list env-var
+                                (offset v (cdr env))
+                                v)))
+              (filter (lambda (v)
+                        (member v lambda-vars))
+                      env)))))
