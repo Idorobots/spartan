@@ -3,13 +3,12 @@
 (load "compiler/utils.scm")
 
 ;; Some optimization
-(define (memoize-input f)
-  (let* ((previous-runs (make-hasheq)))
-    (lambda (hash input offset)
-      (hash-ref! previous-runs
-                 (+ hash offset)
-                 (lambda ()
-                   (f hash input offset))))))
+(define (memoize-input previous-runs f)
+  (lambda (hash input offset)
+    (hash-ref! previous-runs
+               (+ hash offset)
+               (lambda ()
+                 (f hash input offset)))))
 
 ;; Matches
 (define (no-match)
@@ -35,23 +34,30 @@
     (spit temp-file (generate-grammar rules))
     (load temp-file)))
 
-(require file/md5)
 (define (hash-input input)
-  (* (eq-hash-code (md5 input))
-     (eq-hash-code input)
+  (* (eq-hash-code input)
      (string-length input)))
 
 (define (generate-grammar rules)
   (let ((top-name (caar rules))
         (hash (gensym 'hash))
-        (input (gensym 'input)))
+        (input (gensym 'input))
+        (caches (map (lambda (_) (gensym 'cache)) rules)))
     `(define ,top-name
-       (letrec ,(map generate-rule rules)
-         (lambda (,input)
-           (let ((,hash (hash-input ,input)))
-             (,top-name ,hash ,input 0)))))))
+       (let ,(map generate-cache caches)
+         (letrec ,(map generate-rule rules caches)
+           (lambda (,input)
+             ,@(map clear-cache caches)
+             (let ((,hash (hash-input ,input)))
+               (,top-name ,hash ,input 0))))))))
 
-(define (generate-rule rule)
+(define (generate-cache cache)
+  `(,cache (make-hasheq)))
+
+(define (clear-cache cache)
+  `(hash-clear! ,cache))
+
+(define (generate-rule rule cache)
   (let ((name (car rule))
         (pattern (cadr rule))
         (transform (cddr rule))
@@ -59,7 +65,7 @@
         (input (gensym 'input))
         (offset (gensym 'offset)))
     `(,name
-      (memoize-input
+      (memoize-input ,cache
        (lambda (,hash ,input ,offset)
          ,(generate-rule-pattern pattern
                                  hash
