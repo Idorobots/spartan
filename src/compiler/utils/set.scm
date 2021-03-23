@@ -1,7 +1,14 @@
-;; Set
+;; Set of symbols
+
+;; FIXME Could be quicker
+
+(load "compiler/utils/utils.scm")
 
 (define (set . args)
   (sort args symbol<?))
+
+(define (set-empty? set)
+  (null? set))
 
 (define (set-difference as bs)
   (filter (lambda (a)
@@ -15,3 +22,8 @@
 (define (set-sum sets)
   (foldl set-union (set) sets))
 
+(define (set-member? set value)
+  (member value set))
+
+(define (set-insert s value)
+  (set-union s (set value)))
