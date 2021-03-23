@@ -25,13 +25,6 @@
                 (x (lambda (value2)
                      (&yield-cont cont1 value2))))))
 
- (it "CPCing define works."
-     (gensym-reset!)
-     (assert (cpc-define '(define x 23) id) '(define x 23))
-     (gensym-reset!)
-     (assert (cpc-define '(define x (foo 23)) id)
-             '(define x (foo 23 (lambda (value1) value1)))))
-
  (it "CPCing do works."
      (gensym-reset!)
      (assert (cpc-do '(do 1 2 3) id) '(do 1 2 3))

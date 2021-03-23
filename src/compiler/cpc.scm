@@ -18,8 +18,6 @@
         ((lambda? expr) (cpc-lambda expr kont))
         ((fix? expr) (cpc-fix expr kont))
         ((application? expr) (cpc-app expr kont))
-        ;; FIXME These shouldn't be here.
-        ((define? expr) (cpc-define expr kont))
         ;; --
         ('else (error "Unexpected expression: " expr))))
 
@@ -55,12 +53,6 @@
            (cpc (lambda-body expr)
                 (lambda (s)
                   (make-yield (make-app-1 ct s))))))))
-
-(define (cpc-define expr kont)
-  (kont (make-val-define (define-name expr)
-                         (cpc (define-value expr)
-                              ;; FIXME Shouldn't this be the other definitions?
-                              (make-identity-continuation)))))
 
 (define (cpc-do expr kont)
   (cpc-sequence (do-statements expr)

@@ -30,7 +30,6 @@
         ((quote? expr) (set))
         ((lambda? expr) (set-difference (free-vars (lambda-body expr))
                                         (apply set (lambda-args expr))))
-        ((define? expr) (free-vars (define-value expr)))
         ((do? expr) (set-sum (map free-vars
                                   (do-statements expr))))
         ((if? expr) (set-sum (list (free-vars (if-predicate expr))
@@ -52,7 +51,5 @@
                                                (set)
                                                (map free-vars
                                                     (app-args expr)))))
-        ;; These are required by broken letrec implementation.
-        ((set!? expr) (free-vars (set!-val expr)))
         ;; --
         ('else (error "Unexpected expression:" expr))))

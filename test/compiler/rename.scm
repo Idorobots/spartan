@@ -21,12 +21,6 @@
      (assert (mangle 'symbol->safe) '__symbol_GREATERsafe)
      (assert (mangle '&symbol->safe) '&symbol->safe))
 
- (it "Renaming define works."
-     (assert (mangle '(define foo bar))
-             '(define __foo __bar))
-     (assert (mangle '(define id (lambda (x) x)))
-             '(define __id (lambda (__x) __x))))
-
  (it "Renaming let works."
      (assert (mangle '(let ((foo bar))
                         baz))
@@ -52,20 +46,8 @@
      (assert (mangle '(if (equal? 23 23) (cons a b) c))
              '(if (__equalQUEST 23 23) (__cons __a __b) __c)))
 
- (it "Renaming letrec works."
-     (assert (mangle '(letrec ((a 23)
-                               (b a))
-                        b))
-             '(letrec ((__a 23)
-                       (__b __a))
-                __b)))
-
  (it "Renaming application works."
      (assert (mangle '(foo bar baz))
              '(__foo __bar __baz))
      (assert (mangle '(&yield-cont bar baz))
-             '(&yield-cont __bar __baz)))
-
- (it "Renaming set! works."
-     (assert (mangle '(set! foo bar))
-             '(set! __foo __bar))))
+             '(&yield-cont __bar __baz))))

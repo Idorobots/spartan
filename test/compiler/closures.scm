@@ -61,17 +61,6 @@
                                      (&yield-cont c n)
                                      (&yield-cont c n)))))))
 
- (it "Converting define works."
-     (assert (closure-convert '(define k v) '()) '(define k v))
-     (gensym-reset!)
-     (assert (closure-convert '(define f (lambda (x) x)) '())
-             '(define f (&make-closure '()
-                                       (lambda (env1 x) x))))
-     (gensym-reset!)
-     (assert (closure-convert '(define f (lambda (x) f)) '())
-             '(define f (&make-closure f
-                                       (lambda (env1 x) env1)))))
-
  (it "Converting do works."
      (assert (closure-convert '(do a b c) '()) '(do a b c))
      (gensym-reset!)

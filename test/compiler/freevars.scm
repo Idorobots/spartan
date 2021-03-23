@@ -30,11 +30,9 @@
      (assert (free-vars '(a b c)) '(a b c))
      (assert (free-vars '(list (quote foo bar) baz)) '(baz list)))
  (it "handles syntax forms correctly"
-     (assert (free-vars '(define foo (list foo bar baz))) '(bar baz foo list))
      (assert (free-vars '(do a b c)) '(a b c))
      (assert (free-vars '(if foo bar baz)) '(bar baz foo))
-     (assert (free-vars '(do a b (do c d))) '(a b c d))
-     (assert (free-vars '(set! foo bar)) '(bar)))
+     (assert (free-vars '(do a b (do c d))) '(a b c d)))
  (it "handles bindings correctly"
      (assert (free-vars '(letrec ((a 23) (bar a)) (* 2 bar))) '(*))
      (assert (free-vars '(letrec ((a 23) (bar foo)) (* a bar))) '(* foo))
