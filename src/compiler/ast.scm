@@ -1,6 +1,6 @@
 ;; AST handling routines
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
 
 (define (walk pre post expression)
   (let ((w (partial walk pre post))
@@ -31,9 +31,6 @@
   '(quote
     if
     lambda
-    quasiquote
-    unquote
-    unquote-splicing
     do
     let
     letrec

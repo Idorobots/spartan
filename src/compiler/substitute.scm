@@ -1,7 +1,8 @@
 ;; Binding aware variable substitution.
 
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 
 (define (filter-subs subs vars)
   (filter (lambda (s)

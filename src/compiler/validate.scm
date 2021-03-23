@@ -1,6 +1,7 @@
 ;; Final frontend code validation.
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
+
 (load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
 (load "compiler/errors.scm")

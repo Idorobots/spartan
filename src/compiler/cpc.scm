@@ -1,8 +1,10 @@
 ;; Continuation Passing Converter
 ;; Assumes syntax & macro-expanded code.
 
+(load "compiler/utils/gensym.scm")
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 
 (define (cpc expr kont)
   (cond ((symbol? expr) (kont expr))

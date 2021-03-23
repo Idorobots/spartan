@@ -1,6 +1,5 @@
 ;; A very simple parser.
 
-(load "compiler/utils.scm")
 (load "compiler/peggen.scm")
 (load "compiler/env.scm")
 (load "compiler/errors.scm")

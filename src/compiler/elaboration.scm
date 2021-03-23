@@ -1,7 +1,9 @@
 ;; Semantic elaboration.
 ;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
 
-(load "compiler/utils.scm")
+(load "compiler/utils/errors.scm")
+(load "compiler/utils/utils.scm")
+
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")

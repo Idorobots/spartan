@@ -1,6 +1,5 @@
-;; Tha compiler.
+;; The compiler
 
-(load "compiler/utils.scm")
 (load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
 

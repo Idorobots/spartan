@@ -1,6 +1,6 @@
 ;; AST
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
 
 ;; Basic definitions
 

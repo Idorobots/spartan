@@ -1,7 +1,8 @@
 ;; Letrec expansion phase.
 
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 (load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 

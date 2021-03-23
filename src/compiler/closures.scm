@@ -1,8 +1,10 @@
 ;; Closure conversion.
 ;; Assumes macro-expanded code.
 
+(load "compiler/utils/utils.scm")
+(load "compiler/utils/gensym.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 (load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 

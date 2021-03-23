@@ -2,7 +2,8 @@
 ;; Assumes syntax & macro-expanded code.
 
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
+(load "compiler/utils/gensym.scm")
 
 (define (normalize expr kont)
   (let ((n (flip normalize id)))
@@ -35,12 +36,13 @@
           ('else (error "Unexpected expression: " expr)))))
 
 (define (normalize-named expr kont)
-  (normalize expr (lambda (normalized)
-                    (if (atomic? normalized)
-                        (kont normalized)
-                        (let ((temp (gensym 'temp)))
-                          (make-let-1 temp normalized
-                                      (kont temp)))))))
+  (normalize expr
+             (lambda (normalized)
+               (if (atomic? normalized)
+                   (kont normalized)
+                   (let ((temp (gensym 'temp)))
+                     (make-let-1 temp normalized
+                                 (kont temp)))))))
 
 (define (normalize-sequence exprs kont)
   (if (empty? exprs)
