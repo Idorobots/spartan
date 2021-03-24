@@ -1,3 +1,7 @@
+../test/foof/errors/unmatched-parens.foo(2,22): Undefined variable `valid`:
+2 |  `(this unquote is ,@valid)
+                         ^~~~~~
+
 ../test/foof/errors/unmatched-parens.foo(4,11): Unmatched `)`, expected an opening `(` to come before:
 4 |  (newline)))
               ^~~~~~
@@ -6,4 +10,4 @@
 4 |  (newline)))
                ^~~~~~
 
-Compilation aborted due to 2 errors.
+Compilation aborted due to 3 errors.

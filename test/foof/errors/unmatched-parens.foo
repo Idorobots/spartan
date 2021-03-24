@@ -1,4 +1,4 @@
-(define (foo x)
+(define (foo _)
   `(this unquote is ,@valid)
-  (display "Hello world!"))
+  (display (foo "Hello world! ")))
   (newline)))

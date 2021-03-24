@@ -8,3 +8,4 @@
 (load "runtime/monitor.scm")
 (load "runtime/exceptions.scm")
 (load "runtime/modules.scm")
+(load "runtime/bootstrap.scm")

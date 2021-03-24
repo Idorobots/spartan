@@ -1,6 +1,7 @@
 ;; AST
 
-(load "compiler/utils.scm")
+(load "compiler/utils/set.scm")
+(load "compiler/utils/utils.scm")
 
 ;; Basic definitions
 
@@ -77,6 +78,15 @@
 (define (if-node? node)
   (is-type? node 'if))
 
+(define (ast-if-condition node)
+  (ast-get node 'condition))
+
+(define (ast-if-then node)
+  (ast-get node 'then))
+
+(define (ast-if-else node)
+  (ast-get node 'else))
+
 ;; Do
 (define (make-do-node exprs)
   (ast-node 'type 'do 'exprs exprs))
@@ -94,6 +104,12 @@
 (define (lambda-node? node)
   (is-type? node 'lambda))
 
+(define (ast-lambda-body node)
+  (ast-get node 'body))
+
+(define (ast-lambda-formals node)
+  (ast-get node 'formals))
+
 ;; Let
 (define (make-let-node bindings body)
   (ast-node 'type 'let 'bindings bindings 'body body))
@@ -101,12 +117,24 @@
 (define (let-node? node)
   (is-type? node 'let))
 
+(define (ast-let-bindings node)
+  (ast-get node 'bindings))
+
+(define (ast-let-body node)
+  (ast-get node 'body))
+
 ;; Letrec
 (define (make-letrec-node bindings body)
   (ast-node 'type 'letrec 'bindings bindings 'body body))
 
 (define (letrec-node? node)
   (is-type? node 'letrec))
+
+(define (ast-letrec-bindings node)
+  (ast-get node 'bindings))
+
+(define (ast-letrec-body node)
+  (ast-get node 'body))
 
 ;; Quotation
 (define (make-quote-node value)
@@ -156,11 +184,24 @@
 (define (app-node? node)
   (is-type? node 'app))
 
+(define (ast-app-op node)
+  (ast-get node 'op))
+
+(define (ast-app-args node)
+  (ast-get node 'args))
+
+;; Primop application
 (define (make-primop-app-node op args)
   (ast-node 'type 'primop-app 'op op 'args args))
 
 (define (primop-app-node? node)
   (is-type? node 'primop-app))
+
+(define (ast-primop-app-op node)
+  (ast-get node 'op))
+
+(define (ast-primop-app-args node)
+  (ast-get node 'args))
 
 ;; Error within parse tree
 (define (make-error-node)
@@ -217,6 +258,22 @@
 
 (define (get-context node)
   (get-context* node '()))
+
+(define (free-vars vars node)
+  (if (set-empty? vars)
+      node
+      (ast-set node 'free-vars vars)))
+
+(define (get-free-vars node)
+  (ast-get* node 'free-vars (set)))
+
+(define (bound-vars vars node)
+  (if (set-empty? vars)
+      node
+      (ast-set node 'bound-vars vars)))
+
+(define (get-bound-vars node)
+  (ast-get* node 'bound-vars (set)))
 
 (define (get-type node)
   (ast-get node 'type))

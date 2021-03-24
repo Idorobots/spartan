@@ -16,6 +16,27 @@
      (assert (deref x) 2)))
 
 (describe
+ "sets"
+ (it "should support various set operations"
+     (assert (set) (set))
+     (assert (set 'a 'b 'c) (set 'a 'b 'c))
+     (assert (set 'c 'a 'b) (set 'a 'b 'c))
+     (assert (set-difference (set 'a 'b 'c) (set 'a 'b 'c)) (set))
+     (assert (set-difference (set 'a 'b 'c) (set 'a)) (set 'b 'c))
+     (assert (set-difference (set 'a 'b 'c) (set 'd)) (set 'a 'b 'c))
+     (assert (set-difference (set 'a 'b 'c) (set 'c 'd)) (set 'a 'b))
+     (assert (set-union (set 'a 'b 'c) (set 'a 'b 'c)) (set 'a 'b 'c))
+     (assert (set-union (set 'a 'b 'c) (set 'd)) (set 'a 'b 'c 'd))
+     (assert (set-union (set 'b 'c 'd) (set 'a)) (set 'a 'b 'c 'd))
+     (assert (set-union (set 'b 'c) (set 'a 'd)) (set 'a 'b 'c 'd))
+     (assert (set-intersection (set 'a 'b 'c)
+                               (set 'x 'b 'c))
+             (set 'b 'c))
+     (assert (set-intersection (set 'a 'b 'c)
+                               (set 'x 'y 'z))
+             (set))))
+
+(describe
  "gensym"
  (it "should incrementally name variables"
      (gensym-reset!)

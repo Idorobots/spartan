@@ -1,6 +1,8 @@
-(begin
-  (if (define (foo x) x)
-      'yup
-      'nope)
-  (car (module (x)
-         (define (foo x) x))))
+(if (define (foo x) y)
+    'yup
+    'nope)
+(car (module (x)
+       (define (foo x) y)))
+bar
+(define (baz bar)
+  (* 2 bar z))

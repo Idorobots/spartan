@@ -1,5 +1,8 @@
 ;; Error handling within the compiler.
 
+(load "compiler/utils/refs.scm")
+(load "compiler/utils/utils.scm")
+
 (define (report-errors env)
   (let ((errors (env-get env 'errors)))
     (unless (empty? errors)

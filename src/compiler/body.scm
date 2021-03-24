@@ -1,6 +1,8 @@
 ;; Implicit body handling.
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
+(load "compiler/utils/errors.scm")
+
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")
@@ -43,7 +45,7 @@
                     (generated
                      (make-letrec-node defs
                                        (reconstruct-simple-body non-defs expr)))))
-          ((= (length exprs) 0)
+          ((= (length exprs) 1)
            (car exprs))
           (else expr))))
 

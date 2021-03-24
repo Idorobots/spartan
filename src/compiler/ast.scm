@@ -1,6 +1,6 @@
 ;; AST handling routines
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
 
 (define (walk pre post expression)
   (let ((w (partial walk pre post))
@@ -8,20 +8,10 @@
     (post
      (cond ((symbol? expr) expr)
            ((simple? expr) expr)
-           ((quasiquote? expr) (make-quasiquote (w (quoted-expr expr))))
-           ((unquote? expr) (make-unquote (w (quoted-expr expr))))
-           ((unquote-splicing? expr) (make-unquote-splicing (w (quoted-expr expr))))
            ((do? expr) (make-do (map w (do-statements expr))))
            ((if? expr) (make-if (w (if-predicate expr))
                                 (w (if-then expr))
                                 (w (if-else expr))))
-           ((value-define? expr) (make-val-define (w (define-name expr))
-                                                  (w (define-value expr))))
-           ((define? expr) (make-define (w (define-name expr))
-                                        (map w (define-args expr))
-                                        (w (define-body expr))))
-           ((set!? expr) (make-set! (w (set!-var expr))
-                                    (w (set!-val expr))))
            ((lambda? expr) (make-lambda (map w (lambda-args expr))
                                         (w (lambda-body expr))))
            ((application? expr) (make-app (w (app-op expr))
@@ -35,27 +25,16 @@
            ((fix? expr) (make-fix (map (partial map w)
                                        (fix-bindings expr))
                                   (w (fix-body expr))))
-           ((module? expr) (make-module (w (module-name expr))
-                                        (map w (module-deps expr))
-                                        (map w (module-body expr))))
-           ((structure? expr) (make-structure (map w (structure-defs expr))))
            (else (error "Unexpected expression: " expr))))))
 
 (define +syntax-keys+
   '(quote
     if
     lambda
-    quasiquote
-    unquote
-    unquote-splicing
-    define
     do
     let
     letrec
-    fix
-    set!
-    module
-    structure))
+    fix))
 
 (define (simple? expr)
   (or (nil? expr)
@@ -67,8 +46,7 @@
 
 (define (value? expr)
   (or (lambda? expr)
-      (simple? expr)
-      (structure? expr)))
+      (simple? expr)))
 
 ;; ((var val) ...)
 (define binding-var car)
@@ -81,7 +59,6 @@
 (define (bindings-vals bindings)
   (map binding-val bindings))
 
-
 ;; (quote expr)
 (define (quote? expr)
   (tagged-list? 'quote expr))
@@ -91,27 +68,6 @@
 
 (define (quoted-expr expr)
   (cadr expr))
-
-;; (quasiquote expr)
-(define (quasiquote? expr)
-  (tagged-list? 'quasiquote expr))
-
-(define (make-quasiquote expr)
-  (list 'quasiquote expr))
-
-;; (unquote expr)
-(define (unquote? expr)
-  (tagged-list? 'unquote expr))
-
-(define (make-unquote expr)
-  (list 'unquote expr))
-
-;; (unquote-splicing expr)
-(define (unquote-splicing? expr)
-  (tagged-list? 'unquote-splicing expr))
-
-(define (make-unquote-splicing expr)
-  (list 'unquote-splicing expr))
 
 ;; (lambda (args ...) body)
 (define (lambda? expr)
@@ -141,39 +97,6 @@
 
 (define (lambda-body expr)
   (car (lambda-body* expr)))
-
-;; (define (name args ...) body)
-;; (define name value)
-(define (define? expr)
-  (tagged-list? 'define expr))
-
-(define (value-define? expr)
-  (and (define? expr) (symbol? (cadr expr))))
-
-(define (make-define name args body)
-  `(define (,name ,@args)
-     ,body))
-
-(define (make-val-define name value)
-  `(define ,name
-     ,value))
-
-(define (define-name expr)
-  (if (value-define? expr)
-      (cadr expr)
-      (caadr expr)))
-
-(define (define-value expr)
-  (caddr expr))
-
-(define (define-args expr)
-  (cdadr expr))
-
-(define (define-body* expr)
-  (cddr expr))
-
-(define (define-body expr)
-  (car (define-body* expr)))
 
 ;; (do statements ...)
 (define (do? expr)
@@ -256,19 +179,6 @@
 
 (define fix-body let-body)
 
-;; Mutation:
-(define (set!? expr)
-  (tagged-list? 'set! expr))
-
-(define (make-set! variable value)
-  `(set! ,variable ,value))
-
-(define (set!-var expr)
-  (cadr expr))
-
-(define (set!-val expr)
-  (caddr expr))
-
 ;; (operator args ...)
 (define (application? expr)
   (and (list? expr)
@@ -298,29 +208,3 @@
 
 (define (app-args expr)
   (cdr expr))
-
-;; (module (name deps ...) body ...)
-(define (module? expr)
-  (tagged-list? 'module expr))
-
-(define (module-name expr)
-  (caadr expr))
-
-(define (module-deps expr)
-  (cdadr expr))
-
-(define (module-body expr)
-  (cddr expr))
-
-(define (make-module name deps body)
-  `(module (,name ,@deps) ,@body))
-
-;; (structure defs ...)
-(define (structure? expr)
-  (tagged-list? 'structure expr))
-
-(define (structure-defs expr)
-  (cdr expr))
-
-(define (make-structure defs)
-  `(structure ,@defs))

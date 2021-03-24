@@ -1,7 +1,8 @@
 ;; Binding aware variable substitution.
 
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 
 (define (filter-subs subs vars)
   (filter (lambda (s)
@@ -37,13 +38,6 @@
                                                        bindings)))
                             (make-letrec subbed-bindings
                                          (substitute unbound-subs (let-body expr)))))
-        ((value-define? expr) (make-val-define (define-name expr)
-                                               (substitute subs (define-value expr))))
-        ((define? expr) (make-define (define-name expr)
-                                     (define-args expr)
-                                     (substitute subs (define-body expr))))
-        ((set!? expr) (make-set! (set!-var expr)
-                                 (substitute subs (set!-val expr))))
         ((do? expr) (make-do (map (lambda (s)
                                     (substitute subs s))
                                   (do-statements expr))))
@@ -54,12 +48,4 @@
                                        (map (lambda (a)
                                               (substitute subs a))
                                             (app-args expr))))
-        ((module? expr) (make-module (module-name expr)
-                                     (module-deps expr)
-                                     (map (lambda (s)
-                                            (substitute subs s))
-                                          (module-body expr))))
-        ((structure? expr) (make-structure (map (lambda (s)
-                                                  (substitute subs s))
-                                                (structure-defs expr))))
         (else expr)))

@@ -1,7 +1,5 @@
 ;; Static compilation env.
 
-(load "compiler/utils.scm")
-
 (define (env . properties)
   (apply hasheq properties))
 

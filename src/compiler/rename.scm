@@ -1,7 +1,8 @@
 ;; Target-safe variable renaming.
 
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 
 (define (mangle expr)
   (walk id
@@ -42,4 +43,4 @@
         ((equal? char #\@) "AT")
         ((equal? char #\$) "DOLLAR")
         ((equal? char #\~) "TYLDE")
-        ('else (string char))))
+        (else (string char))))

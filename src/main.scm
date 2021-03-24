@@ -2,7 +2,7 @@
 
 (load "compiler/env.scm")
 (load "compiler/compiler.scm")
-(load "runtime/bootstrap.scm")
+(load "runtime/rt.scm")
 (load "rete/rete.scm")
 
 (define (run-code expr)

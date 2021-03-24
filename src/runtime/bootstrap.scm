@@ -1,11 +1,8 @@
 ;; The bootstrap code.
 
-(load "compiler/utils.scm")
-(load "runtime/rt.scm")
+(load "compiler/utils/utils.scm")
+(load "compiler/utils/refs.scm")
 (load "rete/rete.scm")
-
-;; Built-in values:
-(define __nil nil)
 
 ;; Built-in functions:
 (define (cpsfy f)
@@ -23,6 +20,10 @@
 (define bootstrap (compose closurize cpsfy))
 
 ;; Basic
+
+(define __nil '())
+(define __true true)
+(define __false false)
 
 (define __car (bootstrap car))
 (define __cadr (bootstrap car))

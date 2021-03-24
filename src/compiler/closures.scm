@@ -1,8 +1,10 @@
 ;; Closure conversion.
 ;; Assumes macro-expanded code.
 
+(load "compiler/utils/utils.scm")
+(load "compiler/utils/gensym.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 (load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 
@@ -20,7 +22,7 @@
 
 (define (make-global-definitions-list)
   '(nil car cadr cdr cddr list cons append concat
-    equal? nil?
+    equal? nil? true false
     * + - / = < random
     ref deref assign!
     call/current-continuation call/reset call/shift call/handler raise
@@ -41,7 +43,7 @@
         (args (lambda-args expr))
         (body (lambda-body expr))
         (free (filter (compose not primop?)
-                      (set-difference (free-vars expr)
+                      (set-difference (free-vars-old expr)
                               globals))))
     (make-app '&make-closure
               (list (create-env free)

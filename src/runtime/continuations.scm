@@ -1,6 +1,6 @@
 ;; Continuations:
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
 (load "runtime/closures.scm")
 
 ;; FIXME This really needs to be done on a per-uProc basis.

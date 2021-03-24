@@ -1,6 +1,7 @@
 ;; Pseudo macro-expander for convenience
 
-(load "compiler/utils.scm")
+(load "compiler/utils/utils.scm")
+
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
 (load "compiler/tree-ast.scm")

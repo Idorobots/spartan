@@ -1,19 +1,13 @@
 ;; Letrec expansion phase.
 
+(load "compiler/utils/scc.scm")
+(load "compiler/utils/utils.scm")
+
 (load "compiler/ast.scm")
-(load "compiler/utils.scm")
 (load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
-
-(define (letrec-expand expr)
-  (walk identity
-        (lambda (expr)
-          (if (letrec? expr)
-              (ref-conversion expr)
-              expr))
-        expr))
 
 ;; This conversion uses topological sort on a strongly-connected components DAG of the input letrec in order to "untangle" the recursive definitions as much as possible.
 
@@ -51,76 +45,49 @@
 
 ;; ...which is considerably simpler to compile and optimize.
 
-;; ((a b) (a c) (b c) (c a)) -> ((b a) (c a) (c b) (a c))
-(define (transpose g)
-  (map reverse (filter (lambda (e)
-                         (> (length e) 1))
-                       g)))
+(define (letrec-expand expr)
+  (walk identity
+        (lambda (expr)
+          (if (letrec? expr)
+              (ref-conversion expr)
+              expr))
+        expr))
 
-(define (edges v g)
-  (map cadr
-       (filter (lambda (e)
-                 (and (> (length e) 1)
-                      (equal? v (car e))))
-               g)))
+(define (ref-conversion expr)
+  (scc-reorder (derive-graph expr)
+               (partial waddell fix let-ref-assign)
+               expr))
 
-(define (visit v visited l graph)
-  (let ((edges (edges v graph)))
-    (if (member v visited) ;; FIXME Could be quicker.
-        (list visited l)
-        (let* ((result (foldl (lambda (e acc)
-                                (visit e (car acc) (cadr acc) graph))
-                              (list (cons v visited) l)
-                              edges))
-               (new-visited (car result))
-               (new-l (cadr result)))
-          (list new-visited
-                (cons v new-l))))))
+;; Reordering:
 
-(define (assign v root assigned scc t-graph)
-  (let ((edges (edges v t-graph)))
-    (if (member v assigned) ;; FIXME Could be quicker.
-        (list assigned scc)
-        (foldl (lambda (e acc)
-                 (assign e
-                         root
-                         (car acc)
-                         (cadr acc)
-                         t-graph))
-               (list (cons v assigned)
-                     (cons (list root v) scc))
-               edges))))
+(define (recoursive? bindings)
+  (or (> (length bindings) 1)
+      (member (binding-var (car bindings))
+              (free-vars-old (binding-val (car bindings))))))
 
-(define (group scc)
-  (map cdr
-       (foldr (lambda (e acc)
-                (cond ((empty? acc) (list e))
-                      ((equal? (car e)
-                               (caar acc))
-                       (cons (append (car acc) (cdr e))
-                             (cdr acc)))
-                      (else
-                       (cons e acc))))
-              '()
-              scc)))
+(define (reorder-bindings fixer bindings body scc)
+  (foldr (lambda (component acc)
+           (let ((bs (filter (lambda (b)
+                               (member (binding-var b)
+                                       component))
+                             bindings)))
+             (if (recoursive? bs)
+                 (fixer
+                  (make-letrec bs acc))
+                 (make-let bs acc))))
+         body
+         scc))
 
-;; SCC according to the Kosaraju's algorithm:
+(define (scc-reorder deriver fixer expr)
+  (let* ((bindings (letrec-bindings expr))
+         (body (letrec-body expr))
+         (dep-graph (deriver bindings))
+         (scc (scc (bindings-vars bindings) dep-graph)))
+    (if (empty? scc)
+        (make-let bindings body)
+        (reorder-bindings fixer bindings body scc))))
 
-(define (scc verts graph)
-  (let* ((visited (foldl (lambda (v acc)
-                           (visit v (car acc) (cadr acc) graph))
-                         (list '() '())
-                         verts))
-         (postorder (cadr visited))
-         (t-graph (transpose graph))
-         (assigned (foldl (lambda (v acc)
-                            (assign v v (car acc) (cadr acc) t-graph))
-                          (list '() '())
-                          postorder))
-         (scc (cadr assigned)))
-    (group scc)))
-
-;; Dependency derivation::
+;; Dependency derivation:
 
 (define (derive-dependencies bindings)
   (let ((vars (bindings-vars bindings)))
@@ -131,7 +98,7 @@
                          (list (binding-var b) e))
                        (filter (lambda (v)
                                  (member v vars))
-                               (free-vars (binding-val b)))))
+                               (free-vars-old (binding-val b)))))
                 bindings))))
 
 (define (derive-ordering bindings)
@@ -158,35 +125,6 @@
                           (derive-ordering bindings)))))
       derive-dependencies))
 
-;; Reordering:
-
-(define (recoursive? bindings)
-  (or (> (length bindings) 1)
-      (member (binding-var (car bindings))
-              (free-vars (binding-val (car bindings))))))
-
-(define (reorder-bindings fixer bindings body scc)
-  (foldr (lambda (component acc)
-           (let ((bs (filter (lambda (b)
-                               (member (binding-var b)
-                                       component))
-                             bindings)))
-             (if (recoursive? bs)
-                 (fixer
-                  (make-letrec bs acc))
-                 (make-let bs acc))))
-         body
-         scc))
-
-(define (scc-reorder deriver fixer expr)
-  (let* ((bindings (letrec-bindings expr))
-         (body (letrec-body expr))
-         (dep-graph (deriver bindings))
-         (scc (scc (bindings-vars bindings) dep-graph)))
-    (if (empty? scc)
-        (make-let bindings body)
-        (reorder-bindings fixer bindings body scc))))
-
 ;; This conversion relies on boxing & assignments to implement assignment conversion on the variables that require it.
 
 (define (derefy refs expr)
@@ -201,8 +139,8 @@
     (if (empty? bindings)
         body
         (let* ((vars (bindings-vars bindings))
-               (body-free-vars (append (free-vars body)
-                                       (free-vars (bindings-vals bindings))))
+               (body-free-vars (append (free-vars-old body)
+                                       (free-vars-old (bindings-vals bindings))))
                (let-builder (lambda (bindings body)
                               (if (empty? bindings)
                                   body
@@ -301,11 +239,3 @@
     (simple-builder
      (complex-builder
       (letrec-body expr)))))
-
-(define (ref-conversion expr)
-  (scc-reorder (derive-graph expr)
-               (lambda (expr)
-                 (waddell fix
-                          let-ref-assign
-                          expr))
-               expr))

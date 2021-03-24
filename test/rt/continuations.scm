@@ -3,7 +3,7 @@
 (describe
  "delimited continuations"
  (it "Letcc works."
-     (assert (run '(letcc k 23))
+     (assert (run '(letcc _ 23))
              23)
      (assert (run '(letcc k (k 23)))
              23)
@@ -29,14 +29,14 @@
              16)
      (assert (run '(+ 10 (reset (+ 2 (shift k (+ 100 (k (k 3))))))))
              117)
-     (assert (run '(* 10 (reset (* 2 (shift g (* 5 (shift f (+ (f 1) 1))))))))
+     (assert (run '(* 10 (reset (* 2 (shift _ (* 5 (shift f (+ (f 1) 1))))))))
              60)
      (assert (run '(let ((f (lambda (x) (shift k (k (k x))))))
                      (+ 1 (reset (+ 10 (f 100))))))
              121)
      (assert (run '(reset
                     (let ((x (shift f (shift f1 (f1 (cons 'a (f '())))))))
-                      (shift g x))))
+                      (shift _ x))))
              '(a))
      (assert (run '(let ((yield (lambda (x)
                                   (shift k (cons x (k '()))))))

@@ -1,161 +1,193 @@
-../test/foof/errors/macros.foo(2,3): Bad `when` syntax, expected a condition and a body to follow:
-2 |  (when)
-      ^~~~~~
+../test/foof/errors/macros.foo(1,1): Bad `when` syntax, expected a condition and a body to follow:
+1 |(when)
+    ^~~~~~
 
-../test/foof/errors/macros.foo(3,3): Bad `when` syntax, expected a condition and a body to follow:
-3 |  (when #f)
-      ^~~~~~
+../test/foof/errors/macros.foo(2,1): Bad `when` syntax, expected a condition and a body to follow:
+2 |(when #f)
+    ^~~~~~
 
-../test/foof/errors/macros.foo(6,3): Bad `unless` syntax, expected a condition and a body to follow:
-6 |  (unless)
-      ^~~~~~
+../test/foof/errors/macros.foo(5,1): Bad `unless` syntax, expected a condition and a body to follow:
+5 |(unless)
+    ^~~~~~
 
-../test/foof/errors/macros.foo(7,3): Bad `unless` syntax, expected a condition and a body to follow:
-7 |  (unless #f)
-      ^~~~~~
+../test/foof/errors/macros.foo(6,1): Bad `unless` syntax, expected a condition and a body to follow:
+6 |(unless #f)
+    ^~~~~~
 
-../test/foof/errors/macros.foo(10,3): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-10 |  (cond)
-       ^~~~~~
+../test/foof/errors/macros.foo(9,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+9 |(cond)
+    ^~~~~~
 
-../test/foof/errors/macros.foo(11,3): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-11 |  (cond (condition clause))
-       ^~~~~~
+../test/foof/errors/macros.foo(10,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+10 |(cond (5 23))
+     ^~~~~~
 
-../test/foof/errors/macros.foo(12,3): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-12 |  (cond (condition clause) (condition clause))
-       ^~~~~~
+../test/foof/errors/macros.foo(11,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+11 |(cond (5 23) (23 5))
+     ^~~~~~
 
-../test/foof/errors/macros.foo(17,3): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-17 |  (cond (else foo bar baz) (condition foo bar baz))
-       ^~~~~~
+../test/foof/errors/macros.foo(16,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+16 |(cond (else 1 2 3) (5 1 2 3))
+     ^~~~~~
 
-../test/foof/errors/macros.foo(18,3): Bad `and` syntax, expected a list of expressions to follow:
-18 |  (and)
-       ^~~~~~
+../test/foof/errors/macros.foo(16,7): Undefined variable `else`:
+16 |(cond (else 1 2 3) (5 1 2 3))
+           ^~~~~~
 
-../test/foof/errors/macros.foo(24,3): Bad `or` syntax, expected a list of expressions to follow:
-24 |  (or)
-       ^~~~~~
+../test/foof/errors/macros.foo(17,1): Bad `and` syntax, expected a list of expressions to follow:
+17 |(and)
+     ^~~~~~
 
-../test/foof/errors/macros.foo(28,3): Bad `let*` syntax, expected a list of bindings and a body to follow:
-28 |  (let*)
-       ^~~~~~
+../test/foof/errors/macros.foo(23,1): Bad `or` syntax, expected a list of expressions to follow:
+23 |(or)
+     ^~~~~~
 
-../test/foof/errors/macros.foo(29,3): Bad `let*` syntax, expected a list of bindings and a body to follow:
-29 |  (let* ())
-       ^~~~~~
+../test/foof/errors/macros.foo(27,1): Bad `let*` syntax, expected a list of bindings and a body to follow:
+27 |(let*)
+     ^~~~~~
 
-../test/foof/errors/macros.foo(31,2): Bad `let*` syntax, expected a list of bindings and a body to follow:
-31 |  (let* ((foo bar)))
-      ^~~~~~
+../test/foof/errors/macros.foo(28,1): Bad `let*` syntax, expected a list of bindings and a body to follow:
+28 |(let* ())
+     ^~~~~~
 
-../test/foof/errors/macros.foo(36,19): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-36 |  (let* ((foo bar) baz) baz faz)
-                       ^~~~~~
+../test/foof/errors/macros.foo(30,0): Bad `let*` syntax, expected a list of bindings and a body to follow:
+30 |(let* ((_ 23)))
+    ^~~~~~
 
-../test/foof/errors/macros.foo(37,9): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-37 |  (let* (foo bar) baz)
-             ^~~~~~
+../test/foof/errors/macros.foo(35,16): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+35 |(let* ((foo 23) baz) 23 5 foo)
+                    ^~~~~~
 
-../test/foof/errors/macros.foo(37,13): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-37 |  (let* (foo bar) baz)
+../test/foof/errors/macros.foo(36,7): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+36 |(let* (foo bar) 5)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(36,11): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+36 |(let* (foo bar) 5)
+               ^~~~~~
+
+../test/foof/errors/macros.foo(37,1): Bad `letcc` syntax, expected an identifier and a body to follow:
+37 |(letcc)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(38,1): Bad `letcc` syntax, expected an identifier and a body to follow:
+38 |(letcc k)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(41,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+41 |(letcc () 23)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(42,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+42 |(letcc (k) 23)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(43,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+43 |(letcc ((k 5)) 23)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(44,1): Bad `handle` syntax, expected exactly two expressions to follow:
+44 |(handle)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(45,1): Bad `handle` syntax, expected exactly two expressions to follow:
+45 |(handle 23)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(47,1): Bad `handle` syntax, expected exactly two expressions to follow:
+47 |(handle 23 5 oops)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(48,1): Bad `shift` syntax, expected an identifier and a body to follow:
+48 |(shift)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(49,1): Bad `shift` syntax, expected an identifier and a body to follow:
+49 |(shift k)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(52,7): Bad `shift` syntax, expected a symbol but got a list instead:
+52 |(shift () 23)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(53,7): Bad `shift` syntax, expected a symbol but got a list instead:
+53 |(shift (k) 23)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(54,7): Bad `shift` syntax, expected a symbol but got a list instead:
+54 |(shift ((k wut)) 5)
+           ^~~~~~
+
+../test/foof/errors/macros.foo(55,1): Bad `reset` syntax, expected exactly one expression to follow:
+55 |(reset)
+     ^~~~~~
+
+../test/foof/errors/macros.foo(59,11): Bad `structure` syntax, expected a definition:
+59 |(structure x y z)
+               ^~~~~~
+
+../test/foof/errors/macros.foo(59,11): Undefined variable `x`:
+59 |(structure x y z)
+               ^~~~~~
+
+../test/foof/errors/macros.foo(59,13): Bad `structure` syntax, expected a definition:
+59 |(structure x y z)
                  ^~~~~~
 
-../test/foof/errors/macros.foo(38,3): Bad `letcc` syntax, expected an identifier and a body to follow:
-38 |  (letcc)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(39,3): Bad `letcc` syntax, expected an identifier and a body to follow:
-39 |  (letcc k)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(42,9): Bad `letcc` syntax, expected a symbol but got a list instead:
-42 |  (letcc () foo)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(43,9): Bad `letcc` syntax, expected a symbol but got a list instead:
-43 |  (letcc (k) foo)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(44,9): Bad `letcc` syntax, expected a symbol but got a list instead:
-44 |  (letcc ((k wut)) foo)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(45,3): Bad `handle` syntax, expected exactly two expressions to follow:
-45 |  (handle)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(46,3): Bad `handle` syntax, expected exactly two expressions to follow:
-46 |  (handle expr)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(48,3): Bad `handle` syntax, expected exactly two expressions to follow:
-48 |  (handle expr handler oops)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(49,3): Bad `shift` syntax, expected an identifier and a body to follow:
-49 |  (shift)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(50,3): Bad `shift` syntax, expected an identifier and a body to follow:
-50 |  (shift k)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(53,9): Bad `shift` syntax, expected a symbol but got a list instead:
-53 |  (shift () expr)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(54,9): Bad `shift` syntax, expected a symbol but got a list instead:
-54 |  (shift (k) expr)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(55,9): Bad `shift` syntax, expected a symbol but got a list instead:
-55 |  (shift ((k wut)) expr)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(56,3): Bad `reset` syntax, expected exactly one expression to follow:
-56 |  (reset)
-       ^~~~~~
-
-../test/foof/errors/macros.foo(60,13): Bad `structure` syntax, expected a definition:
-60 |  (structure x y z)
+../test/foof/errors/macros.foo(59,13): Undefined variable `y`:
+59 |(structure x y z)
                  ^~~~~~
 
-../test/foof/errors/macros.foo(60,15): Bad `structure` syntax, expected a definition:
-60 |  (structure x y z)
+../test/foof/errors/macros.foo(59,15): Bad `structure` syntax, expected a definition:
+59 |(structure x y z)
                    ^~~~~~
 
-../test/foof/errors/macros.foo(60,17): Bad `structure` syntax, expected a definition:
-60 |  (structure x y z)
-                     ^~~~~~
+../test/foof/errors/macros.foo(59,15): Undefined variable `z`:
+59 |(structure x y z)
+                   ^~~~~~
 
-../test/foof/errors/macros.foo(67,3): Bad `module` syntax, expected a module specification followed by a body:
-67 |  (module)
-       ^~~~~~
+../test/foof/errors/macros.foo(66,1): Bad `module` syntax, expected a module specification followed by a body:
+66 |(module)
+     ^~~~~~
 
-../test/foof/errors/macros.foo(68,3): Bad `module` syntax, expected a module specification followed by a body:
-68 |  (module foo)
-       ^~~~~~
+../test/foof/errors/macros.foo(67,1): Bad `module` syntax, expected a module specification followed by a body:
+67 |(module foo)
+     ^~~~~~
 
-../test/foof/errors/macros.foo(70,3): Bad `module` syntax, expected a module specification followed by a body:
-70 |  (module ())
-       ^~~~~~
+../test/foof/errors/macros.foo(69,1): Bad `module` syntax, expected a module specification followed by a body:
+69 |(module ())
+     ^~~~~~
+
+../test/foof/errors/macros.foo(71,14): Bad `structure` syntax, expected a definition:
+71 |(module (foo) x)
+                  ^~~~~~
+
+../test/foof/errors/macros.foo(71,14): Undefined variable `x`:
+71 |(module (foo) x)
+                  ^~~~~~
+
+../test/foof/errors/macros.foo(72,14): Bad `structure` syntax, expected a definition:
+72 |(module (foo) x y z)
+                  ^~~~~~
+
+../test/foof/errors/macros.foo(72,14): Undefined variable `x`:
+72 |(module (foo) x y z)
+                  ^~~~~~
 
 ../test/foof/errors/macros.foo(72,16): Bad `structure` syntax, expected a definition:
-72 |  (module (foo) x)
+72 |(module (foo) x y z)
                     ^~~~~~
 
-../test/foof/errors/macros.foo(73,16): Bad `structure` syntax, expected a definition:
-73 |  (module (foo) x y z)
+../test/foof/errors/macros.foo(72,16): Undefined variable `y`:
+72 |(module (foo) x y z)
                     ^~~~~~
 
-../test/foof/errors/macros.foo(73,18): Bad `structure` syntax, expected a definition:
-73 |  (module (foo) x y z)
+../test/foof/errors/macros.foo(72,18): Bad `structure` syntax, expected a definition:
+72 |(module (foo) x y z)
                       ^~~~~~
 
-../test/foof/errors/macros.foo(73,20): Bad `structure` syntax, expected a definition:
-73 |  (module (foo) x y z)
-                        ^~~~~~
+../test/foof/errors/macros.foo(72,18): Undefined variable `z`:
+72 |(module (foo) x y z)
+                      ^~~~~~
 
-Compilation aborted due to 40 errors.
+Compilation aborted due to 48 errors.

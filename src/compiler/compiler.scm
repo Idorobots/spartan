@@ -1,6 +1,5 @@
-;; Tha compiler.
+;; The compiler
 
-(load "compiler/utils.scm")
 (load "compiler/env.scm")
 (load "compiler/tree-ast.scm")
 
@@ -25,12 +24,14 @@
            (phase expr))
          (env-set env
                   'errors '()
-                  'macros (make-builtin-macros))
+                  'macros (make-builtin-macros)
+                  'globals (make-global-definitions-list))
          (list parse
                macro-expand
                elaborate
                body-expand
                quasiquote-expand
+               annotate-free-vars
                validate
                report-errors
                adapt-ast
