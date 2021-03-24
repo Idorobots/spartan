@@ -6,6 +6,7 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (validate-ast (set)
+                             (set)
                              (at (location 5 23)
                                  (make-def-node (make-symbol-node 'foo)
                                                 (make-number-node 23)))))
@@ -15,6 +16,7 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (validate-ast (set)
+                             (set)
                              (make-if-node (at (location 5 23)
                                                (context "Bad `module` syntax"
                                                         (make-def-node (make-symbol-node 'foo)
@@ -27,6 +29,7 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (validate-ast (set 'foo 'bar)
+                             (set)
                              (make-do-node
                               (list (at (location 5 23)
                                         (make-symbol-node 'foo))
@@ -37,11 +40,35 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (validate-ast (set 'foo 'bar)
+                             (set)
                              (bound-vars (set 'foo)
                                          (free-vars (set 'bar)
                                                     (make-lambda-node (list (make-symbol-node 'foo))
-                                                                      (make-do-node
-                                                                       (list (make-symbol-node 'foo)
-                                                                             (at (location 5 23)
-                                                                                 (make-symbol-node 'bar)))))))))
-             "Undefined variable `bar`:")))
+                                                                      (free-vars
+                                                                       (set 'foo 'bar)
+                                                                       (make-do-node
+                                                                        (list (make-symbol-node 'foo)
+                                                                              (at (location 5 23)
+                                                                                  (make-symbol-node 'bar))))))))))
+             "Undefined variable `bar`:"))
+
+ (it "should report unused variables"
+     (assert (with-handlers ((compilation-error?
+                              compilation-error-what))
+               (validate-ast (set)
+                             (set)
+                             (bound-vars (set 'x)
+                                         (make-lambda-node (list (at (location 5 23)
+                                                                     (make-symbol-node 'x)))
+                                                           (make-number-node 23)))))
+             "Unused variable `x`, rename to `_` to avoid this error:"))
+
+ (it "should not report unused `_`"
+     (assert (validate-ast (set)
+                           (set)
+                           (bound-vars (set '_)
+                                       (make-lambda-node (list (make-symbol-node '_))
+                                                         (make-number-node 23))))
+             (bound-vars (set '_)
+                         (make-lambda-node (list (make-symbol-node '_))
+                                           (make-number-node 23))))))

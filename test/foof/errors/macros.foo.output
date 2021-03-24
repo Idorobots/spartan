@@ -51,11 +51,11 @@
      ^~~~~~
 
 ../test/foof/errors/macros.foo(30,0): Bad `let*` syntax, expected a list of bindings and a body to follow:
-30 |(let* ((foo 23)))
+30 |(let* ((_ 23)))
     ^~~~~~
 
 ../test/foof/errors/macros.foo(35,16): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-35 |(let* ((foo 23) baz) 23 5)
+35 |(let* ((foo 23) baz) 23 5 foo)
                     ^~~~~~
 
 ../test/foof/errors/macros.foo(36,7): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
