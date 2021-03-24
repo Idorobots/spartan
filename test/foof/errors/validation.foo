@@ -5,4 +5,4 @@
        (define (foo x) y)))
 bar
 (define (baz bar)
-  (* 2 bar))
+  (* 2 bar z))

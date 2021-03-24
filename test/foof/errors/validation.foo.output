@@ -10,4 +10,8 @@
 6 |bar
    ^~~~~~
 
-Compilation aborted due to 3 errors.
+../test/foof/errors/validation.foo(8,11): Undefined variable `z`:
+8 |  (* 2 bar z))
+              ^~~~~~
+
+Compilation aborted due to 4 errors.

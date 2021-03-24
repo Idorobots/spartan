@@ -72,70 +72,84 @@
      (assert (compute-free-vars
               (make-lambda-node (list (make-symbol-node 'x))
                                 (make-symbol-node 'x)))
-             (make-lambda-node (list (make-symbol-node 'x))
-                               (make-symbol-node 'x)))
+             (bound-vars
+              (set 'x)
+              (make-lambda-node (list (make-symbol-node 'x))
+                                (make-symbol-node 'x))))
      (assert (compute-free-vars
               (make-let-node (list (cons (make-symbol-node 'x)
                                          (make-symbol-node 'y)))
                              (make-symbol-node 'z)))
-             (free-vars
-              (set 'y 'z)
-              (make-let-node (list (cons (make-symbol-node 'x)
-                                         (make-symbol-node 'y)))
-                             (make-symbol-node 'z))))
+             (bound-vars
+              (set 'x)
+              (free-vars
+               (set 'y 'z)
+               (make-let-node (list (cons (make-symbol-node 'x)
+                                          (make-symbol-node 'y)))
+                              (make-symbol-node 'z)))))
      (assert (compute-free-vars
               (make-let-node (list (cons (make-symbol-node 'x)
                                          (make-symbol-node 'y)))
                              (make-symbol-node 'x)))
-             (free-vars
-              (set 'y)
-              (make-let-node (list (cons (make-symbol-node 'x)
-                                         (make-symbol-node 'y)))
-                             (make-symbol-node 'x))))
+             (bound-vars
+              (set 'x)
+              (free-vars
+               (set 'y)
+               (make-let-node (list (cons (make-symbol-node 'x)
+                                          (make-symbol-node 'y)))
+                              (make-symbol-node 'x)))))
      (assert (compute-free-vars
               (make-let-node (list (cons (make-symbol-node 'x)
                                          (make-symbol-node 'y))
                                    (cons (make-symbol-node 'z)
                                          (make-symbol-node 'x)))
                              (make-symbol-node 'z)))
-             (free-vars
-              (set 'x 'y)
-              (make-let-node (list (cons (make-symbol-node 'x)
-                                         (make-symbol-node 'y))
-                                   (cons (make-symbol-node 'z)
-                                         (make-symbol-node 'x)))
-                             (make-symbol-node 'z))))
+             (bound-vars
+              (set 'x 'z)
+              (free-vars
+               (set 'x 'y)
+               (make-let-node (list (cons (make-symbol-node 'x)
+                                          (make-symbol-node 'y))
+                                    (cons (make-symbol-node 'z)
+                                          (make-symbol-node 'x)))
+                              (make-symbol-node 'z)))))
      (assert (compute-free-vars
               (make-letrec-node (list (cons (make-symbol-node 'x)
                                             (make-symbol-node 'y)))
                                 (make-symbol-node 'z)))
-             (free-vars
-              (set 'y 'z)
-              (make-letrec-node (list (cons (make-symbol-node 'x)
-                                            (make-symbol-node 'y)))
-                                (make-symbol-node 'z))))
+             (bound-vars
+              (set 'x)
+              (free-vars
+               (set 'y 'z)
+               (make-letrec-node (list (cons (make-symbol-node 'x)
+                                             (make-symbol-node 'y)))
+                                 (make-symbol-node 'z)))))
      (assert (compute-free-vars
               (make-letrec-node (list (cons (make-symbol-node 'x)
                                             (make-symbol-node 'y)))
                                 (make-symbol-node 'x)))
-             (free-vars
-              (set 'y)
-              (make-letrec-node (list (cons (make-symbol-node 'x)
-                                            (make-symbol-node 'y)))
-                                (make-symbol-node 'x))))
+             (bound-vars
+              (set 'x)
+              (free-vars
+               (set 'y)
+               (make-letrec-node (list (cons (make-symbol-node 'x)
+                                             (make-symbol-node 'y)))
+                                 (make-symbol-node 'x)))))
      (assert (compute-free-vars
               (make-letrec-node (list (cons (make-symbol-node 'x)
                                             (make-symbol-node 'y))
                                       (cons (make-symbol-node 'z)
                                             (make-symbol-node 'x)))
                                 (make-symbol-node 'z)))
-             (free-vars
-              (set 'y)
-              (make-letrec-node (list (cons (make-symbol-node 'x)
-                                            (make-symbol-node 'y))
-                                      (cons (make-symbol-node 'z)
-                                            (make-symbol-node 'x)))
-                                (make-symbol-node 'z))))))
+             (bound-vars
+              (set 'x 'z)
+              (free-vars
+               (set 'y)
+               (make-letrec-node (list (cons (make-symbol-node 'x)
+                                             (make-symbol-node 'y))
+                                       (cons (make-symbol-node 'z)
+                                             (make-symbol-node 'x)))
+                                 (make-symbol-node 'z)))))))
 
 (describe
  "old freevars"

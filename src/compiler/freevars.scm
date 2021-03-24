@@ -24,10 +24,12 @@
                         (get-fv (ast-if-else expr))))
                  expr))
                ((lambda)
-                (free-vars
-                 (set-difference (get-fv (ast-lambda-body expr))
-                                 (set-sum (map get-fv (ast-lambda-formals expr))))
-                 expr))
+                (let ((bound (set-sum (map get-fv (ast-lambda-formals expr)))))
+                  (free-vars
+                   (set-difference (get-fv (ast-lambda-body expr))
+                                   bound)
+                   (bound-vars bound
+                               expr))))
                ((let)
                 (let* ((bindings (ast-let-bindings expr))
                        (bound (set-sum (map (compose get-fv car) bindings)))
@@ -37,7 +39,8 @@
                    (set-union free-in-bindings
                               (set-difference free-in-body
                                               bound))
-                   expr)))
+                   (bound-vars bound
+                               expr))))
                ((letrec)
                 (let* ((bindings (ast-letrec-bindings expr))
                        (bound (set-sum (map (compose get-fv car) bindings)))
@@ -46,7 +49,8 @@
                   (free-vars
                    (set-difference (set-union free-in-bindings free-in-body)
                                    bound)
-                   expr)))
+                   (bound-vars bound
+                               expr))))
                ((app)
                 (free-vars
                  (set-union (get-fv (ast-app-op expr))

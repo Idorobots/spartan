@@ -38,16 +38,24 @@
 11 |`(o p ,@q r)
             ^~~~~~
 
-../test/foof/errors/undefined.foo(13,7): Undefined variable `t`:
-13 |  (* s t))
-           ^~~~~~
-
-../test/foof/errors/undefined.foo(15,12): Undefined variable `w`:
-15 |         (v w))
-                ^~~~~~
-
-../test/foof/errors/undefined.foo(16,9): Undefined variable `w`:
-16 |  (* u v w))
+../test/foof/errors/undefined.foo(12,9): Undefined variable `t`:
+12 |(let ((s t)
              ^~~~~~
 
-Compilation aborted due to 13 errors.
+../test/foof/errors/undefined.foo(13,9): Undefined variable `u`:
+13 |      (t u))
+             ^~~~~~
+
+../test/foof/errors/undefined.foo(14,9): Undefined variable `u`:
+14 |  (* s t u))
+             ^~~~~~
+
+../test/foof/errors/undefined.foo(16,12): Undefined variable `w`:
+16 |         (v w))
+                ^~~~~~
+
+../test/foof/errors/undefined.foo(17,9): Undefined variable `w`:
+17 |  (* u v w))
+             ^~~~~~
+
+Compilation aborted due to 15 errors.

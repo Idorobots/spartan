@@ -267,6 +267,14 @@
 (define (get-free-vars node)
   (ast-get* node 'free-vars (set)))
 
+(define (bound-vars vars node)
+  (if (set-empty? vars)
+      node
+      (ast-set node 'bound-vars vars)))
+
+(define (get-bound-vars node)
+  (ast-get* node 'bound-vars (set)))
+
 (define (get-type node)
   (ast-get node 'type))
 

@@ -9,8 +9,9 @@ a
 `m
 `,n
 `(o p ,@q r)
-(let ((s t))
-  (* s t))
+(let ((s t)
+      (t u))
+  (* s t u))
 (letrec ((u v)
          (v w))
   (* u v w))

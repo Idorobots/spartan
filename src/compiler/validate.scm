@@ -26,33 +26,33 @@
   (case (get-type expr)
     ((quote) expr)
     ((lambda)
-     (ast-update expr 'body (partial validate-next
-                                     (set-intersection free-vars
-                                                       (get-free-vars expr)))))
+     (ast-update expr 'body (partial validate-ast
+                                     (set-difference free-vars
+                                                     (get-bound-vars expr)))))
     ((let)
      (ast-update (ast-update expr
                              'bindings
                              (partial map
                                       (lambda (b)
                                         (cons (car b)
-                                              (validate-next free-vars
-                                                             (cdr b))))))
+                                              (validate-ast free-vars
+                                                            (cdr b))))))
                  'body
-                 (partial validate-next
-                          (set-intersection free-vars
-                                            (get-free-vars expr)))))
-    ((let)
-     (let ((bound (set-intersection free-vars
-                                    (get-free-vars expr))))
+                 (partial validate-ast
+                          (set-difference free-vars
+                                          (get-bound-vars expr)))))
+    ((letrec)
+     (let ((bound (set-difference free-vars
+                                  (get-bound-vars expr))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map
                                         (lambda (b)
                                           (cons (car b)
-                                                (validate-next bound
-                                                               (cdr b))))))
+                                                (validate-ast bound
+                                                              (cdr b))))))
                    'body
-                   (partial validate-next bound))))
+                   (partial validate-ast bound))))
     ((symbol)
      (let ((value (ast-symbol-value expr)))
        (if (and (not (generated? expr))
@@ -66,8 +66,5 @@
       (get-location expr)
       (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax"))))
     (else
-     (validate-next free-vars expr))))
-
-(define (validate-next free-vars expr)
-  (walk-ast (partial validate-ast free-vars)
-            expr))
+     (walk-ast (partial validate-ast free-vars)
+               expr))))

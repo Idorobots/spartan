@@ -37,10 +37,11 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (validate-ast (set 'foo 'bar)
-                             (free-vars (set 'bar)
-                                        (make-lambda-node (list (make-symbol-node 'foo))
-                                                          (make-do-node
-                                                           (list (make-symbol-node 'foo)
-                                                                 (at (location 5 23)
-                                                                     (make-symbol-node 'bar))))))))
+                             (bound-vars (set 'foo)
+                                         (free-vars (set 'bar)
+                                                    (make-lambda-node (list (make-symbol-node 'foo))
+                                                                      (make-do-node
+                                                                       (list (make-symbol-node 'foo)
+                                                                             (at (location 5 23)
+                                                                                 (make-symbol-node 'bar)))))))))
              "Undefined variable `bar`:")))

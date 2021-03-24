@@ -6,26 +6,6 @@
 2 |(when #f)
     ^~~~~~
 
-../test/foof/errors/macros.foo(3,6): Undefined variable `cond`:
-3 |(when cond body)
-         ^~~~~~
-
-../test/foof/errors/macros.foo(3,11): Undefined variable `body`:
-3 |(when cond body)
-              ^~~~~~
-
-../test/foof/errors/macros.foo(4,6): Undefined variable `cond`:
-4 |(when cond foo bar baz)
-         ^~~~~~
-
-../test/foof/errors/macros.foo(4,15): Undefined variable `bar`:
-4 |(when cond foo bar baz)
-                  ^~~~~~
-
-../test/foof/errors/macros.foo(4,19): Undefined variable `baz`:
-4 |(when cond foo bar baz)
-                      ^~~~~~
-
 ../test/foof/errors/macros.foo(5,1): Bad `unless` syntax, expected a condition and a body to follow:
 5 |(unless)
     ^~~~~~
@@ -34,141 +14,25 @@
 6 |(unless #f)
     ^~~~~~
 
-../test/foof/errors/macros.foo(7,8): Undefined variable `cond`:
-7 |(unless cond body)
-           ^~~~~~
-
-../test/foof/errors/macros.foo(7,13): Undefined variable `body`:
-7 |(unless cond body)
-                ^~~~~~
-
-../test/foof/errors/macros.foo(8,8): Undefined variable `cond`:
-8 |(unless cond foo bar baz)
-           ^~~~~~
-
-../test/foof/errors/macros.foo(8,17): Undefined variable `bar`:
-8 |(unless cond foo bar baz)
-                    ^~~~~~
-
-../test/foof/errors/macros.foo(8,21): Undefined variable `baz`:
-8 |(unless cond foo bar baz)
-                        ^~~~~~
-
 ../test/foof/errors/macros.foo(9,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
 9 |(cond)
     ^~~~~~
 
 ../test/foof/errors/macros.foo(10,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-10 |(cond (condition clause))
+10 |(cond (5 23))
      ^~~~~~
-
-../test/foof/errors/macros.foo(10,7): Undefined variable `condition`:
-10 |(cond (condition clause))
-           ^~~~~~
-
-../test/foof/errors/macros.foo(10,17): Undefined variable `clause`:
-10 |(cond (condition clause))
-                     ^~~~~~
 
 ../test/foof/errors/macros.foo(11,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-11 |(cond (condition clause) (condition clause))
+11 |(cond (5 23) (23 5))
      ^~~~~~
 
-../test/foof/errors/macros.foo(11,7): Undefined variable `condition`:
-11 |(cond (condition clause) (condition clause))
-           ^~~~~~
-
-../test/foof/errors/macros.foo(11,17): Undefined variable `clause`:
-11 |(cond (condition clause) (condition clause))
-                     ^~~~~~
-
-../test/foof/errors/macros.foo(11,26): Undefined variable `condition`:
-11 |(cond (condition clause) (condition clause))
-                              ^~~~~~
-
-../test/foof/errors/macros.foo(11,36): Undefined variable `clause`:
-11 |(cond (condition clause) (condition clause))
-                                        ^~~~~~
-
-../test/foof/errors/macros.foo(12,7): Undefined variable `condition`:
-12 |(cond (condition clause) (else clause))
-           ^~~~~~
-
-../test/foof/errors/macros.foo(12,17): Undefined variable `clause`:
-12 |(cond (condition clause) (else clause))
-                     ^~~~~~
-
-../test/foof/errors/macros.foo(12,31): Undefined variable `clause`:
-12 |(cond (condition clause) (else clause))
-                                   ^~~~~~
-
-../test/foof/errors/macros.foo(13,12): Undefined variable `clause`:
-13 |(cond (else clause))
-                ^~~~~~
-
-../test/foof/errors/macros.foo(14,7): Undefined variable `condition`:
-14 |(cond (condition foo bar baz) (else clause))
-           ^~~~~~
-
-../test/foof/errors/macros.foo(14,21): Undefined variable `bar`:
-14 |(cond (condition foo bar baz) (else clause))
-                         ^~~~~~
-
-../test/foof/errors/macros.foo(14,25): Undefined variable `baz`:
-14 |(cond (condition foo bar baz) (else clause))
-                             ^~~~~~
-
-../test/foof/errors/macros.foo(14,36): Undefined variable `clause`:
-14 |(cond (condition foo bar baz) (else clause))
-                                        ^~~~~~
-
-../test/foof/errors/macros.foo(15,7): Undefined variable `condition`:
-15 |(cond (condition foo bar baz) (else foo bar baz))
-           ^~~~~~
-
-../test/foof/errors/macros.foo(15,21): Undefined variable `bar`:
-15 |(cond (condition foo bar baz) (else foo bar baz))
-                         ^~~~~~
-
-../test/foof/errors/macros.foo(15,25): Undefined variable `baz`:
-15 |(cond (condition foo bar baz) (else foo bar baz))
-                             ^~~~~~
-
-../test/foof/errors/macros.foo(15,40): Undefined variable `bar`:
-15 |(cond (condition foo bar baz) (else foo bar baz))
-                                            ^~~~~~
-
-../test/foof/errors/macros.foo(15,44): Undefined variable `baz`:
-15 |(cond (condition foo bar baz) (else foo bar baz))
-                                                ^~~~~~
-
 ../test/foof/errors/macros.foo(16,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
-16 |(cond (else foo bar baz) (condition foo bar baz))
+16 |(cond (else 1 2 3) (5 1 2 3))
      ^~~~~~
 
 ../test/foof/errors/macros.foo(16,7): Undefined variable `else`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
+16 |(cond (else 1 2 3) (5 1 2 3))
            ^~~~~~
-
-../test/foof/errors/macros.foo(16,16): Undefined variable `bar`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
-                    ^~~~~~
-
-../test/foof/errors/macros.foo(16,20): Undefined variable `baz`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
-                        ^~~~~~
-
-../test/foof/errors/macros.foo(16,26): Undefined variable `condition`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
-                              ^~~~~~
-
-../test/foof/errors/macros.foo(16,40): Undefined variable `bar`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
-                                            ^~~~~~
-
-../test/foof/errors/macros.foo(16,44): Undefined variable `baz`:
-16 |(cond (else foo bar baz) (condition foo bar baz))
-                                                ^~~~~~
 
 ../test/foof/errors/macros.foo(17,1): Bad `and` syntax, expected a list of expressions to follow:
 17 |(and)
@@ -187,56 +51,20 @@
      ^~~~~~
 
 ../test/foof/errors/macros.foo(30,0): Bad `let*` syntax, expected a list of bindings and a body to follow:
-30 |(let* ((foo bar)))
+30 |(let* ((foo 23)))
     ^~~~~~
 
-../test/foof/errors/macros.foo(31,18): Undefined variable `baz`:
-31 |(let* ((foo bar)) baz)
-                      ^~~~~~
-
-../test/foof/errors/macros.foo(32,18): Undefined variable `baz`:
-32 |(let* ((foo bar)) baz faz)
-                      ^~~~~~
-
-../test/foof/errors/macros.foo(32,22): Undefined variable `faz`:
-32 |(let* ((foo bar)) baz faz)
-                          ^~~~~~
-
-../test/foof/errors/macros.foo(33,22): Undefined variable `faz`:
-33 |(let* ((foo bar) (baz faz)) baz)
-                          ^~~~~~
-
-../test/foof/errors/macros.foo(34,22): Undefined variable `faz`:
-34 |(let* ((foo bar) (baz faz)) baz faz)
-                          ^~~~~~
-
-../test/foof/errors/macros.foo(34,32): Undefined variable `faz`:
-34 |(let* ((foo bar) (baz faz)) baz faz)
-                                    ^~~~~~
-
-../test/foof/errors/macros.foo(35,17): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-35 |(let* ((foo bar) baz) baz faz)
-                     ^~~~~~
-
-../test/foof/errors/macros.foo(35,22): Undefined variable `baz`:
-35 |(let* ((foo bar) baz) baz faz)
-                          ^~~~~~
-
-../test/foof/errors/macros.foo(35,26): Undefined variable `faz`:
-35 |(let* ((foo bar) baz) baz faz)
-                              ^~~~~~
+../test/foof/errors/macros.foo(35,16): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+35 |(let* ((foo 23) baz) 23 5)
+                    ^~~~~~
 
 ../test/foof/errors/macros.foo(36,7): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-36 |(let* (foo bar) baz)
+36 |(let* (foo bar) 5)
            ^~~~~~
 
 ../test/foof/errors/macros.foo(36,11): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
-36 |(let* (foo bar) baz)
+36 |(let* (foo bar) 5)
                ^~~~~~
-
-../test/foof/errors/macros.foo(36,16): Undefined variable `baz`:
-36 |(let* (foo bar) baz)
-                    ^~~~~~
 
 ../test/foof/errors/macros.foo(37,1): Bad `letcc` syntax, expected an identifier and a body to follow:
 37 |(letcc)
@@ -246,28 +74,16 @@
 38 |(letcc k)
      ^~~~~~
 
-../test/foof/errors/macros.foo(39,9): Undefined variable `body`:
-39 |(letcc k body)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(40,13): Undefined variable `bar`:
-40 |(letcc k foo bar baz)
-                 ^~~~~~
-
-../test/foof/errors/macros.foo(40,17): Undefined variable `baz`:
-40 |(letcc k foo bar baz)
-                     ^~~~~~
-
 ../test/foof/errors/macros.foo(41,7): Bad `letcc` syntax, expected a symbol but got a list instead:
-41 |(letcc () foo)
+41 |(letcc () 23)
            ^~~~~~
 
 ../test/foof/errors/macros.foo(42,7): Bad `letcc` syntax, expected a symbol but got a list instead:
-42 |(letcc (k) foo)
+42 |(letcc (k) 23)
            ^~~~~~
 
 ../test/foof/errors/macros.foo(43,7): Bad `letcc` syntax, expected a symbol but got a list instead:
-43 |(letcc ((k wut)) foo)
+43 |(letcc ((k 5)) 23)
            ^~~~~~
 
 ../test/foof/errors/macros.foo(44,1): Bad `handle` syntax, expected exactly two expressions to follow:
@@ -275,15 +91,11 @@
      ^~~~~~
 
 ../test/foof/errors/macros.foo(45,1): Bad `handle` syntax, expected exactly two expressions to follow:
-45 |(handle expr)
+45 |(handle 23)
      ^~~~~~
 
-../test/foof/errors/macros.foo(46,13): Undefined variable `handler`:
-46 |(handle expr handler)
-                 ^~~~~~
-
 ../test/foof/errors/macros.foo(47,1): Bad `handle` syntax, expected exactly two expressions to follow:
-47 |(handle expr handler oops)
+47 |(handle 23 5 oops)
      ^~~~~~
 
 ../test/foof/errors/macros.foo(48,1): Bad `shift` syntax, expected an identifier and a body to follow:
@@ -294,53 +106,21 @@
 49 |(shift k)
      ^~~~~~
 
-../test/foof/errors/macros.foo(50,9): Undefined variable `expr`:
-50 |(shift k expr)
-             ^~~~~~
-
-../test/foof/errors/macros.foo(51,13): Undefined variable `bar`:
-51 |(shift k foo bar baz)
-                 ^~~~~~
-
-../test/foof/errors/macros.foo(51,17): Undefined variable `baz`:
-51 |(shift k foo bar baz)
-                     ^~~~~~
-
 ../test/foof/errors/macros.foo(52,7): Bad `shift` syntax, expected a symbol but got a list instead:
-52 |(shift () expr)
+52 |(shift () 23)
            ^~~~~~
-
-../test/foof/errors/macros.foo(52,10): Undefined variable `expr`:
-52 |(shift () expr)
-              ^~~~~~
 
 ../test/foof/errors/macros.foo(53,7): Bad `shift` syntax, expected a symbol but got a list instead:
-53 |(shift (k) expr)
+53 |(shift (k) 23)
            ^~~~~~
-
-../test/foof/errors/macros.foo(53,11): Undefined variable `expr`:
-53 |(shift (k) expr)
-               ^~~~~~
 
 ../test/foof/errors/macros.foo(54,7): Bad `shift` syntax, expected a symbol but got a list instead:
-54 |(shift ((k wut)) expr)
+54 |(shift ((k wut)) 5)
            ^~~~~~
-
-../test/foof/errors/macros.foo(54,17): Undefined variable `expr`:
-54 |(shift ((k wut)) expr)
-                     ^~~~~~
 
 ../test/foof/errors/macros.foo(55,1): Bad `reset` syntax, expected exactly one expression to follow:
 55 |(reset)
      ^~~~~~
-
-../test/foof/errors/macros.foo(57,11): Undefined variable `bar`:
-57 |(reset foo bar baz)
-               ^~~~~~
-
-../test/foof/errors/macros.foo(57,15): Undefined variable `baz`:
-57 |(reset foo bar baz)
-                   ^~~~~~
 
 ../test/foof/errors/macros.foo(59,11): Bad `structure` syntax, expected a definition:
 59 |(structure x y z)
@@ -365,26 +145,6 @@
 ../test/foof/errors/macros.foo(59,15): Undefined variable `z`:
 59 |(structure x y z)
                    ^~~~~~
-
-../test/foof/errors/macros.foo(60,23): Undefined variable `x`:
-60 |(structure (define foo x))
-                           ^~~~~~
-
-../test/foof/errors/macros.foo(63,20): Undefined variable `bar`:
-63 |           (define (bar y) y))
-                        ^~~~~~
-
-../test/foof/errors/macros.foo(63,20): Undefined variable `bar`:
-63 |           (define (bar y) y))
-                        ^~~~~~
-
-../test/foof/errors/macros.foo(65,19): Undefined variable `bar`:
-65 |           (define bar 23))
-                       ^~~~~~
-
-../test/foof/errors/macros.foo(65,19): Undefined variable `bar`:
-65 |           (define bar 23))
-                       ^~~~~~
 
 ../test/foof/errors/macros.foo(66,1): Bad `module` syntax, expected a module specification followed by a body:
 66 |(module)
@@ -430,8 +190,4 @@
 72 |(module (foo) x y z)
                       ^~~~~~
 
-../test/foof/errors/macros.foo(73,26): Undefined variable `x`:
-73 |(module (foo) (define foo x))
-                              ^~~~~~
-
-Compilation aborted due to 109 errors.
+Compilation aborted due to 48 errors.
