@@ -45,7 +45,7 @@
                     (generated
                      (make-letrec-node defs
                                        (reconstruct-simple-body non-defs expr)))))
-          ((= (length exprs) 0)
+          ((= (length exprs) 1)
            (car exprs))
           (else expr))))
 
