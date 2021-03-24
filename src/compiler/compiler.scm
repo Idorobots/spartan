@@ -30,6 +30,7 @@
                elaborate
                body-expand
                quasiquote-expand
+               annotate-free-vars
                validate
                report-errors
                adapt-ast

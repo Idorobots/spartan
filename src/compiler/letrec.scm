@@ -63,7 +63,7 @@
 (define (recoursive? bindings)
   (or (> (length bindings) 1)
       (member (binding-var (car bindings))
-              (free-vars (binding-val (car bindings))))))
+              (free-vars-old (binding-val (car bindings))))))
 
 (define (reorder-bindings fixer bindings body scc)
   (foldr (lambda (component acc)
@@ -98,7 +98,7 @@
                          (list (binding-var b) e))
                        (filter (lambda (v)
                                  (member v vars))
-                               (free-vars (binding-val b)))))
+                               (free-vars-old (binding-val b)))))
                 bindings))))
 
 (define (derive-ordering bindings)
@@ -139,8 +139,8 @@
     (if (empty? bindings)
         body
         (let* ((vars (bindings-vars bindings))
-               (body-free-vars (append (free-vars body)
-                                       (free-vars (bindings-vals bindings))))
+               (body-free-vars (append (free-vars-old body)
+                                       (free-vars-old (bindings-vals bindings))))
                (let-builder (lambda (bindings body)
                               (if (empty? bindings)
                                   body

@@ -43,7 +43,7 @@
         (args (lambda-args expr))
         (body (lambda-body expr))
         (free (filter (compose not primop?)
-                      (set-difference (free-vars expr)
+                      (set-difference (free-vars-old expr)
                               globals))))
     (make-app '&make-closure
               (list (create-env free)
