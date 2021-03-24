@@ -22,6 +22,8 @@
 ;; Basic
 
 (define __nil '())
+(define __true true)
+(define __false false)
 
 (define __car (bootstrap car))
 (define __cadr (bootstrap car))

@@ -19,6 +19,9 @@
   (sort (append as (set-difference bs as))
         symbol<?))
 
+(define (set-intersection as bs)
+  (filter (partial set-member? as) bs))
+
 (define (set-sum sets)
   (foldl set-union (set) sets))
 

@@ -1,29 +1,33 @@
-../test/foof/errors/symbol-format.foo(3,3): Invalid symbol `this.wont.fly.though.` specified at:
-3 |   this.wont.fly.though.
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(1,0): Undefined variable `this`:
+1 |this.is.actually.valid
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(4,3): Invalid symbol `its-not-a-sentence.` specified at:
-4 |   its-not-a-sentence.
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(2,0): Invalid symbol `this.wont.fly.though.` specified at:
+2 |this.wont.fly.though.
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(5,3): Invalid symbol `.neitherIsItJava` specified at:
-5 |   .neitherIsItJava
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(3,0): Invalid symbol `its-not-a-sentence.` specified at:
+3 |its-not-a-sentence.
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(6,3): Invalid symbol `.` specified at:
-6 |   .
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(4,0): Invalid symbol `.neitherIsItJava` specified at:
+4 |.neitherIsItJava
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(7,3): Invalid symbol `..` specified at:
-7 |   ..
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(5,0): Invalid symbol `.` specified at:
+5 |.
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(8,3): Invalid symbol `...` specified at:
-8 |   ...
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(6,0): Invalid symbol `..` specified at:
+6 |..
+   ^~~~~~
 
-../test/foof/errors/symbol-format.foo(9,3): Invalid symbol `from..to` specified at:
-9 |   from..to
-      ^~~~~~
+../test/foof/errors/symbol-format.foo(7,0): Invalid symbol `...` specified at:
+7 |...
+   ^~~~~~
 
-Compilation aborted due to 7 errors.
+../test/foof/errors/symbol-format.foo(8,0): Invalid symbol `from..to` specified at:
+8 |from..to
+   ^~~~~~
+
+Compilation aborted due to 8 errors.

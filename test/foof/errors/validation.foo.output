@@ -1,9 +1,13 @@
-../test/foof/errors/validation.foo(2,6): Bad `define` syntax, not allowed in this context:
-2 |  (if (define (foo x) x)
-         ^~~~~~
+../test/foof/errors/validation.foo(1,4): Bad `define` syntax, not allowed in this context:
+1 |(if (define (foo x) y)
+       ^~~~~~
 
-../test/foof/errors/validation.foo(5,7): Bad `module` syntax, not allowed in this context:
-5 |  (car (module (x)
-          ^~~~~~
+../test/foof/errors/validation.foo(4,5): Bad `module` syntax, not allowed in this context:
+4 |(car (module (x)
+        ^~~~~~
 
-Compilation aborted due to 2 errors.
+../test/foof/errors/validation.foo(6,0): Undefined variable `bar`:
+6 |bar
+   ^~~~~~
+
+Compilation aborted due to 3 errors.

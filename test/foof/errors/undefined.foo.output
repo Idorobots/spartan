@@ -1,0 +1,53 @@
+../test/foof/errors/undefined.foo(1,0): Undefined variable `a`:
+1 |a
+   ^~~~~~
+
+../test/foof/errors/undefined.foo(2,23): Undefined variable `c`:
+2 |(define (f a b) (* a b c))
+                          ^~~~~~
+
+../test/foof/errors/undefined.foo(3,3): Undefined variable `d`:
+3 |(f d)
+      ^~~~~~
+
+../test/foof/errors/undefined.foo(4,1): Undefined variable `e`:
+4 |(e f)
+    ^~~~~~
+
+../test/foof/errors/undefined.foo(5,5): Undefined variable `g`:
+5 |(if (g h)
+        ^~~~~~
+
+../test/foof/errors/undefined.foo(5,7): Undefined variable `h`:
+5 |(if (g h)
+          ^~~~~~
+
+../test/foof/errors/undefined.foo(6,4): Undefined variable `j`:
+6 |    j
+       ^~~~~~
+
+../test/foof/errors/undefined.foo(7,4): Undefined variable `k`:
+7 |    k)
+       ^~~~~~
+
+../test/foof/errors/undefined.foo(10,2): Undefined variable `n`:
+10 |`,n
+      ^~~~~~
+
+../test/foof/errors/undefined.foo(11,8): Undefined variable `q`:
+11 |`(o p ,@q r)
+            ^~~~~~
+
+../test/foof/errors/undefined.foo(13,7): Undefined variable `t`:
+13 |  (* s t))
+           ^~~~~~
+
+../test/foof/errors/undefined.foo(15,12): Undefined variable `w`:
+15 |         (v w))
+                ^~~~~~
+
+../test/foof/errors/undefined.foo(16,9): Undefined variable `w`:
+16 |  (* u v w))
+             ^~~~~~
+
+Compilation aborted due to 13 errors.

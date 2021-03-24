@@ -24,7 +24,8 @@
            (phase expr))
          (env-set env
                   'errors '()
-                  'macros (make-builtin-macros))
+                  'macros (make-builtin-macros)
+                  'globals (make-global-definitions-list))
          (list parse
                macro-expand
                elaborate
