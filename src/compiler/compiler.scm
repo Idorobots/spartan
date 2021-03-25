@@ -34,8 +34,8 @@
                annotate-free-vars
                validate
                report-errors
-               adapt-ast
                letrec-expand
+               adapt-ast
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
                (flip closure-convert (make-global-definitions-list))

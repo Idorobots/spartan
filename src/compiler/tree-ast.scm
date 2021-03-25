@@ -110,6 +110,16 @@
 (define (ast-lambda-formals node)
   (ast-get node 'formals))
 
+;; Binding
+(define (make-binding var val)
+  (cons var val))
+
+(define (ast-binding-var binding)
+  (car binding))
+
+(define (ast-binding-val binding)
+  (cdr binding))
+
 ;; Let
 (define (make-let-node bindings body)
   (ast-node 'type 'let 'bindings bindings 'body body))
@@ -134,6 +144,19 @@
   (ast-get node 'bindings))
 
 (define (ast-letrec-body node)
+  (ast-get node 'body))
+
+;; Fix
+(define (make-fix-node bindings body)
+  (ast-node 'type 'fix 'bindings bindings 'body body))
+
+(define (fix-node? node)
+  (is-type? node 'fix))
+
+(define (ast-fix-bindings node)
+  (ast-get node 'bindings))
+
+(define (ast-fix-body node)
   (ast-get node 'body))
 
 ;; Quotation
@@ -249,9 +272,7 @@
 
 (define (replace old new)
   (at (get-location old)
-      ((if (generated? old)
-           generated
-           id)
+      ((if (generated? old) generated id)
        new)))
 
 (define (generated node)
@@ -292,39 +313,44 @@
   (equal? (get-type node)
           type))
 
+(define (value-node? node)
+  (or (simple-node? node)
+      (lambda-node? node)))
+
+(define (simple-node? node)
+  (member (get-type node) '(number string quote)))
+
 (define (walk-ast f expr)
   (let* ((mf (partial map f)))
     (case (get-type expr)
-      ((number symbol string <location>) expr)
-      ((if) (foldl (lambda (field acc)
-                     (ast-update acc field f))
-                   expr
-                   '(condition then else)))
-      ((do) (ast-update expr 'exprs mf))
-      ((lambda) (ast-update (ast-update expr 'formals mf)
-                            'body
-                            f))
-      ((let) (ast-update (ast-update expr
-                                     'bindings
-                                     (partial map
-                                              (lambda (b)
-                                                (cons (f (car b))
-                                                      (f (cdr b))))))
-                         'body
-                         f))
-      ((letrec) (ast-update (ast-update expr
-                                        'bindings
-                                        (partial map
-                                                 (lambda (b)
-                                                   (cons (f (car b))
-                                                         (f (cdr b))))))
-                            'body
-                            f))
-      ((quote quasiquote unquote unquote-splicing) (ast-update expr 'value f))
-      ((def) (ast-update (ast-update expr 'name f) 'value f))
-      ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
-      ((list) (ast-update expr 'value mf))
-      ((<error>) (ast-update expr 'expr f))
+      ((number symbol string <location>)
+       expr)
+      ((if)
+       (foldl (lambda (field acc)
+                (ast-update acc field f))
+              expr
+              '(condition then else)))
+      ((do)
+       (ast-update expr 'exprs mf))
+      ((lambda)
+       (ast-update (ast-update expr 'formals mf) 'body f))
+      ((let letrec fix)
+       (ast-update (ast-update expr 'body f)
+                   'bindings
+                   (partial map
+                            (lambda (b)
+                              (cons (f (car b))
+                                    (f (cdr b)))))))
+      ((quote quasiquote unquote unquote-splicing)
+       (ast-update expr 'value f))
+      ((def)
+       (ast-update (ast-update expr 'name f) 'value f))
+      ((app primop-app)
+       (ast-update (ast-update expr 'op f) 'args mf))
+      ((list)
+       (ast-update expr 'value mf))
+      ((<error>)
+       (ast-update expr 'expr f))
       (else (error "Unexpected expression: " expr)))))
 
 (define (map-ast pre post expr)
@@ -339,27 +365,32 @@
              (case (get-type expr)
                ((number symbol string list) (ast-get expr 'value))
                ((if) (list 'if
-                          (ast-get expr 'condition)
-                          (ast-get expr 'then)
-                          (ast-get expr 'else)))
-               ((do) (cons 'do (ast-get expr 'exprs)))
-               ((lambda) (list 'lambda (ast-get expr 'formals) (ast-get expr 'body)))
+                           (ast-if-condition expr)
+                           (ast-if-then expr)
+                           (ast-if-else expr)))
+               ((do) (cons 'do (ast-do-exprs expr)))
+               ((lambda) (list 'lambda (ast-lambda-formals expr) (ast-lambda-body expr)))
                ((let) (list 'let (map (lambda (b)
                                         (list (car b)
                                               (cdr b)))
-                                      (ast-get expr 'bindings))
-                            (ast-get expr 'body)))
+                                      (ast-let-bindings expr))
+                            (ast-let-body expr)))
                ((letrec) (list 'letrec (map (lambda (b)
+                                              (list (car b)
+                                                    (cdr b)))
+                                            (ast-letrec-bindings expr))
+                               (ast-letrec-body expr)))
+               ((fix) (list 'fix (map (lambda (b)
                                         (list (car b)
                                               (cdr b)))
-                                            (ast-get expr 'bindings))
-                               (ast-get expr 'body)))
-               ((quote) (list 'quote (ast-get expr 'value)))
-               ((quasiquote) (list 'quasiquote (ast-get expr 'value)))
-               ((unquote) (list 'unquote (ast-get expr 'value)))
-               ((unquote-splicing) (list 'unquote-splicing (ast-get expr 'value)))
-               ((def) (list 'define (ast-get expr 'name) (ast-get expr 'value)))
-               ((app primop-app) (list* (ast-get expr 'op) (ast-get expr 'args)))
+                                      (ast-fix-bindings expr))
+                            (ast-fix-body expr)))
+               ((quote) (list 'quote (ast-quoted-expr expr)))
+               ((quasiquote) (list 'quasiquote (ast-quoted-expr expr)))
+               ((unquote) (list 'unquote (ast-quoted-expr expr)))
+               ((unquote-splicing) (list 'unquote-splicing (ast-quoted-expr expr)))
+               ((def) (list 'define (ast-get expr 'name) (ast-quoted-expr expr)))
+               ((app primop-app) (list* (ast-app-op expr) (ast-app-args expr)))
                (else (error "Unexpected expression: " expr))))
            ast))
 

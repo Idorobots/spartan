@@ -31,26 +31,9 @@
                    (bound-vars bound
                                expr))))
                ((let)
-                (let* ((bindings (ast-let-bindings expr))
-                       (bound (set-sum (map (compose get-fv car) bindings)))
-                       (free-in-bindings (set-sum (map (compose get-fv cdr) bindings)))
-                       (free-in-body (get-fv (ast-let-body expr))))
-                  (free-vars
-                   (set-union free-in-bindings
-                              (set-difference free-in-body
-                                              bound))
-                   (bound-vars bound
-                               expr))))
+                (compute-let-fv expr))
                ((letrec)
-                (let* ((bindings (ast-letrec-bindings expr))
-                       (bound (set-sum (map (compose get-fv car) bindings)))
-                       (free-in-bindings (set-sum (map (compose get-fv cdr) bindings)))
-                       (free-in-body (get-fv (ast-letrec-body expr))))
-                  (free-vars
-                   (set-difference (set-union free-in-bindings free-in-body)
-                                   bound)
-                   (bound-vars bound
-                               expr))))
+                (compute-letrec-fv expr))
                ((app)
                 (free-vars
                  (set-union (get-fv (ast-app-op expr))
@@ -62,6 +45,29 @@
                (else
                 expr)))
            expr))
+
+(define (compute-let-fv expr)
+  (let* ((bindings (ast-let-bindings expr))
+         (bound (set-sum (map (compose get-fv ast-binding-var) bindings)))
+         (free-in-bindings (set-sum (map (compose get-fv ast-binding-val) bindings)))
+         (free-in-body (get-fv (ast-let-body expr))))
+    (free-vars
+     (set-union free-in-bindings
+                (set-difference free-in-body
+                                bound))
+     (bound-vars bound
+                 expr))))
+
+(define (compute-letrec-fv expr)
+  (let* ((bindings (ast-letrec-bindings expr))
+         (bound (set-sum (map (compose get-fv ast-binding-var) bindings)))
+         (free-in-bindings (set-sum (map (compose get-fv ast-binding-val) bindings)))
+         (free-in-body (get-fv (ast-letrec-body expr))))
+    (free-vars
+     (set-difference (set-union free-in-bindings free-in-body)
+                     bound)
+     (bound-vars bound
+                 expr))))
 
 (define (get-fv expr)
   ;; NOTE Symbols always are their own free var, no need to store that in the AST.

@@ -3,8 +3,10 @@
 (load "compiler/utils/scc.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/env.scm")
+(load "compiler/freevars.scm") ;; FIXME Just for get-fv & compute-let-fv
+
 (load "compiler/ast.scm")
-(load "compiler/freevars.scm")
 (load "compiler/substitute.scm")
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
@@ -45,126 +47,16 @@
 
 ;; ...which is considerably simpler to compile and optimize.
 
-(define (letrec-expand expr)
-  (walk identity
-        (lambda (expr)
-          (if (letrec? expr)
-              (ref-conversion expr)
-              expr))
-        expr))
+(define (letrec-expand env)
+  (env-update env 'ast expand-letrec))
 
-(define (ref-conversion expr)
-  (scc-reorder (derive-graph expr)
-               (partial waddell fix let-ref-assign)
-               expr))
-
-;; Reordering:
-
-(define (recoursive? bindings)
-  (or (> (length bindings) 1)
-      (member (binding-var (car bindings))
-              (free-vars-old (binding-val (car bindings))))))
-
-(define (reorder-bindings fixer bindings body scc)
-  (foldr (lambda (component acc)
-           (let ((bs (filter (lambda (b)
-                               (member (binding-var b)
-                                       component))
-                             bindings)))
-             (if (recoursive? bs)
-                 (fixer
-                  (make-letrec bs acc))
-                 (make-let bs acc))))
-         body
-         scc))
-
-(define (scc-reorder deriver fixer expr)
-  (let* ((bindings (letrec-bindings expr))
-         (body (letrec-body expr))
-         (dep-graph (deriver bindings))
-         (scc (scc (bindings-vars bindings) dep-graph)))
-    (if (empty? scc)
-        (make-let bindings body)
-        (reorder-bindings fixer bindings body scc))))
-
-;; Dependency derivation:
-
-(define (derive-dependencies bindings)
-  (let ((vars (bindings-vars bindings)))
-    (foldl append
-           '()
-           (map (lambda (b)
-                  (map (lambda (e)
-                         (list (binding-var b) e))
-                       (filter (lambda (v)
-                                 (member v vars))
-                               (free-vars-old (binding-val b)))))
-                bindings))))
-
-(define (derive-ordering bindings)
-  (let ((vars (bindings-vars
-               ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
-               (filter (compose not value? binding-val)
-                       bindings))))
-    (if (not (empty? vars))
-        (map list
-             (cdr vars)
-             (reverse (cdr (reverse vars))))
-        '())))
-
-(define +ordered-bindings+ false)
-
-(define (derive-graph expr)
-  ;; NOTE Explicitly includes variable ordering.
-  (if +ordered-bindings+
-      (lambda (bindings)
-        (let ((deps (derive-dependencies bindings)))
-          (append deps
-                  (filter (lambda (e)
-                            (not (member e deps)))
-                          (derive-ordering bindings)))))
-      derive-dependencies))
-
-;; This conversion relies on boxing & assignments to implement assignment conversion on the variables that require it.
-
-(define (derefy refs expr)
-  (substitute (map (lambda (r)
-                     (cons r (list 'deref r)))
-                   refs)
-              expr))
-
-(define (let-ref-assign expr)
-  (let ((bindings (letrec-bindings expr))
-        (body (letrec-body expr)))
-    (if (empty? bindings)
-        body
-        (let* ((vars (bindings-vars bindings))
-               (body-free-vars (append (free-vars-old body)
-                                       (free-vars-old (bindings-vals bindings))))
-               (let-builder (lambda (bindings body)
-                              (if (empty? bindings)
-                                  body
-                                  (make-let bindings
-                                            body))))
-               (refs (map (lambda (v)
-                            (list v '(ref '())))
-                          vars))
-               (setters (map (lambda (b)
-                               (make-app 'assign! (list (car b)
-                                                        (derefy vars (cadr b)))))
-                             bindings))
-               (body (derefy vars body)))
-          (let-builder refs
-                       (if (empty? setters)
-                           body
-                           (make-do (append setters
-                                            (list body)))))))))
-
-;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
-
-(define (fix expr)
-  (make-fix (letrec-bindings expr)
-            (letrec-body expr)))
+(define (expand-letrec expr)
+  (map-ast (lambda (expr)
+             (if (letrec-node? expr)
+                 (ref-conversion expr)
+                 expr))
+           id
+           expr))
 
 ;; This conversion combines the best of three(?) worlds by using SCC reordering and mutation.
 
@@ -201,41 +93,168 @@
 
 ;; The fix expression can be either handled much like in the fixpoint conversion, or directly during the closure conversion phase by allocating a fat closure for all of these functions.
 
-(define (waddell fix let-void-set expr)
-  (let* ((bindings (letrec-bindings expr))
-         (simple (filter (lambda (b)
-                           (simple? (binding-val b)))
+(define (ref-conversion expr)
+  (scc-reorder (derive-graph expr)
+               (partial waddell fix let-ref-assign)
+               expr))
+
+;; Dependency derivation:
+
+(define +ordered-bindings+ false)
+
+(define (derive-graph expr)
+  (let*((bindings (ast-letrec-bindings expr))
+        (deps (derive-dependencies bindings)))
+    (if +ordered-bindings+
+        ;; NOTE Explicitly includes variable ordering.
+        (append deps
+                (filter (lambda (e)
+                          (not (member e deps)))
+                        (derive-ordering bindings)))
+        deps)))
+
+(define (derive-dependencies bindings)
+  (let ((vars (map (compose ast-symbol-value ast-binding-var) bindings)))
+    (foldl append
+           '()
+           (map (lambda (b)
+                  (map (lambda (e)
+                         (list (ast-symbol-value (ast-binding-var b)) e))
+                       (set-intersection (apply set vars)
+                                         (get-fv (ast-binding-val b)))))
+                bindings))))
+
+(define (derive-ordering bindings)
+  (let ((vars (map (compose ast-symbol-value ast-binding-var)
+                   ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
+                   (filter (compose not value-node? ast-binding-val)
+                           bindings))))
+    (if (not (empty? vars))
+        (map list
+             (cdr vars)
+             (reverse (cdr (reverse vars))))
+        '())))
+
+;; Reordering:
+
+(define (scc-reorder dep-graph fixer expr)
+  (let ((bindings (ast-letrec-bindings expr))
+        (body (ast-letrec-body expr))
+        (scc (scc (get-bound-vars expr)
+                  dep-graph)))
+    (if (empty? scc)
+        (reconstruct-let-node expr bindings body)
+        (reorder-bindings scc fixer expr bindings body))))
+
+(define (reorder-bindings scc fixer parent bindings body)
+  (foldr (lambda (component acc)
+           (let ((bs (filter (compose (flip member component) ast-symbol-value ast-binding-var)
+                             bindings)))
+             (if (recoursive? bs)
+                 (fixer parent bs acc)
+                 (reconstruct-let-node parent bs acc))))
+         body
+         scc))
+
+(define (recoursive? bindings)
+  (or (> (length bindings) 1)
+      (set-member? (get-fv (ast-binding-val (car bindings)))
+                   (ast-symbol-value (ast-binding-var (car bindings))))))
+
+;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
+
+(define (waddell fix let-void-set parent bindings body)
+  (let* ((simple (filter (compose simple-node? ast-binding-val)
                          bindings))
-         (lambdas (filter (lambda (b)
-                            (lambda? (binding-val b)))
+         (lambdas (filter (compose lambda-node? ast-binding-val)
                           bindings))
          (complex (filter (lambda (b)
                             (not (or (member b simple)
                                      (member b lambdas))))
                           bindings))
-         (lambdas-builder (cond ((empty? lambdas)
-                                 identity)
-                                ((not (recoursive? lambdas))
-                                 (lambda (body)
-                                   (make-let lambdas
-                                             body)))
-                                (else
-                                 (lambda (body)
-                                   (fix
-                                    (make-letrec lambdas
-                                                 body))))))
+         (lambdas-builder (if (recoursive? lambdas)
+                              (partial fix parent lambdas)
+                              (partial reconstruct-let-node parent lambdas)))
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)
-                                (let ((conv (let-void-set (make-letrec complex body))))
-                                  (list (car conv) (letrec-bindings conv)
-                                        (lambdas-builder
-                                         (letrec-body conv)))))))
-         (simple-builder (if (empty? simple)
-                             identity
-                             (lambda (body)
-                               (make-let simple
-                                         body)))))
-    (simple-builder
-     (complex-builder
-      (letrec-body expr)))))
+                                (ast-update (let-void-set parent complex body)
+                                            'body
+                                            lambda-builder)))))
+    (reconstruct-let-node parent
+                          simple
+                          (complex-builder
+                           body))))
+
+;; This conversion relies on boxing & assignments to implement assignment conversion on the variables that require it.
+
+(define (let-ref-assign parent bindings body)
+  (if (empty? bindings)
+      body
+      (let* ((vars (map (compose ast-symbol-value ast-binding-var) bindings))
+             (refs (map (lambda (b)
+                          (make-binding
+                           (ast-binding-var b)
+                           (replace (ast-binding-val b)
+                                    (generated
+                                     (make-app-node (make-symbol-node 'ref)
+                                                    (list (make-quote-node
+                                                           (make-list-node '()))))))))
+                        bindings))
+             (setters (map (lambda (b)
+                             (let ((val (ast-binding-val b))
+                                   (var (ast-binding-var b)))
+                               (replace val
+                                        (free-vars (set-union (get-fv val) (set 'assign! (ast-symbol-value var)))
+                                                   (generated
+                                                    (make-app-node (at (get-location val)
+                                                                       (generated (make-symbol-node 'assign!)))
+                                                                   (list var
+                                                                         (derefy vars val))))))))
+                           bindings))
+             (body (derefy vars body)))
+        (reconstruct-let-node parent
+                              refs
+                              (if (empty? setters)
+                                  body
+                                  (replace body
+                                           (free-vars (set-union (get-fv body)
+                                                                 (set-sum (map get-fv setters)))
+                                                      (generated
+                                                       (make-do-node (append setters (list body)))))))))))
+
+(define (derefy refs expr)
+  (map-ast id
+           (lambda (expr)
+             (if (and (symbol-node? expr)
+                      (member (ast-symbol-value expr) refs))
+                 (replace expr
+                          (free-vars (set-insert (get-fv expr) 'deref)
+                                     (generated
+                                      (make-app-node (at (get-location expr)
+                                                         (generated
+                                                          (make-symbol-node 'deref)))
+                                                     (list expr)))))
+                 expr))
+           expr))
+
+;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
+
+(define (fix parent bindings body)
+  (if (empty? bindings)
+      body
+      (replace parent
+               (generated
+                ;; FIXME This isn't actually a letrec...
+                (compute-letrec-fv
+                 (make-fix-node bindings
+                                body))))))
+
+(define (reconstruct-let-node parent bindings body)
+  (if (empty? bindings)
+      body
+      (replace parent
+               (generated
+                (compute-let-fv
+                 (make-let-node bindings
+                                body))))))
