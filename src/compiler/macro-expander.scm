@@ -68,7 +68,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `when` syntax, expected a condition and a body to follow:")))))
 
 (define (unless-macro expr)
@@ -82,7 +82,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `unless` syntax, expected a condition and a body to follow:")))))
 
 (define (cond-macro expr)
@@ -100,7 +100,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
 
 (define (and-macro expr)
@@ -118,7 +118,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `and` syntax, expected a list of expressions to follow:")))))
 
 (define (or-macro expr)
@@ -136,7 +136,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `or` syntax, expected a list of expressions to follow:")))))
 
 (define (let*-macro expr)
@@ -156,7 +156,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
 
 (define (letcc-macro expr)
@@ -171,7 +171,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
 
 (define (shift-macro expr)
@@ -186,7 +186,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `shift` syntax, expected an identifier and a body to follow:")))))
 
 (define (reset-macro expr)
@@ -201,7 +201,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `reset` syntax, expected exactly one expression to follow:")))))
 
 (define (handle-macro expr)
@@ -217,7 +217,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `handle` syntax, expected exactly two expressions to follow:")))))
 
 (define (structure-macro expr)
@@ -243,7 +243,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `structure` syntax, expected a module specification followed by a body:")))))
 
 (define (extract-definition-name expr)
@@ -254,7 +254,7 @@
     name)
    (else
     (raise-compilation-error
-     (get-location expr)
+     expr
      "Bad `structure` syntax, expected a definition:"))))
 
 (define (module-macro expr)
@@ -273,5 +273,5 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `module` syntax, expected a module specification followed by a body:")))))

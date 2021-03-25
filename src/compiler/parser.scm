@@ -41,7 +41,8 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (location start end)
+                 (at (location start end)
+                     (make-location-node))
                  "Unmatched `)`, expected an opening `(` to come before:")
                 start
                 end))))
@@ -95,7 +96,8 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (location start end)
+                 (at (location start end)
+                     (make-location-node))
                  (format "No expression following `~a`:"
                          (cadr matching)))
                 start
@@ -122,7 +124,8 @@
             (end (match-end result))
             (content (caddr matching)))
        (matches (raise-compilation-error
-                 (location start end)
+                 (at (location start end)
+                     (make-location-node))
                  "Unterminated string literal, expected a closing `\"` to follow:")
                 start
                 end))))
@@ -148,7 +151,8 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (location start end)
+                 (at (location start end)
+                     (make-location-node))
                  "Unterminated list, expected a closing `)` to follow:")
                 start
                 end))))
@@ -200,7 +204,8 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (location start end)
+                 (at (location start end)
+                     (make-location-node))
                  (format "Invalid symbol `~a` specified at:"
                          (cadr matching)))
                 start
@@ -245,7 +250,8 @@
                                     (if (matches? parsed)
                                         (match-match parsed)
                                         (raise-compilation-error
-                                         (location 0 (string-length input))
+                                         (at (location 0 (string-length input))
+                                             (make-location-node))
                                          "Not a valid FOOF file:")))))))
     (env-set env
              'ast (car result)

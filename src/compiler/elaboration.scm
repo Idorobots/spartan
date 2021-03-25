@@ -79,7 +79,7 @@
 
 (define (fail-unquote expr)
   (raise-compilation-error
-   (get-location expr)
+   expr
    ;; NOTE Misplaced `<error>`, haha.
    (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
 
@@ -124,7 +124,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
 
 (define (reconstruct-do expr)
@@ -135,7 +135,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `do` syntax, expected at least one expression to follow:")))))
 
 (define (reconstruct-lambda expr)
@@ -147,7 +147,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
 
 (define (valid-formals args prefix)
@@ -157,14 +157,14 @@
            (ast-list-values args))
       (list
        (raise-compilation-error
-        (get-location args)
+        args
         (format "~a, expected a list of identifiers:" prefix)))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
       symbol
       (raise-compilation-error
-       (get-location symbol)
+       symbol
        (format "~a, expected a symbol but got a ~a instead:" prefix (get-type symbol)))))
 
 (define (reconstruct-let expr)
@@ -183,7 +183,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
                (ast-symbol-value node)))))))
 
@@ -197,10 +197,10 @@
            (equal? (length (ast-list-values binding)) 2))
       (cons (valid-symbol (ast-list-car binding) prefix)
             (ast-list-nth binding 1))
-      (cons (make-error-node)
-            (raise-compilation-error
-             (get-location binding)
-             (format "~a, expected a pair of an identifier and a value:" prefix)))))
+      (let ((e (raise-compilation-error
+                binding
+                (format "~a, expected a pair of an identifier and a value:" prefix))))
+        (cons e e))))
 
 (define (reconstruct-quote expr)
   (ast-case expr
@@ -213,7 +213,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        (format "Bad `~a` syntax, expected exactly one expression to follow:"
                (ast-symbol-value node)))))))
 
@@ -228,7 +228,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        (format "Bad `~a` syntax, expected exactly one expression to follow:"
                (ast-symbol-value node)))))))
 
@@ -252,7 +252,7 @@
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
-       (get-location node)
+       node
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
 (define (reconstruct-app expr)
@@ -262,7 +262,7 @@
              (make-app-node op args)))
    (else
     (raise-compilation-error
-     (get-location expr)
+     expr
      "Bad call syntax, expected at least one expression within the call:"))))
 
 (define (valid-app-procedure op)
@@ -270,5 +270,5 @@
     (if (member type '(symbol if do lambda let letrec app primop-app))
         op
         (raise-compilation-error
-         (get-location op)
+         op
          (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:" type)))))

@@ -29,11 +29,11 @@
       (compiler-bug)))
 
 (define (expand-body expr)
-  (map-ast (lambda (expr)
+  (map-ast id
+           (lambda (expr)
              (case (get-type expr)
                ((do) (reconstruct-body expr))
                (else expr)))
-           id
            expr))
 
 (define (reconstruct-body expr)
@@ -64,7 +64,7 @@
   (let ((ctx (get-context* parent "Bad `do` syntax")))
     (cond ((= (length exprs) 0)
            (raise-compilation-error
-            (get-location parent)
+            parent
             (format "~a, expected at least one non-definition expression within:" ctx)))
           ((= (length exprs) 1)
            (car exprs))

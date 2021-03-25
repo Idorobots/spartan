@@ -130,6 +130,10 @@
 59 |(structure x y z)
                ^~~~~~
 
+../test/foof/errors/macros.foo(59,11): Undefined variable `x`:
+59 |(structure x y z)
+               ^~~~~~
+
 ../test/foof/errors/macros.foo(59,13): Bad `structure` syntax, expected a definition:
 59 |(structure x y z)
                  ^~~~~~
@@ -138,7 +142,15 @@
 59 |(structure x y z)
                  ^~~~~~
 
+../test/foof/errors/macros.foo(59,13): Undefined variable `y`:
+59 |(structure x y z)
+                 ^~~~~~
+
 ../test/foof/errors/macros.foo(59,15): Bad `structure` syntax, expected a definition:
+59 |(structure x y z)
+                   ^~~~~~
+
+../test/foof/errors/macros.foo(59,15): Undefined variable `z`:
 59 |(structure x y z)
                    ^~~~~~
 
@@ -166,7 +178,15 @@
 71 |(module (foo) x)
                   ^~~~~~
 
+../test/foof/errors/macros.foo(71,14): Undefined variable `x`:
+71 |(module (foo) x)
+                  ^~~~~~
+
 ../test/foof/errors/macros.foo(72,14): Bad `structure` syntax, expected a definition:
+72 |(module (foo) x y z)
+                  ^~~~~~
+
+../test/foof/errors/macros.foo(72,14): Undefined variable `x`:
 72 |(module (foo) x y z)
                   ^~~~~~
 
@@ -182,6 +202,10 @@
 72 |(module (foo) x y z)
                     ^~~~~~
 
+../test/foof/errors/macros.foo(72,16): Undefined variable `y`:
+72 |(module (foo) x y z)
+                    ^~~~~~
+
 ../test/foof/errors/macros.foo(72,18): Bad `structure` syntax, expected a definition:
 72 |(module (foo) x y z)
                       ^~~~~~
@@ -190,4 +214,8 @@
 72 |(module (foo) x y z)
                       ^~~~~~
 
-Compilation aborted due to 48 errors.
+../test/foof/errors/macros.foo(72,18): Undefined variable `z`:
+72 |(module (foo) x y z)
+                      ^~~~~~
+
+Compilation aborted due to 55 errors.

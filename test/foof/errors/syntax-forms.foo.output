@@ -98,6 +98,10 @@
 27 |(let (x) 23)
           ^~~~~~
 
+../test/foof/errors/syntax-forms.foo(27,6): Undefined variable `x`:
+27 |(let (x) 23)
+          ^~~~~~
+
 ../test/foof/errors/syntax-forms.foo(28,7): Bad `let` bindings syntax, expected a symbol but got a number instead:
 28 |(let ((23 x)) 23)
            ^~~~~~
@@ -139,6 +143,10 @@
      ^~~~~~
 
 ../test/foof/errors/syntax-forms.foo(38,9): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+38 |(letrec (x) 23)
+             ^~~~~~
+
+../test/foof/errors/syntax-forms.foo(38,9): Undefined variable `x`:
 38 |(letrec (x) 23)
              ^~~~~~
 
@@ -242,6 +250,10 @@
 69 |((define (faz x) x) 23)
      ^~~~~~
 
+../test/foof/errors/syntax-forms.foo(69,1): Bad `define` syntax, not allowed in this context:
+69 |((define (faz x) x) 23)
+     ^~~~~~
+
 ../test/foof/errors/syntax-forms.foo(72,1): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
 72 |("some function")
      ^~~~~~
@@ -262,4 +274,4 @@
 82 |`,@wat
      ^~~~~~
 
-Compilation aborted due to 66 errors.
+Compilation aborted due to 69 errors.

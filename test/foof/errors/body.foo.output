@@ -2,7 +2,15 @@
 1 |(do (define _ 23))
    ^~~~~~
 
+../test/foof/errors/body.foo(1,4): Bad `define` syntax, not allowed in this context:
+1 |(do (define _ 23))
+       ^~~~~~
+
 ../test/foof/errors/body.foo(4,2): Bad `lambda` body syntax, expected at least one non-definition expression within:
+4 |  (define _ 5))
+     ^~~~~~
+
+../test/foof/errors/body.foo(4,2): Bad `define` syntax, not allowed in this context:
 4 |  (define _ 5))
      ^~~~~~
 
@@ -10,8 +18,16 @@
 9 |  (define _ (* 2 x)))
      ^~~~~~
 
+../test/foof/errors/body.foo(9,2): Bad `define` syntax, not allowed in this context:
+9 |  (define _ (* 2 x)))
+     ^~~~~~
+
 ../test/foof/errors/body.foo(14,2): Bad `letrec` body syntax, expected at least one non-definition expression within:
 14 |  (define _ (* 2 x)))
       ^~~~~~
 
-Compilation aborted due to 4 errors.
+../test/foof/errors/body.foo(14,2): Bad `define` syntax, not allowed in this context:
+14 |  (define _ (* 2 x)))
+      ^~~~~~
+
+Compilation aborted due to 8 errors.

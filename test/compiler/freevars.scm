@@ -18,8 +18,10 @@
                      (make-number-node 23)))))
      (assert (compute-free-vars (make-string-node "foo"))
              (make-string-node "foo"))
-     (assert (compute-free-vars (make-error-node))
-             (make-error-node)))
+     (assert (compute-free-vars (make-error-node
+                                 (make-location-node)))
+             (make-error-node
+              (make-location-node))))
 
  (it "handles syntax forms correctly"
      (assert (compute-free-vars
