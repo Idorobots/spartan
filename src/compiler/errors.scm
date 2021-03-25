@@ -17,13 +17,16 @@
 
 ;; Syntax error
 
-(define (make-compilation-error location what restart)
-  (list 'compilation-error location what restart))
+(define (make-compilation-error where what restart)
+  (list 'compilation-error where what restart))
 
 (define (compilation-error? e)
   (tagged-list? 'compilation-error e))
 
 (define (compilation-error-location e)
+  (get-location (compilation-error-where e)))
+
+(define (compilation-error-where e)
   (cadr e))
 
 (define (compilation-error-what e)
@@ -32,10 +35,10 @@
 (define (compilation-error-restart e)
   (cadddr e))
 
-(define (raise-compilation-error location what)
+(define (raise-compilation-error where what)
   (call/cc
    (lambda (cont)
-     (raise (make-compilation-error location what cont)))))
+     (raise (make-compilation-error where what cont)))))
 
 ;; Error gathering
 
@@ -49,7 +52,8 @@
                          ((compilation-error-restart error)
                           (at (compilation-error-location error)
                               (generated
-                               (make-error-node)))))))
+                               (make-error-node
+                                (compilation-error-where error))))))))
                    (thunk))))
     (list result (deref errors))))
 

@@ -64,7 +64,7 @@
   (let ((ctx (get-context* parent "Bad `do` syntax")))
     (cond ((= (length exprs) 0)
            (raise-compilation-error
-            (get-location parent)
+            parent
             (format "~a, expected at least one non-definition expression within:" ctx)))
           ((= (length exprs) 1)
            (car exprs))

@@ -23,7 +23,7 @@
 (define (expand-no-splicing expr context)
   (if (unquote-splicing-node? expr)
       (raise-compilation-error
-       (get-location expr)
+       expr
        "Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:")
       (expand-splicing expr context)))
 

@@ -203,12 +203,22 @@
 (define (ast-primop-app-args node)
   (ast-get node 'args))
 
+;; Parse location marker
+(define (make-location-node)
+  (ast-node 'type '<location>))
+
+(define (location-node? node)
+  (is-type? node '<location>))
+
 ;; Error within parse tree
-(define (make-error-node)
-  (ast-node 'type '<error> 'value "<error>"))
+(define (make-error-node expr)
+  (ast-node 'type '<error> 'expr expr))
 
 (define (error-node? node)
   (is-type? node '<error>))
+
+(define (ast-error-expr node)
+  (ast-get node 'expr))
 
 ;; AST utils
 
@@ -314,7 +324,7 @@
       ((def) (ast-update (ast-update expr 'name f) 'value f))
       ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
       ((list) (ast-update expr 'value mf))
-      ((<error>) expr)
+      ((<error> <location>) expr)
       (else (error "Unexpected expression: " expr)))))
 
 (define (map-ast pre post expr)

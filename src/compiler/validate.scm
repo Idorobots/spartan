@@ -85,12 +85,12 @@
        (cond ((generated? expr) expr)
              ((set-member? undefined value)
               (raise-compilation-error
-               (get-location expr)
+               expr
                (format "Undefined variable `~a`:" value)))
              ((equal? value '_) expr)
              ((set-member? unused value)
               (raise-compilation-error
-               (get-location expr)
+               expr
                (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
              (else
               expr))))
@@ -99,7 +99,7 @@
      (replace (walk-ast (partial validate-ast undefined unused)
                         expr)
               (raise-compilation-error
-               (get-location expr)
+               expr
                (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax")))))
     (else
      (walk-ast (partial validate-ast undefined unused)
