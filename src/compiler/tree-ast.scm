@@ -295,7 +295,7 @@
 (define (walk-ast f expr)
   (let* ((mf (partial map f)))
     (case (get-type expr)
-      ((number symbol string) expr)
+      ((number symbol string <location>) expr)
       ((if) (foldl (lambda (field acc)
                      (ast-update acc field f))
                    expr
@@ -324,7 +324,7 @@
       ((def) (ast-update (ast-update expr 'name f) 'value f))
       ((app primop-app) (ast-update (ast-update expr 'op f) 'args mf))
       ((list) (ast-update expr 'value mf))
-      ((<error> <location>) expr)
+      ((<error>) (ast-update expr 'expr f))
       (else (error "Unexpected expression: " expr)))))
 
 (define (map-ast pre post expr)

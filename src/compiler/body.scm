@@ -29,11 +29,11 @@
       (compiler-bug)))
 
 (define (expand-body expr)
-  (map-ast (lambda (expr)
+  (map-ast id
+           (lambda (expr)
              (case (get-type expr)
                ((do) (reconstruct-body expr))
                (else expr)))
-           id
            expr))
 
 (define (reconstruct-body expr)
