@@ -166,9 +166,13 @@
          scc))
 
 (define (recoursive? bindings)
-  (or (> (length bindings) 1)
-      (set-member? (get-fv (ast-binding-val (car bindings)))
-                   (safe-symbol-value (ast-binding-var (car bindings))))))
+  (cond ((empty? bindings)
+         #f)
+        ((> (length bindings) 1)
+         #t)
+        (else
+         (set-member? (get-fv (ast-binding-val (car bindings)))
+                   (safe-symbol-value (ast-binding-var (car bindings)))))))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
 
@@ -190,7 +194,7 @@
                               (lambda (body)
                                 (ast-update (let-void-set parent complex body)
                                             'body
-                                            lambda-builder)))))
+                                            lambdas-builder)))))
     (generated
      (reconstruct-let-node parent
                           simple
