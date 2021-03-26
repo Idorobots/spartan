@@ -201,7 +201,7 @@
 (define (let-ref-assign parent bindings body)
   (if (empty? bindings)
       body
-      (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
+      (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
              (refs (map (lambda (b)
                           (let ((val (ast-binding-val b)))
                             (make-binding
@@ -234,26 +234,54 @@
                               refs
                               (if (empty? setters)
                                   body
-                                  (free-vars (set-union (get-fv body)
+                                  ;; NOTE Also includes the `deref` comming from derefy.
+                                  (free-vars (set-union (set-insert (get-fv body) 'deref)
                                                         (set-sum (map get-fv setters)))
                                              (at (get-location body)
                                                  (generated
                                                   (make-do-node (append setters (list body)))))))))))
 
 (define (derefy refs expr)
-  (map-ast id
-           (lambda (expr)
-             (if (and (symbol-node? expr)
-                      (member (safe-symbol-value expr) refs))
-                 (free-vars (set-insert (get-fv expr) 'deref)
-                            (at (get-location expr)
-                                (generated
-                                 (make-app-node (at (get-location expr)
-                                                    (generated
-                                                     (make-symbol-node 'deref)))
-                                                (list expr)))))
-                 expr))
-           expr))
+  (case (get-type expr)
+    ((symbol)
+     (if (member (safe-symbol-value expr) refs)
+      (free-vars (set-insert (get-fv expr) 'deref)
+                 (at (get-location expr)
+                     (generated
+                      (make-app-node (at (get-location expr)
+                                         (generated
+                                          (make-symbol-node 'deref)))
+                                     (list expr)))))
+      expr))
+
+    ((lambda)
+     (ast-update expr
+                 'body (partial derefy
+                                (set-difference refs
+                                                (get-bound-vars expr)))))
+
+    ((let)
+     (let ((unbound-refs (set-difference refs
+                                         (get-bound-vars expr))))
+       (ast-update (ast-update expr 'body (partial derefy unbound-refs))
+                   'bindings
+                   (partial map
+                            (lambda (b)
+                              (make-binding (ast-binding-var b)
+                                            (derefy refs (ast-binding-val b))))))))
+
+    ((letrec fix)
+     (let ((unbound-refs (set-difference refs
+                                         (get-bound-vars expr))))
+       (ast-update (ast-update expr 'body (partial derefy unbound-refs))
+                   'bindings
+                   (partial map
+                            (lambda (b)
+                              (make-binding (ast-binding-var b)
+                                            (derefy unbound-refs (ast-binding-val b))))))))
+
+    (else
+     (walk-ast (partial derefy refs) expr))))
 
 ;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
 
