@@ -33,8 +33,8 @@
                quasiquote-expand
                annotate-free-vars
                validate
-               report-errors
                letrec-expand
+               report-errors
                adapt-ast
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))

@@ -4,6 +4,7 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/errors.scm")
 (load "compiler/freevars.scm") ;; FIXME Just for get-fv & compute-let-fv
 
 (load "compiler/ast.scm")
@@ -48,14 +49,19 @@
 ;; ...which is considerably simpler to compile and optimize.
 
 (define (letrec-expand env)
-  (env-update env 'ast expand-letrec))
+  (let ((result (collect-errors (env-get env 'errors)
+                                (lambda ()
+                                  (expand-letrec (env-get env 'ast))))))
+    (env-set env
+             'ast (car result)
+             'errors (cadr result))))
 
 (define (expand-letrec expr)
-  (map-ast (lambda (expr)
+  (map-ast id
+           (lambda (expr)
              (if (letrec-node? expr)
                  (ref-conversion expr)
                  expr))
-           id
            expr))
 
 ;; This conversion combines the best of three(?) worlds by using SCC reordering and mutation.
@@ -103,32 +109,32 @@
 (define +ordered-bindings+ false)
 
 (define (derive-graph expr)
-  (let*((bindings (ast-letrec-bindings expr))
-        (deps (derive-dependencies bindings)))
+  (let* ((deps (derive-dependencies expr)))
     (if +ordered-bindings+
         ;; NOTE Explicitly includes variable ordering.
         (append deps
                 (filter (lambda (e)
                           (not (member e deps)))
-                        (derive-ordering bindings)))
+                        (derive-ordering expr)))
         deps)))
 
-(define (derive-dependencies bindings)
-  (let ((vars (map (compose ast-symbol-value ast-binding-var) bindings)))
+(define (derive-dependencies expr)
+  (let ((vars (apply set (get-bound-vars expr))))
     (foldl append
            '()
            (map (lambda (b)
                   (map (lambda (e)
-                         (list (ast-symbol-value (ast-binding-var b)) e))
-                       (set-intersection (apply set vars)
+                         ;; NOTE So that we can process somewhat malformed expressions.
+                         (list (safe-symbol-value (ast-binding-var b)) e))
+                       (set-intersection vars
                                          (get-fv (ast-binding-val b)))))
-                bindings))))
+                (ast-letrec-bindings expr)))))
 
-(define (derive-ordering bindings)
-  (let ((vars (map (compose ast-symbol-value ast-binding-var)
+(define (derive-ordering expr)
+  (let ((vars (map (compose safe-symbol-value ast-binding-var)
                    ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
                    (filter (compose not value-node? ast-binding-val)
-                           bindings))))
+                           (ast-letrec-bindings bindings)))))
     (if (not (empty? vars))
         (map list
              (cdr vars)
@@ -148,7 +154,7 @@
 
 (define (reorder-bindings scc fixer parent bindings body)
   (foldr (lambda (component acc)
-           (let ((bs (filter (compose (flip member component) ast-symbol-value ast-binding-var)
+           (let ((bs (filter (compose (flip member component) safe-symbol-value ast-binding-var)
                              bindings)))
              (if (recoursive? bs)
                  (fixer parent bs acc)
@@ -159,7 +165,7 @@
 (define (recoursive? bindings)
   (or (> (length bindings) 1)
       (set-member? (get-fv (ast-binding-val (car bindings)))
-                   (ast-symbol-value (ast-binding-var (car bindings))))))
+                   (safe-symbol-value (ast-binding-var (car bindings))))))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
 
@@ -191,7 +197,7 @@
 (define (let-ref-assign parent bindings body)
   (if (empty? bindings)
       body
-      (let* ((vars (map (compose ast-symbol-value ast-binding-var) bindings))
+      (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
                           (make-binding
                            (ast-binding-var b)
@@ -205,7 +211,7 @@
                              (let ((val (ast-binding-val b))
                                    (var (ast-binding-var b)))
                                (replace val
-                                        (free-vars (set-union (get-fv val) (set 'assign! (ast-symbol-value var)))
+                                        (free-vars (set-union (get-fv val) (set 'assign! (safe-symbol-value var)))
                                                    (generated
                                                     (make-app-node (at (get-location val)
                                                                        (generated (make-symbol-node 'assign!)))
@@ -227,7 +233,7 @@
   (map-ast id
            (lambda (expr)
              (if (and (symbol-node? expr)
-                      (member (ast-symbol-value expr) refs))
+                      (member (safe-symbol-value expr) refs))
                  (replace expr
                           (free-vars (set-insert (get-fv expr) 'deref)
                                      (generated
@@ -258,3 +264,11 @@
                 (compute-let-fv
                  (make-let-node bindings
                                 body))))))
+
+(define (safe-symbol-value expr)
+  (cond ((symbol-node? expr)
+         (ast-symbol-value expr))
+        ((and (error-node? expr)
+              (symbol-node? (ast-error-expr expr)))
+         (ast-symbol-value (ast-error-expr expr)))
+        (else '<error>)))
