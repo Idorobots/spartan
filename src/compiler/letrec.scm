@@ -60,7 +60,8 @@
   (map-ast id
            (lambda (expr)
              (if (letrec-node? expr)
-                 (ref-conversion expr)
+                 (replace expr
+                          (ref-conversion expr))
                  expr))
            expr))
 
@@ -156,9 +157,11 @@
   (foldr (lambda (component acc)
            (let ((bs (filter (compose (flip member component) safe-symbol-value ast-binding-var)
                              bindings)))
-             (if (recoursive? bs)
+             ;; NOTE Nodes resulting from reordering are artificially created, hence they are marked as such.
+             (generated
+              (if (recoursive? bs)
                  (fixer parent bs acc)
-                 (reconstruct-let-node parent bs acc))))
+                 (reconstruct-let-node parent bs acc)))))
          body
          scc))
 
@@ -178,19 +181,20 @@
                             (not (or (member b simple)
                                      (member b lambdas))))
                           bindings))
-         (lambdas-builder (if (recoursive? lambdas)
-                              (partial fix parent lambdas)
-                              (partial reconstruct-let-node parent lambdas)))
+         (lambdas-builder (compose generated
+                                   (if (recoursive? lambdas)
+                                       (partial fix parent lambdas)
+                                       (partial reconstruct-let-node parent lambdas))))
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)
                                 (ast-update (let-void-set parent complex body)
                                             'body
                                             lambda-builder)))))
-    (reconstruct-let-node parent
+    (generated
+     (reconstruct-let-node parent
                           simple
-                          (complex-builder
-                           body))))
+                          (complex-builder body)))))
 
 ;; This conversion relies on boxing & assignments to implement assignment conversion on the variables that require it.
 
@@ -199,48 +203,55 @@
       body
       (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
-                          (make-binding
-                           (ast-binding-var b)
-                           (replace (ast-binding-val b)
-                                    (generated
-                                     (make-app-node (make-symbol-node 'ref)
-                                                    (list (make-quote-node
-                                                           (make-list-node '()))))))))
+                          (let ((val (ast-binding-val b)))
+                            (make-binding
+                             (ast-binding-var b)
+                             (free-vars (set 'ref)
+                                        (at (get-location val)
+                                            (generated
+                                             (make-app-node (at (get-location val)
+                                                                (generated
+                                                                 (make-symbol-node 'ref)))
+                                                            (list (at (get-location val)
+                                                                      (generated
+                                                                       (make-quote-node
+                                                                        (at (get-location val)
+                                                                            (generated
+                                                                             (make-list-node '()))))))))))))))
                         bindings))
              (setters (map (lambda (b)
-                             (let ((val (ast-binding-val b))
+                             (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
-                               (replace val
-                                        (free-vars (set-union (get-fv val) (set 'assign! (safe-symbol-value var)))
-                                                   (generated
-                                                    (make-app-node (at (get-location val)
-                                                                       (generated (make-symbol-node 'assign!)))
-                                                                   (list var
-                                                                         (derefy vars val))))))))
+                               (free-vars (set-union (get-fv val) (set 'assign! (safe-symbol-value var)))
+                                          (at (get-location val)
+                                              (generated
+                                               (make-app-node (at (get-location val)
+                                                                  (generated (make-symbol-node 'assign!)))
+                                                              (list var val)))))))
                            bindings))
              (body (derefy vars body)))
         (reconstruct-let-node parent
                               refs
                               (if (empty? setters)
                                   body
-                                  (replace body
-                                           (free-vars (set-union (get-fv body)
-                                                                 (set-sum (map get-fv setters)))
-                                                      (generated
-                                                       (make-do-node (append setters (list body)))))))))))
+                                  (free-vars (set-union (get-fv body)
+                                                        (set-sum (map get-fv setters)))
+                                             (at (get-location body)
+                                                 (generated
+                                                  (make-do-node (append setters (list body)))))))))))
 
 (define (derefy refs expr)
   (map-ast id
            (lambda (expr)
              (if (and (symbol-node? expr)
                       (member (safe-symbol-value expr) refs))
-                 (replace expr
-                          (free-vars (set-insert (get-fv expr) 'deref)
-                                     (generated
-                                      (make-app-node (at (get-location expr)
-                                                         (generated
-                                                          (make-symbol-node 'deref)))
-                                                     (list expr)))))
+                 (free-vars (set-insert (get-fv expr) 'deref)
+                            (at (get-location expr)
+                                (generated
+                                 (make-app-node (at (get-location expr)
+                                                    (generated
+                                                     (make-symbol-node 'deref)))
+                                                (list expr)))))
                  expr))
            expr))
 
@@ -249,21 +260,19 @@
 (define (fix parent bindings body)
   (if (empty? bindings)
       body
-      (replace parent
-               (generated
-                ;; FIXME This isn't actually a letrec...
-                (compute-letrec-fv
-                 (make-fix-node bindings
-                                body))))))
+      ;; FIXME This isn't actually a letrec...
+      (compute-letrec-fv
+       (at (get-location parent)
+           (make-fix-node bindings
+                          body)))))
 
 (define (reconstruct-let-node parent bindings body)
   (if (empty? bindings)
       body
-      (replace parent
-               (generated
-                (compute-let-fv
-                 (make-let-node bindings
-                                body))))))
+      (compute-let-fv
+       (at (get-location parent)
+           (make-let-node bindings
+                          body)))))
 
 (define (safe-symbol-value expr)
   (cond ((symbol-node? expr)
