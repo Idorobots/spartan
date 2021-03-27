@@ -30,6 +30,15 @@
        (unless (predicate v e)
          (raise (make-assert-exception predicate 'value v e)))))))
 
+(define-syntax assert-ast
+  (syntax-rules ()
+    ((_ expr pattern body ...)
+     (ast-case expr
+               (pattern
+                body ...)
+               (else
+                (raise (make-assert-exception 'ast-case 'expr expr 'pattern)))))))
+
 (define-syntax test-file
   (syntax-rules ()
     ((_ filename)
@@ -86,6 +95,17 @@
        (set! var val)
        (with-test-bindings (bindings ...) body ...)
        (set! var tmp)))))
+
+(define-syntax check
+  (syntax-rules (sample)
+    ((_ (generators ...) body ...)
+     (check 100 (generators ...) body ...))
+    ((_ iterations ((name generator) ...) body ...)
+     (let loop ((n 0))
+       (let* ((name (sample generator random)) ...)
+         body ...)
+       (when (< n iterations)
+         (loop (+ n 1)))))))
 
 (define (assert->string e)
   (format "~a did not satisfy ~a\nexpected:\n~a\nreceived:\n~a\n"
