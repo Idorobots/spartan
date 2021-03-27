@@ -246,46 +246,44 @@
                                                   (make-do-node (append setters (list body)))))))))))
 
 (define (derefy refs expr)
-  (case (get-type expr)
-    ((symbol)
-     (if (member (safe-symbol-value expr) refs)
-      (free-vars (set-insert (get-fv expr) 'deref)
-                 (at (get-location expr)
-                     (generated
-                      (make-app-node (at (get-location expr)
-                                         (generated
-                                          (make-symbol-node 'deref)))
-                                     (list expr)))))
-      expr))
-
-    ((lambda)
-     (ast-update expr
-                 'body (partial derefy
-                                (set-difference refs
-                                                (get-bound-vars expr)))))
-
-    ((let)
-     (let ((unbound-refs (set-difference refs
-                                         (get-bound-vars expr))))
-       (ast-update (ast-update expr 'body (partial derefy unbound-refs))
-                   'bindings
-                   (partial map
-                            (lambda (b)
-                              (make-binding (ast-binding-var b)
-                                            (derefy refs (ast-binding-val b))))))))
-
-    ((letrec fix)
-     (let ((unbound-refs (set-difference refs
-                                         (get-bound-vars expr))))
-       (ast-update (ast-update expr 'body (partial derefy unbound-refs))
-                   'bindings
-                   (partial map
-                            (lambda (b)
-                              (make-binding (ast-binding-var b)
-                                            (derefy unbound-refs (ast-binding-val b))))))))
-
-    (else
-     (walk-ast (partial derefy refs) expr))))
+  (if (empty? refs)
+      expr
+      (case (get-type expr)
+        ((symbol)
+         (if (member (safe-symbol-value expr) refs)
+             (free-vars (set-insert (get-fv expr) 'deref)
+                        (at (get-location expr)
+                            (generated
+                             (make-app-node (at (get-location expr)
+                                                (generated
+                                                 (make-symbol-node 'deref)))
+                                            (list expr)))))
+             expr))
+        ((lambda)
+         (ast-update expr
+                     'body (partial derefy
+                                    (set-difference refs
+                                                    (get-bound-vars expr)))))
+        ((let)
+         (let ((unbound-refs (set-difference refs
+                                             (get-bound-vars expr))))
+           (ast-update (ast-update expr 'body (partial derefy unbound-refs))
+                       'bindings
+                       (partial map
+                                (lambda (b)
+                                  (make-binding (ast-binding-var b)
+                                                (derefy refs (ast-binding-val b))))))))
+        ((letrec fix)
+         (let ((unbound-refs (set-difference refs
+                                             (get-bound-vars expr))))
+           (ast-update (ast-update expr 'body (partial derefy unbound-refs))
+                       'bindings
+                       (partial map
+                                (lambda (b)
+                                  (make-binding (ast-binding-var b)
+                                                (derefy unbound-refs (ast-binding-val b))))))))
+        (else
+         (walk-ast (partial derefy refs) expr)))))
 
 ;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
 
