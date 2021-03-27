@@ -351,13 +351,13 @@
        (ast-update expr 'value mf))
       ((<error>)
        (ast-update expr 'expr f))
-      (else (error "Unexpected expression: " expr)))))
+      (else (compiler-bug "Unexpected expression: " expr)))))
 
 (define (map-ast pre post expr)
   (if (ast-node? expr)
       (let ((m (partial map-ast pre post)))
         (post (walk-ast m (pre expr))))
-      (compiler-bug)))
+      (compiler-bug "Non-AST object passed to map-ast:" expr)))
 
 (define (ast->plain ast)
   (map-ast id
@@ -391,7 +391,7 @@
                ((unquote-splicing) (list 'unquote-splicing (ast-quoted-expr expr)))
                ((def) (list 'define (ast-get expr 'name) (ast-quoted-expr expr)))
                ((app primop-app) (list* (ast-app-op expr) (ast-app-args expr)))
-               (else (error "Unexpected expression: " expr))))
+               (else (compiler-bug "Unexpected expression: " expr))))
            ast))
 
 ;; AST destructuring
