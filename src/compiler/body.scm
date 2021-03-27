@@ -26,7 +26,7 @@
           (generated
            (context ctx
                     (make-do-node exprs))))
-      (compiler-bug)))
+      (compiler-bug "Invalid list of body expressions passed to wrap-with-do:" exprs)))
 
 (define (expand-body expr)
   (map-ast id

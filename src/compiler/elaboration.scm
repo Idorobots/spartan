@@ -57,7 +57,7 @@
     ((list)
      (elaborate-unquoted
       (reconstruct-syntax-forms expr)))
-    (else (compiler-bug))))
+    (else (compiler-bug "Unrecognized expression passed to elaborate-unquoted:" expr))))
 
 (define (elaborate-quoted expr)
   (case (get-type expr)
@@ -69,7 +69,7 @@
        (if rec
            (elaborate-quoted rec)
            (ast-update expr 'value (partial map elaborate-quoted)))))
-    (else (compiler-bug))))
+    (else (compiler-bug "Unrecognized expression passed to elaborate-quoted:" expr))))
 
 (define (elaborate-app expr)
   (ast-update (ast-update expr 'op (lambda (op)
