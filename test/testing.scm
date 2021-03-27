@@ -97,15 +97,21 @@
        (set! var tmp)))))
 
 (define-syntax check
-  (syntax-rules (sample)
+  (syntax-rules (sample random)
     ((_ (generators ...) body ...)
      (check 100 (generators ...) body ...))
-    ((_ iterations ((name generator) ...) body ...)
-     (let loop ((n 0))
-       (let* ((name (sample generator random)) ...)
-         body ...)
-       (when (< n iterations)
-         (loop (+ n 1)))))))
+    ((_ iterations (generators ...) body ...)
+     (let ((seed (random 1234567890)))
+       (check iterations seed (generators ...) body ...)))
+    ((_ iterations seed ((name generator) ...) body ...)
+     (begin
+       (display (format "Running ~a property checks using ~a seed.~n" iterations seed))
+       (random-seed seed)
+       (let loop ((n 0))
+         (let* ((name (sample generator random)) ...)
+           body ...)
+         (when (< n iterations)
+           (loop (+ n 1))))))))
 
 (define (assert->string e)
   (format "~a did not satisfy ~a\nexpected:\n~a\nreceived:\n~a\n"

@@ -1,6 +1,7 @@
 ;; Top level for tests.
 
 (load "../test/testing.scm")
+(load "../test/gen.scm")
 
 ;; Compiler unit tests:
 (load "../test/compiler/utils.scm")
