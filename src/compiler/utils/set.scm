@@ -26,7 +26,7 @@
   (foldl set-union (set) sets))
 
 (define (set-member? set value)
-  (member value set))
+  (and (member value set) #t))
 
 (define (set-insert s value)
   (set-union s (set value)))

@@ -135,12 +135,12 @@
   (let ((vars (map (compose safe-symbol-value ast-binding-var)
                    ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
                    (filter (compose not value-node? ast-binding-val)
-                           (ast-letrec-bindings bindings)))))
-    (if (not (empty? vars))
+                           (ast-letrec-bindings expr)))))
+    (if (empty? vars)
+        '()
         (map list
              (cdr vars)
-             (reverse (cdr (reverse vars))))
-        '())))
+             (reverse (cdr (reverse vars)))))))
 
 ;; Reordering:
 
@@ -160,8 +160,8 @@
              ;; NOTE Nodes resulting from reordering are artificially created, hence they are marked as such.
              (generated
               (if (recoursive? bs)
-                 (fixer parent bs acc)
-                 (reconstruct-let-node parent bs acc)))))
+                  (fixer parent bs acc)
+                  (reconstruct-let-node parent bs acc)))))
          body
          scc))
 
@@ -172,7 +172,7 @@
          #t)
         (else
          (set-member? (get-fv (ast-binding-val (car bindings)))
-                   (safe-symbol-value (ast-binding-var (car bindings)))))))
+                      (safe-symbol-value (ast-binding-var (car bindings)))))))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
 
