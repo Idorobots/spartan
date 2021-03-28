@@ -131,8 +131,7 @@
  "reconstruct-let-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (b gen-complex-node)
-             (body (free-vars (apply set body-fv) b))
+             (body (gen-with-fv gen-complex-node (apply set body-fv)))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -163,8 +162,7 @@
  "fix"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (b gen-complex-node)
-             (body (free-vars (apply set body-fv) b))
+             (body (gen-with-fv gen-complex-node (apply set body-fv)))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -196,8 +194,7 @@
  (it "should correctly assess recoursivity of binding groups"
      (check ((var gen-valid-symbol)
              (node (gen-symbol-node var))
-             (rec-node gen-complex-node)
-             (rec (free-vars (set var) rec-node))
+             (rec (gen-with-fv gen-complex-node (set var)))
              (rec-binding (gen-binding node rec))
              (non-rec-binding gen-valid-binding)
              (multiple-bindings (gen-binding-list (gen-integer 2 5))))
@@ -215,8 +212,7 @@
              (v2 gen-valid-symbol)
              (n2 (gen-symbol-node v2))
              (b2 (gen-binding n2 gen-ast-node))
-             (node (gen-letrec-node (list b1 b2) gen-simple-node))
-             (l (bound-vars (set v1 v2) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2) gen-simple-node) (set v1 v2))))
             (assert (derive-dependencies l) '()))
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
@@ -227,8 +223,7 @@
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding n3 n2))
-             (node (gen-letrec-node (list b1 b2 b3) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2 b3) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-dependencies l) `((,v3 ,v2) (,v2 ,v1))))
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
@@ -239,8 +234,7 @@
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding n3 n1))
-             (node (gen-letrec-node (list b1 b2 b3) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2 b3) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-dependencies l) `((,v3 ,v1) (,v2 ,v1))))
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
@@ -251,8 +245,7 @@
              (b1 (gen-binding n1 n3))
              (b2 (gen-binding n2 n1))
              (b3 (gen-binding n3 n1))
-             (node (gen-letrec-node (list b1 b2 b3) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2 b3) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-dependencies l) `((,v3 ,v1) (,v2 ,v1) (,v1 ,v3)))))
 
  (it "should correctly derive variable ordering"
@@ -265,8 +258,7 @@
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding n3 gen-non-value-node))
-             (node (gen-letrec-node (list b3 b2 b1) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b3 b2 b1) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-ordering l) `((,v2 ,v3) (,v1 ,v2))))
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
@@ -277,8 +269,7 @@
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding n3 gen-non-value-node))
-             (node (gen-letrec-node (list b1 b2 b3) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2 b3) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-ordering l) `((,v2 ,v1) (,v3 ,v2)))))
 
  (it "should not derive variable ordering for simple values"
@@ -291,8 +282,7 @@
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding n3 gen-non-value-node))
-             (node (gen-letrec-node (list b1 b2 b3) gen-simple-node))
-             (l (bound-vars (set v1 v2 v3) node)))
+             (l (gen-with-bv (gen-letrec-node (list b1 b2 b3) gen-simple-node) (set v1 v2 v3))))
             (assert (derive-ordering l) `((,v3 ,v1))))))
 
 (describe
@@ -309,8 +299,7 @@
              (b3 (gen-binding n3 gen-ast-node))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (reorder-bindings `((,v3) (,v2) (,v1)) fix parent bindings body)
                     (generated
                      (reconstruct-let-node parent
@@ -345,13 +334,11 @@
              (b2 (gen-binding n2 gen-ast-node))
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
-             (rec-node gen-complex-node)
-             (rec (free-vars (set v3) rec-node))
+             (rec (gen-with-fv gen-complex-node (set v3)))
              (b3 (gen-binding n3 rec))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (reorder-bindings `((,v3) (,v2) (,v1)) fix parent bindings body)
                     (generated
                      (fix parent
@@ -378,8 +365,7 @@
              (b3 (gen-binding n3 gen-valid-lambda-node))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (node (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) node)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (waddell fix reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
@@ -404,8 +390,7 @@
              (b3 (gen-binding n3 gen-valid-lambda-node))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (waddell fix reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
@@ -426,8 +411,7 @@
              (b3 (gen-binding n3 gen-non-value-node))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (waddell fix reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
@@ -448,8 +432,7 @@
              (b3 (gen-binding n3 gen-value-node))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v1 v2 v3) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
             (assert (waddell fix reconstruct-let-node parent bindings body)
                     ;; NOTE Only simple value group is present.
                     (generated
@@ -479,16 +462,13 @@
  (it "should correctly introduce assignments"
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
-             (val-node gen-non-value-node)
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (free-vars (apply set val-fv) val-node))
+             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
              (b (gen-binding var val))
              (bindings (list b))
-             (body-node gen-non-value-node)
              (body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (free-vars (apply set body-fv) body-node))
-             (l (gen-letrec-node bindings body))
-             (parent (bound-vars (set v) l)))
+             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v))))
             (assert (let-ref-assign parent bindings body)
                     (generated
                      (reconstruct-let-node parent
@@ -517,13 +497,11 @@
  (it "should correctly introduce derefs"
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
-             (val-node gen-non-value-node)
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (free-vars (apply set val-fv) val-node))
+             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
              (b (gen-binding var val))
              (bindings (list b))
-             (l (gen-letrec-node bindings var))
-             (parent (bound-vars (set v) l)))
+             (parent (gen-with-bv (gen-letrec-node bindings var) (set v))))
             (assert (let-ref-assign parent bindings var)
                     (generated
                      (reconstruct-let-node parent

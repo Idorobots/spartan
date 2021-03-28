@@ -183,3 +183,13 @@
     (map (lambda (p)
            (sample (gen p) rand))
          parameters)))
+
+(define (gen-with-fv gen fv)
+  (lambda (rand)
+    (free-vars fv
+               (sample gen rand))))
+
+(define (gen-with-bv gen bv)
+  (lambda (rand)
+    (bound-vars bv
+                (sample gen rand))))
