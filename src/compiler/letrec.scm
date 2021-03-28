@@ -209,19 +209,20 @@
       body
       (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
              (refs (map (lambda (b)
-                          (let ((val (ast-binding-val b)))
+                          (let* ((val (ast-binding-val b))
+                                 (val-loc (get-location val)))
                             (make-binding
                              (ast-binding-var b)
                              (free-vars (set 'ref)
-                                        (at (get-location val)
+                                        (at val-loc
                                             (generated
-                                             (make-app-node (at (get-location val)
+                                             (make-app-node (at val-loc
                                                                 (generated
                                                                  (make-symbol-node 'ref)))
-                                                            (list (at (get-location val)
+                                                            (list (at val-loc
                                                                       (generated
                                                                        (make-quote-node
-                                                                        (at (get-location val)
+                                                                        (at val-loc
                                                                             (generated
                                                                              (make-list-node '()))))))))))))))
                         bindings))
@@ -236,16 +237,17 @@
                                                               (list var val)))))))
                            bindings))
              (body (derefy vars body)))
-        (reconstruct-let-node parent
-                              refs
-                              (if (empty? setters)
-                                  body
-                                  ;; NOTE Also includes the `deref` comming from derefy.
-                                  (free-vars (set-union (set-insert (get-fv body) 'deref)
-                                                        (set-sum (map get-fv setters)))
-                                             (at (get-location body)
-                                                 (generated
-                                                  (make-do-node (append setters (list body)))))))))))
+        (generated
+         (reconstruct-let-node parent
+                               refs
+                               (if (empty? setters)
+                                   body
+                                   ;; NOTE Also includes the `deref` comming from derefy.
+                                   (free-vars (set-union (set-insert (get-fv body) 'deref)
+                                                         (set-sum (map get-fv setters)))
+                                              (at (get-location body)
+                                                  (generated
+                                                   (make-do-node (append setters (list body))))))))))))
 
 (define (derefy refs expr)
   (if (empty? refs)

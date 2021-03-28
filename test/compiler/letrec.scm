@@ -457,10 +457,97 @@
                                            (list b1 b2 b3)
                                            body))))))
 
+(define (gen-ref value)
+  (free-vars
+   (set 'ref)
+   (let ((l (get-location value)))
+     (at l
+         (generated
+          (make-app-node
+           (at l
+               (generated
+                (make-symbol-node 'ref)))
+           (list (at l
+                     (generated
+                      (make-quote-node
+                       (at l
+                           (generated
+                            (make-list-node '())))))))))))))
+
 (describe
  "let-ref-assign"
  (it "should correctly introduce assignments"
-     todo))
+     (check ((v gen-valid-symbol)
+             (var (gen-symbol-node v))
+             (val-node gen-non-value-node)
+             (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
+             (val (free-vars (apply set val-fv) val-node))
+             (b (gen-binding var val))
+             (bindings (list b))
+             (body-node gen-non-value-node)
+             (body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
+             (body (free-vars (apply set body-fv) body-node))
+             (l (gen-letrec-node bindings body))
+             (parent (bound-vars (set v) l)))
+            (assert (let-ref-assign parent bindings body)
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list (make-binding var (gen-ref val)))
+                                           (free-vars
+                                            (set-sum (list (apply set val-fv)
+                                                           (apply set body-fv)
+                                                           (set v 'assign! 'deref)))
+                                            (at (get-location body)
+                                                (generated
+                                                 (make-do-node
+                                                  (list (free-vars
+                                                         (set-union (apply set val-fv)
+                                                                    (set v 'assign!))
+                                                         (let ((l (get-location val)))
+                                                           (at l
+                                                               (generated
+                                                                (make-app-node
+                                                                 (at l
+                                                                     (generated
+                                                                      (make-symbol-node 'assign!)))
+                                                                 (list var
+                                                                       val))))))
+                                                        body))))))))))
+
+ (it "should correctly introduce derefs"
+     (check ((v gen-valid-symbol)
+             (var (gen-symbol-node v))
+             (val-node gen-non-value-node)
+             (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
+             (val (free-vars (apply set val-fv) val-node))
+             (b (gen-binding var val))
+             (bindings (list b))
+             (l (gen-letrec-node bindings var))
+             (parent (bound-vars (set v) l)))
+            (assert (let-ref-assign parent bindings var)
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list (make-binding var (gen-ref val)))
+                                           (free-vars
+                                            (set-union (apply set val-fv)
+                                                       (set v 'assign! 'deref))
+                                            (at (get-location var)
+                                                (generated
+                                                 (make-do-node
+                                                  (list (free-vars
+                                                         (set-union (apply set val-fv)
+                                                                    (set v 'assign!))
+                                                         (let ((l (get-location val)))
+                                                           (at l
+                                                               (generated
+                                                                (make-app-node
+                                                                 (at l
+                                                                     (generated
+                                                                      (make-symbol-node 'assign!)))
+                                                                 (list var
+                                                                       val))))))
+                                                        (derefy (set v)
+                                                                var))))))))))))
 
 (describe
  "ref-conversion"
