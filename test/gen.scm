@@ -98,6 +98,11 @@
         (make-lambda-node (sample gen-formals rand)
                           (sample gen-body rand)))))
 
+(define (gen-valid-lambda-node rand)
+  (sample (gen-lambda-node (gen-arg-list (gen-integer 0 3))
+                           gen-simple-node)
+          rand))
+
 (define (gen-app-node gen-op . gen-args)
   (lambda (rand)
     (at (gen-location rand)
@@ -137,8 +142,13 @@
 (define (gen-complex-node rand)
   (sample (gen-one-of (gen-quote-node gen-simple-node)
                       (gen-list-node (gen-integer 0 5))
-                      (gen-lambda-node (gen-arg-list (gen-integer 0 3))
-                                       gen-simple-node))
+                      gen-valid-lambda-node)
+          rand))
+
+(define (gen-value-node rand)
+  (sample (gen-one-of (gen-number-node gen-number)
+                      (gen-string-node (gen-text (gen-integer 0 10)))
+                      (gen-quote-node gen-simple-node))
           rand))
 
 (define (gen-non-value-node rand)

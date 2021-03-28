@@ -365,9 +365,97 @@
                                                                         body))))))))))
 
 (describe
- "waddel"
+ "waddell"
  (it "should correctly split bindings into multiple groups"
-     todo))
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-binding n1 gen-value-node))
+             (v2 gen-valid-symbol)
+             (n2 (gen-symbol-node v2))
+             (b2 (gen-binding n2 gen-non-value-node))
+             (v3 gen-valid-symbol)
+             (n3 (gen-symbol-node v3))
+             (b3 (gen-binding n3 gen-valid-lambda-node))
+             (bindings (list b1 b2 b3))
+             (body gen-simple-node)
+             (node (gen-letrec-node bindings body))
+             (parent (bound-vars (set v1 v2 v3) node)))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list b1)
+                                           ;; NOTE Complex group is not marked as generated, since it's using plain reconstruct-let-node.
+                                           (reconstruct-let-node parent
+                                                                 (list b2)
+                                                                 (generated
+                                                                  (reconstruct-let-node parent
+                                                                                        (list b3)
+                                                                                        body))))))))
+
+ (it "should omit empty groups"
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-binding n1 gen-value-node))
+             (v2 gen-valid-symbol)
+             (n2 (gen-symbol-node v2))
+             (b2 (gen-binding n2 gen-valid-lambda-node))
+             (v3 gen-valid-symbol)
+             (n3 (gen-symbol-node v3))
+             (b3 (gen-binding n3 gen-valid-lambda-node))
+             (bindings (list b1 b2 b3))
+             (body gen-simple-node)
+             (l (gen-letrec-node bindings body))
+             (parent (bound-vars (set v1 v2 v3) l)))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list b1)
+                                           ;; NOTE No complex group at all.
+                                           (generated
+                                            (fix parent
+                                                 (list b2 b3)
+                                                 body))))))
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-binding n1 gen-value-node))
+             (v2 gen-valid-symbol)
+             (n2 (gen-symbol-node v2))
+             (b2 (gen-binding n2 gen-non-value-node))
+             (v3 gen-valid-symbol)
+             (n3 (gen-symbol-node v3))
+             (b3 (gen-binding n3 gen-non-value-node))
+             (bindings (list b1 b2 b3))
+             (body gen-simple-node)
+             (l (gen-letrec-node bindings body))
+             (parent (bound-vars (set v1 v2 v3) l)))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list b1)
+                                           ;; NOTE Complex group (not marked generated) is present.
+                                           (reconstruct-let-node parent
+                                                                 (list b2 b3)
+                                                                 ;; NOTE But no lambdas are.
+                                                                 body)))))
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-binding n1 gen-value-node))
+             (v2 gen-valid-symbol)
+             (n2 (gen-symbol-node v2))
+             (b2 (gen-binding n2 gen-value-node))
+             (v3 gen-valid-symbol)
+             (n3 (gen-symbol-node v3))
+             (b3 (gen-binding n3 gen-value-node))
+             (bindings (list b1 b2 b3))
+             (body gen-simple-node)
+             (l (gen-letrec-node bindings body))
+             (parent (bound-vars (set v1 v2 v3) l)))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    ;; NOTE Only simple value group is present.
+                    (generated
+                     (reconstruct-let-node parent
+                                           (list b1 b2 b3)
+                                           body))))))
 
 (describe
  "let-ref-assign"

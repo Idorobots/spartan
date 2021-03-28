@@ -185,10 +185,12 @@
                             (not (or (member b simple)
                                      (member b lambdas))))
                           bindings))
-         (lambdas-builder (compose generated
-                                   (if (recoursive? lambdas)
-                                       (partial fix parent lambdas)
-                                       (partial reconstruct-let-node parent lambdas))))
+         (lambdas-builder (if (empty? lambdas)
+                              id
+                              (compose generated
+                                       (if (recoursive? lambdas)
+                                           (partial fix parent lambdas)
+                                           (partial reconstruct-let-node parent lambdas)))))
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)
@@ -197,8 +199,8 @@
                                             lambdas-builder)))))
     (generated
      (reconstruct-let-node parent
-                          simple
-                          (complex-builder body)))))
+                           simple
+                           (complex-builder body)))))
 
 ;; This conversion relies on boxing & assignments to implement assignment conversion on the variables that require it.
 
