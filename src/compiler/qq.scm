@@ -37,7 +37,7 @@
     ((list) (reconstruct-quoted-list
              (ast-list-values expr)
              expr))
-    (else (compiler-bug))))
+    (else (compiler-bug "Unexpected quasiquote expansion expression:" expr))))
 
 (define (reconstruct-quoted-value expr context)
   (at (get-location context)

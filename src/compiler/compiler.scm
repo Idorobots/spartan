@@ -33,9 +33,9 @@
                quasiquote-expand
                annotate-free-vars
                validate
+               letrec-expand
                report-errors
                adapt-ast
-               letrec-expand
                (flip normalize (make-identity-continuation))
                (flip cpc (make-identity-continuation))
                (flip closure-convert (make-global-definitions-list))

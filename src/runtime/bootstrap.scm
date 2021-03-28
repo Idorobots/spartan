@@ -24,6 +24,7 @@
 (define __nil '())
 (define __true true)
 (define __false false)
+(define __not (bootstrap not))
 
 (define __car (bootstrap car))
 (define __cadr (bootstrap car))
@@ -42,6 +43,7 @@
 (define __PLUS (bootstrap +))
 (define ___ (bootstrap -))
 (define __DIV (bootstrap /))
+(define __zeroQUEST (bootstrap zero?))
 
 (define __EQUAL (bootstrap =))
 (define __LESS (bootstrap <))

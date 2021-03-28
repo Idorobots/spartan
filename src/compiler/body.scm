@@ -26,38 +26,37 @@
           (generated
            (context ctx
                     (make-do-node exprs))))
-      (compiler-bug)))
+      (compiler-bug "Invalid list of body expressions passed to wrap-with-do:" exprs)))
 
 (define (expand-body expr)
   (map-ast id
            (lambda (expr)
-             (case (get-type expr)
-               ((do) (reconstruct-body expr))
-               (else expr)))
+             (ast-case expr
+              ((do . ,exprs)
+               (let* ((defs (extract-defs exprs))
+                      (non-defs (extract-non-defs exprs)))
+                 (cond ((> (length defs) 0)
+                        (replace expr
+                                 (generated
+                                  (make-letrec-node defs
+                                                    (reconstruct-simple-body non-defs expr)))))
+                       ((= (length exprs) 1)
+                        (car exprs))
+                       (else expr))))
+              (else expr)))
            expr))
 
-(define (reconstruct-body expr)
-  (let* ((exprs (ast-do-exprs expr))
-         (defs (extract-defs exprs))
-         (non-defs (extract-non-defs exprs)))
-    (cond ((> (length defs) 0)
-           (replace expr
-                    (generated
-                     (make-letrec-node defs
-                                       (reconstruct-simple-body non-defs expr)))))
-          ((= (length exprs) 1)
-           (car exprs))
-          (else expr))))
-
 (define (extract-defs exprs)
-  (map (lambda (e)
-         (cons (ast-def-name e)
-               (ast-def-value e)))
-       (filter (flip is-type? 'def)
-               exprs)))
+  (foldl (lambda (e acc)
+           (ast-case e
+            ((def ,name ,value) (cons (make-binding name value)
+                                      acc))
+            (else acc)))
+         '()
+         exprs))
 
 (define (extract-non-defs exprs)
-  (filter (compose not (flip is-type? 'def))
+  (filter (compose not def-node?)
           exprs))
 
 (define (reconstruct-simple-body exprs parent)

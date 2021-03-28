@@ -49,3 +49,71 @@
      (assert (gensym 'b) 'b2)
      (gensym-reset!)
      (assert (gensym 'a) 'a1)))
+
+(describe
+ "SCC"
+ (it "works for fancy graphs"
+     ;;   a
+     ;;  / \
+     ;; b---c
+     ;; |
+     ;; d---e
+     (assert (scc '(a b c d e)
+                  '((a b)
+                    (b d)
+                    (b c)
+                    (c a)
+                    (d e)
+                    (e)))
+             '((e) (d) (a c b)))
+     (assert (scc '(a b c d e)
+                  '((c a)
+                    (a b)
+                    (b c)
+                    (b d)
+                    (d e)
+                    (e)))
+             '((e) (d) (a c b)))
+     (assert (scc '(a b c d e)
+                  '((d e)
+                    (c a)
+                    (a b)
+                    (b c)
+                    (b d)
+                    (e)))
+             '((e) (d) (a c b))))
+
+ (it "works for disjoint graphs"
+     ;;   a
+     ;;  / \
+     ;; b---c
+     ;;
+     ;; d---e
+     (assert (scc '(a b c d e)
+                  '((a b)
+                    (b c)
+                    (c a)
+                    (d e)
+                    (e)))
+             '((a c b) (e) (d))))
+
+ (it "works for straing lines"
+     ;;   a---b---c---d---e
+     (assert (scc '(a b c d e)
+                  '((a b)
+                    (b c)
+                    (c d)
+                    (d e)
+                    (e)))
+             '((e) (d) (c) (b) (a))))
+
+ (it "works for cyclic graphs"
+     ;;   a---b---c---d---e
+     ;;    \_____________/
+     (assert (scc '(a b c d e)
+                  '((a b)
+                    (b c)
+                    (c d)
+                    (d e)
+                    (e a)))
+             '((a e d c b)))))

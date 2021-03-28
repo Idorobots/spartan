@@ -22,8 +22,8 @@
 
 (define (make-global-definitions-list)
   '(nil car cadr cdr cddr list cons append concat
-    equal? nil? true false
-    * + - / = < random
+    equal? nil? true false not
+    * + - / = < random zero?
     ref deref assign!
     call/current-continuation call/reset call/shift call/handler raise
     sleep self send recv spawn task-info monitor
