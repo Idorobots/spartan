@@ -35,7 +35,7 @@
            (gen-string "abcdefghijklmnopqrstuvwxyz-?" gen-max-length)))
 
 (define gen-valid-symbol
-  (gen-symbol (gen-integer 3 10)))
+  (gen-symbol (gen-integer 10 20)))
 
 (define (gen-list gen-max-size gen-contents)
   (lambda (rand)
@@ -99,7 +99,7 @@
                           (sample gen-body rand)))))
 
 (define (gen-valid-lambda-node rand)
-  (sample (gen-lambda-node (gen-arg-list (gen-integer 0 3))
+  (sample (gen-lambda-node (gen-arg-list (gen-integer 0 5))
                            gen-simple-node)
           rand))
 
@@ -135,8 +135,8 @@
 
 (define (gen-simple-node rand)
   (sample (gen-one-of (gen-number-node gen-number)
-                      (gen-symbol-node (gen-symbol (gen-integer 1 10)))
-                      (gen-string-node (gen-text (gen-integer 0 10))))
+                      gen-valid-symbol-node
+                      (gen-string-node (gen-text (gen-integer 0 50))))
           rand))
 
 (define (gen-complex-node rand)
@@ -147,7 +147,7 @@
 
 (define (gen-value-node rand)
   (sample (gen-one-of (gen-number-node gen-number)
-                      (gen-string-node (gen-text (gen-integer 0 10)))
+                      (gen-string-node (gen-text (gen-integer 0 50)))
                       (gen-quote-node gen-simple-node))
           rand))
 
@@ -158,7 +158,7 @@
                                        gen-simple-node)
                       (apply gen-app-node
                              gen-simple-node
-                             (sample (gen-list (gen-integer 0 3)
+                             (sample (gen-list (gen-integer 0 5)
                                                gen-simple-node)
                                      rand)))
           rand))
