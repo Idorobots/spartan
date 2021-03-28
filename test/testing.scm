@@ -99,7 +99,7 @@
 (define-syntax check
   (syntax-rules (sample random)
     ((_ (generators ...) body ...)
-     (check 100 (generators ...) body ...))
+     (check 1000 (generators ...) body ...))
     ((_ iterations (generators ...) body ...)
      (let ((seed (random 1234567890)))
        (check iterations seed (generators ...) body ...)))
