@@ -530,4 +530,52 @@
 (describe
  "ref-conversion"
  (it "should correctly rewrite letrec expressions"
-     todo))
+     (check ((sym1 gen-valid-symbol)
+             (var1 (gen-symbol-node sym1))
+             (sym2 gen-valid-symbol)
+             (var2 (gen-symbol-node sym2))
+             (sym3 gen-valid-symbol)
+             (var3 (gen-symbol-node sym3))
+             (sym4 gen-valid-symbol)
+             (var4 (gen-symbol-node sym4))
+             (sym5 gen-valid-symbol)
+             (var5 (gen-symbol-node sym5))
+             (sym6 gen-valid-symbol)
+             (var6 (gen-symbol-node sym6))
+             ;; value1 <- complex2 <- complex5 <- (complex6 lambda3 lambda4)
+             (value1 gen-value-node)
+             (complex2 (gen-with-fv gen-value-node (set sym1)))
+             (lambda3 (gen-with-fv gen-valid-lambda-node (set sym6 sym4)))
+             (lambda4 (gen-with-fv gen-valid-lambda-node (set sym1 sym3)))
+             (complex5 (gen-with-fv gen-non-value-node (set sym2)))
+             (complex6 (gen-with-fv gen-non-value-node (set sym5 sym3)))
+             ;; NOTE Order doesn't really matter here.
+             (b1 (gen-binding var1 value1))
+             (b2 (gen-binding var2 complex2))
+             (b3 (gen-binding var3 lambda3))
+             (b4 (gen-binding var4 lambda4))
+             (b5 (gen-binding var5 complex5))
+             (b6 (gen-binding var6 complex6))
+             (bindings (list b1 b2 b3 b4 b5 b6))
+             (body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
+             (body (gen-with-fv gen-non-value-node body-fv))
+             (parent (gen-with-bv (gen-letrec-node bindings body)
+                                  (set sym1 sym2 sym3 sym4 sym5 sym6))))
+            (assert (ref-conversion parent)
+                    (generated
+                     (reconstruct-let-node
+                      parent
+                      (list b1)
+                      (generated
+                       (reconstruct-let-node
+                        parent
+                        (list b2)
+                        (generated
+                         (reconstruct-let-node
+                         parent
+                         (list b5)
+                         (ast-update (let-ref-assign parent (list b6) body)
+                                     'body
+                                     (lambda (b)
+                                       (generated
+                                        (fix parent (list b3 b4) b))))))))))))))
