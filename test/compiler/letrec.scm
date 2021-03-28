@@ -162,11 +162,11 @@
  "fix"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-complex-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
-                                        gen-complex-node)
+                                        gen-non-value-node)
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (var val fv)

@@ -186,10 +186,10 @@
 
 (define (gen-with-fv gen fv)
   (lambda (rand)
-    (free-vars fv
+    (free-vars (apply set (sample fv rand))
                (sample gen rand))))
 
 (define (gen-with-bv gen bv)
   (lambda (rand)
-    (bound-vars bv
+    (bound-vars (apply set (sample bv rand))
                 (sample gen rand))))
