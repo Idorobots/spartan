@@ -209,22 +209,22 @@
       body
       (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
              (refs (map (lambda (b)
-                          (let* ((val (ast-binding-val b))
-                                 (val-loc (get-location val)))
-                            (make-binding
-                             (ast-binding-var b)
-                             (free-vars (set 'ref)
-                                        (at val-loc
-                                            (generated
-                                             (make-app-node (at val-loc
-                                                                (generated
-                                                                 (make-symbol-node 'ref)))
-                                                            (list (at val-loc
-                                                                      (generated
-                                                                       (make-quote-node
-                                                                        (at val-loc
-                                                                            (generated
-                                                                             (make-list-node '()))))))))))))))
+                          (ast-update b
+                                      'val
+                                      (lambda (val)
+                                        (let ((val-loc (get-location val)))
+                                          (free-vars (set 'ref)
+                                                     (at val-loc
+                                                         (generated
+                                                          (make-app-node (at val-loc
+                                                                             (generated
+                                                                              (make-symbol-node 'ref)))
+                                                                         (list (at val-loc
+                                                                                   (generated
+                                                                                    (make-quote-node
+                                                                                     (at val-loc
+                                                                                         (generated
+                                                                                          (make-list-node '())))))))))))))))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
@@ -273,19 +273,15 @@
                                              (get-bound-vars expr))))
            (ast-update (ast-update expr 'body (partial derefy unbound-refs))
                        'bindings
-                       (partial map
-                                (lambda (b)
-                                  (make-binding (ast-binding-var b)
-                                                (derefy refs (ast-binding-val b))))))))
+                       (partial map (partial derefy refs)))))
         ((letrec fix)
          (let ((unbound-refs (set-difference refs
                                              (get-bound-vars expr))))
            (ast-update (ast-update expr 'body (partial derefy unbound-refs))
                        'bindings
-                       (partial map
-                                (lambda (b)
-                                  (make-binding (ast-binding-var b)
-                                                (derefy unbound-refs (ast-binding-val b))))))))
+                       (partial map (partial derefy unbound-refs)))))
+        ((binding)
+         (ast-update expr 'val (partial derefy refs)))
         (else
          (walk-ast (partial derefy refs) expr)))))
 

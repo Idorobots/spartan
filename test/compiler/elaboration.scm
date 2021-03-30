@@ -150,15 +150,17 @@
                                      (make-list-node
                                       (list (make-symbol-node 'let)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))))
+                                             (list (at (location 5 7)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-let-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23)))
+                  (list (at (location 5 7)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23))))
                   (at (location 7 13)
                       (generated
                        (context "Bad `let` body syntax"
@@ -169,20 +171,24 @@
                                      (make-list-node
                                       (list (make-symbol-node 'let)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))
-                                                   (make-list-node
-                                                    (list (make-symbol-node 'y)
-                                                          (make-number-node 5)))))
+                                             (list (at (location 5 5)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))
+                                                   (at (location 6 6)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'y)
+                                                              (make-number-node 5))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-let-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23))
-                        (cons (make-symbol-node 'y)
-                              (make-number-node 5)))
+                  (list (at (location 5 5)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23)))
+                        (at (location 6 6)
+                            (make-binding-node (make-symbol-node 'y)
+                                               (make-number-node 5))))
                   (at (location 7 13)
                       (generated
                        (context "Bad `let` body syntax"
@@ -193,17 +199,19 @@
                                      (make-list-node
                                       (list (make-symbol-node 'let)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))))
+                                             (list (at (location 5 7)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'y))
                                             (at (location 14 15)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-let-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23)))
+                  (list (at (location 5 7)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23))))
                   (at (location 7 15)
                       (generated
                        (context "Bad `let` body syntax"
@@ -257,15 +265,17 @@
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))))
+                                             (list (at (location 5 7)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-letrec-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23)))
+                  (list (at (location 5 7)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23))))
                   (at (location 7 13)
                       (generated
                        (context "Bad `letrec` body syntax"
@@ -276,20 +286,24 @@
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))
-                                                   (make-list-node
-                                                    (list (make-symbol-node 'y)
-                                                          (make-number-node 5)))))
+                                             (list (at (location 5 5)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))
+                                                   (at (location 6 6)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'y)
+                                                              (make-number-node 5))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-letrec-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23))
-                        (cons (make-symbol-node 'y)
-                              (make-number-node 5)))
+                  (list (at (location 5 5)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23)))
+                        (at (location 6 6)
+                            (make-binding-node (make-symbol-node 'y)
+                                               (make-number-node 5))))
                   (at (location 7 13)
                       (generated
                        (context "Bad `letrec` body syntax"
@@ -300,17 +314,19 @@
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
                                             (make-list-node
-                                             (list (make-list-node
-                                                    (list (make-symbol-node 'x)
-                                                          (make-number-node 23)))))
+                                             (list (at (location 5 7)
+                                                       (make-list-node
+                                                        (list (make-symbol-node 'x)
+                                                              (make-number-node 23))))))
                                             (at (location 7 13)
                                                 (make-symbol-node 'y))
                                             (at (location 14 15)
                                                 (make-symbol-node 'x))))))
              (at (location 5 23)
                  (make-letrec-node
-                  (list (cons (make-symbol-node 'x)
-                              (make-number-node 23)))
+                  (list (at (location 5 7)
+                            (make-binding-node (make-symbol-node 'x)
+                                               (make-number-node 23))))
                   (at (location 7 15)
                       (generated
                        (context "Bad `letrec` body syntax"

@@ -47,14 +47,7 @@
                                     (get-fv (ast-let-body expr)))))
        (ast-update (ast-update expr
                                'bindings
-                               (partial map
-                                        (lambda (b)
-                                          (cons (validate-ast (set)
-                                                              unused
-                                                              (car b))
-                                                (validate-ast undefined
-                                                              (set)
-                                                              (cdr b))))))
+                               (partial map (partial validate-ast undefined unused)))
                    'body
                    (partial validate-ast
                             (set-difference undefined bound)
@@ -64,22 +57,18 @@
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
                                     (set-union (get-fv (ast-letrec-body expr))
-                                               (set-sum (map (compose get-fv cdr)
+                                               (set-sum (map get-fv
                                                              (ast-letrec-bindings expr)))))))
        (ast-update (ast-update expr
                                'bindings
-                               (partial map
-                                        (lambda (b)
-                                          (cons (validate-ast (set)
-                                                              unused
-                                                              (car b))
-                                                (validate-ast without-bound
-                                                              (set)
-                                                              (cdr b))))))
+                               (partial map (partial validate-ast without-bound unused)))
                    'body
                    (partial validate-ast
                             without-bound
                             (set)))))
+    ((binding)
+     (ast-update (ast-update expr 'var (partial validate-ast (set) unused))
+                 'val (partial validate-ast undefined (set))))
     ((symbol)
      (let ((value (ast-symbol-value expr)))
        (cond ((generated? expr) expr)

@@ -15,7 +15,9 @@
   (hash-ref node property default))
 
 (define (ast-get node property)
-  (ast-get* node property compiler-bug))
+  (ast-get* node property (lambda ()
+                            (compiler-bug "ast-get on a key with no default value: "
+                                          (cons node property)))))
 
 (define (ast-set node property value)
   (hash-set node property value))
@@ -111,14 +113,17 @@
   (ast-get node 'formals))
 
 ;; Binding
-(define (make-binding var val)
-  (cons var val))
+(define (make-binding-node var val)
+  (ast-node 'type 'binding 'var var 'val val))
+
+(define (binding-node? node)
+  (is-type? node 'binding))
 
 (define (ast-binding-var binding)
-  (car binding))
+  (ast-get binding 'var))
 
 (define (ast-binding-val binding)
-  (cdr binding))
+  (ast-get binding 'val))
 
 ;; Let
 (define (make-let-node bindings body)
@@ -335,12 +340,9 @@
       ((lambda)
        (ast-update (ast-update expr 'formals mf) 'body f))
       ((let letrec fix)
-       (ast-update (ast-update expr 'body f)
-                   'bindings
-                   (partial map
-                            (lambda (b)
-                              (cons (f (car b))
-                                    (f (cdr b)))))))
+       (ast-update (ast-update expr 'body f) 'bindings mf))
+      ((binding)
+       (ast-update (ast-update expr 'var f) 'val f))
       ((quote quasiquote unquote unquote-splicing)
        (ast-update expr 'value f))
       ((def)
@@ -370,21 +372,14 @@
                            (ast-if-else expr)))
                ((do) (cons 'do (ast-do-exprs expr)))
                ((lambda) (list 'lambda (ast-lambda-formals expr) (ast-lambda-body expr)))
-               ((let) (list 'let (map (lambda (b)
-                                        (list (car b)
-                                              (cdr b)))
-                                      (ast-let-bindings expr))
+               ((let) (list 'let (ast-let-bindings expr)
                             (ast-let-body expr)))
-               ((letrec) (list 'letrec (map (lambda (b)
-                                              (list (car b)
-                                                    (cdr b)))
-                                            (ast-letrec-bindings expr))
+               ((letrec) (list 'letrec (ast-letrec-bindings expr)
                                (ast-letrec-body expr)))
-               ((fix) (list 'fix (map (lambda (b)
-                                        (list (car b)
-                                              (cdr b)))
-                                      (ast-fix-bindings expr))
+               ((fix) (list 'fix (ast-fix-bindings expr)
                             (ast-fix-body expr)))
+               ((binding) (list (ast-binding-var expr)
+                                (ast-binding-val expr)))
                ((quote) (list 'quote (ast-quoted-expr expr)))
                ((quasiquote) (list 'quasiquote (ast-quoted-expr expr)))
                ((unquote) (list 'unquote (ast-quoted-expr expr)))
@@ -474,8 +469,9 @@
            ((lambda) (and (lambda-node? expr)
                           (unify-bindings (ast-list-matches? (ast-lambda-formals expr) (cadr pattern))
                                           (ast-matches? (ast-lambda-body expr) (caddr pattern)))))
-           ((binding) (unify-bindings (ast-matches? (ast-binding-var expr) (cadr pattern))
-                                      (ast-matches? (ast-binding-val expr) (caddr pattern))))
+           ((binding) (and (binding-node? expr)
+                           (unify-bindings (ast-matches? (ast-binding-var expr) (cadr pattern))
+                                           (ast-matches? (ast-binding-val expr) (caddr pattern)))))
            ((let) (and (let-node? expr)
                        (unify-bindings (ast-list-matches? (ast-let-bindings expr)
                                                           (cadr pattern))
