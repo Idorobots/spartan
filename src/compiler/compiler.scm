@@ -13,6 +13,8 @@
 (load "compiler/errors.scm")
 
 ;; The backend
+(load "compiler/bindings.scm")
+(load "compiler/freevars.scm")
 (load "compiler/letrec.scm")
 (load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
@@ -31,6 +33,7 @@
                elaborate
                body-expand
                quasiquote-expand
+               annotate-bindings
                annotate-free-vars
                validate
                letrec-expand

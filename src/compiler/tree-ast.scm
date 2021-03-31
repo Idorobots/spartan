@@ -125,6 +125,12 @@
 (define (ast-binding-val binding)
   (ast-get binding 'val))
 
+(define (complexity complexity binding)
+  (ast-set binding 'complexity complexity))
+
+(define (get-complexity binding)
+  (ast-get binding 'complexity))
+
 ;; Let
 (define (make-let-node bindings body)
   (ast-node 'type 'let 'bindings bindings 'body body))
@@ -317,13 +323,6 @@
 (define (is-type? node type)
   (equal? (get-type node)
           type))
-
-(define (value-node? node)
-  (or (simple-node? node)
-      (lambda-node? node)))
-
-(define (simple-node? node)
-  (member (get-type node) '(number string quote)))
 
 (define (walk-ast f expr)
   (let* ((mf (partial map f)))

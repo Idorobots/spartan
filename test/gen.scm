@@ -111,9 +111,11 @@
 
 (define (gen-binding-node gen-name gen-value)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-binding-node (sample gen-name rand)
-                           (sample gen-value rand)))))
+    (let ((val (sample gen-value rand)))
+      (at (sample gen-location rand)
+          (complexity (compute-complexity val)
+                      (make-binding-node (sample gen-name rand)
+                                         val))))))
 
 (define (gen-valid-binding rand)
   (sample (gen-binding-node gen-valid-symbol-node gen-simple-node)

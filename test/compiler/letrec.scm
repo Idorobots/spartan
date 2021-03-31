@@ -471,7 +471,8 @@
                     (generated
                      (reconstruct-let-node parent
                                            (list (at (get-location b)
-                                                     (make-binding-node var (gen-ref val))))
+                                                     (complexity 'complex
+                                                                 (make-binding-node var (gen-ref val)))))
                                            (free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
@@ -505,7 +506,8 @@
                     (generated
                      (reconstruct-let-node parent
                                            (list (at (get-location b)
-                                                     (make-binding-node var (gen-ref val))))
+                                                     (complexity 'complex
+                                                                 (make-binding-node var (gen-ref val)))))
                                            (free-vars
                                             (set-union (apply set val-fv)
                                                        (set v 'assign! 'deref))
