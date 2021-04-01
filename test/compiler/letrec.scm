@@ -580,4 +580,17 @@
                                      'body
                                      (lambda (b)
                                        (generated
-                                        (fix parent (list b3 b4) b))))))))))))))
+                                        (fix parent (list b3 b4) b)))))))))))))
+
+ (it "should preserve lambda self-recursivity"
+     (check ((sym1 gen-valid-symbol)
+             (var1 (gen-symbol-node sym1))
+             (lambda1 (gen-with-fv gen-valid-lambda-node (set sym1)))
+             (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
+             (bindings (list b1))
+             (body gen-simple-node)
+             (parent (gen-with-bv (gen-letrec-node bindings body)
+                                  (set sym1))))
+            (assert (ref-conversion parent)
+                    (generated
+                     (fix parent (list b1) body))))))
