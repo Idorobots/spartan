@@ -199,3 +199,8 @@
 
 (define (gen-with-fv-bv gen fv bv)
   (gen-with-fv (gen-with-bv gen bv) fv))
+
+(define (gen-self-recoursive gen)
+  (lambda (rand)
+    (self-recoursive #t
+                     (sample gen rand))))

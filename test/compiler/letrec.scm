@@ -192,8 +192,8 @@
  (it "should correctly assess recoursivity of binding groups"
      (check ((var gen-valid-symbol)
              (node (gen-symbol-node var))
-             (rec (gen-with-fv gen-complex-node (set var)))
-             (rec-binding (gen-binding-node node rec))
+             (rec gen-complex-node)
+             (rec-binding (gen-self-recoursive (gen-binding-node node rec)))
              (non-rec-binding gen-valid-binding)
              (multiple-bindings (gen-binding-list (gen-integer 2 5))))
             (assert (not (recoursive? '())))
@@ -332,8 +332,8 @@
              (b2 (gen-binding-node n2 gen-ast-node))
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
-             (rec (gen-with-fv gen-complex-node (set v3)))
-             (b3 (gen-binding-node n3 rec))
+             (rec gen-complex-node)
+             (b3 (gen-self-recoursive (gen-binding-node n3 rec)))
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
@@ -375,6 +375,34 @@
                                                                   (reconstruct-let-node parent
                                                                                         (list b3)
                                                                                         body))))))))
+
+ (it "should fix recoursive lambdas"
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-self-recoursive (gen-binding-node n1 gen-valid-lambda-node)))
+             (bindings (list b1))
+             (body gen-simple-node)
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    (generated
+                     ;; NOTE Recoursive lambda is fixed.
+                     (fix parent
+                          (list b1)
+                          body)))))
+
+ (it "should omit needless fix"
+     (check ((v1 gen-valid-symbol)
+             (n1 (gen-symbol-node v1))
+             (b1 (gen-binding-node n1 gen-valid-lambda-node))
+             (bindings (list b1))
+             (body gen-simple-node)
+             (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
+            (assert (waddell fix reconstruct-let-node parent bindings body)
+                    (generated
+                     ;; NOTE Non-recursive lambda is not fixed.
+                     (reconstruct-let-node parent
+                                           (list b1)
+                                           body)))))
 
  (it "should omit empty groups"
      (check ((v1 gen-valid-symbol)
@@ -586,9 +614,9 @@
      (check ((sym1 gen-valid-symbol)
              (var1 (gen-symbol-node sym1))
              (lambda1 (gen-with-fv gen-valid-lambda-node (set sym1)))
-             (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
+             (b1 (gen-self-recoursive (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1))))
              (bindings (list b1))
-             (body gen-simple-node)
+             (body gen-value-node)
              (parent (gen-with-bv (gen-letrec-node bindings body)
                                   (set sym1))))
             (assert (ref-conversion parent)

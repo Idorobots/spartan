@@ -132,10 +132,12 @@
   (ast-get binding 'complexity))
 
 (define (self-recoursive rec? binding)
-  (ast-set binding 'self-recoursive rec?))
+  (if rec?
+      (ast-set binding 'self-recoursive rec?)
+      binding))
 
 (define (get-self-recoursive binding)
-  (ast-get binding 'self-recoursive))
+  (ast-get* binding 'self-recoursive #f))
 
 ;; Let
 (define (make-let-node bindings body)

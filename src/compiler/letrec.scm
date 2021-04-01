@@ -166,13 +166,8 @@
          scc))
 
 (define (recoursive? bindings)
-  (cond ((empty? bindings)
-         #f)
-        ((> (length bindings) 1)
-         #t)
-        (else
-         (set-member? (get-fv (ast-binding-val (car bindings)))
-                      (safe-symbol-value (ast-binding-var (car bindings)))))))
+  (or (> (length bindings) 1)
+      (some? get-self-recoursive bindings)))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
 

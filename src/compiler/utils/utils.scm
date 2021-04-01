@@ -13,6 +13,18 @@
 (define (empty? lst)
   (nil? lst))
 
+(define (every? p lst)
+  (foldl (lambda (el acc)
+           (and (p el) acc))
+         #t
+         lst))
+
+(define (some? p lst)
+  (foldl (lambda (el acc)
+           (or (p el) acc))
+         #f
+         lst))
+
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
 
