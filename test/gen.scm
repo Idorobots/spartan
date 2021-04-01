@@ -196,3 +196,6 @@
   (lambda (rand)
     (bound-vars (apply set (sample bv rand))
                 (sample gen rand))))
+
+(define (gen-with-fv-bv gen fv bv)
+  (gen-with-fv (gen-with-bv gen bv) fv))

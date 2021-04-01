@@ -33,8 +33,8 @@
                elaborate
                body-expand
                quasiquote-expand
-               annotate-bindings
                annotate-free-vars
+               annotate-bindings
                validate
                letrec-expand
                report-errors

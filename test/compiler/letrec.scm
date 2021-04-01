@@ -546,7 +546,7 @@
              (var6 (gen-symbol-node sym6))
              ;; value1 <- complex2 <- complex5 <- (complex6 lambda3 lambda4)
              (value1 gen-value-node)
-             (complex2 (gen-with-fv gen-value-node (set sym1)))
+             (complex2 (gen-with-fv gen-non-value-node (set sym1)))
              (lambda3 (gen-with-fv gen-valid-lambda-node (set sym6 sym4)))
              (lambda4 (gen-with-fv gen-valid-lambda-node (set sym1 sym3)))
              (complex5 (gen-with-fv gen-non-value-node (set sym2)))
