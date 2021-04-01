@@ -29,8 +29,10 @@
                             bm)
              (at (l 1)
                  (make-let-node
-                  (list (cons (at (l 5) (make-symbol-node 'a))
-                              (at (l 6) (make-number-node 23))))
+                  (list (at (l 4)
+                            (make-binding-node
+                             (at (l 5) (make-symbol-node 'a))
+                             (at (l 6) (make-number-node 23)))))
                   (at (l 10)
                       (generated
                        (context "Bad `let*` body syntax"
@@ -51,12 +53,16 @@
                             bm)
              (at (l 1)
                  (make-let-node
-                  (list (cons (at (l 5) (make-symbol-node 'a))
-                              (at (l 6) (make-number-node 23))))
+                  (list (at (l 4)
+                            (make-binding-node
+                             (at (l 5) (make-symbol-node 'a))
+                             (at (l 6) (make-number-node 23)))))
                   (at (l 1)
                       (make-let-node
-                       (list (cons (at (l 8) (make-symbol-node 'b))
-                                   (at (l 9) (make-number-node 5))))
+                       (list (at (l 7)
+                                 (make-binding-node
+                                  (at (l 8) (make-symbol-node 'b))
+                                  (at (l 9) (make-number-node 5)))))
                        (at (l 10)
                            (generated
                             (context "Bad `let*` body syntax"

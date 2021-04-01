@@ -28,22 +28,8 @@
             expr
             '(condition then else)))
     ((lambda) (ast-update expr 'body elaborate-unquoted))
-    ((let) (ast-update (ast-update expr
-                                   'bindings
-                                   (partial map
-                                            (lambda (b)
-                                              (cons (car b)
-                                                    (elaborate-unquoted (cdr b))))))
-                       'body
-                       elaborate-unquoted))
-    ((letrec) (ast-update (ast-update expr
-                                      'bindings
-                                      (partial map
-                                               (lambda (b)
-                                                 (cons (car b)
-                                                       (elaborate-unquoted (cdr b))))))
-                          'body
-                          elaborate-unquoted))
+    ((let letrec) (ast-update (ast-update expr 'body elaborate-unquoted) 'bindings (partial map elaborate-unquoted)))
+    ((binding) (ast-update (ast-update expr 'var elaborate-unquoted) 'val elaborate-unquoted))
     ((def)
      (ast-update expr 'value elaborate-unquoted))
     ((quasiquote)
@@ -193,14 +179,15 @@
        bindings))
 
 (define (valid-binding binding prefix)
-  (if (and (is-type? binding 'list)
-           (equal? (length (ast-list-values binding)) 2))
-      (cons (valid-symbol (ast-list-car binding) prefix)
-            (ast-list-nth binding 1))
-      (let ((e (raise-compilation-error
-                binding
-                (format "~a, expected a pair of an identifier and a value:" prefix))))
-        (cons e e))))
+  (replace binding
+           (if (and (is-type? binding 'list)
+                    (equal? (length (ast-list-values binding)) 2))
+               (make-binding-node (valid-symbol (ast-list-car binding) prefix)
+                                  (ast-list-nth binding 1))
+               (let ((e (raise-compilation-error
+                         binding
+                         (format "~a, expected a pair of an identifier and a value:" prefix))))
+                 (make-binding-node e e)))))
 
 (define (reconstruct-quote expr)
   (ast-case expr

@@ -54,20 +54,24 @@
                             (make-number-node 3))))))
      (assert (expand-body (at (location 1 1)
                               (make-do-node
-                               (list (make-def-node (at (location 2 2)
-                                                        (make-symbol-node 'foo))
-                                                    (at (location 3 3)
-                                                        (make-number-node 'bar)))
+                               (list (at (location 6 6)
+                                         (make-def-node (at (location 2 2)
+                                                            (make-symbol-node 'foo))
+                                                        (at (location 3 3)
+                                                            (make-number-node 'bar))))
                                      (at (location 4 4)
                                          (make-number-node 2))
                                      (at (location 5 5)
                                          (make-number-node 3))))))
              (at (location 1 1)
                  (generated
-                  (make-letrec-node (list (cons (at (location 2 2)
+                  (make-letrec-node (list (at (location 6 6)
+                                              (generated
+                                               (make-binding-node
+                                                (at (location 2 2)
                                                     (make-symbol-node 'foo))
                                                 (at (location 3 3)
-                                                    (make-number-node 'bar))))
+                                                    (make-number-node 'bar))))))
                                     (at (location 4 5)
                                         (generated
                                          (context "Bad `do` syntax"

@@ -2,7 +2,6 @@
 
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
-
 (load "compiler/tree-ast.scm")
 
 (define (annotate-free-vars env)
@@ -30,6 +29,10 @@
                (compute-let-fv expr))
               ((letrec _ _)
                (compute-letrec-fv expr))
+              ((binding ,var ,val)
+               (free-vars (get-fv val)
+                          (bound-vars (get-fv var)
+                                      expr)))
               ((app ,op . ,args)
                (free-vars (set-union (get-fv op)
                                      (set-sum (map get-fv args)))
@@ -43,8 +46,8 @@
 
 (define (compute-let-fv expr)
   (let* ((bindings (ast-let-bindings expr))
-         (bound (set-sum (map (compose get-fv ast-binding-var) bindings)))
-         (free-in-bindings (set-sum (map (compose get-fv ast-binding-val) bindings)))
+         (bound (set-sum (map get-bound-vars bindings)))
+         (free-in-bindings (set-sum (map get-fv bindings)))
          (free-in-body (get-fv (ast-let-body expr))))
     (free-vars
      (set-union free-in-bindings
@@ -55,8 +58,8 @@
 
 (define (compute-letrec-fv expr)
   (let* ((bindings (ast-letrec-bindings expr))
-         (bound (set-sum (map (compose get-fv ast-binding-var) bindings)))
-         (free-in-bindings (set-sum (map (compose get-fv ast-binding-val) bindings)))
+         (bound (set-sum (map get-bound-vars bindings)))
+         (free-in-bindings (set-sum (map get-fv bindings)))
          (free-in-body (get-fv (ast-letrec-body expr))))
     (free-vars
      (set-difference (set-union free-in-bindings free-in-body)

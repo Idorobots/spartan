@@ -50,13 +50,13 @@
 
 (define (gen-number-node gen-value)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-number-node
          (sample gen-value rand)))))
 
 (define (gen-symbol-node gen-symbol)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-symbol-node
          (sample gen-symbol rand)))))
 
@@ -65,13 +65,13 @@
 
 (define (gen-string-node gen-contents)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-string-node
          (sample gen-contents rand)))))
 
 (define (gen-list-node gen-max-size)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-list-node
          ((gen-list gen-max-size
                    ;; NOTE To avoid generating huge objects.
@@ -85,7 +85,7 @@
 
 (define (gen-quote-node gen-contents)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-quote-node
          (gen-contents rand)))))
 
@@ -94,7 +94,7 @@
 
 (define (gen-lambda-node gen-formals gen-body)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-lambda-node (sample gen-formals rand)
                           (sample gen-body rand)))))
 
@@ -105,17 +105,20 @@
 
 (define (gen-app-node gen-op . gen-args)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-app-node (sample gen-op rand)
                        (map (flip sample rand) gen-args)))))
 
-(define (gen-binding gen-name gen-value)
+(define (gen-binding-node gen-name gen-value)
   (lambda (rand)
-    (make-binding (sample gen-name rand)
-                  (sample gen-value rand))))
+    (let ((val (sample gen-value rand)))
+      (at (sample gen-location rand)
+          (complexity (compute-complexity val)
+                      (make-binding-node (sample gen-name rand)
+                                         val))))))
 
 (define (gen-valid-binding rand)
-  (sample (gen-binding gen-valid-symbol-node gen-simple-node)
+  (sample (gen-binding-node gen-valid-symbol-node gen-simple-node)
           rand))
 
 (define (gen-binding-list gen-max-length)
@@ -123,13 +126,13 @@
 
 (define (gen-let-node gen-bindings gen-body)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-let-node (sample gen-bindings rand)
                        (sample gen-body rand)))))
 
 (define (gen-letrec-node gen-bindings gen-body)
   (lambda (rand)
-    (at (gen-location rand)
+    (at (sample gen-location rand)
         (make-letrec-node (sample gen-bindings rand)
                           (sample gen-body rand)))))
 
@@ -193,3 +196,11 @@
   (lambda (rand)
     (bound-vars (apply set (sample bv rand))
                 (sample gen rand))))
+
+(define (gen-with-fv-bv gen fv bv)
+  (gen-with-fv (gen-with-bv gen bv) fv))
+
+(define (gen-self-recoursive gen)
+  (lambda (rand)
+    (self-recoursive #t
+                     (sample gen rand))))

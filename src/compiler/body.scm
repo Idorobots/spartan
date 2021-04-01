@@ -49,8 +49,8 @@
 (define (extract-defs exprs)
   (foldl (lambda (e acc)
            (ast-case e
-            ((def ,name ,value) (cons (make-binding name value)
-                                      acc))
+             ((def ,name ,value) (cons (replace e (generated (make-binding-node name value)))
+                                       acc))
             (else acc)))
          '()
          exprs))

@@ -134,7 +134,7 @@
 (define (derive-ordering expr)
   (let ((vars (map (compose safe-symbol-value ast-binding-var)
                    ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
-                   (filter (compose not value-node? ast-binding-val)
+                   (filter (compose (partial equal? 'complex) get-complexity)
                            (ast-letrec-bindings expr)))))
     (if (empty? vars)
         '()
@@ -166,24 +166,17 @@
          scc))
 
 (define (recoursive? bindings)
-  (cond ((empty? bindings)
-         #f)
-        ((> (length bindings) 1)
-         #t)
-        (else
-         (set-member? (get-fv (ast-binding-val (car bindings)))
-                      (safe-symbol-value (ast-binding-var (car bindings)))))))
+  (or (> (length bindings) 1)
+      (some? get-self-recoursive bindings)))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly.
 
 (define (waddell fix let-void-set parent bindings body)
-  (let* ((simple (filter (compose simple-node? ast-binding-val)
+  (let* ((simple (filter (compose (partial equal? 'simple) get-complexity)
                          bindings))
-         (lambdas (filter (compose lambda-node? ast-binding-val)
+         (lambdas (filter (compose (partial equal? 'lambda) get-complexity)
                           bindings))
-         (complex (filter (lambda (b)
-                            (not (or (member b simple)
-                                     (member b lambdas))))
+         (complex (filter (compose (partial equal? 'complex) get-complexity)
                           bindings))
          (lambdas-builder (if (empty? lambdas)
                               id
@@ -209,22 +202,26 @@
       body
       (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
              (refs (map (lambda (b)
-                          (let* ((val (ast-binding-val b))
-                                 (val-loc (get-location val)))
-                            (make-binding
-                             (ast-binding-var b)
-                             (free-vars (set 'ref)
-                                        (at val-loc
-                                            (generated
-                                             (make-app-node (at val-loc
-                                                                (generated
-                                                                 (make-symbol-node 'ref)))
-                                                            (list (at val-loc
-                                                                      (generated
-                                                                       (make-quote-node
-                                                                        (at val-loc
-                                                                            (generated
-                                                                             (make-list-node '()))))))))))))))
+                          (at (get-location b)
+                              (complexity
+                               ;; FIXME This should ideally be a simple binding of a primop application.
+                               'complex
+                               (make-binding-node
+                                (ast-binding-var b)
+                                (let* ((val (ast-binding-val b))
+                                       (val-loc (get-location val)))
+                                  (free-vars (set 'ref)
+                                             (at val-loc
+                                                 (generated
+                                                  (make-app-node (at val-loc
+                                                                     (generated
+                                                                      (make-symbol-node 'ref)))
+                                                                 (list (at val-loc
+                                                                           (generated
+                                                                            (make-quote-node
+                                                                             (at val-loc
+                                                                                 (generated
+                                                                                  (make-list-node '()))))))))))))))))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
@@ -273,19 +270,15 @@
                                              (get-bound-vars expr))))
            (ast-update (ast-update expr 'body (partial derefy unbound-refs))
                        'bindings
-                       (partial map
-                                (lambda (b)
-                                  (make-binding (ast-binding-var b)
-                                                (derefy refs (ast-binding-val b))))))))
+                       (partial map (partial derefy refs)))))
         ((letrec fix)
          (let ((unbound-refs (set-difference refs
                                              (get-bound-vars expr))))
            (ast-update (ast-update expr 'body (partial derefy unbound-refs))
                        'bindings
-                       (partial map
-                                (lambda (b)
-                                  (make-binding (ast-binding-var b)
-                                                (derefy unbound-refs (ast-binding-val b))))))))
+                       (partial map (partial derefy unbound-refs)))))
+        ((binding)
+         (ast-update expr 'val (partial derefy refs)))
         (else
          (walk-ast (partial derefy refs) expr)))))
 
