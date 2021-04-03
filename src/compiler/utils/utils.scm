@@ -61,6 +61,10 @@
   (lambda (y)
     (f y x)))
 
+(define (constantly v)
+  (lambda _
+    v))
+
 (define (offset needle haystack)
   (- (length haystack)
      (length (member needle haystack))))

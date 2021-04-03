@@ -21,7 +21,8 @@
     ((let) (cpc-let expr kont))
     ((fix) (cpc-fix expr kont))
     ((lambda) (cpc-lambda expr kont))
-    ((app primop-app) (cpc-app expr kont))
+    ((primop-app) (cpc-primop-app expr kont))
+    ((app) (cpc-app expr kont))
     (else (compiler-bug "Unexpected expression passed to cpc:" expr))))
 
 (define (cpc-if expr kont)
@@ -60,8 +61,9 @@
 (define (make-yield-node cont hole)
   (generated
    (make-primop-app-node
-    (generated
-     (make-symbol-node '&yield-cont))
+    (at (get-location cont)
+        (generated
+         (make-symbol-node '&yield-cont)))
     (list cont hole))))
 
 (define (cpc-do expr kont)
@@ -69,22 +71,44 @@
                 (compose kont last)))
 
 (define (cpc-sequence exprs kont)
-  (cond ((> (length exprs) 1)
-         (cpc (car exprs)
-              (lambda (first)
-                (cpc-sequence (cdr exprs)
-                              (lambda (rest)
-                                (kont (cons first rest)))))))
-        ((= (length exprs) 1)
-         (cpc (car exprs)
-              (compose kont list)))
-        (else (compiler-bug "Invalid list of expressions passed to cpc-sequence: " exprs))))
+  (if (> (length exprs) 0)
+      (cpc (car exprs)
+           (lambda (first)
+             (cpc-sequence (cdr exprs)
+                           (lambda (rest)
+                             (kont (cons first rest))))))
+      (kont '())))
 
 (define (cpc-lambda expr kont)
-  todo)
+  (let* ((loc (get-location expr))
+         (ct (at loc (make-gensym-node 'cont))))
+    (kont (replace expr
+                   (make-lambda-node (append (ast-lambda-formals expr)
+                                             (list ct))
+                                     (cpc (ast-lambda-body expr)
+                                          (lambda (s)
+                                            (at loc
+                                                (make-yield-node ct s)))))))))
+
+(define (cpc-primop-app expr kont)
+  (let ((args (ast-primop-app-args expr)))
+    (cpc-sequence args
+                  (compose kont (partial ast-update expr 'args) constantly))))
 
 (define (cpc-app expr kont)
-  todo)
+  (let* ((loc (get-location expr))
+         (value (at loc (make-gensym-node 'value)))
+         (cont (at loc
+                   (make-cont-node value (kont value))))
+         (args (ast-app-args expr)))
+    (cpc (ast-app-op expr)
+         (lambda (op)
+           (cpc-sequence args
+                         (lambda (args)
+                           (replace expr
+                                    (make-app-node op
+                                                   (append args
+                                                           (list cont))))))))))
 
 (define (cpc-let expr kont)
   todo)

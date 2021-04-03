@@ -54,7 +54,146 @@
                                 _))
                           (assert value three))
               (assert (get-location result)
-                      (get-location one))))))
+                      (get-location one)))))
+
+ (it "converts lambda correctly"
+     (check ((arg gen-valid-symbol-node)
+             (body gen-simple-cpc-node)
+             (node (gen-lambda-node (list arg) body)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (lambda (,converted-arg (symbol 'cont1))
+                            (primop-app '&yield-cont 'cont1 ,converted-body))
+                          (assert converted-arg arg)
+                          (assert converted-body body))
+              (assert (get-location result)
+                      (get-location node))))
+     (check ((arg gen-valid-symbol-node)
+             (then gen-simple-cpc-node)
+             (else gen-simple-cpc-node)
+             (body (gen-if-node arg then else))
+             (node (gen-lambda-node (list arg) body)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (lambda (,converted-arg (symbol 'cont1))
+                            (let ((binding 'cont2 (lambda ('value3)
+                                                    (primop-app '&yield-cont 'cont1 'value3))))
+                              (if ,cond
+                                (primop-app '&yield-cont 'cont2 ,converted-then)
+                                (primop-app '&yield-cont 'cont2 ,converted-else))))
+                          (assert converted-arg arg)
+                          (assert converted-then then)
+                          (assert converted-else else))
+              (assert (get-location result)
+                      (get-location node)))))
+
+ (it "converts primop-app correctly"
+     (check ((op gen-valid-symbol-node)
+             (args (gen-list (gen-integer 0 5) gen-simple-cpc-node))
+             (node (apply gen-primop-app-node op args)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (primop-app ,converted-op . ,converted-args)
+                          (assert converted-op op)
+                          (assert converted-args args))
+              (assert (get-location result)
+                      (get-location node))))
+     (check ((op1 gen-valid-symbol-node)
+             (arg1 gen-simple-cpc-node)
+             (app1 (gen-app-node op1 arg1))
+             (op2 gen-valid-symbol-node)
+             (app2 (gen-primop-app-node op2 app1)))
+            (gensym-reset!)
+            (let ((result (cpc app2 id)))
+              (assert-ast result
+                          (app ,converted-op1
+                               ,converted-arg1
+                               (lambda ('value1)
+                                 (primop-app ,converted-op2 'value1)))
+                          (assert converted-op1 op1)
+                          (assert converted-op2 op2)
+                          (assert converted-arg1 arg1))
+              (assert (get-location result)
+                      (get-location app1)))))
+
+ (it "converts app correctly"
+     (check ((op gen-simple-cpc-node)
+             (arg gen-simple-cpc-node)
+             (node (gen-app-node op arg)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (app ,converted-op ,converted-arg (lambda ('value1) 'value1))
+                          (assert converted-op op)
+                          (assert converted-arg arg))
+              (assert (get-location result)
+                      (get-location node))))
+     (check ((op1 gen-simple-cpc-node)
+             (arg1 gen-simple-cpc-node)
+             (app1 (gen-app-node op1 arg1))
+             (arg2 gen-simple-cpc-node)
+             (app2 (gen-app-node app1 arg2)))
+            (gensym-reset!)
+            (let ((result (cpc app2 id)))
+              (assert-ast result
+                          (app ,converted-op1
+                               ,converted-arg1
+                               (lambda ('value2)
+                                 (app 'value2 ,converted-arg2 (lambda ('value1) 'value1))))
+                          (assert converted-op1 op1)
+                          (assert converted-arg1 arg1)
+                          (assert converted-arg2 arg2))
+              (assert (get-location result)
+                      (get-location app1))))
+     (check ((op1 gen-simple-cpc-node)
+             (arg1 gen-simple-cpc-node)
+             (app1 (gen-app-node op1 arg1))
+             (arg2 gen-simple-cpc-node)
+             (app2 (gen-app-node app1 arg2))
+             (op3 gen-simple-cpc-node)
+             (app3 (gen-app-node op3 app2)))
+            (gensym-reset!)
+            (let ((result (cpc app3 id)))
+              (assert-ast result
+                          (app ,converted-op1
+                               ,converted-arg1
+                               (lambda ('value3)
+                                 (app 'value3
+                                      ,converted-arg2
+                                      (lambda ('value2)
+                                        (app ,converted-op3 'value2 (lambda ('value1) 'value1))))))
+                          (assert converted-op1 op1)
+                          (assert converted-op3 op3)
+                          (assert converted-arg1 arg1)
+                          (assert converted-arg2 arg2))
+              (assert (get-location result)
+                      (get-location app1))))
+     (check ((op1 gen-simple-cpc-node)
+             (arg1 gen-simple-cpc-node)
+             (app1 (gen-app-node op1 arg1))
+             (op2 gen-simple-cpc-node)
+             (arg2 gen-simple-cpc-node)
+             (app2 (gen-app-node op2 arg2))
+             (app3 (gen-app-node app1 app2)))
+            (gensym-reset!)
+            (let ((result (cpc app3 id)))
+              (assert-ast result
+                          (app ,converted-op1
+                               ,converted-arg1
+                               (lambda ('value2)
+                                 (app ,converted-op2
+                                      ,converted-arg2
+                                      (lambda ('value3)
+                                        (app 'value2 'value3 (lambda ('value1) 'value1))))))
+                          (assert converted-op1 op1)
+                          (assert converted-op2 op2)
+                          (assert converted-arg1 arg1)
+                          (assert converted-arg2 arg2))
+              (assert (get-location result)
+                      (get-location app1))))))
 
 (describe
  "old CPC conversion"
