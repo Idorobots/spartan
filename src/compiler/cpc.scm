@@ -68,7 +68,8 @@
 
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)
-                (compose kont last)))
+                (lambda (exprs)
+                  (kont (ast-update expr 'exprs (constantly exprs))))))
 
 (define (cpc-sequence exprs kont)
   (if (> (length exprs) 0)
