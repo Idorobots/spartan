@@ -111,15 +111,6 @@
                                                    (append args
                                                            (list cont))))))))))
 
-(define (cp-convert-fix expr kont)
-  (make-fix (map (lambda (b)
-                   (list (car b)
-                         (cp-convert (cadr b)
-                                     (make-identity-continuation))))
-                 (let-bindings expr))
-            (cp-convert (fix-body expr)
-                        kont)))
-
 (define (cpc-fix expr kont)
   (replace expr
            (make-fix-node (map (lambda (b)
@@ -131,7 +122,16 @@
                                kont))))
 
 (define (cpc-let expr kont)
-  todo)
+  (let ((bindings (ast-let-bindings expr)))
+    (cpc-sequence (map ast-binding-val (ast-let-bindings expr))
+                  (lambda (vals)
+                    (replace expr
+                             (make-let-node (map (lambda (var val)
+                                                   (make-binding-node var val))
+                                                 (map ast-binding-var bindings)
+                                                 vals)
+                                            (cpc (ast-let-body expr)
+                                                 kont)))))))
 
 (load "compiler/ast.scm")
 

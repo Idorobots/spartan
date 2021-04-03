@@ -227,7 +227,6 @@
              (node (gen-fix-node (list binding1 binding2) body)))
             (gensym-reset!)
             (let ((result (cpc node id)))
-              (display (ast->plain result)) (newline)
               (assert-ast result
                           (fix ((binding ,converted-var1
                                          (lambda (_ 'cont1)
@@ -241,7 +240,38 @@
                           (assert converted-op var1)
                           (assert converted-arg var2))
               (assert (get-location result)
-                      (get-location node))))))
+                      (get-location node)))))
+
+ (it "converts let correctly"
+     (check ((var1 gen-valid-symbol-node)
+             (op1 gen-simple-cpc-node)
+             (val1 (gen-app-node op1 gen-simple-cpc-node))
+             (binding1 (gen-binding-node var1 val1))
+             (var2 gen-valid-symbol-node)
+             (op2 gen-simple-cpc-node)
+             (val2 (gen-app-node op2 gen-simple-cpc-node))
+             (binding2 (gen-binding-node var2 val2))
+             (body (gen-app-node var1 var2))
+             (node (gen-let-node (list binding1 binding2)
+                                 body)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (app ,converted-op1
+                               _
+                               (lambda ('value1)
+                                 (app ,converted-op2
+                                      _
+                                      (lambda ('value2)
+                                        (let ((binding ,converted-var1 'value1)
+                                              (binding ,converted-var2 'value2))
+                                          (app _ _ (lambda ('value3) 'value3)))))))
+                          (assert converted-op1 op1)
+                          (assert converted-op2 op2)
+                          (assert converted-var1 var1)
+                          (assert converted-var2 var2))
+              (assert (get-location result)
+                      (get-location val1))))))
 
 (describe
  "old CPC conversion"
