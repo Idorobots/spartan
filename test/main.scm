@@ -19,7 +19,6 @@
 (load "../test/compiler/validate.scm")
 (load "../test/compiler/bindings.scm")
 (load "../test/compiler/letrec.scm")
-(load "../test/compiler/anormal.scm")
 (load "../test/compiler/cpc.scm")
 (load "../test/compiler/closures.scm")
 (load "../test/compiler/rename.scm")

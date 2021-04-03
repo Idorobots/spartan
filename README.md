@@ -26,7 +26,6 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - quasiquote expansion,
 - syntax tree validation,
 - `letrec` conversion,
-- normalization,
 - continuation passing style transformation,
 - flat closure conversion,
 - tagret-safe name mangling.

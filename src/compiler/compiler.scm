@@ -16,7 +16,6 @@
 (load "compiler/bindings.scm")
 (load "compiler/freevars.scm")
 (load "compiler/letrec.scm")
-(load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
