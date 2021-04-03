@@ -111,10 +111,26 @@
                                                    (append args
                                                            (list cont))))))))))
 
-(define (cpc-let expr kont)
-  todo)
+(define (cp-convert-fix expr kont)
+  (make-fix (map (lambda (b)
+                   (list (car b)
+                         (cp-convert (cadr b)
+                                     (make-identity-continuation))))
+                 (let-bindings expr))
+            (cp-convert (fix-body expr)
+                        kont)))
 
 (define (cpc-fix expr kont)
+  (replace expr
+           (make-fix-node (map (lambda (b)
+                                 ;; NOTE These are guaranteed to be pure lambda expressions,
+                                 ;; NOTE so no need to propagate the current continuation there.
+                                 (ast-update b 'val (flip cpc (make-identity-continuation))))
+                               (ast-fix-bindings expr))
+                          (cpc (ast-fix-body expr)
+                               kont))))
+
+(define (cpc-let expr kont)
   todo)
 
 (load "compiler/ast.scm")

@@ -212,7 +212,36 @@
                           (assert converted-arg1 arg1)
                           (assert converted-arg2 arg2))
               (assert (get-location result)
-                      (get-location app1))))))
+                      (get-location app1)))))
+
+ (it "converts fix correctly"
+     (check ((var1 gen-valid-symbol-node)
+             (arg1 gen-valid-symbol-node)
+             (val1 (gen-lambda-node (list arg1) gen-simple-cpc-node))
+             (binding1 (gen-binding-node var1 val1))
+             (var2 gen-valid-symbol-node)
+             (arg2 gen-valid-symbol-node)
+             (val2 (gen-lambda-node (list arg2) gen-simple-cpc-node))
+             (binding2 (gen-binding-node var2 val2))
+             (body (gen-app-node var1 var2))
+             (node (gen-fix-node (list binding1 binding2) body)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (display (ast->plain result)) (newline)
+              (assert-ast result
+                          (fix ((binding ,converted-var1
+                                         (lambda (_ 'cont1)
+                                           (primop-app '&yield-cont 'cont1 _)))
+                                (binding ,converted-var2
+                                         (lambda (_ 'cont2)
+                                           (primop-app '&yield-cont 'cont2 _))))
+                               (app ,converted-op ,converted-arg (lambda ('value3) 'value3)))
+                          (assert converted-var1 var1)
+                          (assert converted-var2 var2)
+                          (assert converted-op var1)
+                          (assert converted-arg var2))
+              (assert (get-location result)
+                      (get-location node))))))
 
 (describe
  "old CPC conversion"
