@@ -38,9 +38,8 @@
                validate
                letrec-expand
                report-errors
+               continuation-passing-convert
                adapt-ast
-               (flip normalize (make-identity-continuation))
-               (flip cp-convert (make-identity-continuation))
                (flip closure-convert (make-global-definitions-list))
                mangle)))
 
