@@ -40,7 +40,7 @@
                report-errors
                adapt-ast
                (flip normalize (make-identity-continuation))
-               (flip cpc (make-identity-continuation))
+               (flip cp-convert (make-identity-continuation))
                (flip closure-convert (make-global-definitions-list))
                mangle)))
 
