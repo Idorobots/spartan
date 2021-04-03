@@ -1,5 +1,8 @@
 ;; Continuation Passing Style Conversion
 
+(define gen-simple-cpc-node
+  (gen-one-of gen-valid-symbol-node gen-value-node))
+
 (describe
  "CPC conversion"
  (it "works for the simple cases"
@@ -11,9 +14,9 @@
                     node)))
 
  (it "converts if correctly"
-     (check ((cond (gen-one-of gen-valid-symbol-node gen-value-node))
-             (then (gen-one-of gen-valid-symbol-node gen-value-node))
-             (else (gen-one-of gen-valid-symbol-node gen-value-node))
+     (check ((cond gen-simple-cpc-node)
+             (then gen-simple-cpc-node)
+             (else gen-simple-cpc-node)
              (node (gen-if-node cond then else)))
             (gensym-reset!)
             (let ((result (cpc node id)))
@@ -26,7 +29,32 @@
                           (assert converted-then then)
                           (assert converted-else else))
               (assert (get-location result)
-                      (get-location node))))))
+                      (get-location node)))))
+
+ (it "converts do correctly"
+     (check ((one gen-simple-cpc-node)
+             (two gen-simple-cpc-node)
+             (three gen-simple-cpc-node)
+             (node (gen-specific-do-node one two three)))
+            (gensym-reset!)
+            (assert (cpc node id) three))
+     (check ((cond gen-simple-cpc-node)
+             (then gen-simple-cpc-node)
+             (else gen-simple-cpc-node)
+             (one (gen-if-node cond then else))
+             (two gen-simple-cpc-node)
+             (three gen-simple-cpc-node)
+             (node (gen-specific-do-node one two three)))
+            (gensym-reset!)
+            (let ((result (cpc node id)))
+              (assert-ast result
+                          (let ((binding 'cont1 (lambda ('value2) ,value)))
+                            (if _
+                                _
+                                _))
+                          (assert value three))
+              (assert (get-location result)
+                      (get-location one))))))
 
 (describe
  "old CPC conversion"

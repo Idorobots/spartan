@@ -34,11 +34,13 @@
     (cpc (ast-if-condition expr)
          (lambda (condition)
            (at loc
-               (make-let-1-node ct (make-cont-node value (kont value))
+               (make-let-1-node ct
                                 (at loc
-                                    (make-if-node condition
-                                                  (cpc (ast-if-then expr) rest)
-                                                  (cpc (ast-if-else expr) rest)))))))))
+                                    (make-cont-node value (kont value)))
+                                (replace expr
+                                         (make-if-node condition
+                                                       (cpc (ast-if-then expr) rest)
+                                                       (cpc (ast-if-else expr) rest)))))))))
 
 (define (make-let-1-node var val body)
   (generated
@@ -63,18 +65,31 @@
     (list cont hole))))
 
 (define (cpc-do expr kont)
+  (cpc-sequence (ast-do-exprs expr)
+                (compose kont last)))
+
+(define (cpc-sequence exprs kont)
+  (cond ((> (length exprs) 1)
+         (cpc (car exprs)
+              (lambda (first)
+                (cpc-sequence (cdr exprs)
+                              (lambda (rest)
+                                (kont (cons first rest)))))))
+        ((= (length exprs) 1)
+         (cpc (car exprs)
+              (compose kont list)))
+        (else (compiler-bug "Invalid list of expressions passed to cpc-sequence: " exprs))))
+
+(define (cpc-lambda expr kont)
+  todo)
+
+(define (cpc-app expr kont)
   todo)
 
 (define (cpc-let expr kont)
   todo)
 
 (define (cpc-fix expr kont)
-  todo)
-
-(define (cpc-lambda expr kont)
-  todo)
-
-(define (cpc-app expr kont)
   todo)
 
 (load "compiler/ast.scm")

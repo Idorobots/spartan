@@ -226,6 +226,13 @@
                            gen-contents)
                  rand)))))
 
+(define (gen-specific-do-node . gen-contents)
+  (lambda (rand)
+    (at (sample gen-location rand)
+        (make-do-node
+         (map (flip sample rand)
+              gen-contents)))))
+
 (define (gen-valid-do-node rand)
   (sample (gen-do-node (gen-integer 1 5) gen-simple-node)
           rand))
