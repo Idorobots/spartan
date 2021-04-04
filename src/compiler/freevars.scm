@@ -27,8 +27,17 @@
                                expr))))
               ((let _ _)
                (compute-let-fv expr))
-              ((letrec _ _)
-               (compute-letrec-fv expr))
+              ((letrec ,bindings ,body)
+               (let ((bound (set-sum (map get-bound-vars bindings)))
+                     (free-in-bindings (set-sum (map get-fv bindings)))
+                     (free-in-body (get-fv body)))
+                 (free-vars
+                  (set-difference (set-union free-in-bindings free-in-body)
+                                  bound)
+                  (bound-vars bound
+                              expr))))
+              ((fix _ _)
+               (compute-fix-fv expr))
               ((binding ,var ,val)
                (free-vars (get-fv val)
                           (bound-vars (get-fv var)
@@ -56,11 +65,11 @@
      (bound-vars bound
                  expr))))
 
-(define (compute-letrec-fv expr)
-  (let* ((bindings (ast-letrec-bindings expr))
+(define (compute-fix-fv expr)
+  (let* ((bindings (ast-fix-bindings expr))
          (bound (set-sum (map get-bound-vars bindings)))
          (free-in-bindings (set-sum (map get-fv bindings)))
-         (free-in-body (get-fv (ast-letrec-body expr))))
+         (free-in-body (get-fv (ast-fix-body expr))))
     (free-vars
      (set-difference (set-union free-in-bindings free-in-body)
                      bound)

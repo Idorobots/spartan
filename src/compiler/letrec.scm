@@ -287,8 +287,7 @@
 (define (fix parent bindings body)
   (if (empty? bindings)
       body
-      ;; FIXME This isn't actually a letrec...
-      (compute-letrec-fv
+      (compute-fix-fv
        (at (get-location parent)
            (make-fix-node bindings
                           body)))))
