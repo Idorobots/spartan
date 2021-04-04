@@ -194,7 +194,7 @@
              (node (gen-symbol-node var))
              (rec gen-complex-node)
              (rec-binding (gen-self-recoursive (gen-binding-node node rec)))
-             (non-rec-binding gen-valid-binding)
+             (non-rec-binding gen-valid-binding-node)
              (multiple-bindings (gen-binding-list (gen-integer 2 5))))
             (assert (not (recoursive? '())))
             (assert (not (recoursive? (list non-rec-binding))))

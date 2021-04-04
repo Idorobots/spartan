@@ -34,10 +34,8 @@
   (syntax-rules ()
     ((_ expr pattern body ...)
      (ast-case expr
-               (pattern
-                body ...)
-               (else
-                (raise (make-assert-exception 'ast-case 'expr expr 'pattern)))))))
+               (pattern body ...)
+               (else (raise (make-assert-exception 'ast-case 'expr expr 'pattern)))))))
 
 (define-syntax test-file
   (syntax-rules ()

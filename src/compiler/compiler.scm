@@ -16,7 +16,6 @@
 (load "compiler/bindings.scm")
 (load "compiler/freevars.scm")
 (load "compiler/letrec.scm")
-(load "compiler/anormal.scm")
 (load "compiler/cpc.scm")
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
@@ -38,9 +37,8 @@
                validate
                letrec-expand
                report-errors
+               continuation-passing-convert
                adapt-ast
-               (flip normalize (make-identity-continuation))
-               (flip cpc (make-identity-continuation))
                (flip closure-convert (make-global-definitions-list))
                mangle)))
 
