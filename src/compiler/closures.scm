@@ -44,12 +44,12 @@
         (body (lambda-body expr))
         (free (filter (compose not primop?)
                       (set-difference (free-vars-old expr)
-                              globals))))
+                                      globals))))
     (make-app '&make-closure
               (list (create-env free)
                     (make-lambda (cons env args)
-                                 (substitute (create-ref-substitutes env free)
-                                             body))))))
+                                 (old-substitute (create-ref-substitutes env free)
+                                                 body))))))
 
 (define (create-env free)
   (cond ((= (length free) 0)
@@ -128,8 +128,8 @@
   (cond ((symbol? env)
          (if (member env lambda-vars)
              (list (make-app '&set-closure-env!
-                       (list lambda-var
-                             env)))
+                             (list lambda-var
+                                   env)))
              '()))
         ((and (application? env)
               (equal? (app-op env) '&cons))
