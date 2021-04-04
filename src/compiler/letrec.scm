@@ -247,40 +247,18 @@
                                                    (make-do-node (append setters (list body))))))))))))
 
 (define (derefy refs expr)
-  (if (empty? refs)
-      expr
-      (case (get-type expr)
-        ((symbol)
-         (if (member (safe-symbol-value expr) refs)
-             (free-vars (set-insert (get-fv expr) 'deref)
-                        (at (get-location expr)
-                            (generated
-                             (make-app-node (at (get-location expr)
-                                                (generated
-                                                 (make-symbol-node 'deref)))
-                                            (list expr)))))
-             expr))
-        ((lambda)
-         (ast-update expr
-                     'body (partial derefy
-                                    (set-difference refs
-                                                    (get-bound-vars expr)))))
-        ((let)
-         (let ((unbound-refs (set-difference refs
-                                             (get-bound-vars expr))))
-           (ast-update (ast-update expr 'body (partial derefy unbound-refs))
-                       'bindings
-                       (partial map (partial derefy refs)))))
-        ((letrec fix)
-         (let ((unbound-refs (set-difference refs
-                                             (get-bound-vars expr))))
-           (ast-update (ast-update expr 'body (partial derefy unbound-refs))
-                       'bindings
-                       (partial map (partial derefy unbound-refs)))))
-        ((binding)
-         (ast-update expr 'val (partial derefy refs)))
-        (else
-         (walk-ast (partial derefy refs) expr)))))
+  (substitute (map (lambda (ref)
+                     (cons ref
+                           (lambda (expr)
+                             (free-vars (set ref 'deref)
+                                        (at (get-location expr)
+                                            (generated
+                                             (make-app-node (at (get-location expr)
+                                                                (generated
+                                                                 (make-symbol-node 'deref)))
+                                                            (list expr))))))))
+                   refs)
+              expr))
 
 ;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
 
