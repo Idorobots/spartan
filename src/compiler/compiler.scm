@@ -38,8 +38,10 @@
                letrec-expand
                report-errors
                continuation-passing-convert
+               annotate-free-vars
+               annotate-bindings
+               closure-convert
                adapt-ast
-               (flip old-closure-convert (make-global-definitions-list))
                mangle)))
 
 ;; FIXME This should be removed once all the phases use the new AST.
