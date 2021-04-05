@@ -168,25 +168,3 @@
                           (assert subbed-other other)
                           (assert subbed-orig1 subbed)
                           (assert subbed-orig2 subbed))))))
-
-(define subs '((foo . bar)))
-
-(describe
- "old-substitute"
- (it "simple cases work"
-     (assert (old-substitute subs 'faz) 'faz)
-     (assert (old-substitute subs 'foo) 'bar)
-     (assert (old-substitute subs '(foo bar)) '(bar bar))
-     (assert (old-substitute subs '(foo foo)) '(bar bar))
-     (assert (old-substitute (cons '(bar . foo) subs) '(foo bar)) '(bar foo))
-     (assert (old-substitute (cons '(bar . foo) subs) '(a b c)) '(a b c)))
- (it "syntax forms are handled correctly"
-     (assert (old-substitute subs '(if foo foo (not foo))) '(if bar bar (not bar)))
-     (assert (old-substitute subs '(do foo foo (also foo))) '(do bar bar (also bar)))
-     (assert (old-substitute subs '(do foo foo (also foo))) '(do bar bar (also bar))))
- (it "bindings are handled correctly"
-     (assert (old-substitute subs '(letrec ((bar foo) (foo bar)) foo)) '(letrec ((bar foo) (foo bar)) foo))
-     (assert (old-substitute subs '(let ((bar foo) (foo bar)) foo)) '(let ((bar bar) (foo bar)) foo))
-     (assert (old-substitute subs '(do foo (lambda (foo) foo))) '(do bar (lambda (foo) foo)))
-     (assert (old-substitute subs '(do foo (lambda (bar) foo))) '(do bar (lambda (bar) bar)))
-     (assert (old-substitute (cons '(bar . baz) subs) '(lambda (bar) (* foo bar))) '(lambda (bar) (* bar bar)))))
