@@ -34,9 +34,16 @@
 (define (number-node? node)
   (is-type? node 'number))
 
+(define (ast-number-value node)
+  (ast-get node 'value))
+
 ;; Symbol
 (define (make-symbol-node value)
   (ast-node 'type 'symbol 'value value))
+
+(define (make-gensym-node root)
+  (generated
+   (make-symbol-node (gensym root))))
 
 (define (symbol-node? node)
   (is-type? node 'symbol))
@@ -50,6 +57,9 @@
 
 (define (string-node? node)
   (is-type? node 'string))
+
+(define (ast-string-value node)
+  (ast-get node 'value))
 
 ;; List
 (define (make-list-node values)
@@ -442,9 +452,22 @@
               (equal? (car pattern) 'unquote))
          (bindings (cadr pattern) expr))
         ((and (pair? pattern)
-              (equal? (car pattern) 'quote))
+              (equal? (car pattern) 'quote)
+              (symbol? (cadr pattern)))
          (and (is-type? expr 'symbol)
               (equal? (cadr pattern) (ast-symbol-value expr))
+              (empty-bindings)))
+        ((and (pair? pattern)
+              (equal? (car pattern) 'quote)
+              (number? (cadr pattern)))
+         (and (is-type? expr 'number)
+              (equal? (cadr pattern) (ast-number-value expr))
+              (empty-bindings)))
+        ((and (pair? pattern)
+              (equal? (car pattern) 'quote)
+              (string? (cadr pattern)))
+         (and (is-type? expr 'number)
+              (equal? (cadr pattern) (ast-string-value expr))
               (empty-bindings)))
         ((and (empty? pattern)
               (is-type? expr 'list)

@@ -39,7 +39,7 @@
                report-errors
                continuation-passing-convert
                adapt-ast
-               (flip closure-convert (make-global-definitions-list))
+               (flip old-closure-convert (make-global-definitions-list))
                mangle)))
 
 ;; FIXME This should be removed once all the phases use the new AST.

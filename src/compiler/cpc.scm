@@ -54,10 +54,6 @@
   (generated
    (make-lambda-node (list arg) body)))
 
-(define (make-gensym-node root)
-  (generated
-   (make-symbol-node (gensym root))))
-
 (define (make-yield-node cont hole)
   (generated
    (make-primop-app-node

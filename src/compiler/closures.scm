@@ -4,11 +4,128 @@
 (load "compiler/utils/utils.scm")
 (load "compiler/utils/gensym.scm")
 
-(load "compiler/ast.scm")
-(load "compiler/freevars.scm")
+(load "compiler/env.scm")
 (load "compiler/substitute.scm")
 
-(define (closure-convert expr globals)
+(define (closure-convert env)
+  (env-update env 'ast (flip convert-closures (env-get env 'globals))))
+
+(define (make-global-definitions-list)
+  (apply set
+         '(nil car cadr cdr cddr list cons append concat
+           equal? nil? true false not
+           * + - / = < random zero?
+           ref deref assign!
+           call/current-continuation call/reset call/shift call/handler raise
+           sleep self send recv spawn task-info monitor
+           assert! signal! retract! select notify-whenever
+           display newline debug)))
+
+(define (convert-closures expr globals)
+  (let ((expr (walk-ast (flip convert-closures globals)
+                        expr)))
+    (ast-case expr
+     ((app ,op . ,args)
+      (replace expr
+               (make-primop-app-node
+                (at (get-location op)
+                    (generated
+                     (make-symbol-node '&apply)))
+                (cons op args))))
+     ((lambda ,formals ,body)
+      (let* ((loc (get-location expr))
+             (free (set-difference (get-free-vars expr)
+                                   globals))
+             (env (at loc (make-gensym-node 'env))))
+        (at loc
+            (generated
+             (make-primop-app-node
+              (at loc
+                  (generated
+                   (make-symbol-node '&make-closure)))
+              (list (make-env loc free)
+                    (replace expr
+                             (make-lambda-node
+                              (cons env formals)
+                              (substitute (make-env-subs env free)
+                                          body)))))))))
+     ((fix ,bindings ,body)
+      todo)
+     (else expr))))
+
+(define (make-env loc free)
+  (case (length free)
+    ((0)
+     (at loc
+         (generated
+          (make-quote-node
+           (at loc
+               (generated
+                (make-list-node '())))))))
+    ((1)
+     (at loc
+         (generated
+          (make-symbol-node (car free)))))
+    ((2)
+     (at loc
+         (generated
+          (make-primop-app-node
+           (at loc
+               (generated
+                (make-symbol-node '&cons)))
+           (map (lambda (var)
+                  (at loc
+                      (generated
+                       (make-symbol-node var))))
+                free)))))
+    (else
+     (at loc
+         (generated
+          (make-primop-app-node
+           (at loc
+               (generated
+                (make-symbol-node '&make-env)))
+           (map (lambda (var)
+                  (at loc
+                      (generated
+                       (make-symbol-node var))))
+                free)))))))
+
+(define (make-env-subs env free)
+  (case (length free)
+    ((1) (list (cons (car free)
+                     (flip replace env))))
+    ((2) (map (lambda (var accessor)
+                (cons var
+                      (lambda (expr)
+                        (replace expr
+                                 (generated
+                                  (make-primop-app-node
+                                   (at (get-location expr)
+                                       (make-symbol-node accessor))
+                                   (list env)))))))
+              free
+              (list '&car '&cdr)))
+    (else
+     (map (lambda (var)
+            (cons var
+                  (lambda (expr)
+                    (replace expr
+                             (generated
+                              (make-primop-app-node
+                               (at (get-location expr)
+                                   (generated
+                                    (make-symbol-node '&env-ref)))
+                               (list env
+                                     (at (get-location expr)
+                                         (generated
+                                          (make-number-node (offset var free)))))))))))
+          free))))
+
+(load "compiler/freevars.scm")
+(load "compiler/ast.scm")
+
+(define (old-closure-convert expr globals)
   (walk id
         (lambda (expr)
           (cond ((application? expr)
@@ -19,16 +136,6 @@
                  (cc-fix expr))
                 (else expr)))
         expr))
-
-(define (make-global-definitions-list)
-  '(nil car cadr cdr cddr list cons append concat
-    equal? nil? true false not
-    * + - / = < random zero?
-    ref deref assign!
-    call/current-continuation call/reset call/shift call/handler raise
-    sleep self send recv spawn task-info monitor
-    assert! signal! retract! select notify-whenever
-    display newline debug))
 
 (define (cc-application expr)
   (let ((op (app-op expr)))
