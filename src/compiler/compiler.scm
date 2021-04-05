@@ -35,8 +35,8 @@
                annotate-free-vars
                annotate-bindings
                validate
-               letrec-expand
                report-errors
+               letrec-expand
                continuation-passing-convert
                annotate-free-vars
                annotate-bindings

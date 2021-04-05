@@ -3,11 +3,9 @@
 (load "compiler/utils/scc.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/tree-ast.scm")
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
 (load "compiler/freevars.scm") ;; FIXME Just for get-fv & compute-let-fv
-
-(load "compiler/ast.scm")
 (load "compiler/substitute.scm")
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
@@ -49,12 +47,7 @@
 ;; ...which is considerably simpler to compile and optimize.
 
 (define (letrec-expand env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (expand-letrec (env-get env 'ast))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+  (env-update env 'ast expand-letrec))
 
 (define (expand-letrec expr)
   (map-ast id
