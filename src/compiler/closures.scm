@@ -22,74 +22,68 @@
            display newline debug)))
 
 (define (convert-closures expr globals)
-  (let ((expr (walk-ast (flip convert-closures globals)
-                        expr)))
-    (ast-case expr
-     ((app ,op . ,args)
+  (ast-case expr
+   ((app ,op . ,args)
+    (replace expr
+             (make-primop-app (get-location op)
+                              '&apply
+                              (map (flip convert-closures globals)
+                                   (cons op args)))))
+   ((lambda ,formals ,body)
+    (let ((free (set-difference (get-free-vars expr)
+                                globals)))
+      (recreate-closure expr
+                        (make-env (get-location expr) free)
+                        (flip make-env-subs free)
+                        globals)))
+   ((fix ,bindings ,body)
+    (let* ((loc (get-location expr))
+           (env-var (at loc (make-gensym-node 'env)))
+           (free (set-difference (set-sum (map get-free-vars bindings))
+                                 globals))
+           (bound (get-bound-vars expr))
+           (full-env (make-env loc free))
+           (actual-env (substitute (map (flip cons (compose make-nil get-location)) bound)
+                                   full-env))
+           (env-binding (at loc (make-binding-node env-var actual-env)))
+           (env-subs (flip make-env-subs free))
+           (closures (map (lambda (b)
+                            (ast-update b 'val
+                                        (lambda (fun)
+                                          (recreate-closure fun
+                                                            env-var
+                                                            env-subs
+                                                            globals))))
+                          bindings))
+           (setters (make-env-setters bound (map ast-binding-var closures) env-var full-env))
+           (converted-body (convert-closures body globals)))
       (replace expr
-               (make-primop-app-node
-                (at (get-location op)
-                    (generated
-                     (make-symbol-node '&apply)))
-                (cons op args))))
-     ((lambda ,formals ,body)
-      (let* ((loc (get-location expr))
-             (free (set-difference (get-free-vars expr)
-                                   globals))
-             (env (at loc (make-gensym-node 'env))))
-        (make-primop-app loc
-                         '&make-closure
-                         (list (make-env loc free)
-                               (replace expr
+               (generated
+                (make-let-node (list env-binding)
+                               (at loc
+                                   (generated
+                                    (make-let-node closures
+                                                   (at loc
+                                                       (generated
+                                                        (make-do-node
+                                                         (append setters
+                                                                 (list converted-body)))))))))))))
+   (else (walk-ast (flip convert-closures globals) expr))))
+
+(define (recreate-closure expr env make-subs globals)
+  (let* ((formals (ast-lambda-formals expr))
+         (body (ast-lambda-body expr))
+         (loc (get-location expr))
+         (env-var (at loc (make-gensym-node 'env))))
+    (replace expr
+             (make-primop-app loc
+                              '&make-closure
+                              (list env
+                                    (at loc
                                         (make-lambda-node
-                                         (cons env formals)
-                                         (substitute (make-env-subs env free)
-                                                     body)))))))
-     ;; FIXME This should create a single shared env for all the tightly bound closures that end up in this fix.
-     ((fix ,bindings ,body)
-      (let* ((bound (get-bound-vars expr))
-             (original-envs (map (compose car ast-primop-app-args ast-binding-val) bindings))
-             (env-vars (map (lambda (env)
-                              (at (get-location env)
-                                  (make-gensym-node 'env)))
-                            original-envs))
-             (envs (map (lambda (var e)
-                          (at (get-location e)
-                              (generated
-                               (make-binding-node var
-                                                  ;; Replaces any recoursive variables with nils not to cause undefined vars.
-                                                  (substitute (map (flip cons (compose make-nil get-location)) bound)
-                                                              e)))))
-                        env-vars
-                        original-envs))
-             (closures (map (lambda (b e)
-                              (ast-update b
-                                          'val
-                                          (lambda (v)
-                                            (ast-update v
-                                                        'args
-                                                        (lambda (args)
-                                                          ;; Effectively replaces the env with associated env var.
-                                                          (cons e (cdr args)))))))
-                            bindings
-                            env-vars))
-             (setters (foldl append
-                             '()
-                             (map (partial make-env-setters bound)
-                                  env-vars
-                                  (map ast-binding-var closures)
-                                  original-envs))))
-        (at (get-location expr)
-            (generated
-             (make-let-node envs
-                            (replace expr
-                                     (make-let-node closures
-                                                    (at (get-location body)
-                                                        (generated
-                                                         (make-do-node
-                                                          (append setters
-                                                                  (list body))))))))))))
-     (else expr))))
+                                         (cons env-var formals)
+                                         (substitute (make-subs env-var)
+                                                     (convert-closures body globals)))))))))
 
 (define (make-nil loc)
   (at loc
@@ -160,39 +154,40 @@
                                                   (make-number-node (offset var free))))))))))
           free))))
 
-(define (make-env-setters bound env-var closure-var env)
+(define (make-env-setters bound closures env-var env)
   (ast-case env
    ((symbol ,sym)
     (if (set-member? bound (ast-symbol-value sym))
-        (list
-         (make-primop-app (get-location env)
-                          '&set-closure-env!
-                          (list closure-var env)))
+        (map (lambda (closure-var)
+               (make-primop-app (get-location env)
+                                '&set-closure-env!
+                                (list closure-var env)))
+             closures)
         '()))
    ((primop-app '&cons ,first ,second)
     (if (or (set-member? bound (ast-symbol-value first))
             (set-member? bound (ast-symbol-value second)))
-        (list
-         (make-primop-app (get-location env)
-                          '&set-closure-env!
-                          (list closure-var env)))
+        (map (lambda (closure-var)
+               (make-primop-app (get-location env)
+                                '&set-closure-env!
+                                (list closure-var env)))
+             closures)
         '()))
+   ((primop-app '&make-env . ,args)
+    (let loop ((i 0)
+               (args args))
+      (if (empty? args)
+          '()
+          (let ((arg (car args)))
+            (if (set-member? bound (ast-symbol-value arg))
+                (cons (make-primop-app (get-location arg)
+                                       '&set-env!
+                                       (list env-var
+                                             (at (get-location arg)
+                                                 (generated
+                                                  (make-number-node i)))
+                                             arg))
+                      (loop (+ i 1) (cdr args)))
+                (loop (+ i 1) (cdr args)))))))
    (else
-    (ast-update env
-                'args
-                (lambda (args)
-                  (let loop ((i 0)
-                             (args args))
-                    (if (empty? args)
-                        '()
-                        (let ((arg (car args)))
-                          (if (set-member? bound (ast-symbol-value arg))
-                              (cons
-                               (make-primop-app (get-location arg)
-                                                '&set-env!
-                                                (list env-var
-                                                      (at (get-location arg)
-                                                          (generated
-                                                           (make-number-node i)))))
-                               (loop (+ i 1) (cdr args)))
-                              (loop (+ i 1) (cdr args)))))))))))
+    (compiler-bug "Invalid env in make-env-setters:" env))))
