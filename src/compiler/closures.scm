@@ -55,7 +55,7 @@
                                                             env-subs
                                                             globals))))
                           bindings))
-           (setters (make-env-setters bound (map ast-binding-var closures) env-var full-env))
+           (setters (make-env-setters full-env env-var free bound (map ast-binding-var closures)))
            (converted-body (convert-closures body globals)))
       (replace expr
                (generated
@@ -154,40 +154,32 @@
                                                   (make-number-node (offset var free))))))))))
           free))))
 
-(define (make-env-setters bound closures env-var env)
-  (ast-case env
-   ((symbol ,sym)
-    (if (set-member? bound (ast-symbol-value sym))
-        (map (lambda (closure-var)
-               (make-primop-app (get-location env)
-                                '&set-closure-env!
-                                (list closure-var env)))
-             closures)
-        '()))
-   ((primop-app '&cons ,first ,second)
-    (if (or (set-member? bound (ast-symbol-value first))
-            (set-member? bound (ast-symbol-value second)))
-        (map (lambda (closure-var)
-               (make-primop-app (get-location env)
-                                '&set-closure-env!
-                                (list closure-var env)))
-             closures)
-        '()))
-   ((primop-app '&make-env . ,args)
-    (let loop ((i 0)
-               (args args))
-      (if (empty? args)
-          '()
-          (let ((arg (car args)))
-            (if (set-member? bound (ast-symbol-value arg))
-                (cons (make-primop-app (get-location arg)
-                                       '&set-env!
-                                       (list env-var
-                                             (at (get-location arg)
-                                                 (generated
-                                                  (make-number-node i)))
-                                             arg))
-                      (loop (+ i 1) (cdr args)))
-                (loop (+ i 1) (cdr args)))))))
-   (else
-    (compiler-bug "Invalid env in make-env-setters:" env))))
+(define (make-env-setters env env-var free bound closures)
+  (case (length free)
+    ((0)
+     ;; Nothing to do.
+     '())
+    ((1 2)
+     ;; NOTE This is a fix, therfore at least one of these values is going to be a bound closure,
+     ;; NOTE so we can assume that each closure needs update in this case.
+     (map (lambda (var)
+            (make-primop-app (get-location env)
+                             '&set-closure-env!
+                             (list var env)))
+          closures))
+    (else
+     ;; NOTE Otherwise we just update the env.
+     (let ((args (ast-primop-app-args env)))
+       (filter (compose not empty?)
+             (map (lambda (arg i)
+                    (if (set-member? bound (ast-symbol-value arg))
+                        (make-primop-app (get-location arg)
+                                         '&set-env!
+                                         (list env-var
+                                               (at (get-location arg)
+                                                   (generated
+                                                    (make-number-node i)))
+                                               arg))
+                        '()))
+                  args
+                  (iota 0 (- (length free) 1) 1)))))))
