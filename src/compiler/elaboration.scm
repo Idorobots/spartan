@@ -6,7 +6,7 @@
 
 (load "compiler/env.scm")
 (load "compiler/errors.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 (load "compiler/body.scm")
 
 (define (elaborate env)

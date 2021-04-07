@@ -3,7 +3,7 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 
 (define (quasiquote-expand env)
   (let ((result (collect-errors (env-get env 'errors)

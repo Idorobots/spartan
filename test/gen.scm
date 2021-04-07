@@ -87,25 +87,25 @@
   (lambda (rand)
     (at (sample gen-location rand)
         (make-quote-node
-         (gen-contents rand)))))
+         (sample gen-contents rand)))))
 
 (define (gen-quasiquote-node gen-contents)
   (lambda (rand)
     (at (sample gen-location rand)
         (make-quasiquote-node
-         (gen-contents rand)))))
+         (sample gen-contents rand)))))
 
 (define (gen-unquote-node gen-contents)
   (lambda (rand)
     (at (sample gen-location rand)
         (make-unquote-node
-         (gen-contents rand)))))
+         (sample gen-contents rand)))))
 
 (define (gen-unquote-splicing-node gen-contents)
   (lambda (rand)
     (at (sample gen-location rand)
         (make-unquote-splicing-node
-         (gen-contents rand)))))
+         (sample gen-contents rand)))))
 
 (define (gen-arg-list gen-max-length)
   (gen-list gen-max-length gen-valid-symbol-node))

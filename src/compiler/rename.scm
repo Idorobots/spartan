@@ -1,21 +1,22 @@
 ;; Target-safe variable renaming.
 
 (load "compiler/utils/utils.scm")
-
+(load "compiler/env.scm")
 (load "compiler/ast.scm")
 
-(define (mangle expr)
-  (walk id
-        (lambda (expr)
-          (if (symbol? expr)
-              (rename-symbol expr)
-              expr))
-        expr))
+(define (symbol-rename env)
+  (env-update env 'ast mangle-names))
 
-(define (rename-symbol symbol)
-  (if (primop? symbol)
-      symbol
-      (symbol->safe symbol)))
+(define (mangle-names expr)
+  (case (get-type expr)
+    ((quote)
+     expr)
+    ((symbol)
+     (ast-update expr 'value symbol->safe))
+    ((primop-app)
+     (ast-update expr 'args (partial map mangle-names)))
+    (else
+     (walk-ast mangle-names expr))))
 
 (define (symbol->safe s)
   (string->symbol (apply string-append

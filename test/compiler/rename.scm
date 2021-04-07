@@ -8,46 +8,39 @@
      (assert (symbol->safe 'foo!) '__fooBANG)
      (assert (symbol->safe 'symbol->safe) '__symbol_GREATERsafe)))
 
-
 (describe
- "mangle"
- (it "Renaming simple expressions works."
-     (assert (mangle '23) '23)
-     (assert (mangle '"foo bar") '"foo bar")
-     (assert (mangle ''(heh quote)) ''(heh quote))
-     (assert (mangle 'foo) '__foo)
-     (assert (mangle 'foo23) '__foo23)
-     (assert (mangle 'foo!) '__fooBANG)
-     (assert (mangle 'symbol->safe) '__symbol_GREATERsafe)
-     (assert (mangle '&symbol->safe) '&symbol->safe))
+ "mangle-names"
+ (it "correctly renames simple cases"
+     (check ((symbol gen-valid-symbol-node))
+            (assert (mangle-names symbol)
+                    (ast-update symbol 'value symbol->safe)))
+     (check ((formals (gen-arg-list (gen-integer 0 5)))
+             (body gen-valid-symbol-node)
+             (fun (gen-lambda-node formals body)))
+            (assert-ast (mangle-names fun)
+                        (lambda ,renamed-formals
+                          ,renamed-body)
+                        (assert renamed-body (ast-update body 'value symbol->safe))
+                        (map (lambda (original renamed)
+                               (assert renamed (ast-update original 'value symbol->safe)))
+                             formals
+                             renamed-formals))))
 
- (it "Renaming let works."
-     (assert (mangle '(let ((foo bar))
-                        baz))
-             '(let ((__foo __bar))
-                __baz)))
+ (it "doesn't rename quoted symbols"
+     (check ((symbol gen-valid-symbol-node)
+             (node (gen-quote-node symbol)))
+            (assert-ast (mangle-names node)
+                        (a-quote ,renamed-symbol)
+                        (assert renamed-symbol symbol))))
 
- (it "Renaming lambda works."
-     (assert (mangle '(lambda (foo) bar))
-             '(lambda (__foo) __bar))
-     (assert (mangle '(lambda (foo) ((lambda (x) foo) bar))
-                     )
-             '(lambda (__foo) ((lambda (__x) __foo) __bar))))
-
- (it "Renaming do works."
-     (assert (mangle '(do a b c))
-             '(do __a __b __c))
-     (assert (mangle '(do a (do b c) d))
-             '(do __a (do __b __c) __d)))
-
- (it "Renaming if works."
-     (assert (mangle '(if cond then else))
-             '(if __cond __then __else))
-     (assert (mangle '(if (equal? 23 23) (cons a b) c))
-             '(if (__equalQUEST 23 23) (__cons __a __b) __c)))
-
- (it "Renaming application works."
-     (assert (mangle '(foo bar baz))
-             '(__foo __bar __baz))
-     (assert (mangle '(&yield-cont bar baz))
-             '(&yield-cont __bar __baz))))
+ (it "doesn't rename primop-app ops"
+     (check ((op gen-valid-symbol-node)
+             (args (gen-arg-list (gen-integer 0 5)))
+             (node (apply gen-primop-app-node op args)))
+            (assert-ast (mangle-names node)
+                        (primop-app ,renamed-op . ,renamed-args)
+                        (assert renamed-op op)
+                        (map (lambda (original renamed)
+                               (assert renamed (ast-update original 'value symbol->safe)))
+                             args
+                             renamed-args)))))

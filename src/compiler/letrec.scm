@@ -3,7 +3,7 @@
 (load "compiler/utils/scc.scm")
 (load "compiler/utils/utils.scm")
 
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 (load "compiler/env.scm")
 (load "compiler/freevars.scm") ;; FIXME Just for get-fv & compute-let-fv
 (load "compiler/substitute.scm")
