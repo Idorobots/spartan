@@ -5,19 +5,19 @@
  (it "should create environment correctly"
      (check ((free-vars '())
              (loc gen-location))
-            (let ((result (make-env loc free-vars)))
+            (let ((result (make-env loc free-vars '())))
               (assert-ast result
                           (a-quote (list))
                           (assert (generated? result))
                           (assert (get-location result) loc))))
      (check ((free-vars (gen-list 1 gen-valid-symbol))
              (loc gen-location))
-            (let ((result (make-env loc free-vars)))
+            (let ((result (make-env loc free-vars '())))
               (assert (ast-symbol-value result) (car free-vars))
               (assert (get-location result) loc)))
      (check ((free-vars (gen-list 2 gen-valid-symbol))
              (loc gen-location))
-            (let ((result (make-env loc free-vars)))
+            (let ((result (make-env loc free-vars '())))
               (assert-ast result
                           (primop-app '&cons ,first ,second)
                           (assert (ast-symbol-value first) (car free-vars))
@@ -25,10 +25,20 @@
                           (assert (get-location result) loc))))
      (check ((free-vars (gen-list (gen-integer 3 5) gen-valid-symbol))
              (loc gen-location))
-            (let ((result (make-env loc free-vars)))
+            (let ((result (make-env loc free-vars '())))
               (assert-ast result
                           (primop-app '&make-env . ,args)
                           (assert (map ast-symbol-value args) free-vars)
+                          (assert (get-location result) loc)))))
+
+ (it "should re-use bound names to preserve proper source locations"
+     (check ((closures (gen-list (gen-integer 3 5) gen-valid-symbol-node))
+             (free-vars (map ast-symbol-value closures))
+             (loc gen-location))
+            (let ((result (make-env loc free-vars closures)))
+              (assert-ast result
+                          (primop-app '&make-env . ,args)
+                          (assert args closures)
                           (assert (get-location result) loc))))))
 
 (describe
@@ -82,7 +92,7 @@
  (it "should correctly patch empty envs"
      (check ((env-var gen-valid-symbol-node)
              (loc gen-location))
-            (let* ((env (make-env loc '()))
+            (let* ((env (make-env loc '() '()))
                    (result (make-env-setters env env-var '() '() '())))
               (assert (empty? result)))))
 
@@ -92,7 +102,7 @@
              (closures (gen-arg-list (gen-integer 1 2)))
              (bound (apply set (map ast-symbol-value closures)))
              (free bound))
-            (let* ((env (make-env loc free))
+            (let* ((env (make-env loc free closures))
                    (result (make-env-setters env env-var free bound closures)))
               (assert (length result) (length closures))
               (map (lambda (setter var)
@@ -110,7 +120,7 @@
              (bound (apply set (map ast-symbol-value closures)))
              (extra-free (gen-list (gen-integer 0 5) gen-valid-symbol))
              (free (apply set (append bound extra-free))))
-            (let* ((env (make-env loc free))
+            (let* ((env (make-env loc free closures))
                    (result (make-env-setters env env-var free bound closures)))
               (assert (length result) (length closures))
               (map (lambda (setter var)

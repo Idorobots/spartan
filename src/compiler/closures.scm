@@ -33,7 +33,8 @@
     (let ((free (set-difference (get-free-vars expr)
                                 globals)))
       (recreate-closure expr
-                        (make-env (get-location expr) free)
+                        ;; NOTE This is an anonymous function, so we can't really reuse it's names location for the environment.
+                        (make-env (get-location expr) free '())
                         (flip make-env-subs free)
                         globals)))
    ((fix ,bindings ,body)
@@ -41,12 +42,6 @@
            (env-var (at loc (make-gensym-node 'env)))
            (free (set-difference (set-sum (map get-free-vars bindings))
                                  globals))
-           (bound (get-bound-vars expr))
-           (full-env (make-env loc free))
-           ;; NOTE So that we don't reference undefined (yet) variables.
-           (actual-env (substitute (map (flip cons (compose make-nil get-location)) bound)
-                                   full-env))
-           (env-binding (at loc (make-binding-node env-var actual-env)))
            (env-subs (flip make-env-subs free))
            (closures (map (lambda (b)
                             (ast-update b 'val
@@ -56,7 +51,14 @@
                                                             env-subs
                                                             globals))))
                           bindings))
-           (setters (make-env-setters full-env env-var free bound (map ast-binding-var closures)))
+           (closure-vars (map ast-binding-var closures))
+           (bound (get-bound-vars expr))
+           (full-env (make-env loc free closure-vars))
+           ;; NOTE So that we don't reference undefined (yet) variables.
+           (actual-env (substitute (map (flip cons (compose make-nil get-location)) bound)
+                                   full-env))
+           (env-binding (at loc (make-binding-node env-var actual-env)))
+           (setters (make-env-setters full-env env-var free bound closure-vars))
            (converted-body (convert-closures body globals)))
       (replace expr
                (generated
@@ -103,30 +105,34 @@
              (make-symbol-node primop)))
         args))))
 
-(define (make-env loc free)
+(define (make-env loc free closures)
   (case (length free)
     ((0)
      (make-nil loc))
     ((1)
-     (at loc
-         (generated
-          (make-symbol-node (car free)))))
+     (pick-matching-var loc (car free) closures))
     ((2)
      (make-primop-app loc
                       '&cons
                       (map (lambda (var)
-                             (at loc
-                                 (generated
-                                  (make-symbol-node var))))
+                             (pick-matching-var loc var closures))
                            free)))
     (else
      (make-primop-app loc
                       '&make-env
                       (map (lambda (var)
-                             (at loc
-                                 (generated
-                                  (make-symbol-node var))))
+                             (pick-matching-var loc var closures))
                            free)))))
+
+(define (pick-matching-var loc name vars)
+  (foldl (lambda (v acc)
+           (if (equal? (ast-symbol-value v) name)
+               v
+               acc))
+         (at loc
+             (generated
+              (make-symbol-node name)))
+         vars))
 
 (define (make-env-subs env free)
   (case (length free)
