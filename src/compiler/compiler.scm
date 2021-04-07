@@ -41,9 +41,9 @@
                annotate-free-vars
                annotate-bindings
                closure-convert
-               adapt-ast
-               mangle)))
+               symbol-rename
+               generate-target-code)))
 
-;; FIXME This should be removed once all the phases use the new AST.
-(define (adapt-ast env)
+(define (generate-target-code env)
+  ;; FIXME Actually implement a proper code-gen.
   (ast->plain (env-get env 'ast)))
