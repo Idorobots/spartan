@@ -78,6 +78,51 @@
                           (assert converted-env3 env))))))
 
 (describe
+ "make-env-setters"
+ (it "should correctly patch empty envs"
+     (check ((env-var gen-valid-symbol-node)
+             (loc gen-location))
+            (let* ((env (make-env loc '()))
+                   (result (make-env-setters env env-var '() '() '())))
+              (assert (empty? result)))))
+
+  (it "should correctly patch shared envs encoded as pairs and raw values"
+     (check ((env-var gen-valid-symbol-node)
+             (loc gen-location)
+             (closures (gen-arg-list (gen-integer 1 2)))
+             (bound (apply set (map ast-symbol-value closures)))
+             (free bound))
+            (let* ((env (make-env loc free))
+                   (result (make-env-setters env env-var free bound closures)))
+              (assert (length result) (length closures))
+              (map (lambda (setter var)
+                     (assert-ast setter
+                                 (primop-app '&set-closure-env! ,converted-closure-var ,converted-env)
+                                 (assert (ast-symbol-value converted-closure-var) var)
+                                 (assert converted-env env)))
+                   result
+                   bound))))
+
+ (it "should correctly patch large shared envs"
+     (check ((env-var gen-valid-symbol-node)
+             (loc gen-location)
+             (closures (gen-arg-list (gen-integer 3 5)))
+             (bound (apply set (map ast-symbol-value closures)))
+             (extra-free (gen-list (gen-integer 0 5) gen-valid-symbol))
+             (free (apply set (append bound extra-free))))
+            (let* ((env (make-env loc free))
+                   (result (make-env-setters env env-var free bound closures)))
+              (assert (length result) (length closures))
+              (map (lambda (setter var)
+                     (assert-ast setter
+                                 (primop-app '&set-env! ,converted-env-var ,converted-offset ,converted-var)
+                                 (assert converted-env-var env-var)
+                                 (assert (ast-number-value converted-offset) (offset var free))
+                                 (assert (ast-symbol-value converted-var) var)))
+                   result
+                   bound)))))
+
+(describe
  "closure-convert"
  (it "should convert application correctly"
      (check ((app gen-valid-app-node))

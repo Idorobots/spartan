@@ -43,6 +43,7 @@
                                  globals))
            (bound (get-bound-vars expr))
            (full-env (make-env loc free))
+           ;; NOTE So that we don't reference undefined (yet) variables.
            (actual-env (substitute (map (flip cons (compose make-nil get-location)) bound)
                                    full-env))
            (env-binding (at loc (make-binding-node env-var actual-env)))
