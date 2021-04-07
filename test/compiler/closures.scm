@@ -231,89 +231,160 @@
                       (get-location node)))))
 
  (it "should convert fix correctly"
-     todo))
+     (check ((sym1 gen-valid-symbol)
+             (var1 (gen-symbol-node sym1))
+             (arg1 gen-valid-symbol-node)
+             (lambda1 (gen-lambda-node (list arg1) var1))
+             (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
+             (body gen-simple-node)
+             (node (gen-with-bv (gen-fix-node (list b1) body) (set sym1))))
+            (gensym-reset!)
+            (let ((result (convert-closures node (set))))
+              (assert-ast result
+                          (let ((binding 'env1 (a-quote (list))))
+                            (let ((binding ,converted-var1
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env2 ,converted-arg)
+                                                         'env2))))
+                              (do (primop-app '&set-closure-env!
+                                              ,converted-var2
+                                              ,converted-var3)
+                                  ,converted-body)))
+                          (assert converted-var1 var1)
+                          (assert converted-arg arg1)
+                          (assert converted-var2 var1)
+                          (assert converted-var3 var1)
+                          (assert converted-body body))
+              (assert (get-location result)
+                      (get-location node))
+              (assert (generated? result))))
 
-;; (describe
-;;  "old closure-convert"
-;;  (it "Converting fix works."
-;;      (gensym-reset!)
-;;      (assert (old-closure-convert '(fix ((foo (lambda () (foo))))
-;;                                     (foo 23))
-;;                               '())
-;;              '(let ((env2 '()))
-;;                 (let ((foo (&make-closure env2
-;;                                           (lambda (env1)
-;;                                             (&apply env1)))))
-;;                   (do (&set-closure-env! foo foo)
-;;                       (&apply foo 23)))))
-;;      (gensym-reset!)
-;;      (assert (old-closure-convert '(fix ((foo (lambda () (bar)))
-;;                                      (bar (lambda () (foo))))
-;;                                     (foo))
-;;                               '())
-;;              '(let ((env3 '())
-;;                     (env4 '()))
-;;                 (let ((foo (&make-closure env3
-;;                                           (lambda (env1)
-;;                                             (&apply env1))))
-;;                       (bar (&make-closure env4
-;;                                           (lambda (env2)
-;;                                             (&apply env2)))))
-;;                   (do (&set-closure-env! bar foo)
-;;                       (&set-closure-env! foo bar)
-;;                     (&apply foo))))))
+     (check ((sym1 gen-valid-symbol)
+             (var1 (gen-symbol-node sym1))
+             (arg1 gen-valid-symbol-node)
+             (lambda1 (gen-lambda-node (list arg1) var1))
+             (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
+             ;; NOTE This symbol needs to be lexicographically behind sym1 to make the test predictable.
+             (sym2 (string->symbol
+                    (string-append (symbol->string sym1)
+                                   "-2")))
+             (var2 (gen-symbol-node sym2))
+             (arg2 gen-valid-symbol-node)
+             (lambda2 (gen-lambda-node (list arg2) var2))
+             (b2 (gen-with-fv-bv (gen-binding-node var2 lambda2) (set sym2) (set sym2)))
+             (body gen-simple-node)
+             (node (gen-with-bv (gen-fix-node (list b1 b2) body) (set sym1 sym2))))
+            (gensym-reset!)
+            (let ((result (convert-closures node (set))))
+              (assert-ast result
+                          (let ((binding 'env1 (primop-app '&cons
+                                                           (a-quote (list))
+                                                           (a-quote (list)))))
+                            (let ((binding ,converted-var1
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env2 ,converted-arg1)
+                                                         (primop-app '&car 'env2))))
+                                  (binding ,converted-var2
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env3 ,converted-arg2)
+                                                         (primop-app '&cdr 'env3)))))
+                              (do (primop-app '&set-closure-env!
+                                              ,converted-var3
+                                              (primop-app '&cons
+                                                          ,converted-var4
+                                                          ,converted-var5))
+                                  (primop-app '&set-closure-env!
+                                              ,converted-var6
+                                              (primop-app '&cons
+                                                          ,converted-var7
+                                                          ,converted-var8))
+                                ,converted-body)))
+                          (map (lambda (var)
+                                 (assert var var1))
+                               (list converted-var1
+                                     converted-var3
+                                     converted-var4
+                                     converted-var7))
+                          (map (lambda (var)
+                                 (assert var var2))
+                               (list converted-var2
+                                     converted-var5
+                                     converted-var6
+                                     converted-var8))
+                          (assert converted-arg1 arg1)
+                          (assert converted-arg2 arg2)
+                          (assert converted-body body))
+              (assert (get-location result)
+                      (get-location node))
+              (assert (generated? result))))
 
-;;  (it "Complex examples work."
-;;      (gensym-reset!)
-;;      (assert (old-closure-convert
-;;               '(lambda (n cont4)
-;;                  (fact
-;;                   fact
-;;                   (lambda (value11)
-;;                     (let ((fact value11))
-;;                       23))))
-;;               '())
-;;              '(&make-closure
-;;                fact
-;;                (lambda (env2 n cont4)
-;;                  (&apply
-;;                   env2
-;;                   env2
-;;                   (&make-closure
-;;                    '()
-;;                    (lambda (env1 value11)
-;;                      (let ((fact value11))
-;;                        23)))))))
-;;      (gensym-reset!)
-;;      (assert (old-closure-convert
-;;               '(let ((foo (lambda (foo bar)
-;;                             (lambda ()
-;;                               (let ((bar (bar foo bar)))
-;;                                 bar))))
-;;                      (bar (lambda (foo bar)
-;;                             (lambda ()
-;;                               (let ((foo (foo foo bar)))
-;;                                 foo)))))
-;;                  (let ((foo (foo foo bar))
-;;                        (bar (bar foo bar)))
-;;                    (list (foo) (bar))))
-;;               '())
-;;              '(let ((foo (&make-closure
-;;                           '()
-;;                           (lambda (env2 foo bar)
-;;                             (&make-closure
-;;                              (&cons bar foo)
-;;                              (lambda (env1)
-;;                                (let ((bar (&apply (&car env1) (&cdr env1) (&car env1))))
-;;                                  bar))))))
-;;                     (bar (&make-closure
-;;                           '()
-;;                           (lambda (env4 foo bar)
-;;                             (&make-closure
-;;                              (&cons bar foo)
-;;                              (lambda (env3)
-;;                                (let ((foo (&apply (&cdr env3) (&cdr env3) (&car env3))))
-;;                                  foo)))))))
-;;                 (let ((foo (&apply foo foo bar))
-;;                       (bar (&apply bar foo bar)))
-;;                   (&apply list (&apply foo) (&apply bar)))))))
+     (define (add-suffix symbol suffix)
+       (string->symbol
+        (string-append (symbol->string symbol)
+                       suffix)))
+
+     (check ((sym1 gen-valid-symbol)
+             (var1 (gen-symbol-node sym1))
+             (arg1 gen-valid-symbol-node)
+             (lambda1 (gen-lambda-node (list arg1) var1))
+             (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
+             ;; NOTE This symbol needs to be lexicographically behind sym1 to make the test predictable.
+             (sym2 (add-suffix sym1 "-2"))
+             (var2 (gen-symbol-node sym2))
+             (arg2 gen-valid-symbol-node)
+             (lambda2 (gen-lambda-node (list arg2) var2))
+             (b2 (gen-with-fv-bv (gen-binding-node var2 lambda2) (set sym2) (set sym2)))
+             ;; NOTE This symbol needs to be lexicographically behind sym2 to make the test predictable.
+             (sym3 (add-suffix sym1 "-3"))
+             (var3 (gen-symbol-node sym3))
+             (arg3 gen-valid-symbol-node)
+             (lambda3 (gen-lambda-node (list arg3) var3))
+             ;; NOTE This symbol needs to be lexicographically behind sym3 to make the test predictable.
+             (extra-fv (add-suffix sym1 "-3-fv"))
+             (b3 (gen-with-fv-bv (gen-binding-node var3 lambda3) (set sym3 extra-fv) (set sym3)))
+             (body gen-simple-node)
+             (node (gen-with-bv (gen-fix-node (list b1 b2 b3) body) (set sym1 sym2 sym3))))
+            (gensym-reset!)
+            (let ((result (convert-closures node (set))))
+              (assert-ast result
+                          (let ((binding 'env1 (primop-app '&make-env
+                                                           (a-quote (list))
+                                                           (a-quote (list))
+                                                           (a-quote (list))
+                                                           ,converted-extra-fv)))
+                            (let ((binding ,converted-var1
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env2 ,converted-arg1)
+                                                         (primop-app '&env-ref 'env2 '0))))
+                                  (binding ,converted-var2
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env3 ,converted-arg2)
+                                                         (primop-app '&env-ref 'env3 '1))))
+                                  (binding ,converted-var3
+                                           (primop-app '&make-closure
+                                                       'env1
+                                                       (lambda ('env4 ,converted-arg3)
+                                                         (primop-app '&env-ref 'env4 '2)))))
+                              (do (primop-app '&set-env! 'env1 '0 ,converted-var4)
+                                  (primop-app '&set-env! 'env1 '1 ,converted-var5)
+                                  (primop-app '&set-env! 'env1 '2 ,converted-var6)
+                                  ,converted-body)))
+                          (assert converted-var1 var1)
+                          (assert converted-var4 var1)
+                          (assert converted-var2 var2)
+                          (assert converted-var5 var2)
+                          (assert converted-var3 var3)
+                          (assert converted-var6 var3)
+                          (assert (ast-symbol-value converted-extra-fv) extra-fv)
+                          (assert converted-arg1 arg1)
+                          (assert converted-arg2 arg2)
+                          (assert converted-arg3 arg3)
+                          (assert converted-body body))
+              (assert (get-location result)
+                      (get-location node))
+              (assert (generated? result))))))
