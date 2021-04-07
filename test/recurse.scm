@@ -107,4 +107,50 @@
                                                           (- n 1))))))
                         (bar (lazy-take lazy-23 5)))
                  bar))
-             '(23 23 23 23 23))))
+             '(23 23 23 23 23)))
+
+ (it "handles large shared env"
+     (assert (run
+              ;; env free-vars: var foo bar baz
+              '(letrec ((var (ref '()))
+                        ;; free-vars: bar, var
+                        (foo (lambda (x)
+                               (let ((v (deref var)))
+                                 (assign! var (cons x v))
+                                 (when (nil? v)
+                                   (bar 23)))))
+                        ;; free-vars: baz var
+                        (bar (lambda (x)
+                               (assign! var (cons x (deref var)))
+                               (baz 5)))
+                        ;; free-vars: foo var
+                        (baz (lambda (x)
+                               (assign! var (cons x (deref var)))
+                               (foo 13))))
+                 (foo 7)
+                 (deref var)))
+             '(13 5 23 7)))
+
+ (it "handles cons shared env"
+     (assert (run
+              ;; env free-vars: var foo
+              '(letrec ((var (ref '()))
+                        ;; free-vars: foo var
+                        (foo (lambda (x)
+                               (let ((v (deref var)))
+                                 (assign! var (cons x v))
+                                 (when (nil? v)
+                                   (foo 23))))))
+                 (foo 7)
+                 (deref var)))
+             '(23 7)))
+
+ (it "handles raw value shared env"
+     (assert (run
+              ;; env & fun free-vars: foo
+              '(letrec ((foo (lambda (x)
+                               (if false
+                                   (foo 23)
+                                   x))))
+                 (foo 7)))
+             7)))
