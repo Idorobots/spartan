@@ -4,7 +4,7 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 (load "compiler/errors.scm")
 (load "compiler/freevars.scm") ;; FIXME This is only imported for get-fv.
 

@@ -1,7 +1,8 @@
+;; Bindings analysis
 
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 
 (define (annotate-bindings env)
   (env-update env 'ast (partial analyze-bindings #f)))

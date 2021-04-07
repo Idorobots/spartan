@@ -2,7 +2,7 @@
 
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 
 (define (annotate-free-vars env)
   (env-update env 'ast compute-free-vars))

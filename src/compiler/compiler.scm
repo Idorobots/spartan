@@ -1,7 +1,7 @@
 ;; The compiler
 
 (load "compiler/env.scm")
-(load "compiler/tree-ast.scm")
+(load "compiler/ast.scm")
 
 ;; The frontend
 (load "compiler/parser.scm")
