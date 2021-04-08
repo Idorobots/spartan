@@ -35,7 +35,7 @@
     ((quasiquote)
      (ast-update expr 'value elaborate-quoted))
     ((unquote unquote-splicing)
-     (fail-unquote expr))
+     (ast-update expr 'value elaborate-unquoted))
     ((primop-app)
      (ast-update expr 'args (partial map elaborate-unquoted)))
     ((app)
@@ -63,12 +63,6 @@
               'args
               (partial map elaborate-unquoted)))
 
-(define (fail-unquote expr)
-  (raise-compilation-error
-   expr
-   ;; NOTE Misplaced `<error>`, haha.
-   (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
-
 (define (reconstruct-syntax-forms expr)
   (let ((values (ast-list-values expr)))
     (if (and (not (empty? values))
@@ -85,8 +79,7 @@
           ((quote quasiquote)
            (reconstruct-quote expr))
           ((unquote unquote-splicing)
-           (fail-unquote
-            (reconstruct-unquote expr)))
+           (reconstruct-unquote expr))
           ((define)
            (reconstruct-def expr))
           (else
