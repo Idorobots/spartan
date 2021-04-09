@@ -73,10 +73,17 @@
   (lambda (rand)
     (at (sample gen-location rand)
         (make-list-node
-         ((gen-list gen-max-size
-                    ;; NOTE To avoid generating huge objects.
-                    gen-simple-node)
-          rand)))))
+         (sample (gen-list gen-max-size
+                           ;; NOTE To avoid generating huge objects.
+                           gen-simple-node)
+                 rand)))))
+
+(define (gen-specific-list-node . gen-contents)
+  (lambda (rand)
+    (at (sample gen-location rand)
+        (make-list-node
+         (map (flip sample rand)
+              gen-contents)))))
 
 (define (gen-one-of . alternatives)
   (lambda (rand)
