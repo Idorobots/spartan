@@ -8,17 +8,23 @@
 (define (quasiquote-expand env)
   (let ((result (collect-errors (env-get env 'errors)
                                 (lambda ()
-                                  (map-ast expand-quasiquote
-                                           id
-                                           (env-get env 'ast))))))
+                                  (expand-quasiquote (env-get env 'ast))))))
     (env-set env
              'ast (car result)
              'errors (cadr result))))
 
 (define (expand-quasiquote expr)
-  (if (quasiquote-node? expr)
-      (expand-no-splicing (ast-quoted-expr expr) expr)
-      expr))
+  (case (get-type expr)
+    ((quote) expr)
+    ((quasiquote)
+     (expand-no-splicing (ast-quoted-expr expr)
+                         expr))
+    ((unquote unquote-splicing)
+     (raise-compilation-error
+      expr
+      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
+    (else
+     (walk-ast expand-quasiquote expr))))
 
 (define (expand-no-splicing expr context)
   (if (unquote-splicing-node? expr)
@@ -29,7 +35,8 @@
 
 (define (expand-splicing expr context)
   (case (get-type expr)
-    ((quasiquote number string) expr)
+    ((quote number string) expr)
+    ((quasiquote) (expand-quasiquote expr))
     ((unquote unquote-splicing) (ast-quoted-expr expr))
     ((symbol) (reconstruct-quoted-value
                expr

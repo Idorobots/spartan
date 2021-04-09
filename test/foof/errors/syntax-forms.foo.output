@@ -10,15 +10,7 @@
 3 |(unquote)
     ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(3,1): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
-3 |(unquote)
-    ^~~~~~
-
 ../test/foof/errors/syntax-forms.foo(4,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
-4 |(unquote-splicing)
-    ^~~~~~
-
-../test/foof/errors/syntax-forms.foo(4,1): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
 4 |(unquote-splicing)
     ^~~~~~
 
@@ -42,15 +34,7 @@
 11 |(unquote 23 4)
      ^~~~~~
 
-../test/foof/errors/syntax-forms.foo(11,1): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
-11 |(unquote 23 4)
-     ^~~~~~
-
 ../test/foof/errors/syntax-forms.foo(12,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
-12 |(unquote-splicing 1 2 3)
-     ^~~~~~
-
-../test/foof/errors/syntax-forms.foo(12,1): Misplaced `<error>`, expected to be enclosed within a `quasiquote`:
 12 |(unquote-splicing 1 2 3)
      ^~~~~~
 
@@ -274,4 +258,4 @@
 82 |`,@wat
      ^~~~~~
 
-Compilation aborted due to 69 errors.
+Compilation aborted due to 65 errors.

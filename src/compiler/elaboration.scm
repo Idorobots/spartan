@@ -35,7 +35,7 @@
     ((quasiquote)
      (ast-update expr 'value elaborate-quoted))
     ((unquote unquote-splicing)
-     (fail-unquote expr))
+     (ast-update expr 'value elaborate-unquoted))
     ((primop-app)
      (ast-update expr 'args (partial map elaborate-unquoted)))
     ((app)
@@ -46,14 +46,17 @@
     (else (compiler-bug "Unrecognized expression passed to elaborate-unquoted:" expr))))
 
 (define (elaborate-quoted expr)
+  ;; NOTE We don't want the value within quasiquote to be elaborated.
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
     ((unquote unquote-splicing)
      (ast-update expr 'value elaborate-unquoted))
     ((list)
-     (let ((rec (maybe-reconstruct-syntax-forms expr)))
-       (if rec
-           (elaborate-quoted rec)
+     (let ((values (ast-list-values expr)))
+       (if (and (not (empty? values))
+                (is-type? (car values) 'symbol)
+                (member (ast-symbol-value (car values)) '(unquote unquote-splicing)))
+           (elaborate-quoted (reconstruct-unquote expr))
            (ast-update expr 'value (partial map elaborate-quoted)))))
     (else (compiler-bug "Unrecognized expression passed to elaborate-quoted:" expr))))
 
@@ -62,12 +65,6 @@
                                      (valid-app-procedure (elaborate-unquoted op))))
               'args
               (partial map elaborate-unquoted)))
-
-(define (fail-unquote expr)
-  (raise-compilation-error
-   expr
-   ;; NOTE Misplaced `<error>`, haha.
-   (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
 
 (define (reconstruct-syntax-forms expr)
   (let ((values (ast-list-values expr)))
@@ -85,20 +82,12 @@
           ((quote quasiquote)
            (reconstruct-quote expr))
           ((unquote unquote-splicing)
-           (fail-unquote
-            (reconstruct-unquote expr)))
+           (reconstruct-unquote expr))
           ((define)
            (reconstruct-def expr))
           (else
            (reconstruct-app expr)))
         (reconstruct-app expr))))
-
-(define (maybe-reconstruct-syntax-forms expr)
-  (let ((values (ast-list-values expr)))
-    (and (not (empty? values))
-         (is-type? (car values) 'symbol)
-         (member (ast-symbol-value (car values)) '(unquote unquote-splicing))
-         (reconstruct-unquote expr))))
 
 (define (reconstruct-if expr)
   (ast-case expr
