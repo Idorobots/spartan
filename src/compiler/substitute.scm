@@ -2,36 +2,46 @@
 
 (load "compiler/utils/utils.scm")
 
-(define (substitute subs expr)
+(define (substitute-symbols subs expr)
+  (substitute (lambda (subs expr kont)
+                (if (symbol-node? expr)
+                    (let ((s (assoc (ast-symbol-value expr) subs)))
+                      (if s
+                          ((cdr s) expr)
+                          expr))
+                    (kont expr)))
+              subs
+              expr))
+
+(define (substitute f subs expr)
   (if (empty? subs)
       expr
-      (case (get-type expr)
-        ((symbol)
-         (let ((s (assoc (safe-symbol-value expr) subs)))
-           (if s
-               ((cdr s) expr)
-               expr)))
-        ((lambda)
-         (ast-update expr
-                     'body (partial substitute
-                                    (filter-subs subs
-                                                 (get-bound-vars expr)))))
-        ((let)
-         (let ((unbound-subs (filter-subs subs
-                                          (get-bound-vars expr))))
-           (ast-update (ast-update expr 'body (partial substitute unbound-subs))
-                       'bindings
-                       (partial map (partial substitute subs)))))
-        ((letrec fix)
-         (let ((unbound-subs (filter-subs subs
-                                          (get-bound-vars expr))))
-           (ast-update (ast-update expr 'body (partial substitute unbound-subs))
-                       'bindings
-                       (partial map (partial substitute unbound-subs)))))
-        ((binding)
-         (ast-update expr 'val (partial substitute subs)))
-        (else
-         (walk-ast (partial substitute subs) expr)))))
+      (f subs
+         expr
+         (lambda (expr)
+           (case (get-type expr)
+             ((lambda)
+              (ast-update expr
+                          'body (partial substitute
+                                         f
+                                         (filter-subs subs
+                                                      (get-bound-vars expr)))))
+             ((let)
+              (let ((unbound-subs (filter-subs subs
+                                               (get-bound-vars expr))))
+                (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
+                            'bindings
+                            (partial map (partial substitute f subs)))))
+             ((letrec fix)
+              (let ((unbound-subs (filter-subs subs
+                                               (get-bound-vars expr))))
+                (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
+                            'bindings
+                            (partial map (partial substitute f unbound-subs)))))
+             ((binding)
+              (ast-update expr 'val (partial substitute f subs)))
+             (else
+              (walk-ast (partial substitute f subs) expr)))))))
 
 (define (filter-subs subs vars)
   (filter (lambda (s)

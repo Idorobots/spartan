@@ -55,8 +55,9 @@
            (bound (get-bound-vars expr))
            (full-env (make-env loc free closure-vars))
            ;; NOTE So that we don't reference undefined (yet) variables.
-           (actual-env (substitute (map (flip cons (compose make-nil get-location)) bound)
-                                   full-env))
+           (actual-env (substitute-symbols
+                        (map (flip cons (compose make-nil get-location)) bound)
+                        full-env))
            (env-binding (at loc (make-binding-node env-var actual-env)))
            (setters (make-env-setters full-env env-var free bound closure-vars))
            (converted-body (convert-closures body globals)))
@@ -85,8 +86,9 @@
                                     (at loc
                                         (make-lambda-node
                                          (cons env-var formals)
-                                         (substitute (make-subs env-var)
-                                                     (convert-closures body globals)))))))))
+                                         (substitute-symbols
+                                          (make-subs env-var)
+                                          (convert-closures body globals)))))))))
 
 (define (make-nil loc)
   (at loc

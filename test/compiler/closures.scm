@@ -52,7 +52,7 @@
              (node (apply gen-specific-do-node nodes))
              (free-vars (map ast-symbol-value nodes)))
             (let* ((subs (make-env-subs env free-vars))
-                   (result (substitute subs node)))
+                   (result (substitute-symbols subs node)))
               (assert-ast result
                           (do ,converted-var)
                           (assert converted-var
@@ -63,7 +63,7 @@
              (node (apply gen-specific-do-node nodes))
              (free-vars (map ast-symbol-value nodes)))
             (let* ((subs (make-env-subs env free-vars))
-                   (result (substitute subs node)))
+                   (result (substitute-symbols subs node)))
               (assert-ast result
                           (do (primop-app '&car ,converted-var1)
                               (primop-app '&cdr ,converted-var2))
@@ -74,7 +74,7 @@
              (node (apply gen-specific-do-node nodes))
              (free-vars (map ast-symbol-value nodes)))
             (let* ((subs (make-env-subs env free-vars))
-                   (result (substitute subs node)))
+                   (result (substitute-symbols subs node)))
               (assert-ast result
                           (do (primop-app '&env-ref ,converted-env1 '0)
                               (primop-app '&env-ref ,converted-env2 '1)
