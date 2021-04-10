@@ -17,15 +17,19 @@
 
 See [here](test/foof) for some usage examples.
 
-The compiler is far from being useful, it doesn't even have a code generator yet, and it definitely doesn't optimize anything. It loosely follows the nanopass framework, with currently implemented passes being:
+The compiler is far from being useful, it doesn't even have a code generator yet, and it performs only rudimentary low-hanging fruit optimizations. It loosely follows the nanopass framework, with currently implemented passes being:
 
 - parsing,
 - built-in macro expansion,
 - syntax tree elaboration,
 - implicit body handling,
 - quasiquote expansion,
+- free-variable annotation,
+- binding form analysis,
 - syntax tree validation,
+- `letrec` binding reordering,
 - `letrec` conversion,
+- built-in function inlining,
 - continuation passing style transformation,
 - flat closure conversion,
 - tagret-safe name mangling.
