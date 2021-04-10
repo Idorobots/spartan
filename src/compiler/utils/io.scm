@@ -1,5 +1,11 @@
 ;; File IO
 
+(define (println . args)
+  (if (> (length args) 1)
+      (display (apply format args))
+      (display (car args)))
+  (newline))
+
 (define (spit filename content)
   (with-output-to-file filename
     (lambda ()
