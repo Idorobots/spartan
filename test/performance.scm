@@ -38,7 +38,7 @@
  (it "compiler"
      (test-perf
       "../test/compiler/compiler.scm.perf" 2.5
-      (let ((inputs (map build-input-program (iota 0 10 2))))
+      (let ((inputs (map build-input-program (iota 1 10 2))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
                (collect-garbage 'major)
