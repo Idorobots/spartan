@@ -66,14 +66,16 @@
             (gensym-reset!)
             (let ((result (cpc node id)))
               (assert-ast result
-                          (do (primop-app ,converted-op1 ,converted-arg1)
-                              (primop-app ,converted-op2 ,converted-arg2))
+                          (let ((binding 'value1 (primop-app ,converted-op1 ,converted-arg1)))
+                            (let ((binding 'value2 (primop-app ,converted-op2 ,converted-arg2)))
+                              (do 'value1
+                                  'value2)))
                           (assert converted-op1 op1)
                           (assert converted-op2 op2)
                           (assert converted-arg1 arg1)
                           (assert converted-arg2 arg2))
               (assert (get-location result)
-                      (get-location node)))))
+                      (get-location app1)))))
 
  (it "converts lambda correctly"
      (check ((arg gen-valid-symbol-node)
@@ -115,7 +117,8 @@
             (gensym-reset!)
             (let ((result (cpc node id)))
               (assert-ast result
-                          (primop-app ,converted-op . ,converted-args)
+                          (let ((binding 'value1 (primop-app ,converted-op . ,converted-args)))
+                            'value1)
                           (assert converted-op op)
                           (assert converted-args args))
               (assert (get-location result)
@@ -130,8 +133,9 @@
               (assert-ast result
                           (app ,converted-op1
                                ,converted-arg1
-                               (lambda ('value1)
-                                 (primop-app ,converted-op2 'value1)))
+                               (lambda ('value2)
+                                 (let ((binding 'value1 (primop-app ,converted-op2 'value2)))
+                                   'value1)))
                           (assert converted-op1 op1)
                           (assert converted-op2 op2)
                           (assert converted-arg1 arg1))

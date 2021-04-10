@@ -28,10 +28,10 @@
                            '(car cadr cdr cddr list cons append concat
                              equal? nil? not
                              * + - / = < zero? ;; random ;; FIXME Some tests override this function.
-                             ref deref ;; assign! ;; FIXME Causes loops in letrec-conversion tests.
-                             ;; call/current-continuation call/reset call/shift call/handler raise
-                             self ;; sleep send spawn recv ;; FIXME Cause odd behaviour in Actor Model tests.
-                             ;; assert! signal! retract! select notify-whenever ;; FIXME Causes weird behaviour of the RBS tests.
-                             ;; display newline debug ;; FIXME Causes nothing to print for some examples.
+                             ref deref assign!
+                             ;; call/current-continuation call/reset call/shift call/handler raise ;; NOTE These are not defined.
+                             self send spawn ;; sleep recv ;; FIXME sleep is overriden by some tests.
+                             assert! signal! retract! select ;; notify-whenever ;; NOTE This is not defined as a separate function.
+                             display newline debug
                              ))))
               expr))

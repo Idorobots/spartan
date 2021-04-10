@@ -88,9 +88,15 @@
                                                 (make-yield-node ct s)))))))))
 
 (define (cpc-primop-app expr kont)
-  (let ((args (ast-primop-app-args expr)))
+  (let* ((args (ast-primop-app-args expr))
+         (loc (get-location expr))
+         (value (at loc (make-gensym-node 'value))))
     (cpc-sequence args
-                  (compose kont (partial ast-update expr 'args) constantly))))
+                  (lambda (args)
+                    ;; FIXME The let can be ommited for non-side effecting primops.
+                    (at loc
+                        (make-let-1-node value (ast-update expr 'args (constantly args))
+                                         (kont value)))))))
 
 (define (cpc-app expr kont)
   (let* ((loc (get-location expr))
