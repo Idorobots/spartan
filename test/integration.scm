@@ -32,7 +32,7 @@
                                '()))))
       (test-file "../test/foof/uprocs.foo")
       (test-file "../test/foof/uprocs2.foo" sort-lines)
-      (test-file "../test/foof/msgwait.foo") ;; FIXME Sometimes broken.
+      (test-file "../test/foof/msgwait.foo")
       (test-file "../test/foof/fibonacci2.foo")
       (test-file "../test/foof/errors2.foo")))
  (it "should support the RBS"
@@ -53,5 +53,5 @@
                                   (set! *random* 0.05))
                                 r)))))
       (test-file "../test/foof/rbs2.foo")
-      (test-file "../test/foof/rbs.foo") ;; FIXME Kinda broken.
+      (test-file "../test/foof/rbs.foo")
       (test-file "../test/foof/cep.foo"))))

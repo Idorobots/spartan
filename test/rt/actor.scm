@@ -22,7 +22,7 @@
 
  (it "Can retrieve own pid."
      (gensym-reset!)
-     (assert (run '(self)) 'pid3))
+     (assert (run '(self)) 'pid2))
 
  (ignore "Can retrieve current node."
           ;; There is no notion of a node yet.
@@ -102,4 +102,4 @@
      (gensym-reset!)
      (assert (run '(spawn (lambda ()
                             (* 1 (+ 2 3)))))
-             'pid10)))
+             'pid7)))

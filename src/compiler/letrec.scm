@@ -240,18 +240,19 @@
                                                    (make-do-node (append setters (list body))))))))))))
 
 (define (derefy refs expr)
-  (substitute (map (lambda (ref)
-                     (cons ref
-                           (lambda (expr)
-                             (free-vars (set ref 'deref)
-                                        (at (get-location expr)
-                                            (generated
-                                             (make-app-node (at (get-location expr)
-                                                                (generated
-                                                                 (make-symbol-node 'deref)))
-                                                            (list expr))))))))
-                   refs)
-              expr))
+  (substitute-symbols
+   (map (lambda (ref)
+          (cons ref
+                (lambda (expr)
+                  (free-vars (set ref 'deref)
+                             (at (get-location expr)
+                                 (generated
+                                  (make-app-node (at (get-location expr)
+                                                     (generated
+                                                      (make-symbol-node 'deref)))
+                                                 (list expr))))))))
+        refs)
+   expr))
 
 ;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
 

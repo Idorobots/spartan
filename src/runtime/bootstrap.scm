@@ -110,15 +110,19 @@
 (define __sleep (bootstrap wait))
 (define __self (bootstrap self))
 (define __send (bootstrap send))
+(define __spawn (bootstrap spawn))
 
-(define __recv (bootstrap
-                (lambda ()
+(define __recv (closurize
+                (lambda (cont)
                   (let ((r (recv)))
                     (if (car r)
-                        (cdr r)
-                        nil)))))
-
-(define __spawn (bootstrap spawn))
+                        ;; If a message is received, return the message.
+                        (&yield-cont cont (cdr r))
+                        ;; Else, setup a continuation that attempts to re-fetch the message.
+                        (&yield-cont (closurize
+                                      (lambda (_)
+                                        (&apply __recv cont)))
+                                     nil))))))
 
 (define __task_info (bootstrap task-info))
 (define __monitor (bootstrap (lambda (timeout)
@@ -132,12 +136,13 @@
 (define __retractBANG (bootstrap retract!))
 (define __select (bootstrap select))
 
-(define __notify_whenever (bootstrap
-                           (lambda (who pattern)
-                             (whenever pattern
-                                       ;; NOTE We can't use FOOF functions, since they yield execution.
-                                       (lambda (b)
-                                         (send who b))))))
+(define (notify-whenever who pattern)
+  (whenever pattern
+            ;; FIXME We can't use FOOF functions, since they yield execution.
+            (lambda (b)
+              (send who b))))
+
+(define __notify_whenever (bootstrap notify-whenever))
 
 ;; Misc:
 (define __display (bootstrap display))

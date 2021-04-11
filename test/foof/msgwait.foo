@@ -3,6 +3,5 @@
                       (display (cdr msg))
                       (send (car msg) " world!"))))))
   (send pid (cons (self) "Hello"))
-  (sleep 100)
   (display (recv))
   (newline))

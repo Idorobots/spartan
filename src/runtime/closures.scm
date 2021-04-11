@@ -2,13 +2,7 @@
 
 (define &make-env vector)
 
-(define &cons cons)
-
 (define &env-ref vector-ref)
-
-(define &car car)
-
-(define &cdr cdr)
 
 (define &set-env! vector-set!)
 
