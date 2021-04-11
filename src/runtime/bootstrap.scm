@@ -110,15 +110,19 @@
 (define __sleep (bootstrap wait))
 (define __self (bootstrap self))
 (define __send (bootstrap send))
+(define __spawn (bootstrap spawn))
 
-(define __recv (bootstrap
-                (lambda ()
+(define __recv (closurize
+                (lambda (cont)
                   (let ((r (recv)))
                     (if (car r)
-                        (cdr r)
-                        nil)))))
-
-(define __spawn (bootstrap spawn))
+                        ;; If a message is received, return the message.
+                        (&yield-cont cont (cdr r))
+                        ;; Else, setup a continuation that attempts to re-fetch the message.
+                        (&yield-cont (closurize
+                                      (lambda (_)
+                                        (&apply __recv cont)))
+                                     nil))))))
 
 (define __task_info (bootstrap task-info))
 (define __monitor (bootstrap (lambda (timeout)
