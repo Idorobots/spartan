@@ -12,26 +12,33 @@
 (define (inline-app-ops builtins expr)
   (substitute (lambda (subs expr kont)
                 (kont (ast-case expr
-                                ((app (symbol ,op) . ,args)
-                                 (if (assoc (ast-symbol-value op) subs)
-                                     (replace expr
-                                              (generated
-                                               (make-primop-app-node op args)))
-                                     expr))
-                                (else
-                                 expr))))
+                       ((app (symbol ,op) . ,args)
+                        (let ((b (assoc (ast-symbol-value op) subs)))
+                          (if b
+                              ((cdr b) expr)
+                              expr)))
+                       (else
+                        expr))))
               (map (lambda (b)
-                     (cons b id))
+                     (cons b
+                           (lambda (expr)
+                             (replace expr
+                                      (generated
+                                       (make-primop-app-node (ast-app-op expr)
+                                                             (ast-app-args expr)))))))
                    (set-intersection
                     builtins
                     (apply set
                            '(car cadr cdr cddr list cons append concat
                              equal? nil? not
-                             * + - / = < zero? ;; random ;; FIXME Some tests override this function.
+                             * + - / = < zero?
                              ref deref assign!
-                             ;; call/current-continuation call/reset call/shift call/handler raise ;; NOTE These are not defined.
-                             self send spawn ;; sleep recv ;; FIXME sleep is overriden by some tests.
-                             assert! signal! retract! select ;; notify-whenever ;; NOTE This is not defined as a separate function.
+                             self send spawn
+                             assert! signal! retract! select notify-whenever
                              display newline debug
+                             ;; NOTE These ones use the continuations, so they cannot be inlined.
+                             ;; call/current-continuation call/reset call/shift call/handler raise recv
+                             ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
+                             ;; sleep random
                              ))))
               expr))

@@ -132,12 +132,13 @@
 (define __retractBANG (bootstrap retract!))
 (define __select (bootstrap select))
 
-(define __notify_whenever (bootstrap
-                           (lambda (who pattern)
-                             (whenever pattern
-                                       ;; NOTE We can't use FOOF functions, since they yield execution.
-                                       (lambda (b)
-                                         (send who b))))))
+(define (notify-whenever who pattern)
+  (whenever pattern
+            ;; FIXME We can't use FOOF functions, since they yield execution.
+            (lambda (b)
+              (send who b))))
+
+(define __notify_whenever (bootstrap notify-whenever))
 
 ;; Misc:
 (define __display (bootstrap display))
