@@ -115,7 +115,7 @@
      (pick-matching-var loc (car free) closures))
     ((2)
      (make-primop-app loc
-                      '&cons
+                      'cons
                       (map (lambda (var)
                              (pick-matching-var loc var closures))
                            free)))
@@ -149,7 +149,7 @@
                                      accessor
                                      (list env)))))
           free
-          (list '&car '&cdr)))
+          (list 'car 'cdr)))
     (else
      (map (lambda (var)
             (cons var

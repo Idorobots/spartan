@@ -19,7 +19,7 @@
              (loc gen-location))
             (let ((result (make-env loc free-vars '())))
               (assert-ast result
-                          (primop-app '&cons ,first ,second)
+                          (primop-app 'cons ,first ,second)
                           (assert (ast-symbol-value first) (car free-vars))
                           (assert (ast-symbol-value second) (cadr free-vars))
                           (assert (get-location result) loc))))
@@ -65,8 +65,8 @@
             (let* ((subs (make-env-subs env free-vars))
                    (result (substitute-symbols subs node)))
               (assert-ast result
-                          (do (primop-app '&car ,converted-var1)
-                              (primop-app '&cdr ,converted-var2))
+                          (do (primop-app 'car ,converted-var1)
+                              (primop-app 'cdr ,converted-var2))
                           (assert converted-var1 env)
                           (assert converted-var2 env))))
      (check ((env gen-valid-symbol-node)
@@ -183,10 +183,10 @@
             (let ((result (convert-closures node '())))
               (assert-ast result
                           (primop-app '&make-closure
-                                      (primop-app '&cons . ,args)
+                                      (primop-app 'cons . ,args)
                                       (lambda ('env1)
-                                        (do (primop-app '&car 'env1)
-                                            (primop-app '&cdr 'env1))))
+                                        (do (primop-app 'car 'env1)
+                                            (primop-app 'cdr 'env1))))
                           (assert (map ast-symbol-value args) free-vars))
               (assert (get-location result)
                       (get-location node))))
@@ -278,27 +278,27 @@
             (gensym-reset!)
             (let ((result (convert-closures node (set))))
               (assert-ast result
-                          (let ((binding 'env1 (primop-app '&cons
+                          (let ((binding 'env1 (primop-app 'cons
                                                            (a-quote (list))
                                                            (a-quote (list)))))
                             (let ((binding ,converted-var1
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env2 ,converted-arg1)
-                                                         (primop-app '&car 'env2))))
+                                                         (primop-app 'car 'env2))))
                                   (binding ,converted-var2
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env3 ,converted-arg2)
-                                                         (primop-app '&cdr 'env3)))))
+                                                         (primop-app 'cdr 'env3)))))
                               (do (primop-app '&set-closure-env!
                                               ,converted-var3
-                                              (primop-app '&cons
+                                              (primop-app 'cons
                                                           ,converted-var4
                                                           ,converted-var5))
                                   (primop-app '&set-closure-env!
                                               ,converted-var6
-                                              (primop-app '&cons
+                                              (primop-app 'cons
                                                           ,converted-var7
                                                           ,converted-var8))
                                 ,converted-body)))
