@@ -51,6 +51,14 @@
 (define (ast-symbol-value node)
   (ast-get node 'value))
 
+(define (safe-symbol-value expr)
+  (cond ((symbol-node? expr)
+         (ast-symbol-value expr))
+        ((and (error-node? expr)
+              (symbol-node? (ast-error-expr expr)))
+         (ast-symbol-value (ast-error-expr expr)))
+        (else '<error>)))
+
 ;; String
 (define (make-string-node value)
   (ast-node 'type 'string 'value value))
@@ -148,6 +156,10 @@
 
 (define (get-self-recoursive binding)
   (ast-get* binding 'self-recoursive #f))
+
+(define (recoursive? bindings)
+  (or (> (length bindings) 1)
+      (some? get-self-recoursive bindings)))
 
 ;; Let
 (define (make-let-node bindings body)

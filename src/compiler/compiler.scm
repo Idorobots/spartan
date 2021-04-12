@@ -16,7 +16,8 @@
 (load "compiler/bindings.scm")
 (load "compiler/freevars.scm")
 (load "compiler/builtins.scm")
-(load "compiler/letrec.scm")
+(load "compiler/letrec-bindings.scm")
+(load "compiler/letrec-fix.scm")
 (load "compiler/cpc.scm")
 (load "compiler/closures.scm")
 (load "compiler/rename.scm")
@@ -37,7 +38,8 @@
                annotate-bindings
                validate
                report-errors
-               letrec-expand
+               reorder-letrec-bindings
+               fix-letrec
                inline-builtins
                continuation-passing-convert
                annotate-free-vars
