@@ -288,3 +288,31 @@
                         (let ((binding 'cont1 ,value)) ,body)
                         (assert value val)
                         (assert body bod)))))
+
+(describe
+ "safe-symbol-value"
+ (it "should always return a name"
+     (check ((name gen-valid-symbol)
+             (node (gen-symbol-node name)))
+            (assert (safe-symbol-value node) name))
+     (check ((name gen-valid-symbol)
+             (node (gen-symbol-node name))
+             (error (gen-error-node node)))
+            (assert (safe-symbol-value error) name))
+     (check ((error gen-random-error-node))
+            (unless (symbol-node? (ast-error-expr error))
+                (assert (safe-symbol-value error) '<error>)))))
+
+(describe
+ "recoursive?"
+ (it "should correctly assess recoursivity of binding groups"
+     (check ((var gen-valid-symbol)
+             (node (gen-symbol-node var))
+             (rec gen-complex-node)
+             (rec-binding (gen-self-recoursive (gen-binding-node node rec)))
+             (non-rec-binding gen-valid-binding-node)
+             (multiple-bindings (gen-binding-list (gen-integer 2 5))))
+            (assert (not (recoursive? '())))
+            (assert (not (recoursive? (list non-rec-binding))))
+            (assert (recoursive? (list rec-binding)))
+            (assert (recoursive? multiple-bindings)))))

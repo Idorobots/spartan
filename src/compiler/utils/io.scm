@@ -2,8 +2,8 @@
 
 (define (println . args)
   (if (> (length args) 1)
-      (display (apply format args))
-      (display (car args)))
+      (print (apply format args))
+      (print (car args)))
   (newline))
 
 (define (spit filename content)
