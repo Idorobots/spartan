@@ -21,7 +21,7 @@
 (define (elaborate-unquoted expr)
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
-    ((do)
+    ((do body)
      (ast-update expr 'exprs (partial map elaborate-unquoted)))
     ((if)
      (foldl (lambda (field acc)

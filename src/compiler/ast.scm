@@ -119,6 +119,18 @@
 (define (ast-do-exprs node)
   (ast-get node 'exprs))
 
+;; Implicit body
+(define (make-body-node exprs ctx)
+  (generated
+   (context ctx
+            (ast-node 'type 'body 'exprs exprs))))
+
+(define (body-node? node)
+  (is-type? node 'body))
+
+(define (ast-body-exprs node)
+  (ast-get node 'exprs))
+
 ;; Lambda
 (define (make-lambda-node formals body)
   (ast-node 'type 'lambda 'formals formals 'body body))
@@ -372,7 +384,7 @@
                 (ast-update acc field f))
               expr
               '(condition then else)))
-      ((do)
+      ((do body)
        (ast-update expr 'exprs mf))
       ((lambda)
        (ast-update (ast-update expr 'formals mf) 'body f))
@@ -408,6 +420,7 @@
                            (ast-if-then expr)
                            (ast-if-else expr)))
                ((do) (cons 'do (ast-do-exprs expr)))
+               ((body) (cons 'do (ast-body-exprs expr)))
                ((lambda) (list 'lambda (ast-lambda-formals expr) (ast-lambda-body expr)))
                ((let) (list 'let (ast-let-bindings expr)
                             (ast-let-body expr)))
@@ -504,6 +517,8 @@
                         (ast-list-matches? (ast-list-values expr) (cdr pattern))))
            ((do) (and (do-node? expr)
                       (ast-list-matches? (ast-do-exprs expr) (cdr pattern))))
+           ((body) (and (body-node? expr)
+                        (ast-list-matches? (ast-body-exprs expr) (cdr pattern))))
            ((if) (and (if-node? expr)
                       (unify-bindings
                        (unify-bindings
