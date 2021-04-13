@@ -5,8 +5,6 @@
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(load "compiler/passes/body.scm")
-
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
  '(Program
@@ -19,16 +17,7 @@
        (matches (if (= (length exprs) 1)
                     (car exprs)
                     (at (location start end)
-                        ;; FIXME Body needs at least one non-def expression.
-                        (wrap-with-do (cons (at (location end end)
-                                                (generated
-                                                 (make-quote-node
-                                                  (at (location end end)
-                                                      (generated
-                                                       (make-list-node
-                                                        '()))))))
-                                            exprs)
-                                      "Bad script")))
+                        (make-body-node exprs "Bad script")))
                 start
                 end))))
 
