@@ -7,8 +7,6 @@
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(load "compiler/passes/freevars.scm") ;; FIXME This is only imported for get-fv.
-
 (define (validate env)
   (let ((result (collect-errors (env-get env 'errors)
                                 (lambda ()
@@ -22,7 +20,7 @@
              'errors (cadr result))))
 
 (define (get-undefined-vars expr globals)
-  (set-difference (get-fv expr)
+  (set-difference (get-free-vars expr)
                   (apply set globals)))
 
 (define (validate-ast undefined unused expr)
@@ -31,7 +29,7 @@
     ((lambda)
      (let* ((bound (get-bound-vars expr))
             (unused (set-difference bound
-                                    (get-fv (ast-lambda-body expr)))))
+                                    (get-free-vars (ast-lambda-body expr)))))
        (ast-update (ast-update expr
                                'formals
                                (partial map
@@ -45,7 +43,7 @@
     ((let)
      (let* ((bound (get-bound-vars expr))
             (unused (set-difference bound
-                                    (get-fv (ast-let-body expr)))))
+                                    (get-free-vars (ast-let-body expr)))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map (partial validate-ast undefined unused)))
@@ -57,8 +55,8 @@
      (let* ((bound (get-bound-vars expr))
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
-                                    (set-union (get-fv (ast-letrec-body expr))
-                                               (set-sum (map get-fv
+                                    (set-union (get-free-vars (ast-letrec-body expr))
+                                               (set-sum (map get-free-vars
                                                              (ast-letrec-bindings expr)))))))
        (ast-update (ast-update expr
                                'bindings

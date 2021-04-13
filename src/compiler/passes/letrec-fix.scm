@@ -6,7 +6,7 @@
 (load "compiler/env.scm")
 (load "compiler/substitute.scm")
 
-(load "compiler/passes/freevars.scm") ;; FIXME Just for get-fv & compute-fix-fv
+(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-fix-fv
 (load "compiler/passes/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
 
 (define (fix-letrec env)
@@ -109,7 +109,7 @@
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
-                               (free-vars (set-union (get-fv val) (set 'assign! (safe-symbol-value var)))
+                               (free-vars (set-union (get-free-vars val) (set 'assign! (safe-symbol-value var)))
                                           (at (get-location val)
                                               (generated
                                                (make-app-node (at (get-location val)
@@ -123,8 +123,8 @@
                                (if (empty? setters)
                                    body
                                    ;; NOTE Also includes the `deref` comming from derefy.
-                                   (free-vars (set-union (set-insert (get-fv body) 'deref)
-                                                         (set-sum (map get-fv setters)))
+                                   (free-vars (set-union (set-insert (get-free-vars body) 'deref)
+                                                         (set-sum (map get-free-vars setters)))
                                               (at (get-location body)
                                                   (generated
                                                    (make-do-node (append setters (list body))))))))))))

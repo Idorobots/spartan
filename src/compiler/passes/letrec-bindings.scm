@@ -6,7 +6,7 @@
 (load "compiler/ast.scm")
 (load "compiler/env.scm")
 
-(load "compiler/passes/freevars.scm") ;; FIXME Just for get-fv, compute-let-fv & compute-letrec-fv
+(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-let-fv & compute-letrec-fv
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 
@@ -81,7 +81,7 @@
                          ;; NOTE So that we can process somewhat malformed expressions.
                          (list (safe-symbol-value (ast-binding-var b)) e))
                        (set-intersection vars
-                                         (get-fv (ast-binding-val b)))))
+                                         (get-free-vars (ast-binding-val b)))))
                 (ast-letrec-bindings expr)))))
 
 (define (derive-ordering expr)
