@@ -4,10 +4,10 @@
 
 (load "compiler/ast.scm")
 (load "compiler/env.scm")
-(load "compiler/freevars.scm") ;; FIXME Just for get-fv & compute-fix-fv
 (load "compiler/substitute.scm")
 
-(load "compiler/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
+(load "compiler/passes/freevars.scm") ;; FIXME Just for get-fv & compute-fix-fv
+(load "compiler/passes/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
 
 (define (fix-letrec env)
   (env-update env 'ast fixing-letrec))

@@ -1,13 +1,14 @@
 ;; Semantic elaboration.
 ;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
 
-(load "compiler/utils/errors.scm")
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
 (load "compiler/ast.scm")
-(load "compiler/body.scm")
+(load "compiler/errors.scm")
+
+(load "compiler/passes/errors.scm")
+(load "compiler/passes/body.scm") ;; FIXME For wrap-with-do
 
 (define (elaborate env)
   (let ((result (collect-errors (env-get env 'errors)

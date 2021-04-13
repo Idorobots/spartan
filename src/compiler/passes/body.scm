@@ -1,11 +1,12 @@
 ;; Implicit body handling.
 
 (load "compiler/utils/utils.scm")
-(load "compiler/utils/errors.scm")
 
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
 (load "compiler/ast.scm")
+(load "compiler/errors.scm")
+
+(load "compiler/passes/errors.scm")
 
 (define (body-expand env)
   (let ((result (collect-errors (env-get env 'errors)

@@ -4,6 +4,7 @@
 
 (load "compiler/env.scm")
 (load "compiler/ast.scm")
+(load "compiler/errors.scm")
 
 (define (quasiquote-expand env)
   (let ((result (collect-errors (env-get env 'errors)

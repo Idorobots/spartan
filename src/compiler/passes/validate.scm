@@ -6,7 +6,8 @@
 (load "compiler/env.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
-(load "compiler/freevars.scm") ;; FIXME This is only imported for get-fv.
+
+(load "compiler/passes/freevars.scm") ;; FIXME This is only imported for get-fv.
 
 (define (validate env)
   (let ((result (collect-errors (env-get env 'errors)

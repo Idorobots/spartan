@@ -2,9 +2,10 @@
 
 (load "compiler/peggen.scm")
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
 (load "compiler/ast.scm")
-(load "compiler/body.scm")
+(load "compiler/errors.scm")
+
+(load "compiler/passes/body.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser

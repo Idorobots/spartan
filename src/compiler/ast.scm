@@ -3,6 +3,8 @@
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/errors.scm")
+
 ;; Basic definitions
 
 (define (ast-node? node)
