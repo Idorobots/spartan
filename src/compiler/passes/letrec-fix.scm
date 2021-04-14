@@ -93,22 +93,20 @@
                                 (let* ((val (ast-binding-val b))
                                        (val-loc (get-location val)))
                                   (at val-loc
-                                      (generated
-                                       (make-primop-app-node 'ref
-                                                             (list (at val-loc
-                                                                       (generated
-                                                                        (make-quote-node
-                                                                         (at val-loc
-                                                                             (generated
-                                                                              (make-list-node '())))))))))))))))
+                                      (make-primop-app-node 'ref
+                                                            (list (at val-loc
+                                                                      (generated
+                                                                       (make-quote-node
+                                                                        (at val-loc
+                                                                            (generated
+                                                                             (make-list-node '()))))))))))))))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
                                (free-vars (set-insert (get-free-vars val) (safe-symbol-value var))
                                           (at (get-location val)
-                                              (generated
-                                               (make-primop-app-node 'assign! (list var val)))))))
+                                              (make-primop-app-node 'assign! (list var val))))))
                            bindings))
              (body (derefy vars body)))
         (generated
@@ -129,8 +127,7 @@
                 (lambda (expr)
                   (free-vars (set ref)
                              (at (get-location expr)
-                                 (generated
-                                  (make-primop-app-node 'deref (list expr))))))))
+                                 (make-primop-app-node 'deref (list expr)))))))
         refs)
    expr))
 

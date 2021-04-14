@@ -23,8 +23,7 @@
                      (cons b
                            (lambda (expr)
                              (replace expr
-                                      (generated
-                                       (make-primop-app-node b (ast-app-args expr)))))))
+                                      (make-primop-app-node b (ast-app-args expr))))))
                    (set-intersection
                     builtins
                     (apply set

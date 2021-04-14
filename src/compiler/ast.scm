@@ -270,7 +270,8 @@
 
 ;; Primop application
 (define (make-primop-app-node op args)
-  (ast-node 'type 'primop-app 'op op 'args args))
+  (generated
+   (ast-node 'type 'primop-app 'op op 'args args)))
 
 (define (primop-app-node? node)
   (is-type? node 'primop-app))

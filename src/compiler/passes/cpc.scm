@@ -56,8 +56,7 @@
    (make-lambda-node (list arg) body)))
 
 (define (make-yield-node cont hole)
-  (generated
-   (make-primop-app-node '&yield-cont (list cont hole))))
+  (make-primop-app-node '&yield-cont (list cont hole)))
 
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)

@@ -218,12 +218,12 @@
 (define (expand-structure-refs loc head rest)
   (foldl (lambda (part acc)
            (at loc
-               (generated
-                (make-primop-app-node '&structure-ref
-                                      (list acc
-                                            (at loc
-                                                (generated
-                                                 (make-quote-node part))))))))
+               (make-primop-app-node
+                '&structure-ref
+                (list acc
+                      (at loc
+                          (generated
+                           (make-quote-node part)))))))
          (wrap-symbol loc head)
          (map (partial wrap-symbol loc)
               rest)))

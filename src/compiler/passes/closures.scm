@@ -25,10 +25,11 @@
   (ast-case expr
    ((app ,op . ,args)
     (replace expr
-             (make-primop-app (get-location op)
-                              '&apply
-                              (map (flip convert-closures globals)
-                                   (cons op args)))))
+             (at (get-location op)
+                 (make-primop-app-node
+                  '&apply
+                  (map (flip convert-closures globals)
+                       (cons op args))))))
    ((lambda ,formals ,body)
     (let ((free (set-difference (get-free-vars expr)
                                 globals)))
@@ -80,15 +81,15 @@
          (loc (get-location expr))
          (env-var (at loc (make-gensym-node 'env))))
     (replace expr
-             (make-primop-app loc
-                              '&make-closure
-                              (list env
-                                    (at loc
-                                        (make-lambda-node
-                                         (cons env-var formals)
-                                         (substitute-symbols
-                                          (make-subs env-var)
-                                          (convert-closures body globals)))))))))
+             (make-primop-app-node
+              '&make-closure
+              (list env
+                    (at loc
+                        (make-lambda-node
+                         (cons env-var formals)
+                         (substitute-symbols
+                          (make-subs env-var)
+                          (convert-closures body globals)))))))))
 
 (define (make-nil loc)
   (at loc
@@ -98,11 +99,6 @@
             (generated
              (make-list-node '())))))))
 
-(define (make-primop-app loc primop args)
-  (at loc
-      (generated
-       (make-primop-app-node primop args))))
-
 (define (make-env loc free closures)
   (case (length free)
     ((0)
@@ -110,17 +106,19 @@
     ((1)
      (pick-matching-var loc (car free) closures))
     ((2)
-     (make-primop-app loc
-                      'cons
-                      (map (lambda (var)
-                             (pick-matching-var loc var closures))
-                           free)))
+     (at loc
+         (make-primop-app-node
+          'cons
+          (map (lambda (var)
+                 (pick-matching-var loc var closures))
+               free))))
     (else
-     (make-primop-app loc
-                      '&make-env
-                      (map (lambda (var)
-                             (pick-matching-var loc var closures))
-                           free)))))
+     (at loc
+         (make-primop-app-node
+          '&make-env
+          (map (lambda (var)
+                 (pick-matching-var loc var closures))
+               free))))))
 
 (define (pick-matching-var loc name vars)
   (foldl (lambda (v acc)
@@ -141,22 +139,23 @@
      (map (lambda (var accessor)
             (cons var
                   (lambda (expr)
-                    (make-primop-app (get-location expr)
-                                     accessor
-                                     (list env)))))
+                    (replace expr
+                             (make-primop-app-node
+                              accessor
+                              (list env))))))
           free
           (list 'car 'cdr)))
     (else
      (map (lambda (var)
             (cons var
                   (lambda (expr)
-                    (let ((loc (get-location expr)))
-                      (make-primop-app loc
-                                       '&env-ref
-                                       (list env
-                                             (at loc
-                                                 (generated
-                                                  (make-number-node (offset var free))))))))))
+                    (replace expr
+                             (make-primop-app-node
+                              '&env-ref
+                              (list env
+                                    (at (get-location expr)
+                                        (generated
+                                         (make-number-node (offset var free))))))))))
           free))))
 
 (define (make-env-setters env env-var free bound closures)
@@ -168,23 +167,25 @@
      ;; NOTE This is a fix, therfore at least one of these values is going to be a bound closure,
      ;; NOTE so we can assume that each closure needs update in this case.
      (map (lambda (var)
-            (make-primop-app (get-location env)
-                             '&set-closure-env!
-                             (list var env)))
+            (at (get-location env)
+                (make-primop-app-node
+                 '&set-closure-env!
+                 (list var env))))
           closures))
     (else
      ;; NOTE Otherwise we just update the env.
      (let ((args (ast-primop-app-args env)))
        (filter (compose not empty?)
-             (map (lambda (arg i)
-                    (if (set-member? bound (ast-symbol-value arg))
-                        (make-primop-app (get-location arg)
-                                         '&set-env!
-                                         (list env-var
-                                               (at (get-location arg)
-                                                   (generated
-                                                    (make-number-node i)))
-                                               arg))
-                        '()))
-                  args
-                  (iota 0 (- (length free) 1) 1)))))))
+               (map (lambda (arg i)
+                      (if (set-member? bound (ast-symbol-value arg))
+                          (at (get-location arg)
+                              (make-primop-app-node
+                               '&set-env!
+                               (list env-var
+                                     (at (get-location arg)
+                                         (generated
+                                          (make-number-node i)))
+                                     arg)))
+                          '()))
+                    args
+                    (iota 0 (- (length free) 1) 1)))))))
