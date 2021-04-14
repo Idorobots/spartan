@@ -1,78 +1,57 @@
 ;; Implicit body expansion tests.
 
+(define gen-body-neutral-node (gen-one-of gen-value-node gen-non-value-node))
+
 (describe
  "body expansion"
- (it "should only operate on `do` nodes"
-     (assert (expand-body (make-lambda-node '()
-                                            (make-symbol-node 'x)))
-             (make-lambda-node '()
-                               (make-symbol-node 'x))))
+ (it "should only operate on `body` nodes"
+     (check ((node gen-body-neutral-node))
+            (assert (expand-body node)
+                    node)))
 
  (it "should expand well-formed body correctly"
-     (assert (expand-body (at (location 1 1)
-                              (make-do-node
-                               (list (at (location 2 2)
-                                         (make-number-node 1))
-                                     (make-number-node 2)
-                                     (at (location 3 3)
-                                         (make-number-node 3))))))
-             (at (location 1 1)
-                 (make-do-node
-                  (list (at (location 2 2)
-                            (make-number-node 1))
-                        (make-number-node 2)
-                        (at (location 3 3)
-                            (make-number-node 3))))))
-     (assert (expand-body (at (location 1 1)
-                              (make-do-node
-                               (list (at (location 6 6)
-                                         (make-def-node (at (location 2 2)
-                                                            (make-symbol-node 'foo))
-                                                        (at (location 3 3)
-                                                            (make-number-node 'bar))))
-                                     (at (location 4 4)
-                                         (make-number-node 2))
-                                     (at (location 5 5)
-                                         (make-number-node 3))))))
-             (at (location 1 1)
-                 (generated
-                  (make-letrec-node (list (at (location 6 6)
-                                              (generated
-                                               (make-binding-node
-                                                (at (location 2 2)
-                                                    (make-symbol-node 'foo))
-                                                (at (location 3 3)
-                                                    (make-number-node 'bar))))))
-                                    (at (location 4 5)
-                                        (generated
-                                         (context "Bad `do` syntax"
-                                                  (make-do-node
-                                                   (list (at (location 4 4)
-                                                             (make-number-node 2))
-                                                         (at (location 5 5)
-                                                             (make-number-node 3))))))))))))
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (expr gen-body-neutral-node)
+             (node (gen-specific-body-node ctx expr)))
+            (assert (expand-body node)
+                    expr))
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
+             (node (apply gen-specific-body-node ctx exprs)))
+            (let ((result (expand-body node)))
+              (assert-ast result
+                          (do . ,expanded-exprs)
+                          (assert expanded-exprs exprs))))
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
+             (non-defs (gen-list (gen-integer 2 5) gen-body-neutral-node))
+             (node (apply gen-specific-body-node ctx (append defs non-defs))))
+            (let ((result (expand-body node)))
+              (assert-ast result
+                          (letrec ,bindings
+                            (do . ,body))
+                          (assert (length bindings)
+                                  (length defs))
+                          (map (lambda (b d)
+                                 (assert (ast-binding-var b)
+                                         (ast-def-name d))
+                                 (assert (ast-binding-val b)
+                                         (ast-def-value d)))
+                               bindings
+                               defs)
+                          (assert body non-defs)))))
 
  (it "should disallow not well-formed bodies"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (expand-body (at (location 1 1)
-                                (make-do-node
-                                 (list (at (location 2 2)
-                                           (make-def-node (at (location 3 3)
-                                                              (make-symbol-node 'foo))
-                                                          (at (location 4 4)
-                                                              (make-number-node 'bar)))))))))
-             "Bad `do` syntax, expected at least one non-definition expression within:"))
+     (check ((exprs (gen-list (gen-integer 0 5) gen-valid-def-node))
+             (ctx (gen-text (gen-integer 10 20)))
+             (node (apply gen-specific-body-node ctx exprs)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (expand-body node))
+                    (format "~a, expected at least one non-definition expression within:" ctx))))
 
  (it "should preserve error context"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (expand-body (at (location 1 1)
-                                (context "Bad `lambda` body syntax"
-                                         (make-do-node
-                                          (list (at (location 2 2)
-                                                    (make-def-node (at (location 3 3)
-                                                                       (make-symbol-node 'foo))
-                                                                   (at (location 4 4)
-                                                                       (make-number-node 'bar))))))))))
-             "Bad `lambda` body syntax, expected at least one non-definition expression within:")))
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
+             (node (apply gen-specific-body-node ctx exprs)))
+            (assert (get-context (expand-body node)) ctx))))

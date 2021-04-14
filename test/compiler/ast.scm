@@ -228,6 +228,8 @@
                        (assert values (ast-list-values node)))
                       ((do . ,values)
                        (assert values (ast-do-exprs node)))
+                      ((body . ,values)
+                       (assert values (ast-body-exprs node)))
                       ((if ,cond ,then, else)
                        (assert cond (ast-if-condition node))
                        (assert then (ast-if-then node))
