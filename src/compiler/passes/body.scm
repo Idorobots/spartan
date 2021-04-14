@@ -47,13 +47,13 @@
               ((body . ,exprs)
                (let* ((defs (extract-defs exprs))
                       (non-defs (extract-non-defs exprs)))
-                 (cond ((= (length exprs) 1)
-                        (car exprs))
-                        ((> (length defs) 0)
+                 (cond ((> (length defs) 0)
                         (replace expr
                                  (generated
                                   (make-letrec-node defs
                                                     (reconstruct-simple-body non-defs expr)))))
+                       ((= (length exprs) 1)
+                        (car exprs))
                        (else (reconstruct-simple-body exprs expr)))))
               (else expr)))
            expr))

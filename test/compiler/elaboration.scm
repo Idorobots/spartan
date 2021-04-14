@@ -65,9 +65,10 @@
                                             (make-number-node 23)
                                             (make-number-node 5)))))
              (at (location 5 23)
-                 (make-do-node
+                 (make-body-node
                   (list (make-number-node 23)
-                        (make-number-node 5))))))
+                        (make-number-node 5))
+                  "Bad `do` syntax"))))
 
  (it "disallows bad do syntax"
      (assert (with-handlers ((compilation-error?
@@ -89,12 +90,11 @@
              (at (location 5 23)
                  (make-lambda-node
                   (list (make-symbol-node 'x))
-                  (at (location 7 13)
-                      (generated
-                       (context "Bad `lambda` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'x))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'x)))
+                       "Bad `lambda` body syntax")))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'lambda)
@@ -107,14 +107,13 @@
              (at (location 5 23)
                  (make-lambda-node
                   (list (make-symbol-node 'x))
-                  (at (location 7 15)
-                      (generated
-                       (context "Bad `lambda` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'y))
-                                       (at (location 14 15)
-                                           (make-symbol-node 'x)))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'y))
+                             (at (location 14 15)
+                                 (make-symbol-node 'x)))
+                       "Bad `lambda` body syntax"))))))
 
  (it "disallows bad lambda syntax"
      (assert (with-handlers ((compilation-error?
@@ -161,12 +160,11 @@
                   (list (at (location 5 7)
                             (make-binding-node (make-symbol-node 'x)
                                                (make-number-node 23))))
-                  (at (location 7 13)
-                      (generated
-                       (context "Bad `let` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'x))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'x)))
+                       "Bad `let` body syntax")))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'let)
@@ -189,12 +187,11 @@
                         (at (location 6 6)
                             (make-binding-node (make-symbol-node 'y)
                                                (make-number-node 5))))
-                  (at (location 7 13)
-                      (generated
-                       (context "Bad `let` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'x))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'x)))
+                       "Bad `let` body syntax")))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'let)
@@ -212,14 +209,13 @@
                   (list (at (location 5 7)
                             (make-binding-node (make-symbol-node 'x)
                                                (make-number-node 23))))
-                  (at (location 7 15)
-                      (generated
-                       (context "Bad `let` body syntax"
-                                (make-do-node
+                  (at (location 5 23)
+                      (make-body-node
                                  (list (at (location 7 13)
                                            (make-symbol-node 'y))
                                        (at (location 14 15)
-                                           (make-symbol-node 'x)))))))))))
+                                           (make-symbol-node 'x)))
+                                 "Bad `let` body syntax"))))))
 
  (it "disallows bad let syntax"
      (assert (with-handlers ((compilation-error?
@@ -276,12 +272,11 @@
                   (list (at (location 5 7)
                             (make-binding-node (make-symbol-node 'x)
                                                (make-number-node 23))))
-                  (at (location 7 13)
-                      (generated
-                       (context "Bad `letrec` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'x))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'x)))
+                       "Bad `letrec` body syntax")))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
@@ -304,12 +299,11 @@
                         (at (location 6 6)
                             (make-binding-node (make-symbol-node 'y)
                                                (make-number-node 5))))
-                  (at (location 7 13)
-                      (generated
-                       (context "Bad `letrec` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'x))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'x)))
+                       "Bad `letrec` body syntax")))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'letrec)
@@ -327,14 +321,13 @@
                   (list (at (location 5 7)
                             (make-binding-node (make-symbol-node 'x)
                                                (make-number-node 23))))
-                  (at (location 7 15)
-                      (generated
-                       (context "Bad `letrec` body syntax"
-                                (make-do-node
-                                 (list (at (location 7 13)
-                                           (make-symbol-node 'y))
-                                       (at (location 14 15)
-                                           (make-symbol-node 'x)))))))))))
+                  (at (location 5 23)
+                      (make-body-node
+                       (list (at (location 7 13)
+                                 (make-symbol-node 'y))
+                             (at (location 14 15)
+                                 (make-symbol-node 'x)))
+                       "Bad `letrec` body syntax"))))))
 
  (it "disallows bad letrec syntax"
      (assert (with-handlers ((compilation-error?
@@ -467,12 +460,11 @@
                       (generated
                        (make-lambda-node
                         '()
-                        (at (location 15 19)
-                            (generated
-                             (context "Bad `define` function body syntax"
-                                      (make-do-node
-                                       (list (at (location 15 19)
-                                                 (make-number-node 23)))))))))))))
+                        (at (location 5 23)
+                            (make-body-node
+                             (list (at (location 15 19)
+                                       (make-number-node 23)))
+                             "Bad `define` function body syntax"))))))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'define)
@@ -489,12 +481,11 @@
                       (generated
                        (make-lambda-node
                         (list (make-symbol-node 'x))
-                        (at (location 15 19)
-                            (generated
-                             (context "Bad `define` function body syntax"
-                                      (make-do-node
-                                       (list (at (location 15 19)
-                                                 (make-symbol-node 'x)))))))))))))
+                        (at (location 5 23)
+                            (make-body-node
+                             (list (at (location 15 19)
+                                       (make-symbol-node 'x)))
+                             "Bad `define` function body syntax"))))))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
                                       (list (make-symbol-node 'define)
@@ -513,14 +504,13 @@
                       (generated
                        (make-lambda-node
                         (list (make-symbol-node 'x))
-                        (at (location 14 18)
-                            (generated
-                             (context "Bad `define` function body syntax"
-                                      (make-do-node
-                                       (list (at (location 14 15)
-                                                 (make-symbol-node 'y))
-                                             (at (location 17 18)
-                                                 (make-symbol-node 'x))))))))))))))
+                        (at (location 5 23)
+                            (make-body-node
+                             (list (at (location 14 15)
+                                       (make-symbol-node 'y))
+                                   (at (location 17 18)
+                                       (make-symbol-node 'x)))
+                             "Bad `define` function body syntax")))))))))
 
  (it "disallows invalid defines"
      (assert (with-handlers ((compilation-error?
@@ -609,9 +599,10 @@
              (at (location 5 23)
                  (make-app-node
                   (at (location 7 13)
-                      (make-do-node
+                      (make-body-node
                        (list (make-number-node 23)
-                             (make-symbol-node 'foo))))
+                             (make-symbol-node 'foo))
+                       "Bad `do` syntax"))
                   (list (make-symbol-node 'bar)))))
      (assert (elaborate-unquoted (at (location 5 23)
                                      (make-list-node
