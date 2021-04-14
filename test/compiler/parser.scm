@@ -25,9 +25,7 @@
                (at loc
                    (generated
                     (make-primop-app-node
-                     (at loc
-                         (generated
-                          (make-symbol-node '&structure-ref)))
+                     '&structure-ref
                      (list (at loc
                                (make-symbol-node 'foo))
                            (at loc
@@ -39,21 +37,15 @@
                (at loc
                    (generated
                     (make-primop-app-node
-                     (at loc
-                         (generated
-                          (make-symbol-node '&structure-ref)))
+                     '&structure-ref
                      (list (at loc
                                (generated
                                 (make-primop-app-node
-                                 (at loc
-                                     (generated
-                                      (make-symbol-node '&structure-ref)))
+                                 '&structure-ref
                                  (list (at loc
                                            (generated
                                             (make-primop-app-node
-                                             (at loc
-                                                 (generated
-                                                  (make-symbol-node '&structure-ref)))
+                                             '&structure-ref
                                              (list (at loc
                                                        (make-symbol-node 'foo))
                                                    (at loc

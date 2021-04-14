@@ -238,7 +238,7 @@
                        (assert op (ast-app-op node))
                        (assert args (ast-app-args node)))
                       ((primop-app ,op . ,args)
-                       (assert op (ast-app-op node))
+                       (assert (ast-symbol-value op) (ast-app-op node))
                        (assert args (ast-app-args node)))
                       ((lambda ,formals ,body)
                        (assert formals (ast-lambda-formals node))
@@ -265,10 +265,9 @@
                       (else (assert #f)))))
 
  (it "can match specific primops"
-     (check ((primop (gen-symbol-node '&yield-cont))
-             (cont (gen-symbol-node 'cont1))
+     (check ((cont (gen-symbol-node 'cont1))
              (node gen-ast-node)
-             (app (gen-primop-app-node primop cont node)))
+             (app (gen-primop-app-node '&yield-cont cont node)))
             (assert-ast app
                         (primop-app '&yield-cont 'cont1 ,some-value)
                         (assert some-value node))))

@@ -219,7 +219,7 @@
   (foldl (lambda (part acc)
            (at loc
                (generated
-                (make-primop-app-node (generated (wrap-symbol loc '&structure-ref))
+                (make-primop-app-node '&structure-ref
                                       (list acc
                                             (at loc
                                                 (generated

@@ -54,14 +54,16 @@
                              (list (make-symbol-node 'b)
                                    (make-symbol-node 'c)))))
      (assert (compute-free-vars
-              (make-primop-app-node (make-symbol-node 'a)
+              (at (location 5 23)
+                  (make-primop-app-node 'a
                                     (list (make-symbol-node 'b)
-                                          (make-symbol-node 'c))))
+                                          (make-symbol-node 'c)))))
              (free-vars
               (set 'b 'c)
-              (make-primop-app-node (make-symbol-node 'a)
+              (at (location 5 23)
+                  (make-primop-app-node 'a
                                     (list (make-symbol-node 'b)
-                                          (make-symbol-node 'c))))))
+                                          (make-symbol-node 'c)))))))
 
  (it "handles bindings correctly"
      (define (b-n-f-vars bv fv expr)

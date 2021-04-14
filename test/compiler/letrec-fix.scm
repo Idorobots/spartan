@@ -6,9 +6,7 @@
               (assert inserted-node node))
   (assert (generated? result))
   (assert (get-free-vars result) (set arg))
-  (assert (get-location result) (get-location node))
-  (assert (generated? (ast-app-op result)))
-  (assert (get-location (ast-app-op result)) (get-location node)))
+  (assert (get-location result) (get-location node)))
 
 (describe
  "derefy"
@@ -146,9 +144,7 @@
     (at l
         (generated
          (make-primop-app-node
-          (at l
-              (generated
-               (make-symbol-node 'ref)))
+          'ref
           (list (at l
                     (generated
                      (make-quote-node
@@ -188,9 +184,7 @@
                                                            (at l
                                                                (generated
                                                                 (make-primop-app-node
-                                                                 (at l
-                                                                     (generated
-                                                                      (make-symbol-node 'assign!)))
+                                                                 'assign!
                                                                  (list var
                                                                        val))))))
                                                         body))))))))))
@@ -222,9 +216,7 @@
                                                            (at l
                                                                (generated
                                                                 (make-primop-app-node
-                                                                 (at l
-                                                                     (generated
-                                                                      (make-symbol-node 'assign!)))
+                                                                 'assign!
                                                                  (list var
                                                                        val))))))
                                                         (derefy (set v)

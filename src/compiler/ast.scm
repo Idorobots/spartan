@@ -396,8 +396,10 @@
        (ast-update expr 'value f))
       ((def)
        (ast-update (ast-update expr 'name f) 'value f))
-      ((app primop-app)
+      ((app)
        (ast-update (ast-update expr 'op f) 'args mf))
+      ((primop-app)
+       (ast-update expr 'args mf))
       ((list)
        (ast-update expr 'value mf))
       ((<error>)
@@ -532,7 +534,12 @@
                        (unify-bindings (ast-matches? (ast-app-op expr) (cadr pattern))
                                        (ast-list-matches? (ast-app-args expr) (cddr pattern)))))
            ((primop-app) (and (primop-app-node? expr)
-                              (unify-bindings (ast-matches? (ast-primop-app-op expr) (cadr pattern))
+                              ;; NOTE Spoofs a full symbol node for the op to make matching easier.
+                              (unify-bindings (ast-matches? (at (get-location expr)
+                                                                (generated
+                                                                 (make-symbol-node
+                                                                  (ast-primop-app-op expr))))
+                                                            (cadr pattern))
                                               (ast-list-matches? (ast-primop-app-args expr) (cddr pattern)))))
            ((lambda) (and (lambda-node? expr)
                           (unify-bindings (ast-list-matches? (ast-lambda-formals expr) (cadr pattern))

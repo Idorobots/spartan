@@ -150,7 +150,7 @@
 
 (define (gen-valid-primop-app-node rand)
   (sample (apply gen-primop-app-node
-                 gen-valid-symbol-node
+                 gen-valid-symbol
                  (sample (gen-list (gen-integer 0 5)
                                    gen-simple-node)
                          rand))

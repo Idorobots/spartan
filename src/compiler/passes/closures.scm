@@ -101,11 +101,7 @@
 (define (make-primop-app loc primop args)
   (at loc
       (generated
-       (make-primop-app-node
-        (at loc
-            (generated
-             (make-symbol-node primop)))
-        args))))
+       (make-primop-app-node primop args))))
 
 (define (make-env loc free closures)
   (case (length free)

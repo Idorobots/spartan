@@ -241,13 +241,11 @@
                (make-body-node (append defs
                                        (list (at (get-location expr)
                                                  (make-primop-app-node
-                                                  (at (get-location expr)
-                                                      (make-symbol-node '&make-structure))
+                                                  '&make-structure
                                                   (map (lambda (n)
                                                          (at (get-location n)
                                                              (make-primop-app-node
-                                                              (at (get-location n)
-                                                                  (make-symbol-node '&structure-binding))
+                                                              '&structure-binding
                                                               (list (at (get-location n)
                                                                         (make-quote-node n))
                                                                     n))))
