@@ -16,30 +16,25 @@
              'errors (cadr result))))
 
 (define (expand-macros expr macros)
-  (walk-ast (lambda (subexpr)
-              (if (is-quoted? subexpr)
-                  subexpr
-                  (expand-macros subexpr macros)))
-            (if (and (is-type? expr 'list)
-                     (> (ast-list-length expr) 0)
-                     (is-type? (ast-list-car expr) 'symbol))
-                (expand-macro expr macros)
-                expr)))
-
-(define (is-quoted? expr)
-  (case (get-type expr)
-    ((quote quasiquote) #t)
-    ((list) (and (> (ast-list-length expr) 0)
-                 (is-type? (ast-list-car expr) 'symbol)
-                 (equal? (ast-symbol-value (ast-list-car expr)) 'quote)))
-    (else #f)))
-
-(define (expand-macro expr macros)
-  (let ((macro (assoc (ast-symbol-value (ast-list-car expr)) macros)))
-    (if macro
-        (expand-macros ((cdr macro) expr)
-                       macros)
-        expr)))
+  (ast-case expr
+   ((a-quote _)
+    expr)
+   ((a-quasiquote _)
+    expr)
+   ((list 'quote . ,rest)
+    expr)
+   ((list 'quasiquote . ,rest)
+    expr)
+   ((list (symbol ,head) . ,rest)
+    (let ((macro (assoc (ast-symbol-value head) macros)))
+      (if macro
+          (expand-macros ((cdr macro) expr)
+                         macros)
+          (walk-ast (flip expand-macros macros)
+                    expr))))
+   (else
+    (walk-ast (flip expand-macros macros)
+              expr))))
 
 (define (make-builtin-macros)
   (list (cons 'when when-macro)
