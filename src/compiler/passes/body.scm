@@ -16,34 +16,10 @@
              'ast (car result)
              'errors (cadr result))))
 
-;; FIXME This is used by several different phases to store context for body expansion later on
-;; FIXME to get more meaningful error messages. This should probably be done differently.
-(define (wrap-with-do exprs ctx)
-  (if (and (list? exprs)
-           (> (length exprs) 0))
-      ;; NOTE The body spans all the expressions within it.
-      (at (location (get-location-start (car exprs))
-                    (get-location-end (last exprs)))
-          (generated
-           (context ctx
-                    (make-do-node exprs))))
-      (compiler-bug "Invalid list of body expressions passed to wrap-with-do:" exprs)))
-
 (define (expand-body expr)
   (map-ast id
            (lambda (expr)
              (ast-case expr
-              ((do . ,exprs)
-               (let* ((defs (extract-defs exprs))
-                      (non-defs (extract-non-defs exprs)))
-                 (cond ((> (length defs) 0)
-                        (replace expr
-                                 (generated
-                                  (make-letrec-node defs
-                                                    (reconstruct-simple-body non-defs expr)))))
-                       ((= (length exprs) 1)
-                        (car exprs))
-                       (else expr))))
               ((body . ,exprs)
                (let* ((defs (extract-defs exprs))
                       (non-defs (extract-non-defs exprs)))
