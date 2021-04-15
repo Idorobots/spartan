@@ -13,7 +13,7 @@
                 'errors a-list?
                 'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec binding lambda app
-                                    primop-app <error> <location>)))
+                                    primop-app <error>)))
    (lambda (env)
      (let ((result (collect-errors (env-get env 'errors)
                                    (lambda ()

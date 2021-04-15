@@ -11,7 +11,7 @@
   (pass (schema "annotate-free-vars"
                 'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec fix binding lambda app ;; NOTE fix, since this pass is used multiple times.
-                                    primop-app <error> <location>)))
+                                    primop-app <error>)))
         (lambda (env)
           (env-update env 'ast compute-free-vars))))
 
