@@ -43,4 +43,12 @@
                         (map (lambda (original renamed)
                                (assert renamed (ast-update original 'value symbol->safe)))
                              args
-                             renamed-args)))))
+                             renamed-args))))
+
+ (it "renames all wildcards"
+     (check ((symbol (gen-symbol-node '_))
+             (list (gen-specific-do-node symbol symbol symbol)))
+            (gensym-reset!)
+            (assert-ast (mangle-names list)
+                        (do 'WILD1 'WILD2 'WILD3)
+                        (assert #t)))))
