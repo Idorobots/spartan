@@ -473,8 +473,8 @@
 
 (define-syntax ast-case
   (syntax-rules (else)
-    ((ast-case expr (else v))
-     v)
+    ((ast-case expr (else v ...))
+     (begin v ...))
     ((ast-case expr rule rest ...)
      (let ((tmp expr))
        (ast-case-match-rule tmp
