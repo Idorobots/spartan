@@ -53,7 +53,7 @@
 (define generate-target-code
   (pass (schema "generate-target-code"
                 'ast (ast-subset? '(quote number symbol string list
-                                    if do let fix binding lambda primop-app)))
+                                    if do let binding lambda primop-app)))
         (lambda (env)
           ;; FIXME Actually implement a proper code-gen.
           (ast->plain (env-get env 'ast)))))

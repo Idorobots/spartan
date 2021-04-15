@@ -8,7 +8,7 @@
 (define symbol-rename
   (pass (schema "symbol-rename"
                 'ast (ast-subset? '(quote number symbol string list
-                                    if do let fix binding lambda primop-app)))
+                                    if do let binding lambda primop-app)))
         (lambda (env)
           (env-update env 'ast mangle-names))))
 
