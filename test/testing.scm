@@ -112,7 +112,7 @@
            (loop (+ n 1))))))))
 
 (define (assert->string e)
-  (format "~a did not satisfy ~a\nexpected:\n~v\nreceived:\n~v\n"
+  (format "~a did not satisfy ~a\nexpected:\n~a\nreceived:\n~a\n"
           (assert-exception-expression e)
           (assert-exception-predicate e)
           (assert-exception-expected e)

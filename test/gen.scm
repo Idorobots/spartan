@@ -346,6 +346,11 @@
 (define (gen-with-fv-bv gen fv bv)
   (gen-with-fv (gen-with-bv gen bv) fv))
 
+(define (gen-with-ctx gen ctx)
+  (lambda (rand)
+    (context ctx
+             (sample gen rand))))
+
 (define (gen-self-recoursive gen)
   (lambda (rand)
     (self-recoursive #t

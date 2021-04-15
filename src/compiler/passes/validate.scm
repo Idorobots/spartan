@@ -12,7 +12,7 @@
   (pass (schema "validate"
                 'errors a-list?
                 'ast (ast-subset? '(quote number symbol string list
-                                    if do let letrec binding lambda app def ;; FIXME def should already be eliminated by body expansion.
+                                    if do let letrec binding lambda app
                                     primop-app <error> <location>)))
    (lambda (env)
      (let ((result (collect-errors (env-get env 'errors)
@@ -90,12 +90,15 @@
              (else
               expr))))
     ((def)
-     ;; NOTE So that we can find potential errors in misplaced defs.
-     (replace (walk-ast (partial validate-ast undefined unused)
-                        expr)
-              (raise-compilation-error
-               expr
-               (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax")))))
+     ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
+     (let* ((bound (get-bound-vars expr))
+            (unused (set-difference bound
+                                    (get-free-vars (ast-def-value expr)))))
+       (ast-update (ast-update expr 'name (partial validate-ast (set) unused))
+                   'value
+                   (partial validate-ast
+                            (set-difference undefined bound)
+                            (set)))))
     (else
      (walk-ast (partial validate-ast undefined unused)
                expr))))

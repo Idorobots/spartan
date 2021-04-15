@@ -21,7 +21,9 @@
             (let ((result (expand-body node)))
               (assert-ast result
                           (do . ,expanded-exprs)
-                          (assert expanded-exprs exprs))))
+                          (assert expanded-exprs exprs))
+              (assert (get-location result)
+                      (get-location node))))
      (check ((ctx (gen-text (gen-integer 10 20)))
              (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
              (non-defs (gen-list (gen-integer 2 5) gen-body-neutral-node))
@@ -39,7 +41,11 @@
                                          (ast-def-value d)))
                                bindings
                                defs)
-                          (assert body non-defs)))))
+                          (assert body non-defs))
+              (assert (get-location result)
+                      (get-location node))
+              (assert (get-location (ast-letrec-body result))
+                      (get-location node)))))
 
  (it "should disallow not well-formed bodies"
      (check ((exprs (gen-list (gen-integer 0 5) gen-valid-def-node))
@@ -49,6 +55,14 @@
                                      compilation-error-what))
                       (expand-body node))
                     (format "~a, expected at least one non-definition expression within:" ctx))))
+
+ (it "should disallow stray defs"
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (node (gen-with-ctx gen-valid-def-node ctx)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (expand-body node))
+                    (format "~a, not allowed in this context:" ctx))))
 
  (it "should preserve error context"
      (check ((ctx (gen-text (gen-integer 10 20)))

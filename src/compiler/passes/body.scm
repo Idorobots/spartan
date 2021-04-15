@@ -23,22 +23,27 @@
                      'errors (cadr result))))))
 
 (define (expand-body expr)
-  (map-ast id
-           (lambda (expr)
-             (ast-case expr
-              ((body . ,exprs)
-               (let* ((defs (extract-defs exprs))
-                      (non-defs (extract-non-defs exprs)))
-                 (cond ((> (length defs) 0)
-                        (replace expr
-                                 (generated
-                                  (make-letrec-node defs
-                                                    (reconstruct-simple-body non-defs expr)))))
-                       ((= (length exprs) 1)
-                        (car exprs))
-                       (else (reconstruct-simple-body exprs expr)))))
-              (else expr)))
-           expr))
+  (ast-case expr
+   ((body . ,exprs)
+    (let* ((defs (extract-defs exprs))
+           (non-defs (extract-non-defs exprs)))
+      (if (> (length defs) 0)
+          (replace expr
+                   (generated
+                    (make-letrec-node (map expand-body defs)
+                                      (reconstruct-simple-body
+                                       (map expand-body non-defs)
+                                       expr))))
+          (reconstruct-simple-body
+           (map expand-body exprs)
+           expr))))
+   ((def ,name ,value)
+    (raise-compilation-error
+     ;; NOTE So that we might find more meaningful errors in the future passes.
+     (walk-ast expand-body expr)
+     (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax"))))
+   (else
+    (walk-ast expand-body expr))))
 
 (define (extract-defs exprs)
   (foldr (lambda (e acc)
@@ -62,10 +67,8 @@
           ((= (length exprs) 1)
            (car exprs))
           (else
-           ;; NOTE Reconstructed body location now has to be adjusted.
-           (at (location (get-location-start (car exprs))
-                         (get-location-end (last exprs)))
+           (at (get-location parent)
                (generated
-                ;; However the context should be preserved.
+                ;; NOTE The context should be preserved.
                 (context ctx
                          (make-do-node exprs))))))))

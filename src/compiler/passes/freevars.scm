@@ -50,6 +50,13 @@
               ((primop-app _ . ,args)
                (free-vars (set-sum (map get-free-vars args))
                           expr))
+              ((def ,name ,val)
+               ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
+               (let ((bound (get-free-vars name)))
+                 (free-vars (set-difference (get-free-vars val)
+                                            bound)
+                            (bound-vars bound
+                                        expr))))
               (else
                expr)))
            expr))
