@@ -77,16 +77,8 @@
 
 (define (make-concat a b context)
   (at (get-location context)
-      (generated
-       (make-app-node
-        (at (get-location context)
-            (generated (make-symbol-node 'concat)))
-        (list a b)))))
+      (make-primop-app-node 'concat (list a b))))
 
 (define (make-cons a b context)
   (at (get-location context)
-      (generated
-       (make-app-node
-        (at (get-location context)
-            (generated (make-symbol-node 'cons)))
-        (list a b)))))
+      (make-primop-app-node 'cons (list a b))))

@@ -16,13 +16,13 @@
              (node (gen-quasiquote-node contents)))
             (let ((result (expand-quasiquote node)))
               (assert-ast result
-                          (app 'cons
-                               (a-quote ,first)
-                               (app 'cons
-                                    (a-quote ,second)
-                                    (app 'cons
-                                         (a-quote ,third)
-                                         (a-quote (list)))))
+                          (primop-app 'cons
+                                      (a-quote ,first)
+                                      (primop-app 'cons
+                                                  (a-quote ,second)
+                                                  (primop-app 'cons
+                                                              (a-quote ,third)
+                                                              (a-quote (list)))))
                           (assert first (ast-list-nth contents 0))
                           (assert second (ast-list-nth contents 1))
                           (assert third (ast-list-nth contents 2)))
@@ -41,13 +41,13 @@
              (node (gen-quasiquote-node list)))
             (let ((result (expand-quasiquote node)))
               (assert-ast result
-                          (app 'cons
-                               _
-                               (app 'cons
-                                    ,converted-contents
-                                    (app 'cons
-                                         _
-                                         (a-quote (list)))))
+                          (primop-app 'cons
+                                      _
+                                      (primop-app 'cons
+                                                  ,converted-contents
+                                                  (primop-app 'cons
+                                                              _
+                                                              (a-quote (list)))))
                           (assert converted-contents contents))
               (assert (generated? result)))))
 
@@ -59,13 +59,13 @@
              (node (gen-quasiquote-node list)))
             (let ((result (expand-quasiquote node)))
               (assert-ast result
-                          (app 'cons
-                               _
-                               (app 'concat
-                                    ,converted-contents
-                                    (app 'cons
-                                         _
-                                         (a-quote (list)))))
+                          (primop-app 'cons
+                                      _
+                                      (primop-app 'concat
+                                                  ,converted-contents
+                                                  (primop-app 'cons
+                                                              _
+                                                              (a-quote (list)))))
                           (assert converted-contents contents))
               (assert (generated? result)))))
 
