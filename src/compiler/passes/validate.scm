@@ -4,20 +4,26 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(define (validate env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (let ((expr (env-get env 'ast))
-                                        (globals (env-get env 'globals)))
-                                    (validate-ast (get-undefined-vars expr globals)
-                                                  (set)
-                                                  expr))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define validate
+  (pass (schema 'errors a-list?
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app def ;; FIXME def should already be eliminated by body expansion.
+                                    primop-app <error> <location>)))
+   (lambda (env)
+     (let ((result (collect-errors (env-get env 'errors)
+                                   (lambda ()
+                                     (let ((expr (env-get env 'ast))
+                                           (globals (env-get env 'globals)))
+                                       (validate-ast (get-undefined-vars expr globals)
+                                                     (set)
+                                                     expr))))))
+       (env-set env
+                'ast (car result)
+                'errors (cadr result))))))
 
 (define (get-undefined-vars expr globals)
   (set-difference (get-free-vars expr)

@@ -4,12 +4,16 @@
 (load "compiler/utils/gensym.scm")
 (load "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(define (continuation-passing-convert env)
-  (env-update env 'ast (flip cpc (make-identity-continuation))))
+(define continuation-passing-convert
+  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+                                    if do let fix binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast (flip cpc (make-identity-continuation))))))
 
 (define (make-identity-continuation)
   id)

@@ -3,17 +3,24 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(define (macro-expand env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (expand-macros (env-get env 'ast)
-                                                 (env-get env 'macros))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define macro-expand
+  (pass (schema 'macros non-empty-list?
+                'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    primop-app body <error> <location>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (expand-macros (env-get env 'ast)
+                                                         (env-get env 'macros))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))
 
 (define (expand-macros expr macros)
   (ast-case expr

@@ -3,8 +3,9 @@
 (load "compiler/utils/scc.scm")
 (load "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
 
 (load "compiler/passes/freevars.scm") ;; FIXME Just for compute-let-fv & compute-letrec-fv
 
@@ -46,8 +47,11 @@
 
 ;; ...which is considerably simpler to compile and optimize.
 
-(define (reorder-letrec-bindings env)
-  (env-update env 'ast reorder-letrec))
+(define reorder-letrec-bindings
+  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast reorder-letrec))))
 
 (define (reorder-letrec expr)
   (map-ast id

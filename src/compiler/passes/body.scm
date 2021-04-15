@@ -3,18 +3,23 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(load "compiler/passes/errors.scm")
-
-(define (body-expand env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (expand-body (env-get env 'ast))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define body-expand
+  (pass (schema 'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    if do let letrec binding lambda app def
+                                    primop-app body <error> <location>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (expand-body (env-get env 'ast))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))
 
 (define (expand-body expr)
   (map-ast id

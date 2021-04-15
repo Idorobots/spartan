@@ -4,10 +4,15 @@
 (load "compiler/substitute.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
-(define (inline-builtins env)
-  (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))
+(define inline-builtins
+  (pass (schema 'globals a-list?
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let fix binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
 
 (define (inline-app-ops builtins expr)
   (substitute (lambda (subs expr kont)

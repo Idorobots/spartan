@@ -1,9 +1,10 @@
 ;; Parser tests.
 
 (define (p string)
-  (env-get (parse (env 'input string
-                       'module 'test
-                       'errors '()))
+  (env-get ((pass-transform parse)
+            (env 'input string
+                 'module 'test
+                 'errors '()))
            'ast))
 
 (define (pe string)
@@ -12,9 +13,10 @@
                  (compilation-error-what e)
                  (car (compilation-error-location e))
                  (cdr (compilation-error-location e))))
-       (env-get (parse (env 'input string
-                            'module 'test
-                            'errors '()))
+       (env-get ((pass-transform parse)
+                 (env 'input string
+                      'module 'test
+                      'errors '()))
                 'errors)))
 
 (describe

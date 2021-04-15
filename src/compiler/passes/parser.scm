@@ -2,6 +2,7 @@
 
 (load "compiler/peggen.scm")
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
@@ -232,17 +233,20 @@
   (at loc
       (make-symbol-node s)))
 
-(define (parse env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (let* ((input (env-get env 'input))
-                                         (parsed (Program input)))
-                                    (if (matches? parsed)
-                                        (match-match parsed)
-                                        (raise-compilation-error
-                                         (at (location 0 (string-length input))
-                                             (make-location-node))
-                                         "Not a valid FOOF file:")))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define parse
+  (pass (schema 'input non-empty-string?
+                'errors a-list?)
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (let* ((input (env-get env 'input))
+                                                 (parsed (Program input)))
+                                            (if (matches? parsed)
+                                                (match-match parsed)
+                                                (raise-compilation-error
+                                                 (at (location 0 (string-length input))
+                                                     (make-location-node))
+                                                 "Not a valid FOOF file:")))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))

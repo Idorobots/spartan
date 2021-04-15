@@ -1,6 +1,7 @@
 ;; The compiler
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
 ;; The frontend
@@ -23,8 +24,10 @@
 (load "compiler/passes/rename.scm")
 
 (define (compile env)
-  (foldl (lambda (phase expr)
-           (phase expr))
+  (foldl (lambda (pass env)
+           (unless (env-contains? env 'no-validation)
+             ((pass-schema pass) env))
+           ((pass-transform pass) env))
          (env-set env
                   'errors '()
                   'macros (make-builtin-macros)
@@ -47,6 +50,9 @@
                symbol-rename
                generate-target-code)))
 
-(define (generate-target-code env)
-  ;; FIXME Actually implement a proper code-gen.
-  (ast->plain (env-get env 'ast)))
+(define generate-target-code
+  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+                                    if do let fix binding lambda primop-app)))
+        (lambda (env)
+          ;; FIXME Actually implement a proper code-gen.
+          (ast->plain (env-get env 'ast)))))

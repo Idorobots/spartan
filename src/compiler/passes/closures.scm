@@ -5,10 +5,16 @@
 (load "compiler/utils/gensym.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
 (load "compiler/substitute.scm")
 
-(define (closure-convert env)
-  (env-update env 'ast (flip convert-closures (env-get env 'globals))))
+(define closure-convert
+  (pass (schema 'globals a-list?
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let fix binding lambda primop-app)))
+        (lambda (env)
+          (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
 
 (define (make-global-definitions-list)
   (apply set

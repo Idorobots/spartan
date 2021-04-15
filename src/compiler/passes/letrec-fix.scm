@@ -2,15 +2,19 @@
 
 (load "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
-(load "compiler/env.scm")
 (load "compiler/substitute.scm")
+(load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
 
 (load "compiler/passes/freevars.scm") ;; FIXME Just for compute-fix-fv
 (load "compiler/passes/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
 
-(define (fix-letrec env)
-  (env-update env 'ast fixing-letrec))
+(define fix-letrec
+  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast fixing-letrec))))
 
 (define (fixing-letrec expr)
   (map-ast id

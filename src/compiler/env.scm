@@ -6,6 +6,9 @@
 (define (env-get env property)
   (hash-ref env property))
 
+(define (env-contains? env property)
+  (hash-has-key? env property))
+
 (define (env-set env . setters)
   (apply hash-set* env setters))
 

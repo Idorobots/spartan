@@ -3,16 +3,23 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(define (quasiquote-expand env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (expand-quasiquote (env-get env 'ast))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define quasiquote-expand
+  (pass (schema 'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app <error> <location>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (expand-quasiquote (env-get env 'ast))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))
 
 (define (expand-quasiquote expr)
   (case (get-type expr)

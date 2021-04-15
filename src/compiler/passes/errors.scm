@@ -3,19 +3,24 @@
 (load "compiler/utils/refs.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
 (load "compiler/errors.scm")
 
-(define (report-errors env)
-  (let ((errors (env-get env 'errors)))
-    (unless (empty? errors)
-        (map (partial report-error env)
-             (sort (reverse errors)
-                   (lambda (a b)
-                     (location<? (compilation-error-location a)
-                                 (compilation-error-location b)))))
-        (raise-compilation-error (location 0 0)
-                                 (format "Compilation aborted due to ~s errors." (length errors))))
-    env))
+(define report-errors
+  (pass (schema 'errors a-list?)
+        (lambda (env)
+          (let ((errors (env-get env 'errors)))
+            (unless (empty? errors)
+              (map (partial report-error env)
+                   (sort (reverse errors)
+                         (lambda (a b)
+                           (location<? (compilation-error-location a)
+                                       (compilation-error-location b)))))
+              (raise-compilation-error (location 0 0)
+                                       (format "Compilation aborted due to ~s errors." (length errors))))
+            env))))
 
 ;; Error reporting
 

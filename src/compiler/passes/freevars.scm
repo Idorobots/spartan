@@ -3,10 +3,16 @@
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
-(define (annotate-free-vars env)
-  (env-update env 'ast compute-free-vars))
+(define annotate-free-vars
+  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec fix binding lambda app ;; NOTE fix, since this pass is used multiple times.
+                                    primop-app <error> <location>)))
+        (lambda (env)
+          (env-update env 'ast compute-free-vars))))
 
 (define (compute-free-vars expr)
   (map-ast id
