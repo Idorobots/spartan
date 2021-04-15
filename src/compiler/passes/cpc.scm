@@ -10,7 +10,8 @@
 (load "compiler/errors.scm")
 
 (define continuation-passing-convert
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "continuation-passing-convert"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip cpc (make-identity-continuation))))))

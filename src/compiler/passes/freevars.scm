@@ -8,7 +8,8 @@
 (load "compiler/ast.scm")
 
 (define annotate-free-vars
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "annotate-free-vars"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec fix binding lambda app ;; NOTE fix, since this pass is used multiple times.
                                     primop-app <error> <location>)))
         (lambda (env)

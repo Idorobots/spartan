@@ -51,7 +51,8 @@
                generate-target-code)))
 
 (define generate-target-code
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "generate-target-code"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let fix binding lambda primop-app)))
         (lambda (env)
           ;; FIXME Actually implement a proper code-gen.

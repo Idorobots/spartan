@@ -11,7 +11,8 @@
 (load "compiler/passes/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
 
 (define fix-letrec
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "fix-letrec"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast fixing-letrec))))

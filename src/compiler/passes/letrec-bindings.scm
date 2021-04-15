@@ -48,7 +48,8 @@
 ;; ...which is considerably simpler to compile and optimize.
 
 (define reorder-letrec-bindings
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "reorder-letrec-bindings"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast reorder-letrec))))

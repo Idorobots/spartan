@@ -9,7 +9,8 @@
 (load "compiler/errors.scm")
 
 (define report-errors
-  (pass (schema 'errors a-list?)
+  (pass (schema "report-errors"
+                'errors a-list?)
         (lambda (env)
           (let ((errors (env-get env 'errors)))
             (unless (empty? errors)

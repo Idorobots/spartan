@@ -9,7 +9,7 @@
 (load "compiler/errors.scm")
 
 (define elaborate
-  (pass (schema 'macros non-empty-list?
+  (pass (schema "elaborate"
                 'errors a-list?
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list

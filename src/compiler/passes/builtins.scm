@@ -8,7 +8,8 @@
 (load "compiler/ast.scm")
 
 (define inline-builtins
-  (pass (schema 'globals a-list?
+  (pass (schema "inline-builtins"
+                'globals a-list?
                 'ast (ast-subset? '(quote number symbol string list
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)

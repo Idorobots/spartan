@@ -8,7 +8,8 @@
 (load "compiler/errors.scm")
 
 (define macro-expand
-  (pass (schema 'macros non-empty-list?
+  (pass (schema "macro-expand"
+                'macros non-empty-list?
                 'errors a-list?
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list

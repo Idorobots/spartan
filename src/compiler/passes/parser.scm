@@ -234,7 +234,8 @@
       (make-symbol-node s)))
 
 (define parse
-  (pass (schema 'input non-empty-string?
+  (pass (schema "parse"
+                'input non-empty-string?
                 'errors a-list?)
         (lambda (env)
           (let ((result (collect-errors (env-get env 'errors)

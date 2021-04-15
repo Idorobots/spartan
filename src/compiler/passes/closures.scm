@@ -10,9 +10,10 @@
 (load "compiler/substitute.scm")
 
 (define closure-convert
-  (pass (schema 'globals a-list?
+  (pass (schema "closure-convert"
+                'globals a-list?
                 'ast (ast-subset? '(quote number symbol string list
-                                    if do let fix binding lambda primop-app)))
+                                    if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
 

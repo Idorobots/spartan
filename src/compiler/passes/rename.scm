@@ -6,7 +6,8 @@
 (load "compiler/ast.scm")
 
 (define symbol-rename
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "symbol-rename"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let fix binding lambda primop-app)))
         (lambda (env)
           (env-update env 'ast mangle-names))))

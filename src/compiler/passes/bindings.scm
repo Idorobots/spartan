@@ -8,7 +8,8 @@
 (load "compiler/ast.scm")
 
 (define annotate-bindings
-  (pass (schema 'ast (ast-subset? '(quote number symbol string list
+  (pass (schema "annotate-bindings"
+                'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec binding lambda app
                                     primop-app <error> <location>)))
         (lambda (env)

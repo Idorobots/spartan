@@ -9,7 +9,8 @@
 (load "compiler/errors.scm")
 
 (define validate
-  (pass (schema 'errors a-list?
+  (pass (schema "validate"
+                'errors a-list?
                 'ast (ast-subset? '(quote number symbol string list
                                     if do let letrec binding lambda app def ;; FIXME def should already be eliminated by body expansion.
                                     primop-app <error> <location>)))

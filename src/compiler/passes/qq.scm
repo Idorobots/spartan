@@ -8,7 +8,8 @@
 (load "compiler/errors.scm")
 
 (define quasiquote-expand
-  (pass (schema 'errors a-list?
+  (pass (schema "quasiquote-expand"
+                'errors a-list?
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list
                                     if do let letrec binding lambda app
