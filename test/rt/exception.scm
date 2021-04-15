@@ -9,8 +9,7 @@
 
  (it "Can handle an error."
      (assert (run '(handle (raise 'error)
-                           (lambda (e _)
-                             e ;; FIXME Can't have duplicate arg names in scheme runtime.
+                           (lambda (_ _)
                              'ok)))
              'ok))
 
@@ -24,8 +23,7 @@
      (assert (run '(handle (handle (raise 'error)
                                    (lambda (e _)
                                      (raise e)))
-                           (lambda (e _)
-                             e ;; FIXME Can't have duplicate arg names in scheme runtime.
+                           (lambda (_ _)
                              'ok)))
              'ok))
 

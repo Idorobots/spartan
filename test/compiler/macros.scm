@@ -12,12 +12,11 @@
                                              (at (l 3) (make-list-node '()))
                                              (at (l 10) (make-symbol-node 'c)))))
                             bm)
-             (at (l 10)
-                 (generated
-                  (context "Bad `let*` body syntax"
-                           (make-do-node
-                            (list (at (l 10)
-                                      (make-symbol-node 'c))))))))
+             (at (l 1)
+                 (make-body-node
+                  (list (at (l 10)
+                            (make-symbol-node 'c)))
+                  "Bad `let*` body syntax")))
      (assert (expand-macros (at (l 1) (make-list-node
                                        (list (at (l 2) (make-symbol-node 'let*))
                                              (at (l 3) (make-list-node
@@ -33,11 +32,10 @@
                             (make-binding-node
                              (at (l 5) (make-symbol-node 'a))
                              (at (l 6) (make-number-node 23)))))
-                  (at (l 10)
-                      (generated
-                       (context "Bad `let*` body syntax"
-                                (make-do-node
-                                 (list (at (l 10) (make-symbol-node 'c))))))))))
+                  (at (l 1)
+                      (make-body-node
+                       (list (at (l 10) (make-symbol-node 'c)))
+                       "Bad `let*` body syntax")))))
      (assert (expand-macros (at (l 1) (make-list-node
                                        (list (at (l 2) (make-symbol-node 'let*))
                                              (at (l 3) (make-list-node
@@ -63,11 +61,10 @@
                                  (make-binding-node
                                   (at (l 8) (make-symbol-node 'b))
                                   (at (l 9) (make-number-node 5)))))
-                       (at (l 10)
-                           (generated
-                            (context "Bad `let*` body syntax"
-                                     (make-do-node
-                                      (list (at (l 10) (make-symbol-node 'c)))))))))))))
+                       (at (l 1)
+                           (make-body-node
+                            (list (at (l 10) (make-symbol-node 'c)))
+                            "Bad `let*` body syntax"))))))))
 
  (it "handle macro works"
      (assert (expand-macros (at (l 1) (make-list-node
@@ -90,11 +87,10 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/shift))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (at (l 4)
-                                                                      (generated
-                                                                       (context "Bad `shift` body syntax"
-                                                                                (make-do-node
-                                                                                 (list (at (l 4) (make-symbol-node 'expr))))))))))))))
+                                                                  (at (l 1)
+                                                                      (make-body-node
+                                                                       (list (at (l 4) (make-symbol-node 'expr)))
+                                                                       "Bad `shift` body syntax")))))))))
 
  (it "reset macro works"
      (assert (expand-macros (at (l 1) (make-list-node
@@ -104,11 +100,10 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/reset))
                                       (list (at (l 1)
                                                 (make-lambda-node '()
-                                                                  (at (l 3)
-                                                                      (generated
-                                                                       (context "Bad `reset` body syntax"
-                                                                                (make-do-node
-                                                                                 (list (at (l 3) (make-symbol-node 'expr))))))))))))))
+                                                                  (at (l 1)
+                                                                      (make-body-node
+                                                                       (list (at (l 3) (make-symbol-node 'expr)))
+                                                                       "Bad `reset` body syntax")))))))))
 
  (it "letcc macro works"
      (assert (expand-macros (at (l 1) (make-list-node
@@ -119,11 +114,10 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/current-continuation))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (at (l 4)
-                                                                      (generated
-                                                                       (context "Bad `letcc` body syntax"
-                                                                                (make-do-node
-                                                                                 (list (at (l 4) (make-symbol-node 'expr)))))))))))))
+                                                                  (at (l 1)
+                                                                      (make-body-node
+                                                                       (list (at (l 4) (make-symbol-node 'expr)))
+                                                                       "Bad `letcc` body syntax"))))))))
      (assert (expand-macros (at (l 1) (make-list-node
                                        (list (at (l 2) (make-symbol-node 'letcc))
                                              (at (l 3) (make-symbol-node 'kont))
@@ -133,9 +127,8 @@
              (at (l 1) (make-app-node (at (l 1) (make-symbol-node 'call/current-continuation))
                                       (list (at (l 1)
                                                 (make-lambda-node (list (at (l 3) (make-symbol-node 'kont)))
-                                                                  (at (location 4 5)
-                                                                      (generated
-                                                                       (context "Bad `letcc` body syntax"
-                                                                                (make-do-node
-                                                                                 (list (at (l 4) (make-symbol-node 'expr1))
-                                                                                       (at (l 5) (make-symbol-node 'expr2)))))))))))))))
+                                                                  (at (l 1)
+                                                                      (make-body-node
+                                                                       (list (at (l 4) (make-symbol-node 'expr1))
+                                                                             (at (l 5) (make-symbol-node 'expr2)))
+                                                                       "Bad `letcc` body syntax"))))))))))

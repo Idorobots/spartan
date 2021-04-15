@@ -1,14 +1,20 @@
 ;; Continuation Passing Converter
 ;; Assumes macro- & letrec-expanded code. This phase contorts the code so much that it invalidates free-vars & bindings annotations.
 
-
 (load "compiler/utils/gensym.scm")
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
+(load "compiler/errors.scm")
 
-(define (continuation-passing-convert env)
-  (env-update env 'ast (flip cpc (make-identity-continuation))))
+(define continuation-passing-convert
+  (pass (schema "continuation-passing-convert"
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let fix binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast (flip cpc (make-identity-continuation))))))
 
 (define (make-identity-continuation)
   id)
@@ -55,12 +61,7 @@
    (make-lambda-node (list arg) body)))
 
 (define (make-yield-node cont hole)
-  (generated
-   (make-primop-app-node
-    (at (get-location cont)
-        (generated
-         (make-symbol-node '&yield-cont)))
-    (list cont hole))))
+  (make-primop-app-node '&yield-cont (list cont hole)))
 
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)

@@ -3,19 +3,28 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
+(load "compiler/errors.scm")
 
-(define (quasiquote-expand env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (expand-quasiquote (env-get env 'ast))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define quasiquote-expand
+  (pass (schema "quasiquote-expand"
+                'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app <error>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (expand-quasiquote (env-get env 'ast))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))
 
 (define (expand-quasiquote expr)
   (case (get-type expr)
-    ((quote) expr)
+    ((quote) (walk-ast plainify-quote expr))
     ((quasiquote)
      (expand-no-splicing (ast-quoted-expr expr)
                          expr))
@@ -35,7 +44,8 @@
 
 (define (expand-splicing expr context)
   (case (get-type expr)
-    ((quote number string) expr)
+    ((number string) expr)
+    ((quote) (walk-ast plainify-quote expr))
     ((quasiquote) (expand-quasiquote expr))
     ((unquote unquote-splicing) (ast-quoted-expr expr))
     ((symbol) (reconstruct-quoted-value
@@ -68,16 +78,22 @@
 
 (define (make-concat a b context)
   (at (get-location context)
-      (generated
-       (make-app-node
-        (at (get-location context)
-            (generated (make-symbol-node 'concat)))
-        (list a b)))))
+      (make-primop-app-node 'concat (list a b))))
 
 (define (make-cons a b context)
   (at (get-location context)
-      (generated
-       (make-app-node
-        (at (get-location context)
-            (generated (make-symbol-node 'cons)))
-        (list a b)))))
+      (make-primop-app-node 'cons (list a b))))
+
+(define (plainify-quote expr)
+  (case (get-type expr)
+    ((quote quasiquote unquote unquote-splicing)
+    ;; NOTE Within `quote` all the semantic AST nodes have to be dumbed down to plain old data.
+     (replace expr
+              (generated
+               (make-list-node
+                (list (at (get-location expr)
+                          (generated
+                           (make-symbol-node (get-type expr))))
+                      (ast-quoted-expr expr))))))
+    (else
+     (walk-ast plainify-quote expr))))

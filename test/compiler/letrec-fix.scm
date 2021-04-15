@@ -2,13 +2,11 @@
 
 
 (define (check-deref arg node result)
-  (assert-ast result (app 'deref ,inserted-node)
+  (assert-ast result (primop-app 'deref ,inserted-node)
               (assert inserted-node node))
   (assert (generated? result))
-  (assert (get-free-vars result) (set 'deref arg))
-  (assert (get-location result) (get-location node))
-  (assert (generated? (ast-app-op result)))
-  (assert (get-location (ast-app-op result)) (get-location node)))
+  (assert (get-free-vars result) (set arg))
+  (assert (get-location result) (get-location node)))
 
 (describe
  "derefy"
@@ -142,21 +140,17 @@
               (assert (ast-fix-bindings result) bindings)))))
 
 (define (gen-ref value)
-  (free-vars
-   (set 'ref)
-   (let ((l (get-location value)))
-     (at l
-         (generated
-          (make-app-node
-           (at l
-               (generated
-                (make-symbol-node 'ref)))
-           (list (at l
-                     (generated
-                      (make-quote-node
-                       (at l
-                           (generated
-                            (make-list-node '())))))))))))))
+  (let ((l (get-location value)))
+    (at l
+        (generated
+         (make-primop-app-node
+          'ref
+          (list (at l
+                    (generated
+                     (make-quote-node
+                      (at l
+                          (generated
+                           (make-list-node '()))))))))))))
 
 (describe
  "let-ref-assign"
@@ -174,25 +168,23 @@
                     (generated
                      (reconstruct-let-node parent
                                            (list (at (get-location b)
-                                                     (complexity 'complex
+                                                     (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
                                            (free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
-                                                           (set v 'assign! 'deref)))
+                                                           (set v)))
                                             (at (get-location body)
                                                 (generated
                                                  (make-do-node
                                                   (list (free-vars
                                                          (set-union (apply set val-fv)
-                                                                    (set v 'assign!))
+                                                                    (set v))
                                                          (let ((l (get-location val)))
                                                            (at l
                                                                (generated
-                                                                (make-app-node
-                                                                 (at l
-                                                                     (generated
-                                                                      (make-symbol-node 'assign!)))
+                                                                (make-primop-app-node
+                                                                 'assign!
                                                                  (list var
                                                                        val))))))
                                                         body))))))))))
@@ -209,24 +201,22 @@
                     (generated
                      (reconstruct-let-node parent
                                            (list (at (get-location b)
-                                                     (complexity 'complex
+                                                     (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
                                            (free-vars
                                             (set-union (apply set val-fv)
-                                                       (set v 'assign! 'deref))
+                                                       (set v))
                                             (at (get-location var)
                                                 (generated
                                                  (make-do-node
                                                   (list (free-vars
                                                          (set-union (apply set val-fv)
-                                                                    (set v 'assign!))
+                                                                    (set v))
                                                          (let ((l (get-location val)))
                                                            (at l
                                                                (generated
-                                                                (make-app-node
-                                                                 (at l
-                                                                     (generated
-                                                                      (make-symbol-node 'assign!)))
+                                                                (make-primop-app-node
+                                                                 'assign!
                                                                  (list var
                                                                        val))))))
                                                         (derefy (set v)

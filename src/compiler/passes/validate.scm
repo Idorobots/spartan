@@ -4,33 +4,38 @@
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 (load "compiler/errors.scm")
-(load "compiler/freevars.scm") ;; FIXME This is only imported for get-fv.
 
-(define (validate env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (let ((expr (env-get env 'ast))
-                                        (globals (env-get env 'globals)))
-                                    (validate-ast (get-undefined-vars expr globals)
-                                                  (set)
-                                                  expr))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define validate
+  (pass (schema "validate"
+                'errors a-list?
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app <error>)))
+   (lambda (env)
+     (let ((result (collect-errors (env-get env 'errors)
+                                   (lambda ()
+                                     (let ((expr (env-get env 'ast))
+                                           (globals (env-get env 'globals)))
+                                       (validate-ast (get-undefined-vars expr globals)
+                                                     (set)
+                                                     expr))))))
+       (env-set env
+                'ast (car result)
+                'errors (cadr result))))))
 
 (define (get-undefined-vars expr globals)
-  (set-difference (get-fv expr)
+  (set-difference (get-free-vars expr)
                   (apply set globals)))
 
 (define (validate-ast undefined unused expr)
-  (case (get-type expr)
-    ((quote) expr)
-    ((lambda)
+  (ast-case expr
+    ((a-quote _) expr)
+    ((lambda _ ,body)
      (let* ((bound (get-bound-vars expr))
-            (unused (set-difference bound
-                                    (get-fv (ast-lambda-body expr)))))
+            (unused (set-difference bound (get-free-vars body))))
        (ast-update (ast-update expr
                                'formals
                                (partial map
@@ -41,10 +46,9 @@
                    (partial validate-ast
                             (set-difference undefined bound)
                             (set)))))
-    ((let)
+    ((let _ ,body)
      (let* ((bound (get-bound-vars expr))
-            (unused (set-difference bound
-                                    (get-fv (ast-let-body expr)))))
+            (unused (set-difference bound (get-free-vars body))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map (partial validate-ast undefined unused)))
@@ -52,13 +56,12 @@
                    (partial validate-ast
                             (set-difference undefined bound)
                             (set)))))
-    ((letrec)
+    ((letrec ,bindings ,body)
      (let* ((bound (get-bound-vars expr))
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
-                                    (set-union (get-fv (ast-letrec-body expr))
-                                               (set-sum (map get-fv
-                                                             (ast-letrec-bindings expr)))))))
+                                    (set-union (get-free-vars body)
+                                               (set-sum (map get-free-vars bindings))))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map (partial validate-ast without-bound unused)))
@@ -66,30 +69,33 @@
                    (partial validate-ast
                             without-bound
                             (set)))))
-    ((binding)
+    ((binding _ _)
      (ast-update (ast-update expr 'var (partial validate-ast (set) unused))
                  'val (partial validate-ast undefined (set))))
-    ((symbol)
+    ((symbol '_)
+     expr)
+    ((symbol _)
      (let ((value (ast-symbol-value expr)))
        (cond ((generated? expr) expr)
              ((set-member? undefined value)
               (raise-compilation-error
                expr
                (format "Undefined variable `~a`:" value)))
-             ((equal? value '_) expr)
              ((set-member? unused value)
               (raise-compilation-error
                expr
                (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
              (else
               expr))))
-    ((def)
-     ;; NOTE So that we can find potential errors in misplaced defs.
-     (replace (walk-ast (partial validate-ast undefined unused)
-                        expr)
-              (raise-compilation-error
-               expr
-               (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax")))))
+    ((def _ ,value)
+     ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
+     (let* ((bound (get-bound-vars expr))
+            (unused (set-difference bound (get-free-vars value))))
+       (ast-update (ast-update expr 'name (partial validate-ast (set) unused))
+                   'value
+                   (partial validate-ast
+                            (set-difference undefined bound)
+                            (set)))))
     (else
      (walk-ast (partial validate-ast undefined unused)
                expr))))

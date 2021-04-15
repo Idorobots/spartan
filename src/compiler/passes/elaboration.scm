@@ -1,26 +1,32 @@
 ;; Semantic elaboration.
 ;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
 
-(load "compiler/utils/errors.scm")
 (load "compiler/utils/utils.scm")
 
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
-(load "compiler/body.scm")
+(load "compiler/errors.scm")
 
-(define (elaborate env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (elaborate-unquoted (env-get env 'ast))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define elaborate
+  (pass (schema "elaborate"
+                'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    if let binding lambda app def
+                                    primop-app body <error>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (elaborate-unquoted (env-get env 'ast))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))
 
 (define (elaborate-unquoted expr)
   (case (get-type expr)
     ((<error> quote number symbol string) expr)
-    ((do)
+    ((do body)
      (ast-update expr 'exprs (partial map elaborate-unquoted)))
     ((if)
      (foldl (lambda (field acc)
@@ -106,7 +112,8 @@
   (ast-case expr
    ((list 'do ,first . ,rest)
     (replace expr
-             (make-do-node (cons first rest))))
+             ;; NOTE User-supplied do needs to be body-expanded as well.
+             (make-body-node (cons first rest) "Bad `do` syntax")))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -118,7 +125,8 @@
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
              (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
-                               (wrap-with-do (cons first rest) "Bad `lambda` body syntax"))))
+                               (at (get-location expr)
+                                   (make-body-node (cons first rest) "Bad `lambda` body syntax")))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -147,11 +155,13 @@
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
-                            (wrap-with-do (cons first-body rest-body) "Bad `let` body syntax"))))
+                            (at (get-location expr)
+                                (make-body-node (cons first-body rest-body) "Bad `let` body syntax")))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
-                               (wrap-with-do (cons first-body rest-body) "Bad `letrec` body syntax"))))
+                               (at (get-location expr)
+                                   (make-body-node (cons first-body rest-body) "Bad `letrec` body syntax")))))
    ((list _ () ,first . ,rest)
     (replace expr
              (make-do-node (cons first rest))))
@@ -220,7 +230,8 @@
                                                                         (generated
                                                                          (make-list-node formals)))
                                                                     "Bad `define` function signature syntax")
-                                                     (wrap-with-do (cons first rest) "Bad `define` function body syntax"))))))))
+                                                     (at (get-location expr)
+                                                         (make-body-node (cons first rest) "Bad `define` function body syntax")))))))))
    ((list 'define ,name ,value)
     (replace expr
              (make-def-node (valid-symbol name "Bad `define` syntax")
@@ -243,7 +254,7 @@
 
 (define (valid-app-procedure op)
   (let ((type (get-type op)))
-    (if (member type '(symbol if do lambda let letrec app primop-app))
+    (if (member type '(symbol if do body lambda let letrec app primop-app))
         op
         (raise-compilation-error
          op

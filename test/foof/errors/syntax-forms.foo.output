@@ -238,6 +238,10 @@
 69 |((define (faz x) x) 23)
      ^~~~~~
 
+../test/foof/errors/syntax-forms.foo(69,10): Unused variable `faz`, rename to `_` to avoid this error:
+69 |((define (faz x) x) 23)
+              ^~~~~~
+
 ../test/foof/errors/syntax-forms.foo(72,1): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
 72 |("some function")
      ^~~~~~
@@ -258,4 +262,4 @@
 82 |`,@wat
      ^~~~~~
 
-Compilation aborted due to 65 errors.
+Compilation aborted due to 66 errors.

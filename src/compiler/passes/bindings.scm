@@ -2,10 +2,18 @@
 
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
+
+(load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
-(define (annotate-bindings env)
-  (env-update env 'ast (partial analyze-bindings #f)))
+(define annotate-bindings
+  (pass (schema "annotate-bindings"
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app <error>)))
+        (lambda (env)
+          (env-update env 'ast (partial analyze-bindings #f)))))
 
 (define (analyze-bindings within-letrec? expr)
   (ast-case expr

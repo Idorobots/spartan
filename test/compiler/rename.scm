@@ -34,13 +34,21 @@
                         (assert renamed-symbol symbol))))
 
  (it "doesn't rename primop-app ops"
-     (check ((op gen-valid-symbol-node)
+     (check ((op gen-valid-symbol)
              (args (gen-arg-list (gen-integer 0 5)))
              (node (apply gen-primop-app-node op args)))
             (assert-ast (mangle-names node)
                         (primop-app ,renamed-op . ,renamed-args)
-                        (assert renamed-op op)
+                        (assert (ast-symbol-value renamed-op) op)
                         (map (lambda (original renamed)
                                (assert renamed (ast-update original 'value symbol->safe)))
                              args
-                             renamed-args)))))
+                             renamed-args))))
+
+ (it "renames all wildcards"
+     (check ((symbol (gen-symbol-node '_))
+             (list (gen-specific-do-node symbol symbol symbol)))
+            (gensym-reset!)
+            (assert-ast (mangle-names list)
+                        (do 'WILD1 'WILD2 'WILD3)
+                        (assert #t)))))

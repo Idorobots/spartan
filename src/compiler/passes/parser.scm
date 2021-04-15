@@ -2,9 +2,9 @@
 
 (load "compiler/peggen.scm")
 (load "compiler/env.scm")
-(load "compiler/errors.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
-(load "compiler/body.scm")
+(load "compiler/errors.scm")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser
@@ -18,16 +18,7 @@
        (matches (if (= (length exprs) 1)
                     (car exprs)
                     (at (location start end)
-                        ;; FIXME Body needs at least one non-def expression.
-                        (wrap-with-do (cons (at (location end end)
-                                                (generated
-                                                 (make-quote-node
-                                                  (at (location end end)
-                                                      (generated
-                                                       (make-list-node
-                                                        '()))))))
-                                            exprs)
-                                      "Bad script")))
+                        (make-body-node exprs "Bad script")))
                 start
                 end))))
 
@@ -228,12 +219,12 @@
 (define (expand-structure-refs loc head rest)
   (foldl (lambda (part acc)
            (at loc
-               (generated
-                (make-primop-app-node (generated (wrap-symbol loc '&structure-ref))
-                                      (list acc
-                                            (at loc
-                                                (generated
-                                                 (make-quote-node part))))))))
+               (make-primop-app-node
+                '&structure-ref
+                (list acc
+                      (at loc
+                          (generated
+                           (make-quote-node part)))))))
          (wrap-symbol loc head)
          (map (partial wrap-symbol loc)
               rest)))
@@ -242,17 +233,21 @@
   (at loc
       (make-symbol-node s)))
 
-(define (parse env)
-  (let ((result (collect-errors (env-get env 'errors)
-                                (lambda ()
-                                  (let* ((input (env-get env 'input))
-                                         (parsed (Program input)))
-                                    (if (matches? parsed)
-                                        (match-match parsed)
-                                        (raise-compilation-error
-                                         (at (location 0 (string-length input))
-                                             (make-location-node))
-                                         "Not a valid FOOF file:")))))))
-    (env-set env
-             'ast (car result)
-             'errors (cadr result))))
+(define parse
+  (pass (schema "parse"
+                'input non-empty-string?
+                'errors a-list?)
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (let* ((input (env-get env 'input))
+                                                 (parsed (Program input)))
+                                            (if (matches? parsed)
+                                                (match-match parsed)
+                                                (raise-compilation-error
+                                                 (at (location 0 (string-length input))
+                                                     (make-location-node))
+                                                 "Not a valid FOOF file:")))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))))

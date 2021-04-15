@@ -3,6 +3,8 @@
 (load "compiler/utils/set.scm")
 (load "compiler/utils/utils.scm")
 
+(load "compiler/errors.scm")
+
 ;; Basic definitions
 
 (define (ast-node? node)
@@ -115,6 +117,18 @@
   (is-type? node 'do))
 
 (define (ast-do-exprs node)
+  (ast-get node 'exprs))
+
+;; Implicit body
+(define (make-body-node exprs ctx)
+  (generated
+   (context ctx
+            (ast-node 'type 'body 'exprs exprs))))
+
+(define (body-node? node)
+  (is-type? node 'body))
+
+(define (ast-body-exprs node)
   (ast-get node 'exprs))
 
 ;; Lambda
@@ -256,7 +270,8 @@
 
 ;; Primop application
 (define (make-primop-app-node op args)
-  (ast-node 'type 'primop-app 'op op 'args args))
+  (generated
+   (ast-node 'type 'primop-app 'op op 'args args)))
 
 (define (primop-app-node? node)
   (is-type? node 'primop-app))
@@ -332,12 +347,18 @@
   (get-context* node '()))
 
 (define (free-vars vars node)
-  (if (set-empty? vars)
-      node
-      (ast-set node 'free-vars vars)))
+  (cond ((set-empty? vars)
+         node)
+        ((symbol-node? node)
+         ;; NOTE Symbols always are their own free var, no need to store that in the AST.
+         node)
+        (else
+         (ast-set node 'free-vars vars))))
 
 (define (get-free-vars node)
-  (ast-get* node 'free-vars (set)))
+  (if (symbol-node? node)
+      (set (ast-symbol-value node))
+      (ast-get* node 'free-vars (set))))
 
 (define (bound-vars vars node)
   (if (set-empty? vars)
@@ -364,7 +385,7 @@
                 (ast-update acc field f))
               expr
               '(condition then else)))
-      ((do)
+      ((do body)
        (ast-update expr 'exprs mf))
       ((lambda)
        (ast-update (ast-update expr 'formals mf) 'body f))
@@ -376,8 +397,10 @@
        (ast-update expr 'value f))
       ((def)
        (ast-update (ast-update expr 'name f) 'value f))
-      ((app primop-app)
+      ((app)
        (ast-update (ast-update expr 'op f) 'args mf))
+      ((primop-app)
+       (ast-update expr 'args mf))
       ((list)
        (ast-update expr 'value mf))
       ((<error>)
@@ -400,6 +423,7 @@
                            (ast-if-then expr)
                            (ast-if-else expr)))
                ((do) (cons 'do (ast-do-exprs expr)))
+               ((body) (cons 'do (ast-body-exprs expr)))
                ((lambda) (list 'lambda (ast-lambda-formals expr) (ast-lambda-body expr)))
                ((let) (list 'let (ast-let-bindings expr)
                             (ast-let-body expr)))
@@ -449,8 +473,8 @@
 
 (define-syntax ast-case
   (syntax-rules (else)
-    ((ast-case expr (else v))
-     v)
+    ((ast-case expr (else v ...))
+     (begin v ...))
     ((ast-case expr rule rest ...)
      (let ((tmp expr))
        (ast-case-match-rule tmp
@@ -496,6 +520,8 @@
                         (ast-list-matches? (ast-list-values expr) (cdr pattern))))
            ((do) (and (do-node? expr)
                       (ast-list-matches? (ast-do-exprs expr) (cdr pattern))))
+           ((body) (and (body-node? expr)
+                        (ast-list-matches? (ast-body-exprs expr) (cdr pattern))))
            ((if) (and (if-node? expr)
                       (unify-bindings
                        (unify-bindings
@@ -509,7 +535,12 @@
                        (unify-bindings (ast-matches? (ast-app-op expr) (cadr pattern))
                                        (ast-list-matches? (ast-app-args expr) (cddr pattern)))))
            ((primop-app) (and (primop-app-node? expr)
-                              (unify-bindings (ast-matches? (ast-primop-app-op expr) (cadr pattern))
+                              ;; NOTE Spoofs a full symbol node for the op to make matching easier.
+                              (unify-bindings (ast-matches? (at (get-location expr)
+                                                                (generated
+                                                                 (make-symbol-node
+                                                                  (ast-primop-app-op expr))))
+                                                            (cadr pattern))
                                               (ast-list-matches? (ast-primop-app-args expr) (cddr pattern)))))
            ((lambda) (and (lambda-node? expr)
                           (unify-bindings (ast-list-matches? (ast-lambda-formals expr) (cadr pattern))

@@ -1,30 +1,33 @@
 ;; The compiler
 
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
 ;; The frontend
-(load "compiler/parser.scm")
-(load "compiler/macro-expander.scm")
-(load "compiler/elaboration.scm")
-(load "compiler/body.scm")
-(load "compiler/qq.scm")
-(load "compiler/validate.scm")
-(load "compiler/errors.scm")
+(load "compiler/passes/parser.scm")
+(load "compiler/passes/macro-expander.scm")
+(load "compiler/passes/elaboration.scm")
+(load "compiler/passes/body.scm")
+(load "compiler/passes/qq.scm")
+(load "compiler/passes/validate.scm")
+(load "compiler/passes/errors.scm")
 
 ;; The backend
-(load "compiler/bindings.scm")
-(load "compiler/freevars.scm")
-(load "compiler/builtins.scm")
-(load "compiler/letrec-bindings.scm")
-(load "compiler/letrec-fix.scm")
-(load "compiler/cpc.scm")
-(load "compiler/closures.scm")
-(load "compiler/rename.scm")
+(load "compiler/passes/bindings.scm")
+(load "compiler/passes/freevars.scm")
+(load "compiler/passes/builtins.scm")
+(load "compiler/passes/letrec-bindings.scm")
+(load "compiler/passes/letrec-fix.scm")
+(load "compiler/passes/cpc.scm")
+(load "compiler/passes/closures.scm")
+(load "compiler/passes/rename.scm")
 
 (define (compile env)
-  (foldl (lambda (phase expr)
-           (phase expr))
+  (foldl (lambda (pass env)
+           (unless (env-contains? env 'no-validation)
+             ((pass-schema pass) env))
+           ((pass-transform pass) env))
          (env-set env
                   'errors '()
                   'macros (make-builtin-macros)
@@ -47,6 +50,10 @@
                symbol-rename
                generate-target-code)))
 
-(define (generate-target-code env)
-  ;; FIXME Actually implement a proper code-gen.
-  (ast->plain (env-get env 'ast)))
+(define generate-target-code
+  (pass (schema "generate-target-code"
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let binding lambda primop-app)))
+        (lambda (env)
+          ;; FIXME Actually implement a proper code-gen.
+          (ast->plain (env-get env 'ast)))))

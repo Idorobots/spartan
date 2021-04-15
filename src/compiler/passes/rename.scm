@@ -1,18 +1,27 @@
 ;; Target-safe variable renaming.
 
 (load "compiler/utils/utils.scm")
+(load "compiler/utils/gensym.scm")
+
 (load "compiler/env.scm")
+(load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
-(define (symbol-rename env)
-  (env-update env 'ast mangle-names))
+(define symbol-rename
+  (pass (schema "symbol-rename"
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let binding lambda primop-app)))
+        (lambda (env)
+          (env-update env 'ast mangle-names))))
 
 (define (mangle-names expr)
   (case (get-type expr)
     ((quote)
      expr)
     ((symbol)
-     (ast-update expr 'value symbol->safe))
+     (if (equal? (ast-symbol-value expr) '_)
+         (ast-update expr 'value (constantly (gensym 'WILD)))
+         (ast-update expr 'value symbol->safe)))
     ((primop-app)
      (ast-update expr 'args (partial map mangle-names)))
     (else

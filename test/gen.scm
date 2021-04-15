@@ -150,7 +150,7 @@
 
 (define (gen-valid-primop-app-node rand)
   (sample (apply gen-primop-app-node
-                 gen-valid-symbol-node
+                 gen-valid-symbol
                  (sample (gen-list (gen-integer 0 5)
                                    gen-simple-node)
                          rand))
@@ -244,6 +244,28 @@
   (sample (gen-do-node (gen-integer 1 5) gen-simple-node)
           rand))
 
+(define (gen-body-node gen-max-length gen-contents gen-context)
+  (lambda (rand)
+    (at (sample gen-location rand)
+        (make-body-node
+         (sample (gen-list gen-max-length
+                           gen-contents)
+                 rand)
+         (sample gen-context
+                 rand)))))
+
+(define (gen-valid-body-node rand)
+  (sample (gen-body-node (gen-integer 1 5) gen-simple-node (gen-text (gen-integer 10 20)))
+          rand))
+
+(define (gen-specific-body-node gen-context . gen-contents)
+  (lambda (rand)
+    (at (sample gen-location rand)
+        (make-body-node
+         (map (flip sample rand)
+              gen-contents)
+         (sample gen-context rand)))))
+
 (define (gen-simple-node rand)
   (sample (gen-one-of (gen-number-node gen-number)
                       gen-valid-symbol-node
@@ -280,7 +302,8 @@
                       gen-valid-def-node
                       (gen-quasiquote-node gen-simple-node)
                       (gen-unquote-node gen-simple-node)
-                      (gen-unquote-splicing-node gen-simple-node))
+                      (gen-unquote-splicing-node gen-simple-node)
+                      gen-valid-body-node)
           rand))
 
 (define (gen-ast-node rand)
@@ -322,6 +345,11 @@
 
 (define (gen-with-fv-bv gen fv bv)
   (gen-with-fv (gen-with-bv gen bv) fv))
+
+(define (gen-with-ctx gen ctx)
+  (lambda (rand)
+    (context ctx
+             (sample gen rand))))
 
 (define (gen-self-recoursive gen)
   (lambda (rand)

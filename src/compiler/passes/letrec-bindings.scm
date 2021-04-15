@@ -3,9 +3,11 @@
 (load "compiler/utils/scc.scm")
 (load "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
 (load "compiler/env.scm")
-(load "compiler/freevars.scm") ;; FIXME Just for get-fv, compute-let-fv & compute-letrec-fv
+(load "compiler/pass.scm")
+(load "compiler/ast.scm")
+
+(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-let-fv & compute-letrec-fv
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 
@@ -45,8 +47,12 @@
 
 ;; ...which is considerably simpler to compile and optimize.
 
-(define (reorder-letrec-bindings env)
-  (env-update env 'ast reorder-letrec))
+(define reorder-letrec-bindings
+  (pass (schema "reorder-letrec-bindings"
+                'ast (ast-subset? '(quote number symbol string list
+                                    if do let letrec binding lambda app primop-app)))
+        (lambda (env)
+          (env-update env 'ast reorder-letrec))))
 
 (define (reorder-letrec expr)
   (map-ast id
@@ -80,7 +86,7 @@
                          ;; NOTE So that we can process somewhat malformed expressions.
                          (list (safe-symbol-value (ast-binding-var b)) e))
                        (set-intersection vars
-                                         (get-fv (ast-binding-val b)))))
+                                         (get-free-vars (ast-binding-val b)))))
                 (ast-letrec-bindings expr)))))
 
 (define (derive-ordering expr)

@@ -2,6 +2,10 @@
 1 |(if (define (foo x) y)
        ^~~~~~
 
+../test/foof/errors/validation.foo(1,13): Unused variable `foo`, rename to `_` to avoid this error:
+1 |(if (define (foo x) y)
+                ^~~~~~
+
 ../test/foof/errors/validation.foo(1,17): Unused variable `x`, rename to `_` to avoid this error:
 1 |(if (define (foo x) y)
                     ^~~~~~
@@ -9,6 +13,10 @@
 ../test/foof/errors/validation.foo(4,5): Bad `module` syntax, not allowed in this context:
 4 |(car (module (x)
         ^~~~~~
+
+../test/foof/errors/validation.foo(4,14): Unused variable `x`, rename to `_` to avoid this error:
+4 |(car (module (x)
+                 ^~~~~~
 
 ../test/foof/errors/validation.foo(5,20): Unused variable `x`, rename to `_` to avoid this error:
 5 |       (define (foo x) y)))
@@ -26,4 +34,4 @@
 8 |  (* 2 bar z))
               ^~~~~~
 
-Compilation aborted due to 7 errors.
+Compilation aborted due to 9 errors.
