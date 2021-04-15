@@ -49,8 +49,7 @@
       (unless (member t types)
         (schema-validation-error (format "Unhandled AST node type `~a`" t) expr))
       ;; NOTE Contents of these are technically not part of the subset.
-      (if (or (error-node? expr)
-              (quote-node? expr))
+      (if (error-node? expr)
           error
           (walk-ast (ast-subset? types)
                     expr)))))

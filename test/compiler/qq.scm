@@ -93,4 +93,21 @@
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
                       (expand-quasiquote node))
-                    "Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:"))))
+                    "Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:")))
+
+ (it "should turn quoted values into plain old data inside of quote"
+     (check ((quoted (gen-one-of (gen-quote-node gen-simple-node)
+                                 (gen-quasiquote-node gen-simple-node)
+                                 (gen-unquote-node gen-simple-node)
+                                 (gen-unquote-splicing-node gen-simple-node)))
+             (list (gen-specific-list-node gen-simple-node quoted gen-simple-node))
+             (node (gen-quote-node list)))
+            (assert-ast (expand-quasiquote node)
+                        (a-quote
+                         (list ,simple-node1
+                               (list ,quoted-symbol ,simple-node2)
+                               ,simple-node3))
+                        (assert simple-node1 (ast-list-nth list 0))
+                        (assert (ast-symbol-value quoted-symbol) (get-type quoted))
+                        (assert simple-node2 (ast-quoted-expr quoted))
+                        (assert simple-node3 (ast-list-nth list 2))))))

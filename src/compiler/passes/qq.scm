@@ -24,7 +24,7 @@
 
 (define (expand-quasiquote expr)
   (case (get-type expr)
-    ((quote) expr)
+    ((quote) (walk-ast plainify-quote expr))
     ((quasiquote)
      (expand-no-splicing (ast-quoted-expr expr)
                          expr))
@@ -44,7 +44,8 @@
 
 (define (expand-splicing expr context)
   (case (get-type expr)
-    ((quote number string) expr)
+    ((number string) expr)
+    ((quote) (walk-ast plainify-quote expr))
     ((quasiquote) (expand-quasiquote expr))
     ((unquote unquote-splicing) (ast-quoted-expr expr))
     ((symbol) (reconstruct-quoted-value
@@ -82,3 +83,17 @@
 (define (make-cons a b context)
   (at (get-location context)
       (make-primop-app-node 'cons (list a b))))
+
+(define (plainify-quote expr)
+  (case (get-type expr)
+    ((quote quasiquote unquote unquote-splicing)
+    ;; NOTE Within `quote` all the semantic AST nodes have to be dumbed down to plain old data.
+     (replace expr
+              (generated
+               (make-list-node
+                (list (at (get-location expr)
+                          (generated
+                           (make-symbol-node (get-type expr))))
+                      (ast-quoted-expr expr))))))
+    (else
+     (walk-ast plainify-quote expr))))
