@@ -45,13 +45,15 @@
 
 (define (ast-subset? types)
   (lambda (expr)
-    (map-ast id
-             (lambda (expr)
-               (let ((t (get-type expr)))
-                 (unless (member t types)
-                   (schema-validation-error (format "Unhandled AST node type `~a`" t) expr)))
-               expr)
-             expr)))
+    (let ((t (get-type expr)))
+      (unless (member t types)
+        (schema-validation-error (format "Unhandled AST node type `~a`" t) expr))
+      ;; NOTE Contents of these are technically not part of the subset.
+      (if (or (error-node? expr)
+              (quote-node? expr))
+          error
+          (walk-ast (ast-subset? types)
+                    expr)))))
 
 (define (schema-validation-error? e)
   (tagged-list? 'schema-validation-error e))
