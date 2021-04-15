@@ -31,12 +31,11 @@
                   (apply set globals)))
 
 (define (validate-ast undefined unused expr)
-  (case (get-type expr)
-    ((quote) expr)
-    ((lambda)
+  (ast-case expr
+    ((a-quote _) expr)
+    ((lambda _ ,body)
      (let* ((bound (get-bound-vars expr))
-            (unused (set-difference bound
-                                    (get-free-vars (ast-lambda-body expr)))))
+            (unused (set-difference bound (get-free-vars body))))
        (ast-update (ast-update expr
                                'formals
                                (partial map
@@ -47,10 +46,9 @@
                    (partial validate-ast
                             (set-difference undefined bound)
                             (set)))))
-    ((let)
+    ((let _ ,body)
      (let* ((bound (get-bound-vars expr))
-            (unused (set-difference bound
-                                    (get-free-vars (ast-let-body expr)))))
+            (unused (set-difference bound (get-free-vars body))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map (partial validate-ast undefined unused)))
@@ -58,13 +56,12 @@
                    (partial validate-ast
                             (set-difference undefined bound)
                             (set)))))
-    ((letrec)
+    ((letrec ,bindings ,body)
      (let* ((bound (get-bound-vars expr))
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
-                                    (set-union (get-free-vars (ast-letrec-body expr))
-                                               (set-sum (map get-free-vars
-                                                             (ast-letrec-bindings expr)))))))
+                                    (set-union (get-free-vars body)
+                                               (set-sum (map get-free-vars bindings))))))
        (ast-update (ast-update expr
                                'bindings
                                (partial map (partial validate-ast without-bound unused)))
@@ -72,28 +69,28 @@
                    (partial validate-ast
                             without-bound
                             (set)))))
-    ((binding)
+    ((binding _ _)
      (ast-update (ast-update expr 'var (partial validate-ast (set) unused))
                  'val (partial validate-ast undefined (set))))
-    ((symbol)
+    ((symbol '_)
+     expr)
+    ((symbol _)
      (let ((value (ast-symbol-value expr)))
        (cond ((generated? expr) expr)
              ((set-member? undefined value)
               (raise-compilation-error
                expr
                (format "Undefined variable `~a`:" value)))
-             ((equal? value '_) expr)
              ((set-member? unused value)
               (raise-compilation-error
                expr
                (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
              (else
               expr))))
-    ((def)
+    ((def _ ,value)
      ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (get-bound-vars expr))
-            (unused (set-difference bound
-                                    (get-free-vars (ast-def-value expr)))))
+            (unused (set-difference bound (get-free-vars value))))
        (ast-update (ast-update expr 'name (partial validate-ast (set) unused))
                    'value
                    (partial validate-ast
