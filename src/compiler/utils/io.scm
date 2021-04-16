@@ -6,6 +6,18 @@
       (print (car args)))
   (newline))
 
+(define (ansi-wrap a b text)
+  (format "\u001b[~am~a\u001b[~am" a text b))
+
+(define (red text)
+  (ansi-wrap 31 39 text))
+
+(define (green text)
+  (ansi-wrap 32 39 text))
+
+(define (yellow text)
+  (ansi-wrap 33 39 text))
+
 (define (spit filename content)
   (with-output-to-file filename
     (lambda ()
