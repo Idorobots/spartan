@@ -37,7 +37,7 @@
     (newline)))
 
 (define +min-margin+ 3)
-(define +context+ 1)
+(define +context+ 2)
 (define +ellide-blocks-larger-than+ 5)
 
 (define (format-error module input location what)

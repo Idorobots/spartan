@@ -3,13 +3,16 @@
   2 [33m|[39m  `(this unquote is ,@valid)
     [33m|[39m                      [31m^^^^^[39m
   3 [33m|[39m  (display (foo "Hello world! ")))
+  4 [33m|[39m  (newline)))
 
 ../test/foof/errors/unmatched-parens.foo(4,11): Unmatched `)`, expected an opening `(` to come before:
+  2 [33m|[39m  `(this unquote is ,@valid)
   3 [33m|[39m  (display (foo "Hello world! ")))
   4 [33m|[39m  (newline)))
     [33m|[39m           [31m^[39m
 
 ../test/foof/errors/unmatched-parens.foo(4,12): Unmatched `)`, expected an opening `(` to come before:
+  2 [33m|[39m  `(this unquote is ,@valid)
   3 [33m|[39m  (display (foo "Hello world! ")))
   4 [33m|[39m  (newline)))
     [33m|[39m            [31m^[39m

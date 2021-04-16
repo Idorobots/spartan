@@ -2,329 +2,437 @@
   1 [33m|[39m(when)
     [33m|[39m [31m^^^^[39m
   2 [33m|[39m(when #f)
+  3 [33m|[39m(when 5 23)
 
 ../test/foof/errors/macros.foo(2,1): Bad `when` syntax, expected a condition and a body to follow:
   1 [33m|[39m(when)
   2 [33m|[39m(when #f)
     [33m|[39m [31m^^^^[39m
   3 [33m|[39m(when 5 23)
+  4 [33m|[39m(when 5 1 2 3)
 
 ../test/foof/errors/macros.foo(5,1): Bad `unless` syntax, expected a condition and a body to follow:
+  3 [33m|[39m(when 5 23)
   4 [33m|[39m(when 5 1 2 3)
   5 [33m|[39m(unless)
     [33m|[39m [31m^^^^^^[39m
   6 [33m|[39m(unless #f)
+  7 [33m|[39m(unless 5 23)
 
 ../test/foof/errors/macros.foo(6,1): Bad `unless` syntax, expected a condition and a body to follow:
+  4 [33m|[39m(when 5 1 2 3)
   5 [33m|[39m(unless)
   6 [33m|[39m(unless #f)
     [33m|[39m [31m^^^^^^[39m
   7 [33m|[39m(unless 5 23)
+  8 [33m|[39m(unless 23 3 2 1)
 
 ../test/foof/errors/macros.foo(9,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+  7 [33m|[39m(unless 5 23)
   8 [33m|[39m(unless 23 3 2 1)
   9 [33m|[39m(cond)
     [33m|[39m [31m^^^^[39m
  10 [33m|[39m(cond (5 23))
+ 11 [33m|[39m(cond (5 23) (23 5))
 
 ../test/foof/errors/macros.foo(10,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+  8 [33m|[39m(unless 23 3 2 1)
   9 [33m|[39m(cond)
  10 [33m|[39m(cond (5 23))
     [33m|[39m [31m^^^^[39m
  11 [33m|[39m(cond (5 23) (23 5))
+ 12 [33m|[39m(cond (5 23) (else 5))
 
 ../test/foof/errors/macros.foo(11,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+  9 [33m|[39m(cond)
  10 [33m|[39m(cond (5 23))
  11 [33m|[39m(cond (5 23) (23 5))
     [33m|[39m [31m^^^^[39m
  12 [33m|[39m(cond (5 23) (else 5))
+ 13 [33m|[39m(cond (else 5))
 
 ../test/foof/errors/macros.foo(16,1): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+ 14 [33m|[39m(cond (5 1 2 3) (else 23))
  15 [33m|[39m(cond (5 1 2 3) (else 1 2 3))
  16 [33m|[39m(cond (else 1 2 3) (5 1 2 3))
     [33m|[39m [31m^^^^[39m
  17 [33m|[39m(and)
+ 18 [33m|[39m'(and)        ;; both
 
 ../test/foof/errors/macros.foo(16,7): Undefined variable `else`:
+ 14 [33m|[39m(cond (5 1 2 3) (else 23))
  15 [33m|[39m(cond (5 1 2 3) (else 1 2 3))
  16 [33m|[39m(cond (else 1 2 3) (5 1 2 3))
     [33m|[39m       [31m^^^^[39m
  17 [33m|[39m(and)
+ 18 [33m|[39m'(and)        ;; both
 
 ../test/foof/errors/macros.foo(17,1): Bad `and` syntax, expected a list of expressions to follow:
+ 15 [33m|[39m(cond (5 1 2 3) (else 1 2 3))
  16 [33m|[39m(cond (else 1 2 3) (5 1 2 3))
  17 [33m|[39m(and)
     [33m|[39m [31m^^^[39m
  18 [33m|[39m'(and)        ;; both
+ 19 [33m|[39m(quote (and)) ;; OK
 
 ../test/foof/errors/macros.foo(23,1): Bad `or` syntax, expected a list of expressions to follow:
+ 21 [33m|[39m(and 1 2)
  22 [33m|[39m(and 1 2 3 4 5)
  23 [33m|[39m(or)
     [33m|[39m [31m^^[39m
  24 [33m|[39m(or 1)
+ 25 [33m|[39m(or 1 2)
 
 ../test/foof/errors/macros.foo(27,1): Bad `let*` syntax, expected a list of bindings and a body to follow:
+ 25 [33m|[39m(or 1 2)
  26 [33m|[39m(or 1 2 3 4 5)
  27 [33m|[39m(let*)
     [33m|[39m [31m^^^^[39m
  28 [33m|[39m(let* ())
+ 29 [33m|[39m(let* () 23)
 
 ../test/foof/errors/macros.foo(28,1): Bad `let*` syntax, expected a list of bindings and a body to follow:
+ 26 [33m|[39m(or 1 2 3 4 5)
  27 [33m|[39m(let*)
  28 [33m|[39m(let* ())
     [33m|[39m [31m^^^^[39m
  29 [33m|[39m(let* () 23)
+ 30 [33m|[39m(let* ((_ 23)))
 
 ../test/foof/errors/macros.foo(30,0): Bad `let*` syntax, expected a list of bindings and a body to follow:
+ 28 [33m|[39m(let* ())
  29 [33m|[39m(let* () 23)
  30 [33m|[39m(let* ((_ 23)))
     [33m|[39m[31m^^^^^^^^^^^^^^^[39m
  31 [33m|[39m(let* ((foo 23)) foo)
+ 32 [33m|[39m(let* ((foo 23)) 5 foo)
 
 ../test/foof/errors/macros.foo(35,16): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+ 33 [33m|[39m(let* ((_ 23) (baz 5)) baz)
  34 [33m|[39m(let* ((foo 23) (baz 5)) baz foo)
  35 [33m|[39m(let* ((foo 23) baz) 23 5 foo)
     [33m|[39m                [31m^^^[39m
  36 [33m|[39m(let* (foo bar) 5)
+ 37 [33m|[39m(letcc)
 
 ../test/foof/errors/macros.foo(36,7): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+ 34 [33m|[39m(let* ((foo 23) (baz 5)) baz foo)
  35 [33m|[39m(let* ((foo 23) baz) 23 5 foo)
  36 [33m|[39m(let* (foo bar) 5)
     [33m|[39m       [31m^^^[39m
  37 [33m|[39m(letcc)
+ 38 [33m|[39m(letcc k)
 
 ../test/foof/errors/macros.foo(36,11): Bad `let*` bindings syntax, expected a pair of an identifier and a value:
+ 34 [33m|[39m(let* ((foo 23) (baz 5)) baz foo)
  35 [33m|[39m(let* ((foo 23) baz) 23 5 foo)
  36 [33m|[39m(let* (foo bar) 5)
     [33m|[39m           [31m^^^[39m
  37 [33m|[39m(letcc)
+ 38 [33m|[39m(letcc k)
 
 ../test/foof/errors/macros.foo(37,1): Bad `letcc` syntax, expected an identifier and a body to follow:
+ 35 [33m|[39m(let* ((foo 23) baz) 23 5 foo)
  36 [33m|[39m(let* (foo bar) 5)
  37 [33m|[39m(letcc)
     [33m|[39m [31m^^^^^[39m
  38 [33m|[39m(letcc k)
+ 39 [33m|[39m(letcc k k)
 
 ../test/foof/errors/macros.foo(38,1): Bad `letcc` syntax, expected an identifier and a body to follow:
+ 36 [33m|[39m(let* (foo bar) 5)
  37 [33m|[39m(letcc)
  38 [33m|[39m(letcc k)
     [33m|[39m [31m^^^^^[39m
  39 [33m|[39m(letcc k k)
+ 40 [33m|[39m(letcc k 1 2 3 k)
 
 ../test/foof/errors/macros.foo(41,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+ 39 [33m|[39m(letcc k k)
  40 [33m|[39m(letcc k 1 2 3 k)
  41 [33m|[39m(letcc () 23)
     [33m|[39m       [31m^^[39m
  42 [33m|[39m(letcc (k) 23)
+ 43 [33m|[39m(letcc ((k 5)) 23)
 
 ../test/foof/errors/macros.foo(42,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+ 40 [33m|[39m(letcc k 1 2 3 k)
  41 [33m|[39m(letcc () 23)
  42 [33m|[39m(letcc (k) 23)
     [33m|[39m       [31m^^^[39m
  43 [33m|[39m(letcc ((k 5)) 23)
+ 44 [33m|[39m(handle)
 
 ../test/foof/errors/macros.foo(43,7): Bad `letcc` syntax, expected a symbol but got a list instead:
+ 41 [33m|[39m(letcc () 23)
  42 [33m|[39m(letcc (k) 23)
  43 [33m|[39m(letcc ((k 5)) 23)
     [33m|[39m       [31m^^^^^^^[39m
  44 [33m|[39m(handle)
+ 45 [33m|[39m(handle 23)
 
 ../test/foof/errors/macros.foo(44,1): Bad `handle` syntax, expected exactly two expressions to follow:
+ 42 [33m|[39m(letcc (k) 23)
  43 [33m|[39m(letcc ((k 5)) 23)
  44 [33m|[39m(handle)
     [33m|[39m [31m^^^^^^[39m
  45 [33m|[39m(handle 23)
+ 46 [33m|[39m(handle 23 5)
 
 ../test/foof/errors/macros.foo(45,1): Bad `handle` syntax, expected exactly two expressions to follow:
+ 43 [33m|[39m(letcc ((k 5)) 23)
  44 [33m|[39m(handle)
  45 [33m|[39m(handle 23)
     [33m|[39m [31m^^^^^^[39m
  46 [33m|[39m(handle 23 5)
+ 47 [33m|[39m(handle 23 5 oops)
 
 ../test/foof/errors/macros.foo(47,1): Bad `handle` syntax, expected exactly two expressions to follow:
+ 45 [33m|[39m(handle 23)
  46 [33m|[39m(handle 23 5)
  47 [33m|[39m(handle 23 5 oops)
     [33m|[39m [31m^^^^^^[39m
  48 [33m|[39m(shift)
+ 49 [33m|[39m(shift k)
 
 ../test/foof/errors/macros.foo(48,1): Bad `shift` syntax, expected an identifier and a body to follow:
+ 46 [33m|[39m(handle 23 5)
  47 [33m|[39m(handle 23 5 oops)
  48 [33m|[39m(shift)
     [33m|[39m [31m^^^^^[39m
  49 [33m|[39m(shift k)
+ 50 [33m|[39m(shift k k)
 
 ../test/foof/errors/macros.foo(49,1): Bad `shift` syntax, expected an identifier and a body to follow:
+ 47 [33m|[39m(handle 23 5 oops)
  48 [33m|[39m(shift)
  49 [33m|[39m(shift k)
     [33m|[39m [31m^^^^^[39m
  50 [33m|[39m(shift k k)
+ 51 [33m|[39m(shift k 1 2 3 k)
 
 ../test/foof/errors/macros.foo(52,7): Bad `shift` syntax, expected a symbol but got a list instead:
+ 50 [33m|[39m(shift k k)
  51 [33m|[39m(shift k 1 2 3 k)
  52 [33m|[39m(shift () 23)
     [33m|[39m       [31m^^[39m
  53 [33m|[39m(shift (k) 23)
+ 54 [33m|[39m(shift ((k wut)) 5)
 
 ../test/foof/errors/macros.foo(53,7): Bad `shift` syntax, expected a symbol but got a list instead:
+ 51 [33m|[39m(shift k 1 2 3 k)
  52 [33m|[39m(shift () 23)
  53 [33m|[39m(shift (k) 23)
     [33m|[39m       [31m^^^[39m
  54 [33m|[39m(shift ((k wut)) 5)
+ 55 [33m|[39m(reset)
 
 ../test/foof/errors/macros.foo(54,7): Bad `shift` syntax, expected a symbol but got a list instead:
+ 52 [33m|[39m(shift () 23)
  53 [33m|[39m(shift (k) 23)
  54 [33m|[39m(shift ((k wut)) 5)
     [33m|[39m       [31m^^^^^^^^^[39m
  55 [33m|[39m(reset)
+ 56 [33m|[39m(reset 5)
 
 ../test/foof/errors/macros.foo(55,1): Bad `reset` syntax, expected exactly one expression to follow:
+ 53 [33m|[39m(shift (k) 23)
  54 [33m|[39m(shift ((k wut)) 5)
  55 [33m|[39m(reset)
     [33m|[39m [31m^^^^^[39m
  56 [33m|[39m(reset 5)
+ 57 [33m|[39m(reset 1 2 3)
 
 ../test/foof/errors/macros.foo(59,11): Bad `structure` syntax, expected a definition:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m           [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,11): Undefined variable `x`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m           [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,11): Undefined variable `x`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m           [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,13): Bad `structure` syntax, expected a definition:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m             [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,13): Undefined variable `y`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m             [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,13): Undefined variable `y`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m             [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,15): Bad `structure` syntax, expected a definition:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m               [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,15): Undefined variable `z`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m               [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(59,15): Undefined variable `z`:
+ 57 [33m|[39m(reset 1 2 3)
  58 [33m|[39m(structure)
  59 [33m|[39m(structure x y z)
     [33m|[39m               [31m^[39m
  60 [33m|[39m(structure (define foo 5))
+ 61 [33m|[39m(structure (define (foo x) x))
 
 ../test/foof/errors/macros.foo(66,1): Bad `module` syntax, expected a module specification followed by a body:
+ 64 [33m|[39m(structure (define (foo x) x)
  65 [33m|[39m           (define bar 23))
  66 [33m|[39m(module)
     [33m|[39m [31m^^^^^^[39m
  67 [33m|[39m(module foo)
+ 68 [33m|[39m(module (foo))
 
 ../test/foof/errors/macros.foo(67,1): Bad `module` syntax, expected a module specification followed by a body:
+ 65 [33m|[39m           (define bar 23))
  66 [33m|[39m(module)
  67 [33m|[39m(module foo)
     [33m|[39m [31m^^^^^^[39m
  68 [33m|[39m(module (foo))
+ 69 [33m|[39m(module ())
 
 ../test/foof/errors/macros.foo(69,1): Bad `module` syntax, expected a module specification followed by a body:
+ 67 [33m|[39m(module foo)
  68 [33m|[39m(module (foo))
  69 [33m|[39m(module ())
     [33m|[39m [31m^^^^^^[39m
  70 [33m|[39m(module (foo _))
+ 71 [33m|[39m(module (foo) x)
 
 ../test/foof/errors/macros.foo(71,14): Bad `structure` syntax, expected a definition:
+ 69 [33m|[39m(module ())
  70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
     [33m|[39m              [31m^[39m
  72 [33m|[39m(module (foo) x y z)
+ 73 [33m|[39m(module (foo) (define foo 5))
 
 ../test/foof/errors/macros.foo(71,14): Undefined variable `x`:
+ 69 [33m|[39m(module ())
  70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
     [33m|[39m              [31m^[39m
  72 [33m|[39m(module (foo) x y z)
+ 73 [33m|[39m(module (foo) (define foo 5))
 
 ../test/foof/errors/macros.foo(71,14): Undefined variable `x`:
+ 69 [33m|[39m(module ())
  70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
     [33m|[39m              [31m^[39m
  72 [33m|[39m(module (foo) x y z)
+ 73 [33m|[39m(module (foo) (define foo 5))
 
 ../test/foof/errors/macros.foo(72,14): Bad `structure` syntax, expected a definition:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m              [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,14): Undefined variable `x`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m              [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,14): Undefined variable `x`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m              [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,16): Bad `structure` syntax, expected a definition:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,16): Undefined variable `y`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,16): Undefined variable `y`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,18): Bad `structure` syntax, expected a definition:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                  [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,18): Undefined variable `z`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                  [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 ../test/foof/errors/macros.foo(72,18): Undefined variable `z`:
+ 70 [33m|[39m(module (foo _))
  71 [33m|[39m(module (foo) x)
  72 [33m|[39m(module (foo) x y z)
     [33m|[39m                  [31m^[39m
  73 [33m|[39m(module (foo) (define foo 5))
+ 74 [33m|[39m(module (foo) (define (foo x) x))
 
 Compilation aborted due to 55 errors.
