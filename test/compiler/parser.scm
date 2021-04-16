@@ -3,7 +3,7 @@
 (define (p string)
   (env-get ((pass-transform parse)
             (env 'input string
-                 'module 'test
+                 'module "test"
                  'errors '()))
            'ast))
 
@@ -15,7 +15,7 @@
                  (cdr (compilation-error-location e))))
        (env-get ((pass-transform parse)
                  (env 'input string
-                      'module 'test
+                      'module "test"
                       'errors '()))
                 'errors)))
 
