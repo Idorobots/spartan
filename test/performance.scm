@@ -16,7 +16,7 @@
                              (run-code
                               (compile
                                (env 'input (slurp "../test/foof/fibonacci.foo")
-                                    'module 'perf
+                                    'module "perf"
                                     'no-validation #t))))))
                   ;; NOTE The GC time makes this test very flakey.
                   (list (car time)
@@ -32,7 +32,7 @@
                (let ((size (+ 1 (count (partial equal? #\newline) (string->list input))))
                      (time (time-execution ((pass-transform parse)
                                             (env 'input input
-                                                 'module 'perf
+                                                 'module "perf"
                                                  'errors '()
                                                  'no-validation #t)))))
                  (apply printf "~a, ~a, ~a, ~a~n" size time)
@@ -50,7 +50,7 @@
                (collect-garbage 'major)
                (let ((size (+ 1 (count (partial equal? #\newline) (string->list input))))
                      (time (time-execution (compile (env 'input input
-                                                         'module 'perf
+                                                         'module "perf"
                                                          'no-validation #t)))))
                  (apply printf "~a, ~a, ~a, ~a~n" size time)
                  ;; NOTE It's hard to avoid the GC here, so in case it kicks in anyway we

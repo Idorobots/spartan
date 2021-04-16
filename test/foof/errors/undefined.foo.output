@@ -1,61 +1,117 @@
 ../test/foof/errors/undefined.foo(1,0): Undefined variable `a`:
-1 |a
-   ^~~~~~
+  1 [33m|[39ma
+    [33m|[39m[31m^[39m
+  2 [33m|[39m(define (f a b) (* a b c))
+  3 [33m|[39m(f d)
 
 ../test/foof/errors/undefined.foo(2,23): Undefined variable `c`:
-2 |(define (f a b) (* a b c))
-                          ^~~~~~
+  1 [33m|[39ma
+  2 [33m|[39m(define (f a b) (* a b c))
+    [33m|[39m                       [31m^[39m
+  3 [33m|[39m(f d)
+  4 [33m|[39m(e f)
 
 ../test/foof/errors/undefined.foo(3,3): Undefined variable `d`:
-3 |(f d)
-      ^~~~~~
+  1 [33m|[39ma
+  2 [33m|[39m(define (f a b) (* a b c))
+  3 [33m|[39m(f d)
+    [33m|[39m   [31m^[39m
+  4 [33m|[39m(e f)
+  5 [33m|[39m(if (g h)
 
 ../test/foof/errors/undefined.foo(4,1): Undefined variable `e`:
-4 |(e f)
-    ^~~~~~
+  2 [33m|[39m(define (f a b) (* a b c))
+  3 [33m|[39m(f d)
+  4 [33m|[39m(e f)
+    [33m|[39m [31m^[39m
+  5 [33m|[39m(if (g h)
+  6 [33m|[39m    j
 
 ../test/foof/errors/undefined.foo(5,5): Undefined variable `g`:
-5 |(if (g h)
-        ^~~~~~
+  3 [33m|[39m(f d)
+  4 [33m|[39m(e f)
+  5 [33m|[39m(if (g h)
+    [33m|[39m     [31m^[39m
+  6 [33m|[39m    j
+  7 [33m|[39m    k)
 
 ../test/foof/errors/undefined.foo(5,7): Undefined variable `h`:
-5 |(if (g h)
-          ^~~~~~
+  3 [33m|[39m(f d)
+  4 [33m|[39m(e f)
+  5 [33m|[39m(if (g h)
+    [33m|[39m       [31m^[39m
+  6 [33m|[39m    j
+  7 [33m|[39m    k)
 
 ../test/foof/errors/undefined.foo(6,4): Undefined variable `j`:
-6 |    j
-       ^~~~~~
+  4 [33m|[39m(e f)
+  5 [33m|[39m(if (g h)
+  6 [33m|[39m    j
+    [33m|[39m    [31m^[39m
+  7 [33m|[39m    k)
+  8 [33m|[39m'l
 
 ../test/foof/errors/undefined.foo(7,4): Undefined variable `k`:
-7 |    k)
-       ^~~~~~
+  5 [33m|[39m(if (g h)
+  6 [33m|[39m    j
+  7 [33m|[39m    k)
+    [33m|[39m    [31m^[39m
+  8 [33m|[39m'l
+  9 [33m|[39m`m
 
 ../test/foof/errors/undefined.foo(10,2): Undefined variable `n`:
-10 |`,n
-      ^~~~~~
+  8 [33m|[39m'l
+  9 [33m|[39m`m
+ 10 [33m|[39m`,n
+    [33m|[39m  [31m^[39m
+ 11 [33m|[39m`(o p ,@q r)
+ 12 [33m|[39m(let ((s t)
 
 ../test/foof/errors/undefined.foo(11,8): Undefined variable `q`:
-11 |`(o p ,@q r)
-            ^~~~~~
+  9 [33m|[39m`m
+ 10 [33m|[39m`,n
+ 11 [33m|[39m`(o p ,@q r)
+    [33m|[39m        [31m^[39m
+ 12 [33m|[39m(let ((s t)
+ 13 [33m|[39m      (t u))
 
 ../test/foof/errors/undefined.foo(12,9): Undefined variable `t`:
-12 |(let ((s t)
-             ^~~~~~
+ 10 [33m|[39m`,n
+ 11 [33m|[39m`(o p ,@q r)
+ 12 [33m|[39m(let ((s t)
+    [33m|[39m         [31m^[39m
+ 13 [33m|[39m      (t u))
+ 14 [33m|[39m  (* s t u))
 
 ../test/foof/errors/undefined.foo(13,9): Undefined variable `u`:
-13 |      (t u))
-             ^~~~~~
+ 11 [33m|[39m`(o p ,@q r)
+ 12 [33m|[39m(let ((s t)
+ 13 [33m|[39m      (t u))
+    [33m|[39m         [31m^[39m
+ 14 [33m|[39m  (* s t u))
+ 15 [33m|[39m(letrec ((u v)
 
 ../test/foof/errors/undefined.foo(14,9): Undefined variable `u`:
-14 |  (* s t u))
-             ^~~~~~
+ 12 [33m|[39m(let ((s t)
+ 13 [33m|[39m      (t u))
+ 14 [33m|[39m  (* s t u))
+    [33m|[39m         [31m^[39m
+ 15 [33m|[39m(letrec ((u v)
+ 16 [33m|[39m         (v w))
 
 ../test/foof/errors/undefined.foo(16,12): Undefined variable `w`:
-16 |         (v w))
-                ^~~~~~
+ 14 [33m|[39m  (* s t u))
+ 15 [33m|[39m(letrec ((u v)
+ 16 [33m|[39m         (v w))
+    [33m|[39m            [31m^[39m
+ 17 [33m|[39m  (* u v w))
+ 18 [33m|[39m
 
 ../test/foof/errors/undefined.foo(17,9): Undefined variable `w`:
-17 |  (* u v w))
-             ^~~~~~
+ 15 [33m|[39m(letrec ((u v)
+ 16 [33m|[39m         (v w))
+ 17 [33m|[39m  (* u v w))
+    [33m|[39m         [31m^[39m
+ 18 [33m|[39m
 
 Compilation aborted due to 15 errors.

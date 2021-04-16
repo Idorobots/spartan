@@ -1,17 +1,37 @@
 ../test/foof/errors/body.foo(1,0): Bad `do` syntax, expected at least one non-definition expression within:
-1 |(do (define _ 23))
-   ^~~~~~
+  1 [33m|[39m(do (define _ 23))
+    [33m|[39m[31m^^^^^^^^^^^^^^^^^^[39m
+  2 [33m|[39m(do (define foo 23) foo)
+  3 [33m|[39m(lambda ()
 
 ../test/foof/errors/body.foo(3,0): Bad `lambda` body syntax, expected at least one non-definition expression within:
-3 |(lambda ()
-   ^~~~~~
+  1 [33m|[39m(do (define _ 23))
+  2 [33m|[39m(do (define foo 23) foo)
+  3 [33m|[39m(lambda ()
+    [33m|[39m[31m^^^^^^^^^^[39m
+  4 [33m|[39m  (define _ 5))
+    [33m|[39m  [31m^^^^^^^^^^^^^[39m
+  5 [33m|[39m(lambda ()
+  6 [33m|[39m  (define x 5)
 
 ../test/foof/errors/body.foo(8,0): Bad `let` body syntax, expected at least one non-definition expression within:
-8 |(let ((x 23))
-   ^~~~~~
+  6 [33m|[39m  (define x 5)
+  7 [33m|[39m  x)
+  8 [33m|[39m(let ((x 23))
+    [33m|[39m[31m^^^^^^^^^^^^^[39m
+  9 [33m|[39m  (define _ (* 2 x)))
+    [33m|[39m  [31m^^^^^^^^^^^^^^^^^^^[39m
+ 10 [33m|[39m(let ((x 23))
+ 11 [33m|[39m  (define y (* 2 x))
 
 ../test/foof/errors/body.foo(13,0): Bad `letrec` body syntax, expected at least one non-definition expression within:
-13 |(letrec ((x 23))
-    ^~~~~~
+ 11 [33m|[39m  (define y (* 2 x))
+ 12 [33m|[39m  y)
+ 13 [33m|[39m(letrec ((x 23))
+    [33m|[39m[31m^^^^^^^^^^^^^^^^[39m
+ 14 [33m|[39m  (define _ (* 2 x)))
+    [33m|[39m  [31m^^^^^^^^^^^^^^^^^^^[39m
+ 15 [33m|[39m(letrec ((x 23))
+ 16 [33m|[39m  (define y (* 2 x))
 
 Compilation aborted due to 4 errors.

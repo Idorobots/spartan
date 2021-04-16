@@ -22,7 +22,7 @@
   (run-code
    (compile
     (env 'input input
-         'module 'string))))
+         'module "string"))))
 
 (define (run expr)
   (run-code
@@ -30,7 +30,7 @@
     (env 'input (with-output-to-string
                   (lambda ()
                     (pretty-write expr)))
-         'module 'expr))))
+         'module "expr"))))
 
 (define (run-file filename)
   (run-code
