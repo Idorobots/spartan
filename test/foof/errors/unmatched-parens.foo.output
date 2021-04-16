@@ -1,13 +1,17 @@
 ../test/foof/errors/unmatched-parens.foo(2,22): Undefined variable `valid`:
-2 |  `(this unquote is ,@valid)
-                         ^~~~~~
+  1 [33m|[39m(define (foo _)
+  2 [33m|[39m  `(this unquote is ,@valid)
+    [33m|[39m                      [31m^^^^^[39m
+  3 [33m|[39m  (display (foo "Hello world! ")))
 
 ../test/foof/errors/unmatched-parens.foo(4,11): Unmatched `)`, expected an opening `(` to come before:
-4 |  (newline)))
-              ^~~~~~
+  3 [33m|[39m  (display (foo "Hello world! ")))
+  4 [33m|[39m  (newline)))
+    [33m|[39m           [31m^[39m
 
 ../test/foof/errors/unmatched-parens.foo(4,12): Unmatched `)`, expected an opening `(` to come before:
-4 |  (newline)))
-               ^~~~~~
+  3 [33m|[39m  (display (foo "Hello world! ")))
+  4 [33m|[39m  (newline)))
+    [33m|[39m            [31m^[39m
 
 Compilation aborted due to 3 errors.

@@ -1,37 +1,54 @@
 ../test/foof/errors/validation.foo(1,4): Bad `define` syntax, not allowed in this context:
-1 |(if (define (foo x) y)
-       ^~~~~~
+  1 [33m|[39m(if (define (foo x) y)
+    [33m|[39m    [31m^^^^^^^^^^^^^^^^^^[39m
+  2 [33m|[39m    'yup
 
 ../test/foof/errors/validation.foo(1,13): Unused variable `foo`, rename to `_` to avoid this error:
-1 |(if (define (foo x) y)
-                ^~~~~~
+  1 [33m|[39m(if (define (foo x) y)
+    [33m|[39m             [31m^^^[39m
+  2 [33m|[39m    'yup
 
 ../test/foof/errors/validation.foo(1,17): Unused variable `x`, rename to `_` to avoid this error:
-1 |(if (define (foo x) y)
-                    ^~~~~~
+  1 [33m|[39m(if (define (foo x) y)
+    [33m|[39m                 [31m^[39m
+  2 [33m|[39m    'yup
 
 ../test/foof/errors/validation.foo(4,5): Bad `module` syntax, not allowed in this context:
-4 |(car (module (x)
-        ^~~~~~
+  3 [33m|[39m    'nope)
+  4 [33m|[39m(car (module (x)
+    [33m|[39m     [31m^^^^^^^^^^^[39m
+  5 [33m|[39m       (define (foo x) y)))
+    [33m|[39m       [31m^^^^^^^^^^^^^^^^^^^[39m
+  6 [33m|[39mbar
 
 ../test/foof/errors/validation.foo(4,14): Unused variable `x`, rename to `_` to avoid this error:
-4 |(car (module (x)
-                 ^~~~~~
+  3 [33m|[39m    'nope)
+  4 [33m|[39m(car (module (x)
+    [33m|[39m              [31m^[39m
+  5 [33m|[39m       (define (foo x) y)))
 
 ../test/foof/errors/validation.foo(5,20): Unused variable `x`, rename to `_` to avoid this error:
-5 |       (define (foo x) y)))
-                       ^~~~~~
+  4 [33m|[39m(car (module (x)
+  5 [33m|[39m       (define (foo x) y)))
+    [33m|[39m                    [31m^[39m
+  6 [33m|[39mbar
 
 ../test/foof/errors/validation.foo(6,0): Undefined variable `bar`:
-6 |bar
-   ^~~~~~
+  5 [33m|[39m       (define (foo x) y)))
+  6 [33m|[39mbar
+    [33m|[39m[31m^^^[39m
+  7 [33m|[39m(define (baz bar)
 
 ../test/foof/errors/validation.foo(7,9): Unused variable `baz`, rename to `_` to avoid this error:
-7 |(define (baz bar)
-            ^~~~~~
+  6 [33m|[39mbar
+  7 [33m|[39m(define (baz bar)
+    [33m|[39m         [31m^^^[39m
+  8 [33m|[39m  (* 2 bar z))
 
 ../test/foof/errors/validation.foo(8,11): Undefined variable `z`:
-8 |  (* 2 bar z))
-              ^~~~~~
+  7 [33m|[39m(define (baz bar)
+  8 [33m|[39m  (* 2 bar z))
+    [33m|[39m           [31m^[39m
+  9 [33m|[39m
 
 Compilation aborted due to 9 errors.
