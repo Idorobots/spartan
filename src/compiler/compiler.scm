@@ -10,6 +10,7 @@
 (load "compiler/passes/elaboration.scm")
 (load "compiler/passes/body.scm")
 (load "compiler/passes/qq.scm")
+(load "compiler/passes/const.scm")
 (load "compiler/passes/validate.scm")
 (load "compiler/passes/errors.scm")
 
@@ -37,6 +38,7 @@
                elaborate
                body-expand
                quasiquote-expand
+               annotate-constants
                annotate-free-vars
                annotate-bindings
                validate
