@@ -32,7 +32,9 @@
 
 (define (validate-ast undefined unused expr)
   (ast-case expr
-    ((const _) expr)
+    ((const _)
+     ;; TODO Validate number ranges, string escape sequences, unicode well-formedness etc.
+     expr)
     ((lambda _ ,body)
      (let* ((bound (get-bound-vars expr))
             (unused (set-difference bound (get-free-vars body))))
