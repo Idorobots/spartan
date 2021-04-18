@@ -141,7 +141,7 @@
              (b1 (gen-binding-node n1 gen-non-value-node))
              (v2 gen-valid-symbol)
              (n2 (gen-symbol-node v2))
-             (b2 (gen-binding-node n2 (gen-number-node 23)))
+             (b2 (gen-binding-node n2 gen-const-node))
              (v3 gen-valid-symbol)
              (n3 (gen-symbol-node v3))
              (b3 (gen-binding-node n3 gen-non-value-node))

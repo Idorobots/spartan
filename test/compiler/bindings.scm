@@ -3,7 +3,7 @@
 (describe
  "compute-complexity"
  (it "should recognize simple values"
-     (check ((node gen-value-node))
+     (check ((node gen-const-node))
             (assert (compute-complexity node)
                     'simple)))
  (it "should recognize lambdas"
@@ -49,7 +49,7 @@
              (var5 (gen-symbol-node sym5))
              (sym6 gen-valid-symbol)
              (var6 (gen-symbol-node sym6))
-             (value1 gen-value-node)
+             (value1 gen-const-node)
              (complex2 gen-non-value-node)
              (lambda3 gen-valid-lambda-node)
              (lambda4 gen-valid-lambda-node)

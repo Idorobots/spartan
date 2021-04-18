@@ -33,7 +33,7 @@
 (define (compute-complexity expr)
   (case (get-type expr)
     ;; Simple values.
-    ((number string quote const) 'simple)
+    ((const) 'simple)
     ;; Function values, used by letrec-conversion later on.
     ((lambda) 'lambda)
     ;; Any potentially side-effecting expressions.

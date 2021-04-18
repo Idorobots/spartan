@@ -319,7 +319,8 @@
                       (gen-quasiquote-node gen-simple-node)
                       (gen-unquote-node gen-simple-node)
                       (gen-unquote-splicing-node gen-simple-node)
-                      gen-valid-body-node)
+                      gen-valid-body-node
+                      gen-const-node)
           rand))
 
 (define (gen-ast-node rand)
