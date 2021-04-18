@@ -147,7 +147,7 @@
           'ref
           (list (at l
                     (generated
-                     (make-quote-node
+                     (make-const-node
                       (at l
                           (generated
                            (make-list-node '()))))))))))))

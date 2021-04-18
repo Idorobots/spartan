@@ -12,7 +12,7 @@
 
 (define fix-letrec
   (pass (schema "fix-letrec"
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast fixing-letrec))))
@@ -101,7 +101,7 @@
                                       (make-primop-app-node 'ref
                                                             (list (at val-loc
                                                                       (generated
-                                                                       (make-quote-node
+                                                                       (make-const-node
                                                                         (at val-loc
                                                                             (generated
                                                                              (make-list-node '()))))))))))))))

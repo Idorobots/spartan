@@ -1,9 +1,5 @@
 ;; Constant annotation tests.
 
-(define gen-const-node
-  (gen-one-of (gen-number-node gen-number)
-              (gen-string-node (gen-text (gen-integer 0 50)))))
-
 (define (gen-non-const-node rand)
   (sample (gen-one-of gen-valid-symbol-node
                       (gen-app-node gen-valid-symbol-node gen-valid-symbol-node gen-valid-symbol-node)
@@ -13,19 +9,29 @@
 
 (describe
  "wrap-constants"
- (it "should wrap raw constants with a quote"
-     (check ((unquoted gen-const-node))
+ (it "should wrap raw constants with a const node"
+     (check ((unquoted (gen-one-of (gen-number-node gen-number)
+                                   (gen-string-node (gen-text (gen-integer 0 50))))))
             (let ((result (wrap-constants unquoted)))
               (assert-ast result
-                          (a-quote ,expr)
+                          (const ,expr)
                           (assert expr unquoted))
               (assert (generated? result))
               (assert (get-location result)
-                      (get-location unquoted)))))
+                      (get-location unquoted))))
+     (check ((unquoted (gen-one-of (gen-number-node gen-number)
+                                   (gen-string-node (gen-text (gen-integer 0 50)))))
+             (quoted (gen-quote-node unquoted)))
+            (let ((result (wrap-constants quoted)))
+              (assert-ast result
+                          (const ,expr)
+                          (assert expr unquoted))
+              (assert (generated? result))
+              (assert (get-location result)
+                      (get-location quoted)))))
 
  (it "should not wrap anything else"
-     (check ((node (gen-one-of gen-non-const-node
-                               (gen-quote-node gen-valid-symbol-node))))
+     (check ((node gen-non-const-node))
             (assert (wrap-constants node)
                     node)))
 
@@ -37,7 +43,7 @@
              (list (gen-specific-list-node gen-non-const-node quoted gen-non-const-node))
              (node (gen-quote-node list)))
             (assert-ast (wrap-constants node)
-                        (a-quote
+                        (const
                          (list ,simple-node1
                                (list ,quoted-symbol ,simple-node2)
                                ,simple-node3))

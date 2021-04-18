@@ -11,7 +11,7 @@
 (define validate
   (pass (schema "validate"
                 'errors a-list?
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
                                     primop-app <error>)))
    (lambda (env)
@@ -32,7 +32,7 @@
 
 (define (validate-ast undefined unused expr)
   (ast-case expr
-    ((a-quote _) expr)
+    ((const _) expr)
     ((lambda _ ,body)
      (let* ((bound (get-bound-vars expr))
             (unused (set-difference bound (get-free-vars body))))

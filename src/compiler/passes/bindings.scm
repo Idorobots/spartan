@@ -9,7 +9,7 @@
 
 (define annotate-bindings
   (pass (schema "annotate-bindings"
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
                                     primop-app <error>)))
         (lambda (env)
@@ -33,7 +33,7 @@
 (define (compute-complexity expr)
   (case (get-type expr)
     ;; Simple values.
-    ((number string quote) 'simple)
+    ((number string quote const) 'simple)
     ;; Function values, used by letrec-conversion later on.
     ((lambda) 'lambda)
     ;; Any potentially side-effecting expressions.

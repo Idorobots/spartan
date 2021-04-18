@@ -114,6 +114,22 @@
         (make-unquote-splicing-node
          (sample gen-contents rand)))))
 
+(define (gen-specific-const-node gen-contents)
+  (lambda (rand)
+    (at (sample gen-location rand)
+        (make-const-node
+         (sample gen-contents rand)))))
+
+(define (gen-const-node rand)
+  (sample (gen-specific-const-node
+           (gen-one-of (gen-number-node gen-number)
+                       (gen-string-node (gen-text (gen-integer 0 50)))
+                       gen-valid-symbol-node
+                       (apply gen-specific-list-node
+                              (sample (gen-list (gen-integer 0 3) gen-valid-symbol-node)
+                                      rand))))
+          rand))
+
 (define (gen-arg-list gen-max-length)
   (gen-list gen-max-length gen-valid-symbol-node))
 

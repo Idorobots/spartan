@@ -17,10 +17,13 @@
 
 (define (wrap-constants expr)
   (case (get-type expr)
-   ((quote)
-    (walk-ast plainify-quote expr))
+    ((quote)
+     (replace expr
+              (make-const-node
+               (plainify-quote (ast-quoted-expr expr)))))
    ((number string)
-    (replace-with-quoted expr))
+    (replace expr
+             (make-const-node expr)))
    (else
     (walk-ast wrap-constants expr))))
 
@@ -37,8 +40,3 @@
                       (ast-quoted-expr expr))))))
     (else
      (walk-ast plainify-quote expr))))
-
-(define (replace-with-quoted original)
-  (replace original
-           (generated
-            (make-quote-node original))))
