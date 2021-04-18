@@ -7,7 +7,7 @@
              (loc gen-location))
             (let ((result (make-env loc free-vars '())))
               (assert-ast result
-                          (a-quote (list))
+                          (const (list))
                           (assert (generated? result))
                           (assert (get-location result) loc))))
      (check ((free-vars (gen-list 1 gen-valid-symbol))
@@ -76,9 +76,9 @@
             (let* ((subs (make-env-subs env free-vars))
                    (result (substitute-symbols subs node)))
               (assert-ast result
-                          (do (primop-app '&env-ref ,converted-env1 '0)
-                              (primop-app '&env-ref ,converted-env2 '1)
-                              (primop-app '&env-ref ,converted-env3 '2)
+                          (do (primop-app '&env-ref ,converted-env1 (const '0))
+                              (primop-app '&env-ref ,converted-env2 (const '1))
+                              (primop-app '&env-ref ,converted-env3 (const '2))
                               .
                               ,rest)
                           (assert (length rest)
@@ -125,7 +125,7 @@
               (assert (length result) (length closures))
               (map (lambda (setter var)
                      (assert-ast setter
-                                 (primop-app '&set-env! ,converted-env-var ,converted-offset ,converted-var)
+                                 (primop-app '&set-env! ,converted-env-var (const ,converted-offset) ,converted-var)
                                  (assert converted-env-var env-var)
                                  (assert (ast-number-value converted-offset) (offset var free))
                                  (assert (ast-symbol-value converted-var) var)))
@@ -150,7 +150,7 @@
             (let ((result (convert-closures node '())))
               (assert-ast result
                           (primop-app '&make-closure
-                                      (a-quote (list))
+                                      (const (list))
                                       (lambda ('env1 . ,formals)
                                         ,body))
                           (assert formals (ast-lambda-formals node))
@@ -204,9 +204,9 @@
                           (primop-app '&make-closure
                                       (primop-app '&make-env . ,args)
                                       (lambda ('env1)
-                                        (do (primop-app '&env-ref 'env1 '0)
-                                            (primop-app '&env-ref 'env1 '1)
-                                            (primop-app '&env-ref 'env1 '2)
+                                        (do (primop-app '&env-ref 'env1 (const '0))
+                                            (primop-app '&env-ref 'env1 (const '1))
+                                            (primop-app '&env-ref 'env1 (const '2))
                                             .
                                             ,rest)))
                           (assert (map ast-symbol-value args) free-vars)
@@ -223,7 +223,7 @@
             (let ((result (convert-closures node (set var))))
               (assert-ast result
                           (primop-app '&make-closure
-                                      (a-quote (list))
+                                      (const (list))
                                       (lambda ('env1 _)
                                         ,converted-body))
                           (assert converted-body body))
@@ -241,7 +241,7 @@
             (gensym-reset!)
             (let ((result (convert-closures node (set))))
               (assert-ast result
-                          (let ((binding 'env1 (a-quote (list))))
+                          (let ((binding 'env1 (const (list))))
                             (let ((binding ,converted-var1
                                            (primop-app '&make-closure
                                                        'env1
@@ -279,8 +279,8 @@
             (let ((result (convert-closures node (set))))
               (assert-ast result
                           (let ((binding 'env1 (primop-app 'cons
-                                                           (a-quote (list))
-                                                           (a-quote (list)))))
+                                                           (const (list))
+                                                           (const (list)))))
                             (let ((binding ,converted-var1
                                            (primop-app '&make-closure
                                                        'env1
@@ -351,28 +351,28 @@
             (let ((result (convert-closures node (set))))
               (assert-ast result
                           (let ((binding 'env1 (primop-app '&make-env
-                                                           (a-quote (list))
-                                                           (a-quote (list))
-                                                           (a-quote (list))
+                                                           (const (list))
+                                                           (const (list))
+                                                           (const (list))
                                                            ,converted-extra-fv)))
                             (let ((binding ,converted-var1
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env2 ,converted-arg1)
-                                                         (primop-app '&env-ref 'env2 '0))))
+                                                         (primop-app '&env-ref 'env2 (const '0)))))
                                   (binding ,converted-var2
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env3 ,converted-arg2)
-                                                         (primop-app '&env-ref 'env3 '1))))
+                                                         (primop-app '&env-ref 'env3 (const '1)))))
                                   (binding ,converted-var3
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env4 ,converted-arg3)
-                                                         (primop-app '&env-ref 'env4 '2)))))
-                              (do (primop-app '&set-env! 'env1 '0 ,converted-var4)
-                                  (primop-app '&set-env! 'env1 '1 ,converted-var5)
-                                  (primop-app '&set-env! 'env1 '2 ,converted-var6)
+                                                         (primop-app '&env-ref 'env4 (const '2))))))
+                              (do (primop-app '&set-env! 'env1 (const '0) ,converted-var4)
+                                  (primop-app '&set-env! 'env1 (const '1) ,converted-var5)
+                                  (primop-app '&set-env! 'env1 (const '2) ,converted-var6)
                                   ,converted-body)))
                           (assert converted-var1 var1)
                           (assert converted-var4 var1)

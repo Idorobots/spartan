@@ -16,6 +16,7 @@
 (load "../test/compiler/elaboration.scm")
 (load "../test/compiler/body.scm")
 (load "../test/compiler/qq.scm")
+(load "../test/compiler/const.scm")
 (load "../test/compiler/validate.scm")
 (load "../test/compiler/bindings.scm")
 (load "../test/compiler/letrec-bindings.scm")

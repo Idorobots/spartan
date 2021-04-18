@@ -28,9 +28,9 @@
 
  (it "doesn't rename quoted symbols"
      (check ((symbol gen-valid-symbol-node)
-             (node (gen-quote-node symbol)))
+             (node (gen-specific-const-node symbol)))
             (assert-ast (mangle-names node)
-                        (a-quote ,renamed-symbol)
+                        (const ,renamed-symbol)
                         (assert renamed-symbol symbol))))
 
  (it "doesn't rename primop-app ops"

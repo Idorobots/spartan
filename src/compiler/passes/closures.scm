@@ -12,7 +12,7 @@
 (define closure-convert
   (pass (schema "closure-convert"
                 'globals a-list?
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
@@ -101,7 +101,7 @@
 (define (make-nil loc)
   (at loc
       (generated
-       (make-quote-node
+       (make-const-node
         (at loc
             (generated
              (make-list-node '())))))))
@@ -161,8 +161,10 @@
                               '&env-ref
                               (list env
                                     (at (get-location expr)
-                                        (generated
-                                         (make-number-node (offset var free))))))))))
+                                        (make-const-node
+                                         (at (get-location expr)
+                                             (generated
+                                              (make-number-node (offset var free))))))))))))
           free))))
 
 (define (make-env-setters env env-var free bound closures)
@@ -190,8 +192,10 @@
                                '&set-env!
                                (list env-var
                                      (at (get-location arg)
-                                         (generated
-                                          (make-number-node i)))
+                                         (make-const-node
+                                          (at (get-location arg)
+                                              (generated
+                                               (make-number-node i)))))
                                      arg)))
                           '()))
                     args

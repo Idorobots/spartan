@@ -10,7 +10,7 @@
 (define inline-builtins
   (pass (schema "inline-builtins"
                 'globals a-list?
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))

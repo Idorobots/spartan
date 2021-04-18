@@ -10,6 +10,7 @@
 (load "compiler/passes/elaboration.scm")
 (load "compiler/passes/body.scm")
 (load "compiler/passes/qq.scm")
+(load "compiler/passes/const.scm")
 (load "compiler/passes/validate.scm")
 (load "compiler/passes/errors.scm")
 
@@ -37,6 +38,7 @@
                elaborate
                body-expand
                quasiquote-expand
+               annotate-constants
                annotate-free-vars
                annotate-bindings
                validate
@@ -52,8 +54,7 @@
 
 (define generate-target-code
   (pass (schema "generate-target-code"
-                'ast (ast-subset? '(quote number symbol string list
-                                    if do let binding lambda primop-app)))
+                'ast (ast-subset? '(const symbol if do let binding lambda primop-app)))
         (lambda (env)
           ;; FIXME Actually implement a proper code-gen.
           (ast->plain (env-get env 'ast)))))

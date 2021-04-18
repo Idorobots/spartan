@@ -216,6 +216,8 @@
                        (assert value node))
                       ((string ,value)
                        (assert value node))
+                      ((const ,value)
+                       (assert value (ast-const-value node)))
                       ((a-quote ,value)
                        (assert value (ast-quoted-expr node)))
                       ((a-quasiquote ,value)

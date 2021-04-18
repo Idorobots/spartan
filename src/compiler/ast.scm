@@ -242,6 +242,17 @@
 (define (ast-quoted-expr node)
   (ast-get node 'value))
 
+;; Constant
+(define (make-const-node value)
+  (generated
+   (ast-node 'type 'const 'value value)))
+
+(define (const-node? node)
+  (is-type? node 'const))
+
+(define (ast-const-value node)
+  (ast-get node 'value))
+
 ;; Definition
 (define (make-def-node name value)
   (ast-node 'type 'def 'name name 'value value))
@@ -393,7 +404,7 @@
        (ast-update (ast-update expr 'body f) 'bindings mf))
       ((binding)
        (ast-update (ast-update expr 'var f) 'val f))
-      ((quote quasiquote unquote unquote-splicing)
+      ((quote quasiquote unquote unquote-splicing const)
        (ast-update expr 'value f))
       ((def)
        (ast-update (ast-update expr 'name f) 'value f))
@@ -434,6 +445,7 @@
                ((binding) (list (ast-binding-var expr)
                                 (ast-binding-val expr)))
                ((quote) (list 'quote (ast-quoted-expr expr)))
+               ((const) (list 'quote (ast-const-value expr)))
                ((quasiquote) (list 'quasiquote (ast-quoted-expr expr)))
                ((unquote) (list 'unquote (ast-quoted-expr expr)))
                ((unquote-splicing) (list 'unquote-splicing (ast-quoted-expr expr)))
@@ -570,6 +582,9 @@
                      (unquote-node? expr)
                      (unquote-splicing-node? expr))
                  (ast-matches? (ast-quoted-expr expr) (cadr pattern))))
+           ((const)
+            (and (const-node? expr)
+                 (ast-matches? (ast-const-value expr) (cadr pattern))))
            ;; NOTE These are special nodes that we might still want to match for error handling etc.
            ((<error>) (and (error-node? expr)
                            (ast-matches? (ast-error-expr expr)

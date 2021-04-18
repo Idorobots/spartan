@@ -1,15 +1,12 @@
 ;; Continuation Passing Style Conversion
 
 (define gen-simple-cpc-node
-  (gen-one-of gen-valid-symbol-node gen-value-node))
+  (gen-one-of gen-valid-symbol-node gen-const-node))
 
 (describe
  "CPC conversion"
  (it "works for the simple cases"
-     (check ((node gen-valid-symbol-node))
-            (assert (cpc node id)
-                    node))
-     (check ((node gen-value-node))
+     (check ((node gen-const-node))
             (assert (cpc node id)
                     node)))
 

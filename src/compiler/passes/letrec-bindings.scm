@@ -49,7 +49,7 @@
 
 (define reorder-letrec-bindings
   (pass (schema "reorder-letrec-bindings"
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast reorder-letrec))))

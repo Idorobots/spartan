@@ -9,14 +9,14 @@
 
 (define symbol-rename
   (pass (schema "symbol-rename"
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let binding lambda primop-app)))
         (lambda (env)
           (env-update env 'ast mangle-names))))
 
 (define (mangle-names expr)
   (case (get-type expr)
-    ((quote)
+    ((const)
      expr)
     ((symbol)
      (if (equal? (ast-symbol-value expr) '_)

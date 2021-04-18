@@ -11,7 +11,7 @@
 
 (define continuation-passing-convert
   (pass (schema "continuation-passing-convert"
-                'ast (ast-subset? '(quote number symbol string list
+                'ast (ast-subset? '(const symbol
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip cpc (make-identity-continuation))))))
@@ -21,7 +21,7 @@
 
 (define (cpc expr kont)
   (case (get-type expr)
-    ((symbol number string quote) (kont expr))
+    ((symbol const) (kont expr))
     ((if) (cpc-if expr kont))
     ((do) (cpc-do expr kont))
     ((let) (cpc-let expr kont))
