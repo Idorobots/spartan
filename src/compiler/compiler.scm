@@ -14,10 +14,12 @@
 (load "compiler/passes/validate.scm")
 (load "compiler/passes/errors.scm")
 
-;; The backend
 (load "compiler/passes/bindings.scm")
 (load "compiler/passes/freevars.scm")
+
+;; The backend
 (load "compiler/passes/builtins.scm")
+(load "compiler/passes/const-propagation.scm")
 (load "compiler/passes/letrec-bindings.scm")
 (load "compiler/passes/letrec-fix.scm")
 (load "compiler/passes/cpc.scm")
@@ -44,6 +46,7 @@
                validate
                report-errors
                inline-builtins
+               propagate-constants
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
