@@ -11,7 +11,7 @@
   (pass (schema "inline-builtins"
                 'globals a-list?
                 'ast (ast-subset? '(const symbol
-                                    if do let fix binding lambda app primop-app)))
+                                    if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
 
@@ -28,8 +28,12 @@
               (map (lambda (b)
                      (cons b
                            (lambda (expr)
-                             (replace expr
-                                      (make-primop-app-node b (ast-app-args expr))))))
+                             (let ((args (ast-app-args expr)))
+                               (replace expr
+                                      ;; NOTE The op no longer needs to be stored in free vars.
+                                      (free-vars
+                                       (set-sum (map get-free-vars args))
+                                       (make-primop-app-node b args)))))))
                    (set-intersection
                     builtins
                     (apply set

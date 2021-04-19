@@ -43,9 +43,9 @@
                annotate-bindings
                validate
                report-errors
+               inline-builtins
                reorder-letrec-bindings
                fix-letrec
-               inline-builtins
                continuation-passing-convert
                annotate-free-vars
                closure-convert
