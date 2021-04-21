@@ -15,61 +15,71 @@
 
 (define (constant-folding expr)
   (map-ast id
-           (lambda (expr)
-             (ast-case
-              expr
-              ((primop-app ,op . ,args)
-               (if (every? const-node? args)
-                   (fold-builtin expr)
-                   expr))
-              (else
-               expr)))
+           fold-builtins
            expr))
 
-(define (foldable arg-types extractor)
-  (cons arg-types extractor))
-
-(define +foldable-builtins+
-  (list (cons 'car (foldable (list list-node?)
-                             (compose car ast-list-values)))
-        (cons 'cdr (foldable (list list-node?)
-                             (compose cdr ast-list-values)))
-        (cons 'cadr (foldable (list list-node?)
-                              (compose cadr ast-list-values)))
-        (cons 'cddr (foldable (list list-node?)
-                              (compose cddr ast-list-values)))
-        ;; TODO
-        ;; (cons 'list list)
-        ;; (cons 'cons cons)
-        ;; (cons 'append append)
-        ;; (cons 'concat concat)
-        ;; (cons 'nil? nil?)
-        ;; (cons 'equal? equal?)
-        ;; (cons 'not not)
-        ;; (cons '* *)
-        ;; (cons '+ +)
-        ;; (cons '- -)
-        ;; (cons '/ /)
-        ;; (cons '= =)
-        ;; (cons '< <)
-        ;; (cons 'zero? zero?)
-  ))
-
-(define (fold-builtin expr)
-  (let* ((op (ast-primop-app-op expr))
-         (args (map ast-const-value (ast-primop-app-args expr)))
-         (f (assoc op +foldable-builtins+)))
-    (if (and f
-             (equal? (length (cadr f))
-                     (length args))
-             (every? true?
-                     (map (lambda (pred arg)
-                            (pred arg))
-                          (cadr f)
-                          args)))
-        (replace expr
-                 (generated
-                  (make-const-node
-                   (apply (cddr f) args))))
-        ;; NOTE If anything seems funny about this app, we leave it up for the runtime to break.
-        expr)))
+(define (fold-builtins expr)
+  (ast-case expr
+   ((primop-app 'car (const (list ,first . ,rest)))
+    (replace expr
+             (make-const-node first)))
+   ((primop-app 'cdr (const (list _ . ,rest)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-list-node rest))))))
+   ((primop-app 'cadr (const (list _ ,second . ,rest)))
+    (replace expr
+             (make-const-node second)))
+   ((primop-app 'cddr (const (list _ _ . ,rest)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-list-node rest))))))
+   ((primop-app 'list (const (list . ,values)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-list-node values))))))
+   ((primop-app 'cons (const ,first) (const (list . ,rest)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-list-node (cons first rest)))))))
+   ((primop-app '* (const (number ,a)) (const (number ,b)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-number-node (* (ast-number-value a)
+                                        (ast-number-value b))))))))
+   ((primop-app '+ (const (number ,a)) (const (number ,b)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-number-node (+ (ast-number-value a)
+                                        (ast-number-value b))))))))
+   ((primop-app '/ (const (number ,a)) (const (number ,b)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-number-node (/ (ast-number-value a)
+                                        (ast-number-value b))))))))
+   ((primop-app '- (const (number ,a)) (const (number ,b)))
+    (replace expr
+             (make-const-node
+              (at (get-location expr)
+                  (generated
+                   (make-number-node (- (ast-number-value a)
+                                        (ast-number-value b))))))))
+   ;; TODO
+   ;; append, concat & boolean returning values.
+   (else
+    ;; NOTE If anything seems funny about this app, we leave it up for the runtime to break.
+    expr)))
