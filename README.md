@@ -27,9 +27,11 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - free-variable annotation,
 - binding form analysis,
 - syntax tree validation,
+- built-in function inlining,
+- constant propagation,
+- constant folding,
 - `letrec` binding reordering,
 - `letrec` conversion,
-- built-in function inlining,
 - continuation passing style transformation,
 - flat closure conversion,
 - tagret-safe name mangling.
