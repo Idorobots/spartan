@@ -15,46 +15,55 @@
           (env-update env 'ast (partial constant-propagation '())))))
 
 (define (constant-propagation subs expr)
-  (ast-case expr
-   ((symbol _)
-    (let ((s (assoc (ast-symbol-value expr) subs)))
-      (if s
-          (cdr s) ;; NOTE Completely replaces the expr, together with its location.
-          expr)))
-   ((lambda _ _)
-    (ast-update expr
-                'body
-                (partial constant-propagation
-                         (filter-subs subs
-                                      (get-bound-vars expr)))))
-   ((let ,bindings _)
-    (let* ((bs (partition-bindings const-binding? bindings))
-           (consts (car bs))
-           (rest (cdr bs))
-           (new-subs (map make-const-sub consts))
-           (updated-subs (append new-subs
-                                 (filter-subs subs
-                                              (get-bound-vars expr))))
-           (updated-bindings (map (partial constant-propagation subs) rest)))
-      (ast-update (ast-update expr 'bindings (constantly updated-bindings))
-                  'body
-                  (partial constant-propagation updated-subs))))
-   ((letrec ,bindings _)
-    (let* ((bs (partition-bindings const-binding? bindings))
-           (consts (car bs))
-           (rest (cdr bs))
-           (new-subs (map make-const-sub consts))
-           (updated-subs (append new-subs
-                                 (filter-subs subs
-                                              (get-bound-vars expr))))
-           (updated-bindings (map (partial constant-propagation updated-subs) rest)))
-      (ast-update (ast-update expr 'bindings (constantly updated-bindings))
-                  'body
-                  (partial constant-propagation updated-subs))))
-   ((binding _ _)
-    (ast-update expr 'val (partial constant-propagation subs)))
-   (else
-    (walk-ast (partial constant-propagation subs) expr))))
+  (propagate const-binding?
+             make-const-sub
+             (lambda (subs expr kont)
+               (ast-case expr
+                ((symbol _)
+                 (let ((s (assoc (ast-symbol-value expr) subs)))
+                   (if s
+                       (cdr s) ;; NOTE Completely replaces the expr, together with its location.
+                       (kont expr))))
+                (else
+                 (kont expr))))
+             subs
+             expr))
+
+(define (propagate partition-by make-sub replace-with subs expr)
+  (define (loop subs expr)
+    (replace-with subs
+                  expr
+                  (lambda (expr)
+                    (ast-case expr
+                     ((lambda _ _)
+                      (ast-update expr
+                                  'body
+                                  (partial loop
+                                           (filter-subs subs
+                                                        (get-bound-vars expr)))))
+                     ((let ,bindings _)
+                      (let* ((bs (partition-bindings partition-by bindings))
+                             (updated-subs (append (map make-sub (car bs))
+                                                   (filter-subs subs (get-bound-vars expr))))
+                             (updated-bindings (map (partial loop subs)
+                                                    (cdr bs))))
+                        (ast-update (ast-update expr 'bindings (constantly updated-bindings))
+                                    'body
+                                    (partial loop updated-subs))))
+                     ((letrec ,bindings _)
+                      (let* ((bs (partition-bindings partition-by bindings))
+                             (updated-subs (append (map make-sub (car bs))
+                                                   (filter-subs subs (get-bound-vars expr))))
+                             (updated-bindings (map (partial loop updated-subs)
+                                                    (cdr bs))))
+                        (ast-update (ast-update expr 'bindings (constantly updated-bindings))
+                                    'body
+                                    (partial loop updated-subs))))
+                     ((binding _ _)
+                      (ast-update expr 'val (partial loop subs)))
+                     (else
+                      (walk-ast (partial loop subs) expr))))))
+  (loop subs expr))
 
 (define (const-binding? binding)
   (const-node? (ast-binding-val binding)))
