@@ -28,32 +28,26 @@
                          (filter-subs subs
                                       (get-bound-vars expr)))))
    ((let ,bindings _)
-    (let* ((consts (filter (compose (partial equal? 'simple) get-complexity) bindings))
-           (new-subs (map (lambda (b)
-                            (cons (ast-symbol-value (ast-binding-var b))
-                                  (ast-binding-val b)))
-                          consts))
+    (let* ((bs (partition-bindings const-binding? bindings))
+           (consts (car bs))
+           (rest (cdr bs))
+           (new-subs (map make-const-sub consts))
            (updated-subs (append new-subs
                                  (filter-subs subs
                                               (get-bound-vars expr))))
-           (updated-bindings (map (partial constant-propagation subs)
-                                  (filter (compose not (partial equal? 'simple) get-complexity)
-                                          bindings))))
+           (updated-bindings (map (partial constant-propagation subs) rest)))
       (ast-update (ast-update expr 'bindings (constantly updated-bindings))
                   'body
                   (partial constant-propagation updated-subs))))
    ((letrec ,bindings _)
-    (let* ((consts (filter (compose (partial equal? 'simple) get-complexity) bindings))
-           (new-subs (map (lambda (b)
-                            (cons (ast-symbol-value (ast-binding-var b))
-                                  (ast-binding-val b)))
-                          consts))
+    (let* ((bs (partition-bindings const-binding? bindings))
+           (consts (car bs))
+           (rest (cdr bs))
+           (new-subs (map make-const-sub consts))
            (updated-subs (append new-subs
                                  (filter-subs subs
                                               (get-bound-vars expr))))
-           (updated-bindings (map (partial constant-propagation updated-subs)
-                                  (filter (compose not (partial equal? 'simple) get-complexity)
-                                          bindings))))
+           (updated-bindings (map (partial constant-propagation updated-subs) rest)))
       (ast-update (ast-update expr 'bindings (constantly updated-bindings))
                   'body
                   (partial constant-propagation updated-subs))))
@@ -61,3 +55,20 @@
     (ast-update expr 'val (partial constant-propagation subs)))
    (else
     (walk-ast (partial constant-propagation subs) expr))))
+
+(define (const-binding? binding)
+  (const-node? (ast-binding-val binding)))
+
+(define (make-const-sub binding)
+  (cons (ast-symbol-value (ast-binding-var binding))
+        (ast-binding-val binding)))
+
+(define (partition-bindings pred bindings)
+  (foldr (lambda (b acc)
+           (if (pred b)
+               (cons (cons b (car acc))
+                     (cdr acc))
+               (cons (car acc)
+                     (cons b (cdr acc)))))
+         (cons '() '())
+         bindings))
