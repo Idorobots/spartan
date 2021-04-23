@@ -28,11 +28,10 @@
 (load "compiler/passes/closures.scm")
 (load "compiler/passes/rename.scm")
 
+(define +optimization-loops+ 10)
+
 (define (compile env)
-  (foldl (lambda (pass env)
-           (unless (env-contains? env 'no-validation)
-             ((pass-schema pass) env))
-           ((pass-transform pass) env))
+  (foldl run-pass
          (env-set env
                   'errors '()
                   'macros (make-builtin-macros)
@@ -48,9 +47,10 @@
                validate
                report-errors
                inline-builtins
-               propagate-copies
-               propagate-constants
-               fold-constants
+               (optimize
+                (list propagate-copies
+                      propagate-constants
+                      fold-constants))
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
@@ -58,6 +58,21 @@
                closure-convert
                symbol-rename
                generate-target-code)))
+
+(define (optimize passes)
+  (pass (schema "optimize")
+        (lambda (env)
+          (let loop ((i +optimization-loops+)
+                     (acc env)
+                     (prev '()))
+            (if (or (= i 0)
+                    (equal? prev acc))
+                acc
+                (loop (- i 1)
+                      (foldl run-pass
+                             acc
+                             passes)
+                      acc))))))
 
 (define generate-target-code
   (pass (schema "generate-target-code"
