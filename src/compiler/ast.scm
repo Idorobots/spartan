@@ -479,7 +479,7 @@
      (let ((bound (ast-matches? expr 'pattern)))
        (if bound
            (ast-case-extract-vars bound
-                                  (begin body ...)
+                                  (begin '() body ...)
                                   pattern)
            rest)))))
 

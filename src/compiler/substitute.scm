@@ -21,6 +21,8 @@
          expr
          (lambda (expr)
            (case (get-type expr)
+             ((const)
+              expr)
              ((lambda)
               (ast-update expr
                           'body (partial substitute

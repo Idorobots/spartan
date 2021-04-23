@@ -7,6 +7,7 @@
 (load "../test/compiler/utils.scm")
 (load "../test/compiler/freevars.scm")
 (load "../test/compiler/substitute.scm")
+(load "../test/compiler/propagate.scm")
 (load "../test/compiler/peggen.scm")
 (load "../test/compiler/ast.scm")
 (load "../test/compiler/pass.scm")

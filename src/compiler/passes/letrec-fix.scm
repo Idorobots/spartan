@@ -6,9 +6,7 @@
 (load "compiler/env.scm")
 (load "compiler/pass.scm")
 (load "compiler/ast.scm")
-
-(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-fix-fv
-(load "compiler/passes/letrec-bindings.scm") ;; FIXME For reconstruct-let-node
+(load "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
 
 (define fix-letrec
   (pass (schema "fix-letrec"
@@ -23,7 +21,7 @@
              (ast-case expr
               ((letrec ,bindings ,body)
                (replace expr
-                        (waddell fix let-ref-assign expr bindings body)))
+                        (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
               (else
                expr)))
            expr))
@@ -135,13 +133,3 @@
                                  (make-primop-app-node 'deref (list expr)))))))
         refs)
    expr))
-
-;; Delegates implementation of the actual fixpoint conversion to the closure conversion phase.
-
-(define (fix parent bindings body)
-  (if (empty? bindings)
-      body
-      (compute-fix-fv
-       (at (get-location parent)
-           (make-fix-node bindings
-                          body)))))
