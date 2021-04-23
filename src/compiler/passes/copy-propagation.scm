@@ -1,4 +1,4 @@
-;; Constant propagation.
+;; Copy propagation.
 
 (load "compiler/utils/utils.scm")
 
@@ -7,16 +7,16 @@
 (load "compiler/pass.scm")
 (load "compiler/ast.scm")
 
-(define propagate-constants
-  (pass (schema "propagate-constants"
+(define propagate-copies
+  (pass (schema "propagate-copies"
                 'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial constant-propagation '())))))
+          (env-update env 'ast (partial copy-propagation '())))))
 
-(define (constant-propagation subs expr)
-  (propagate const-binding?
-             make-const-sub
+(define (copy-propagation subs expr)
+  (propagate symbol-binding?
+             make-copy-sub
              (lambda (subs expr kont)
                (ast-case expr
                 ((symbol _)
@@ -29,9 +29,9 @@
              subs
              expr))
 
-(define (const-binding? binding)
-  (const-node? (ast-binding-val binding)))
+(define (symbol-binding? binding)
+  (symbol-node? (ast-binding-val binding)))
 
-(define (make-const-sub binding)
+(define (make-copy-sub binding)
   (cons (ast-symbol-value (ast-binding-var binding))
         (ast-binding-val binding)))

@@ -19,6 +19,7 @@
 
 ;; The backend
 (load "compiler/passes/builtins.scm")
+(load "compiler/passes/copy-propagation.scm")
 (load "compiler/passes/const-propagation.scm")
 (load "compiler/passes/const-folding.scm")
 (load "compiler/passes/letrec-bindings.scm")
@@ -47,6 +48,7 @@
                validate
                report-errors
                inline-builtins
+               propagate-copies
                propagate-constants
                fold-constants
                reorder-letrec-bindings
