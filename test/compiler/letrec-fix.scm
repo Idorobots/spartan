@@ -106,39 +106,6 @@
                           (check-deref arg node deref))
               (assert (get-location result) (get-location l))))))
 
-(describe
- "fix"
- (it "should correctly recompute free & bound vars"
-     (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
-             (let-bv (take body-fv 2))
-             (vars (gen-specific-list gen-symbol-node let-bv))
-             (vals (gen-specific-list (lambda (_)
-                                        gen-non-value-node)
-                                      let-bv))
-             (vals-fv (gen-list (length let-bv) gen-valid-symbol))
-             (bindings (map (lambda (sym var val fv)
-                              (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
-                            let-bv
-                            vars
-                            vals
-                            vals-fv))
-             (parent gen-ast-node)
-             (expected-fv (append (drop body-fv 2)
-                                  vals-fv)))
-            (assert (fix parent '() body)
-                    body)
-            (let ((result (fix parent bindings body)))
-              (assert (fix-node? result))
-              (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
-              (assert (ast-fix-body result) body)
-              (assert (ast-fix-bindings result) bindings)))))
-
 (define (gen-ref value)
   (let ((l (get-location value)))
     (at l
@@ -237,7 +204,7 @@
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
                                            (list b1)
@@ -256,12 +223,12 @@
              (bindings (list b1))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
                      ;; NOTE Recoursive lambda is fixed.
-                     (fix parent
-                          (list b1)
-                          body)))))
+                     (reconstruct-fix-node parent
+                                           (list b1)
+                                           body)))))
 
  (it "should omit needless fix"
      (check ((v1 gen-valid-symbol)
@@ -270,7 +237,7 @@
              (bindings (list b1))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
                      ;; NOTE Non-recursive lambda is not fixed.
                      (reconstruct-let-node parent
@@ -290,15 +257,15 @@
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
                                            (list b1)
                                            ;; NOTE No complex group at all.
                                            (generated
-                                            (fix parent
-                                                 (list b2 b3)
-                                                 body))))))
+                                            (reconstruct-fix-node parent
+                                                                  (list b2 b3)
+                                                                  body))))))
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
              (b1 (gen-binding-node n1 gen-const-node))
@@ -311,7 +278,7 @@
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
                      (reconstruct-let-node parent
                                            (list b1)
@@ -332,7 +299,7 @@
              (bindings (list b1 b2 b3))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1 v2 v3))))
-            (assert (waddell fix reconstruct-let-node parent bindings body)
+            (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     ;; NOTE Only simple value group is present.
                     (generated
                      (reconstruct-let-node parent

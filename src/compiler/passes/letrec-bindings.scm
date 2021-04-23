@@ -6,8 +6,7 @@
 (load "compiler/env.scm")
 (load "compiler/pass.scm")
 (load "compiler/ast.scm")
-
-(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-let-fv & compute-letrec-fv
+(load "compiler/propagate.scm") ;; FIXME For reconstruct-*-node.
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 
@@ -122,19 +121,3 @@
                   (reconstruct-let-node parent bs acc)))))
          body
          scc))
-
-(define (reconstruct-letrec-node parent bindings body)
-  (if (empty? bindings)
-      body
-      (compute-letrec-fv
-       (at (get-location parent)
-           (make-letrec-node bindings
-                             body)))))
-
-(define (reconstruct-let-node parent bindings body)
-  (if (empty? bindings)
-      body
-      (compute-let-fv
-       (at (get-location parent)
-           (make-let-node bindings
-                          body)))))

@@ -167,4 +167,13 @@
                           (fix ((binding ,subbed-other ,subbed-orig1)) ,subbed-orig2)
                           (assert subbed-other other)
                           (assert subbed-orig1 subbed)
-                          (assert subbed-orig2 subbed))))))
+                          (assert subbed-orig2 subbed)))))
+
+ (it "doesn't subsitute const values"
+     (check ((var gen-valid-symbol)
+             (sym (gen-symbol-node var))
+             (node (gen-specific-const-node sym))
+             (subbed gen-valid-symbol-node))
+            (assert (substitute-symbols (list (cons var (constantly subbed)))
+                                        node)
+                    node))))

@@ -2,6 +2,7 @@
 
 (load "compiler/errors.scm")
 (load "compiler/ast.scm")
+(load "compiler/env.scm")
 
 (define (pass schema transform)
   (cons schema transform))
@@ -11,6 +12,11 @@
 
 (define (pass-transform pass)
   (cdr pass))
+
+(define (run-pass pass env)
+  (unless (env-contains? env 'no-validation)
+    ((pass-schema pass) env))
+  ((pass-transform pass) env))
 
 (define (schema hint . properties)
   (lambda (env)

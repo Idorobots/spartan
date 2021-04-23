@@ -10,4 +10,11 @@
                   (map (lambda (path)
                          (string-append "../test/foof/errors/"
                                         (path->string path)))
-                       (directory-list "../test/foof/errors/"))))))
+                       (directory-list "../test/foof/errors/")))))
+
+ (it "optimizes the output"
+     (gensym-reset!)
+     (assert (compile (env 'module "optimize"
+                           'input (slurp "../test/foof/math.foo")))
+             '(let ((__value1 (display '1462731)))
+                __value1))))

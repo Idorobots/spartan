@@ -1,0 +1,7 @@
+(let ((a 23))
+  (let ((b a)
+        (c (* a a)))
+    (let ((d (* (+ b c) 5))
+          (e c))
+      (let ((f (* e (+ d 5))))
+        (display (+ 23 (+ a f)))))))
