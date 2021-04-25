@@ -20,6 +20,7 @@
 (load "../test/compiler/const.scm")
 (load "../test/compiler/validate.scm")
 (load "../test/compiler/bindings.scm")
+(load "../test/compiler/dce.scm")
 (load "../test/compiler/copy-propagation.scm")
 (load "../test/compiler/const-propagation.scm")
 (load "../test/compiler/const-folding.scm")

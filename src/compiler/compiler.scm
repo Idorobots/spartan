@@ -22,6 +22,7 @@
 (load "compiler/passes/copy-propagation.scm")
 (load "compiler/passes/const-propagation.scm")
 (load "compiler/passes/const-folding.scm")
+(load "compiler/passes/dce.scm")
 (load "compiler/passes/letrec-bindings.scm")
 (load "compiler/passes/letrec-fix.scm")
 (load "compiler/passes/cpc.scm")
@@ -54,19 +55,22 @@
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
+               (optimize
+                (list
+                 elliminate-dead-code))
                annotate-free-vars
                closure-convert
                symbol-rename
                generate-target-code)))
 
 (define (optimize passes)
-  (pass (schema "optimize")
+  (pass (schema "optimize") ;; NOTE Schema depends on the passes.
         (lambda (env)
           (let loop ((i +optimization-loops+)
                      (acc env)
                      (prev '()))
             (if (or (= i 0)
-                    (equal? prev acc))
+                    (equal? prev acc)) ;; FIXME This is needlessly slow.
                 acc
                 (loop (- i 1)
                       (foldl run-pass
