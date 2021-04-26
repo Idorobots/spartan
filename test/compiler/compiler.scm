@@ -16,4 +16,4 @@
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'input (slurp "../test/foof/math.foo")))
-             '(display '1462731))))
+             '(display '(5 1462731 23)))))

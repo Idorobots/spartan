@@ -9,7 +9,7 @@
 (define elliminate-dead-code
   (pass (schema "elliminate-dead-code"
                 'ast (ast-subset? '(const symbol
-                                    if do let fix binding lambda app primop-app)))
+                                    if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast dead-code-ellimination))))
 

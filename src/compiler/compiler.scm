@@ -47,17 +47,19 @@
                annotate-bindings
                validate
                report-errors
-               inline-builtins
                (optimize
-                (list propagate-copies
+                (list inline-builtins
+                      propagate-copies
                       propagate-constants
-                      fold-constants))
+                      fold-constants
+                      elliminate-dead-code))
+               annotate-free-vars
+               annotate-bindings
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
                (optimize
-                (list
-                 elliminate-dead-code))
+                (list elliminate-dead-code))
                annotate-free-vars
                closure-convert
                symbol-rename

@@ -192,7 +192,7 @@
              (b2 (gen-binding-node sym2 gen-valid-symbol-node))
              (var3 gen-valid-symbol)
              (sym3 (gen-symbol-node var3))
-             (val3 (gen-app-node sym2))
+             (val3 (gen-app-node sym1))
              (b3 (gen-binding-node sym3 val3))
              (body (gen-specific-do-node sym1 sym2 sym3))
              (node (gen-with-bv (gen-letrec-node (list b1 b2 b3) body)
@@ -200,10 +200,13 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (letrec ((binding _ (app (number '23))))
+                        (letrec (,unchanged-b2
+                                 (binding _ (app (number '23))))
                           (do (number '23) ;; NOTE Not subbed.
-                              (number '23)
+                              ,unchanged-sym2
                               ,unchanged-node))
+                        (assert unchanged-b2 b2)
+                        (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3)))
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
@@ -213,7 +216,7 @@
              (b2 (gen-binding-node sym2 gen-valid-symbol-node))
              (var3 gen-valid-symbol)
              (sym3 (gen-symbol-node var3))
-             (val3 (gen-app-node sym2))
+             (val3 (gen-app-node sym1))
              (b3 (gen-binding-node sym3 val3))
              (body (gen-specific-do-node sym1 sym2 sym3))
              ;; NOTE Technically not a proper fix node, but oh well.
@@ -222,10 +225,13 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (fix ((binding _ (app (number '23))))
+                        (fix (,unchanged-b2
+                              (binding _ (app (number '23))))
                           (do (number '23) ;; NOTE Not subbed.
-                              (number '23)
+                              ,unchanged-sym2
                               ,unchanged-node))
+                        (assert unchanged-b2 b2)
+                        (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3))))
 
  (it "should not leave empty let bindings in"
