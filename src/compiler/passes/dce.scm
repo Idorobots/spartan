@@ -18,24 +18,11 @@
            (lambda (expr)
              (ast-case expr
               ;; NOTE These are introduced by CPC.
-              ((let ((binding (symbol ,var) ,val)) (symbol ,body))
-               (if (equal? (ast-symbol-value var)
-                           (ast-symbol-value body))
-                   val
-                   expr))
+              ((let ((binding ,var ,val)) ,var)
+               val)
               ;; NOTE Eta reduction.
-              ((lambda ,formals (app ,op . ,args))
-               (if (and (equal? (length formals)
-                                (length args))
-                        (every? symbol-node? args)
-                        (every? true?
-                                (map (lambda (formal arg)
-                                       (equal? (ast-symbol-value formal)
-                                               (ast-symbol-value arg)))
-                                     formals
-                                     args)))
-                   op
-                   expr))
+              ((lambda ,args (app ,op . ,args))
+               op)
               (else
                expr)))
            expr))

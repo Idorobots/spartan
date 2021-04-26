@@ -206,6 +206,23 @@
                                    (make-number-node 3))))))
 
 (describe
+ "ast-eqv?"
+ (it "should find the same trees equivalent"
+     (check ((node gen-ast-node))
+            (assert (ast-eqv? node node))))
+
+ (it "should find same contents with different metadata equivalent"
+     (check ((var gen-valid-symbol)
+             (a (gen-symbol-node var))
+             (b (gen-symbol-node var)))
+            (assert (ast-eqv? a b))))
+
+ (it "should not find different trees equivalent"
+     (check ((a gen-ast-node)
+             (b gen-ast-node))
+            (assert (not (ast-eqv? a b))))))
+
+(describe
  "ast-case"
  (it "can match any expression"
      (check ((node gen-ast-node))
@@ -270,16 +287,20 @@
      (check ((cont (gen-symbol-node 'cont1))
              (node gen-ast-node)
              (app (gen-primop-app-node '&yield-cont cont node)))
-            (assert-ast app
-                        (primop-app '&yield-cont 'cont1 ,some-value)
-                        (assert some-value node))))
+            (ast-case app
+                      ((primop-app '&yield-cont 'cont1 ,some-value)
+                       (assert some-value node))
+                      (else
+                       (assert #f)))))
 
  (it "can match specific lambdas"
      (check ((val (gen-symbol-node 'value2))
              (node (gen-lambda-node (list val) val)))
-            (assert-ast node
-                        (lambda ('value2) 'value2)
-                        (assert #t))))
+            (ast-case node
+                      ((lambda ('value2) 'value2)
+                       (assert #t))
+                      (else
+                       (assert #f)))))
 
  (it "can match specific bindings on let"
      (check ((cont (gen-symbol-node 'cont1))
@@ -287,10 +308,30 @@
              (binding (gen-binding-node cont val))
              (bod gen-ast-node)
              (node (gen-let-node (list binding) bod)))
-            (assert-ast node
-                        (let ((binding 'cont1 ,value)) ,body)
-                        (assert value val)
-                        (assert body bod)))))
+            (ast-case node
+                      ((let ((binding 'cont1 ,value)) ,body)
+                       (assert value val)
+                       (assert body bod))
+                      (else
+                       (assert #f)))))
+
+ (it "correctly unifies bindings"
+     (check ((needle gen-valid-symbol-node)
+             (node (gen-lambda-node (list needle) gen-valid-symbol-node)))
+            (ast-case node
+                      ((lambda (,arg) ,arg)
+                       (assert #f))
+                      (else
+                       (assert #t))))
+     (check ((var gen-valid-symbol)
+             (needle (gen-symbol-node var))
+             (body (gen-symbol-node var))
+             (node (gen-lambda-node (list needle) body)))
+            (ast-case node
+                      ((lambda (,arg) ,arg)
+                       (assert arg body))
+                      (else
+                       (assert #f))))))
 
 (describe
  "safe-symbol-value"
