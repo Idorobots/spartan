@@ -1,6 +1,6 @@
 ;; Gensym impl
 
-(load "compiler/utils/refs.scm")
+(load-once "compiler/utils/refs.scm")
 
 (define *gensym-counter* (ref 0))
 (define (gensym root)

@@ -1,7 +1,7 @@
 ;; The scheduler:
 
-(load "runtime/priority-queue.scm")
-(load "runtime/processes.scm")
+(load-once "runtime/priority-queue.scm")
+(load-once "runtime/processes.scm")
 
 ;; Some configuration constants:
 (define +priority+ 100)           ;; Default priority.

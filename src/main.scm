@@ -1,9 +1,18 @@
 ;; The main entry point.
 
-(load "compiler/env.scm")
-(load "compiler/compiler.scm")
-(load "runtime/rt.scm")
-(load "rete/rete.scm")
+(define *imported-modules* '())
+
+(define-syntax load-once
+  (syntax-rules (*imported-modules*)
+    ((load-once file)
+     (unless (member file *imported-modules*)
+       (set! *imported-modules* (cons file *imported-modules*))
+       (load file)))))
+
+(load-once "compiler/env.scm")
+(load-once "compiler/compiler.scm")
+(load-once "runtime/rt.scm")
+(load-once "rete/rete.scm")
 
 (define (run-code expr)
   (reset-rete!)

@@ -1,7 +1,7 @@
 ;; Actor model runtime stuff:
 
-(load "runtime/processes.scm")
-(load "runtime/scheduler.scm")
+(load-once "runtime/processes.scm")
+(load-once "runtime/scheduler.scm")
 
 (define (wait time) ;; NOTE Can't be called the same as Scheme sleep. :(
   (inc-uproc-rtime! (current-task)

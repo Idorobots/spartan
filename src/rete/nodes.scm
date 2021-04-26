@@ -1,5 +1,5 @@
 ;; Rete nodes live here.
-(load "rete/utils.scm")
+(load-once "rete/utils.scm")
 
 (define (node type next . data)
   (list* type next data))

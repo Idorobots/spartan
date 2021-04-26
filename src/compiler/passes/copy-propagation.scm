@@ -1,11 +1,11 @@
 ;; Copy propagation.
 
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/propagate.scm")
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
+(load-once "compiler/propagate.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load "compiler/ast.scm") ;; FIXME Breaks the compiler when loaded once.
 
 (define propagate-copies
   (pass (schema "propagate-copies"

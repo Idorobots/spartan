@@ -1,7 +1,7 @@
 ;; Exception handling stuff.
 
-(load "runtime/processes.scm")
-(load "runtime/scheduler.scm")
+(load-once "runtime/processes.scm")
+(load-once "runtime/scheduler.scm")
 
 (define (&error-handler)
   (uproc-error-handler (current-task)))

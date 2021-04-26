@@ -1,8 +1,8 @@
 ;; PEG parser source generator
 
-(load "compiler/utils/gensym.scm")
-(load "compiler/utils/io.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/gensym.scm")
+(load-once "compiler/utils/io.scm")
+(load-once "compiler/utils/utils.scm")
 
 ;; Some optimization
 (define (memoize-input previous-runs f)

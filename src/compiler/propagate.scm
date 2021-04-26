@@ -1,11 +1,11 @@
 ;; Generic binding propagation
 
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
-(load "compiler/substitute.scm") ;; FIXME For filter-subs.
+(load-once "compiler/ast.scm")
+(load-once "compiler/substitute.scm") ;; FIXME For filter-subs.
 
-(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
+(load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
 
 (define (propagate partition-by make-sub replace-with subs expr)
   (define (loop subs expr)

@@ -1,10 +1,10 @@
 ;; Rete implementation.
 
-(load "rete/utils.scm")
-(load "rete/nodes.scm")
-(load "rete/patternmatch.scm")
-(load "rete/compiler.scm")
-(load "rete/factstore.scm")
+(load-once "rete/utils.scm")
+(load-once "rete/nodes.scm")
+(load-once "rete/patternmatch.scm")
+(load-once "rete/compiler.scm")
+(load-once "rete/factstore.scm")
 
 ;; State:
 

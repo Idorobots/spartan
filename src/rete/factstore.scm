@@ -1,6 +1,6 @@
 ;; Fact store for storing facts.
 
-(load "rete/utils.scm")
+(load-once "rete/utils.scm")
 
 ;; State:
 

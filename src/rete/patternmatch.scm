@@ -1,6 +1,6 @@
 ;; Pattern matching related stuff.
 
-(load "rete/utils.scm")
+(load-once "rete/utils.scm")
 
 ;; FIXME Needs better unification.
 (define (unify pattern value)

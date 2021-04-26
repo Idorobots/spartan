@@ -1,6 +1,6 @@
 ;; Various utils for Rete.
 
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/utils.scm")
 
 (define (slice array start end)
   (reverse (let loop ((index start)

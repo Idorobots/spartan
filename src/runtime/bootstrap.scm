@@ -1,8 +1,8 @@
 ;; The bootstrap code.
 
-(load "compiler/utils/utils.scm")
-(load "compiler/utils/refs.scm")
-(load "rete/rete.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/refs.scm")
+(load-once "rete/rete.scm")
 
 ;; Built-in functions:
 (define (cpsfy f)
