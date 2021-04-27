@@ -33,6 +33,10 @@
                               (make-do-node
                                (append filtered
                                        (list final)))))))
+              ((if ,condition ,then ,else)
+               (cond ((falsy? condition) else)
+                     ((truthy? condition) then)
+                     (else expr)))
               (else
                expr)))
            expr))
@@ -40,4 +44,15 @@
 (define (effectful? node)
   (not (or (const-node? node)
            (symbol-node? node)
+           (lambda-node? node))))
+
+(define (falsy? node)
+  ;; FIXME Implement proper booleans.
+  (and (const-node? node)
+       (list-node? (ast-const-value node))
+       (equal? 0 (ast-list-length (ast-const-value node)))))
+
+(define (truthy? node)
+  (and (not (falsy? node))
+       (or (const-node? node)
            (lambda-node? node))))

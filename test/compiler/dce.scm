@@ -45,6 +45,32 @@
                         (assert dce-non-const non-const)
                         (assert dce-const const))))
 
+ (it "should elliminate dead if branches"
+     (check ((then gen-valid-symbol-node)
+             (els gen-valid-symbol-node)
+             (cnd (gen-one-of gen-valid-symbol-node
+                              gen-valid-let-node
+                              gen-valid-letrec-node))
+             (node (gen-if-node cnd then els)))
+            (assert (dead-code-ellimination node)
+                    node))
+     (check ((then gen-valid-symbol-node)
+             (els gen-valid-symbol-node)
+             (cnd (gen-one-of (gen-specific-const-node gen-valid-symbol-node)
+                              (gen-specific-const-node (gen-list-node (gen-integer 1 5)))
+                              (gen-specific-const-node (gen-number-node gen-number))
+                              (gen-specific-const-node (gen-string-node (gen-integer 0 20)))
+                              gen-valid-lambda-node))
+             (node (gen-if-node cnd then els)))
+            (assert (dead-code-ellimination node)
+                    then))
+     (check ((then gen-valid-symbol-node)
+             (els gen-valid-symbol-node)
+             (cnd (gen-specific-const-node (gen-list-node 0)))
+             (node (gen-if-node cnd then els)))
+            (assert (dead-code-ellimination node)
+                    els)))
+
  (it "should perform eta reduction"
      (check ((args (gen-arg-list (gen-integer 0 5)))
              (op gen-valid-symbol-node)
@@ -52,3 +78,56 @@
              (node (gen-lambda-node args body)))
             (assert (dead-code-ellimination node)
                     op))))
+
+(describe
+ "effectful?"
+ (it "should recognize potentially effectful nodes"
+     (check ((node (gen-one-of gen-const-node
+                               gen-valid-symbol-node
+                               gen-valid-lambda-node)))
+            (assert (not (effectful? node))))
+     (check ((node (gen-one-of gen-valid-do-node
+                               gen-valid-if-node
+                               gen-valid-app-node
+                               gen-valid-primop-app-node
+                               gen-valid-let-node
+                               gen-valid-letrec-node)))
+            (assert (effectful? node)))))
+
+(describe
+ "truthy? and falsy?"
+ (it "falsy? should only recognize constant empty list as falsy"
+     (assert (falsy? (sample (gen-specific-const-node
+                              (gen-list-node 0))
+                             random)))
+     (check ((value (gen-one-of gen-valid-symbol-node
+                                (gen-list-node (gen-integer 1 5))
+                                (gen-number-node gen-number)
+                                (gen-string-node (gen-integer 0 20))))
+             (node (gen-specific-const-node value)))
+            (assert (not (falsy? node))))
+     (check ((node (gen-one-of gen-valid-lambda-node
+                               gen-valid-symbol-node
+                               gen-valid-do-node
+                               gen-valid-if-node
+                               gen-valid-let-node
+                               gen-valid-letrec-node)))
+            (assert (not (falsy? node)))))
+
+ (it "truthy? should treat other static values as truthy"
+     (assert (not (truthy? (sample (gen-specific-const-node
+                                    (gen-list-node 0))
+                                   random))))
+     (check ((value (gen-one-of gen-valid-symbol-node
+                                (gen-list-node (gen-integer 1 5))
+                                (gen-number-node gen-number)
+                                (gen-string-node (gen-integer 0 20))))
+             (node (gen-one-of (gen-specific-const-node value)
+                               gen-valid-lambda-node)))
+            (assert (truthy? node)))
+     (check ((node (gen-one-of gen-valid-do-node
+                               gen-valid-symbol-node
+                               gen-valid-if-node
+                               gen-valid-let-node
+                               gen-valid-letrec-node)))
+            (assert (not (truthy? node))))))
