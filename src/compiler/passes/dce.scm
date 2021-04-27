@@ -23,6 +23,21 @@
               ;; NOTE Eta reduction.
               ((lambda ,args (app ,op . ,args))
                op)
+              ((do . ,exprs)
+               (let ((final (last exprs))
+                     (filtered (filter effectful?
+                                       (take exprs (- (length exprs) 1)))))
+                 (if (empty? filtered)
+                     final
+                     (replace expr
+                              (make-do-node
+                               (append filtered
+                                       (list final)))))))
               (else
                expr)))
            expr))
+
+(define (effectful? node)
+  (not (or (const-node? node)
+           (symbol-node? node)
+           (lambda-node? node))))
