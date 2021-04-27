@@ -1,5 +1,9 @@
 ;; AST equivalence checking.
 
+(load-once "compiler/ast/nodes.scm")
+
+(load-once "compiler/errors.scm")
+
 (define (ast-eqv? a b)
   (cond ((and (list? a)
               (list? b))

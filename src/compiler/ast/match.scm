@@ -1,5 +1,10 @@
 ;; AST pattern matching
 
+(load-once "compiler/ast/nodes.scm")
+(load-once "compiler/ast/eqv.scm")
+
+(load-once "compiler/errors.scm")
+
 (define-syntax ast-case-extract-vars
   (syntax-rules (quote unquote get-var)
     ((ast-case-extract-vars bound body)

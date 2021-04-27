@@ -5,7 +5,7 @@
 (load-once "compiler/propagate.scm")
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")
-(load "compiler/ast.scm") ;; FIXME Breaks the compiler when loaded once.
+(load-once "compiler/ast.scm")
 
 (define propagate-copies
   (pass (schema "propagate-copies"

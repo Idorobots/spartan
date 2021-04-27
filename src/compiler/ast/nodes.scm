@@ -1,4 +1,12 @@
-;; Basic definitions
+;; AST
+
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
+(load-once "compiler/utils/gensym.scm")
+
+(load-once "compiler/errors.scm")
+
+;; AST Node
 
 (define (ast-node? node)
   (hash? node))
@@ -19,6 +27,82 @@
 
 (define (ast-update node property f)
   (ast-set node property (f (ast-get* node property '()))))
+
+;; AST metadata
+
+(define (location start end)
+  (cons start end))
+
+(define (location-start loc)
+  (car loc))
+
+(define (location-end loc)
+  (cdr loc))
+
+(define (location<? a b)
+  (< (location-start a)
+     (location-start b)))
+
+(define (get-location node)
+  (ast-get node 'location))
+
+(define (get-location-start node)
+  (car (get-location node)))
+
+(define (get-location-end node)
+  (cdr (get-location node)))
+
+(define (at location node)
+  (ast-set node 'location location))
+
+(define (replace old new)
+  (at (get-location old)
+      ((if (generated? old) generated id)
+       new)))
+
+(define (generated node)
+  (ast-set node 'generated #t))
+
+(define (generated? node)
+  (ast-get* node 'generated #f))
+
+(define (context ctx node)
+  (ast-set node 'context ctx))
+
+(define (get-context* node default)
+  (ast-get* node 'context default))
+
+(define (get-context node)
+  (get-context* node '()))
+
+(define (free-vars vars node)
+  (cond ((set-empty? vars)
+         node)
+        ((symbol-node? node)
+         ;; NOTE Symbols always are their own free var, no need to store that in the AST.
+         node)
+        (else
+         (ast-set node 'free-vars vars))))
+
+(define (get-free-vars node)
+  (if (symbol-node? node)
+      (set (ast-symbol-value node))
+      (ast-get* node 'free-vars (set))))
+
+(define (bound-vars vars node)
+  (if (set-empty? vars)
+      node
+      (ast-set node 'bound-vars vars)))
+
+(define (get-bound-vars node)
+  (ast-get* node 'bound-vars (set)))
+
+(define (get-type node)
+  (ast-get node 'type))
+
+(define (is-type? node type)
+  (equal? (get-type node)
+          type))
 
 ;; AST nodes
 
