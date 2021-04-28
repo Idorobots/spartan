@@ -23,6 +23,8 @@
               ;; NOTE Eta reduction.
               ((lambda ,args (app ,op . ,args))
                op)
+              ((lambda ,args (primop-app '&yield-cont ,cont . ,args))
+               cont)
               ((do . ,exprs)
                (let ((final (last exprs))
                      (filtered (filter effectful?
