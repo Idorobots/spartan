@@ -52,14 +52,14 @@
                       propagate-copies
                       propagate-constants
                       fold-constants
-                      elliminate-dead-code))
+                      eliminate-dead-code))
                annotate-free-vars
                annotate-bindings
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
                (optimize
-                (list elliminate-dead-code))
+                (list eliminate-dead-code))
                annotate-free-vars
                closure-convert
                symbol-rename
