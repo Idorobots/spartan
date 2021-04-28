@@ -1,7 +1,7 @@
 ;; Continuations:
 
-(load "compiler/utils/utils.scm")
-(load "runtime/closures.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "runtime/closures.scm")
 
 ;; FIXME This really needs to be done on a per-uProc basis.
 (define *delimited-continuations* nil)

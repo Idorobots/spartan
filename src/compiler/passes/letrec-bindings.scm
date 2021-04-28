@@ -1,12 +1,12 @@
 ;; Letrec expansion phase.
 
-(load "compiler/utils/scc.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/scc.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
-(load "compiler/propagate.scm") ;; FIXME For reconstruct-*-node.
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
+(load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node.
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 

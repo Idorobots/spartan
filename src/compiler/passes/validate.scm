@@ -1,12 +1,12 @@
 ;; Final frontend code validation.
 
-(load "compiler/utils/set.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
-(load "compiler/errors.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
+(load-once "compiler/errors.scm")
 
 (define validate
   (pass (schema "validate"

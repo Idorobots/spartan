@@ -1,11 +1,11 @@
 ;; Free vars computation
 
-(load "compiler/utils/set.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
 
 (define annotate-free-vars
   (pass (schema "annotate-free-vars"

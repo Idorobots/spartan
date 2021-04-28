@@ -1,5 +1,5 @@
-(load "compiler/utils/utils.scm")
-(load "compiler/utils/refs.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/refs.scm")
 
 ;; Syntax error
 

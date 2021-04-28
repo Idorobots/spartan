@@ -1,6 +1,6 @@
 ;; Rule compiler.
 
-(load "rete/nodes.scm")
+(load-once "rete/nodes.scm")
 
 (define (compile-rule pattern action)
   (root-node (compile-pattern pattern (node-a action))))

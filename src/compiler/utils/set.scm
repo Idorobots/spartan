@@ -2,7 +2,7 @@
 
 ;; FIXME Could be quicker
 
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/utils.scm")
 
 (define (set . args)
   (sort args symbol<?))

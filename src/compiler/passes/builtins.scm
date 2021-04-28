@@ -1,11 +1,11 @@
 ;; Builtins inliner
 
-(load "compiler/utils/utils.scm")
-(load "compiler/substitute.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/substitute.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
 
 (define inline-builtins
   (pass (schema "inline-builtins"

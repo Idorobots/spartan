@@ -1,13 +1,13 @@
 ;; Closure conversion.
 ;; Assumes macro-expanded code.
 
-(load "compiler/utils/utils.scm")
-(load "compiler/utils/gensym.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/gensym.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
-(load "compiler/substitute.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
+(load-once "compiler/substitute.scm")
 
 (define closure-convert
   (pass (schema "closure-convert"

@@ -1,13 +1,13 @@
 ;; Continuation Passing Converter
 ;; Assumes macro- & letrec-expanded code. This phase contorts the code so much that it invalidates free-vars & bindings annotations.
 
-(load "compiler/utils/gensym.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/gensym.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/env.scm")
-(load "compiler/pass.scm")
-(load "compiler/ast.scm")
-(load "compiler/errors.scm")
+(load-once "compiler/env.scm")
+(load-once "compiler/pass.scm")
+(load-once "compiler/ast.scm")
+(load-once "compiler/errors.scm")
 
 (define continuation-passing-convert
   (pass (schema "continuation-passing-convert"

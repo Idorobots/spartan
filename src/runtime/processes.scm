@@ -1,7 +1,7 @@
 ;; Actor model:
 
-(load "compiler/utils/utils.scm")
-(load "runtime/continuations.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "runtime/continuations.scm")
 
 (define (&uproc fields)
   (list &uproc fields))

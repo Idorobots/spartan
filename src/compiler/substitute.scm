@@ -1,7 +1,7 @@
 ;; Binding aware variable substitution.
 
-(load "compiler/utils/utils.scm")
-(load "compiler/utils/set.scm")
+(load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
 
 (define (substitute-symbols subs expr)
   (substitute (lambda (subs expr kont)

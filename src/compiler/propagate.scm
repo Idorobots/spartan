@@ -1,11 +1,11 @@
 ;; Generic binding propagation
 
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/utils.scm")
 
-(load "compiler/ast.scm")
-(load "compiler/substitute.scm") ;; FIXME For filter-subs.
+(load-once "compiler/ast.scm")
+(load-once "compiler/substitute.scm") ;; FIXME For filter-subs.
 
-(load "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
+(load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
 
 (define (propagate partition-by make-sub replace-with subs expr)
   (define (loop subs expr)
@@ -31,7 +31,8 @@
                                               updated-bindings
                                               (loop updated-subs body))))
                      ((letrec ,bindings ,body)
-                      (let* ((bs (partition-bindings partition-by bindings))
+                      (let* ((bs (select-first (partition-bindings partition-by bindings)
+                                               bindings));; NOTE Can't use all propagatable bindings as they might interfere.
                              (updated-subs (append (map make-sub (car bs))
                                                    (filter-subs subs (get-bound-vars expr))))
                              (updated-bindings (map (partial loop updated-subs)
@@ -40,7 +41,8 @@
                                                  updated-bindings
                                                  (loop updated-subs body))))
                      ((fix ,bindings ,body)
-                      (let* ((bs (partition-bindings partition-by bindings))
+                      (let* ((bs (select-first (partition-bindings partition-by bindings)
+                                               bindings)) ;; NOTE Can't use all propagatable bindings as they might interfere.
                              (updated-subs (append (map make-sub (car bs))
                                                    (filter-subs subs (get-bound-vars expr))))
                              (updated-bindings (map (partial loop updated-subs)
@@ -63,6 +65,16 @@
                      (cons b (cdr acc)))))
          (cons '() '())
          bindings))
+
+(define (select-first partitioned original)
+  (let ((left (car partitioned)))
+    (if (empty? left)
+        partitioned
+        (let ((selected (car left)))
+          (cons (list selected)
+                (filter (lambda (b)
+                          (not (equal? b selected)))
+                        original))))))
 
 (define (reconstruct-let-node parent bindings body)
   (if (empty? bindings)

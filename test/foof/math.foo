@@ -4,4 +4,7 @@
     (let ((d (* (+ b c) 5))
           (e c))
       (let ((f (* e (+ d 5))))
-        (display (+ 23 (+ a f)))))))
+        ((let ((fun display))
+           (lambda (x)
+             (fun x)))
+         `(5 ,(+ 23 (+ a f)) 23))))))

@@ -1,7 +1,7 @@
 ;; A task debug monitor.
 
-(load "runtime/processes.scm")
-(load "runtime/scheduler.scm")
+(load-once "runtime/processes.scm")
+(load-once "runtime/scheduler.scm")
 
 (define (paddify thing padding)
   (let ((s (format "~a" thing)))

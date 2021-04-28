@@ -1,7 +1,7 @@
 ;; Strongly-connected components
 
-(load "compiler/utils/set.scm")
-(load "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
+(load-once "compiler/utils/utils.scm")
 
 ;; Kosaraju's algorithm:
 

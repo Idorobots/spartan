@@ -1,8 +1,8 @@
 ;; Compiler pass definition
 
-(load "compiler/errors.scm")
-(load "compiler/ast.scm")
-(load "compiler/env.scm")
+(load-once "compiler/errors.scm")
+(load-once "compiler/ast.scm")
+(load-once "compiler/env.scm")
 
 (define (pass schema transform)
   (cons schema transform))
