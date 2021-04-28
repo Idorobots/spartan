@@ -27,11 +27,10 @@
         (dce (set) op)))
    ((lambda ,args (primop-app '&yield-cont ,cont . ,args))
     (dce (set) cont))
-   ((binding _ ,value)
-    (walk-ast (partial dce (if (get-self-recoursive expr)
-                               (get-bound-vars expr) ;; Disallows eta-reduction on self-recoursive functions.
-                               (set)))
-              expr))
+   ((letrec ,bindings _)
+    (disallow-recoursive-eta expr))
+   ((fix ,bindings _)
+    (disallow-recoursive-eta expr))
    ;; Actual dead code elimination
    ((do . ,exprs)
     (let ((final (last exprs))
@@ -47,9 +46,19 @@
    ((if ,condition ,then ,else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
-          (else expr)))
+          (else (walk-ast (partial dce (set)) expr))))
    (else
     (walk-ast (partial dce (set)) expr))))
+
+(define (disallow-recoursive-eta expr)
+  (ast-update (ast-update expr 'body (partial dce (set)))
+              'bindings
+              (lambda (bs)
+                ;; NOTE Disallows eta-reduction on self-recoursive functions.
+                (map (lambda (b)
+                       (walk-ast (partial dce (get-bound-vars expr))
+                                 b))
+                     bs))))
 
 (define (effectful? node)
   (not (or (const-node? node)

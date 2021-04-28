@@ -58,6 +58,7 @@
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
+               annotate-free-vars ;; FIXME Needed for proper tail-call ellimination.
                (optimize
                 (list eliminate-dead-code))
                annotate-free-vars
