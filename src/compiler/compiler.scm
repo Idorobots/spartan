@@ -62,7 +62,11 @@
                continuation-passing-convert
                annotate-free-vars ;; FIXME Needed for proper dead code ellimination.
                (optimize
-                (list eliminate-dead-code))
+                (list propagate-constants
+                      fold-constants
+                      eliminate-common-subexpressions
+                      propagate-copies
+                      eliminate-dead-code))
                annotate-free-vars
                closure-convert
                symbol-rename
