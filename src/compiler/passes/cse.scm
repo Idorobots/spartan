@@ -35,9 +35,18 @@
     (let* ((filtered (filter-subexprs subexprs (get-bound-vars expr)))
            (updated (append (extract-subexprs bindings)
                             filtered)))
-      (walk-ast (partial cse updated) expr)))
+      (ast-update (ast-update expr 'body (partial cse updated))
+                  'bindings (partial map
+                                     (lambda (b)
+                                       (cse (append (extract-subexprs
+                                                     ;; NOTE Can't use the current expression as it'll match itself and optimize out.
+                                                     (filter (compose not (partial equal? b))
+                                                             bindings))
+                                                    filtered)
+                                            b))))))
    ((fix ,bindings _)
     (let* ((filtered (filter-subexprs subexprs (get-bound-vars expr))))
+      ;; NOTE These are only lambdas, so there's nothing to eliminate.
       (walk-ast (partial cse filtered) expr)))
    (else
     (walk-ast (partial cse subexprs) expr))))
