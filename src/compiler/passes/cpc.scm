@@ -94,7 +94,8 @@
          (value (at loc (make-gensym-node 'value))))
     (cpc-sequence args
                   (lambda (args)
-                    ;; FIXME The let can be ommited for non-side effecting primops.
+                    ;; NOTE The let could be ommited for non-side-effecting primops, but this way presents more
+                    ;; NOTE opportunities for common subexpression elimination.
                     (at loc
                         (make-let-1-node value (ast-update expr 'args (constantly args))
                                          (kont value)))))))

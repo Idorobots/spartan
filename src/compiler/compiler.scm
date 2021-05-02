@@ -23,6 +23,7 @@
 (load-once "compiler/passes/const-propagation.scm")
 (load-once "compiler/passes/const-folding.scm")
 (load-once "compiler/passes/dce.scm")
+(load-once "compiler/passes/cse.scm")
 (load-once "compiler/passes/letrec-bindings.scm")
 (load-once "compiler/passes/letrec-fix.scm")
 (load-once "compiler/passes/cpc.scm")
@@ -49,16 +50,17 @@
                report-errors
                (optimize
                 (list inline-builtins
-                      propagate-copies
                       propagate-constants
                       fold-constants
+                      eliminate-common-subexpressions
+                      propagate-copies
                       eliminate-dead-code))
                annotate-free-vars
                annotate-bindings
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
-               annotate-free-vars ;; FIXME Needed for proper tail-call ellimination.
+               annotate-free-vars ;; FIXME Needed for proper dead code ellimination.
                (optimize
                 (list eliminate-dead-code))
                annotate-free-vars

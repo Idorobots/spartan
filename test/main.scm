@@ -21,6 +21,7 @@
 (load-once "../test/compiler/validate.scm")
 (load-once "../test/compiler/bindings.scm")
 (load-once "../test/compiler/dce.scm")
+(load-once "../test/compiler/cse.scm")
 (load-once "../test/compiler/copy-propagation.scm")
 (load-once "../test/compiler/const-propagation.scm")
 (load-once "../test/compiler/const-folding.scm")
