@@ -29,12 +29,13 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - binding form analysis,
 - syntax tree validation,
 - built-in function inlining,
-- copy propagation,
 - constant propagation,
 - constant folding,
+- common subexpression elimination,
+- copy propagation,
 - dead code elimination,
 - `letrec` binding reordering,
 - `letrec` conversion,
 - continuation passing style transformation,
 - flat closure conversion,
-- tagret-safe name mangling.
+- target-safe name mangling.
