@@ -1,4 +1,4 @@
-;; Dead code ellimination.
+;; Dead code elimination.
 
 (load-once "compiler/utils/utils.scm")
 (load-once "compiler/utils/set.scm")
@@ -9,8 +9,7 @@
 
 (define eliminate-dead-code
   (pass (schema "eliminate-dead-code"
-                'ast (ast-subset? '(const symbol
-                                    if do let letrec fix binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial dce (set))))))
 

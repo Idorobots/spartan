@@ -10,8 +10,7 @@
 (define inline-builtins
   (pass (schema "inline-builtins"
                 'globals a-list?
-                'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
 

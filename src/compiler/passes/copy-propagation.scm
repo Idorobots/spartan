@@ -9,8 +9,7 @@
 
 (define propagate-copies
   (pass (schema "propagate-copies"
-                'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial copy-propagation '())))))
 
