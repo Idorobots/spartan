@@ -92,7 +92,7 @@
                         (assert cse-var1 var1)
                         (assert cse-app2 app2))))
 
- (it "should optimize out letrec bindings"
+ (it "should not optimize out letrec bindings"
      (check ((v1 gen-valid-symbol)
              (v2 gen-valid-symbol)
              (var1 (gen-symbol-node v1))
