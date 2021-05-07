@@ -19,6 +19,7 @@
 
 ;; The backend
 (load-once "compiler/passes/builtins.scm")
+(load-once "compiler/passes/lambdas.scm")
 (load-once "compiler/passes/copy-propagation.scm")
 (load-once "compiler/passes/const-propagation.scm")
 (load-once "compiler/passes/const-folding.scm")
@@ -50,6 +51,7 @@
                report-errors
                (optimize
                 (list inline-builtins
+                      inline-lambdas
                       propagate-constants
                       fold-constants
                       eliminate-common-subexpressions
@@ -62,7 +64,8 @@
                continuation-passing-convert
                annotate-free-vars ;; FIXME Needed for proper dead code ellimination.
                (optimize
-                (list propagate-constants
+                (list inline-lambdas
+                      propagate-constants
                       fold-constants
                       eliminate-common-subexpressions
                       propagate-copies
