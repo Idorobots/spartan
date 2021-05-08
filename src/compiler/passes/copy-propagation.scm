@@ -19,14 +19,22 @@
              (lambda (subs expr kont)
                (ast-case expr
                 ((symbol _)
-                 (let ((s (assoc (ast-symbol-value expr) subs)))
-                   (if s
-                       (cdr s) ;; NOTE Completely replaces the expr, together with its location.
-                       expr)))
+                 (replace-copy expr subs))
                 (else
                  (kont expr))))
              subs
              expr))
+
+(define (replace-copy expr subs)
+  (let ((s (assoc (ast-symbol-value expr) subs)))
+    (cond ((not s) expr)
+          ((symbol-node? (cdr s))
+           ;; NOTE To avoid reintroducing potentially no-longer-defined variables...
+           (replace-copy (cdr s)
+                         ;; NOTE ...but also not overwrite copy substitutions with values bound later.
+                         (member s subs)))
+          (else
+           (cdr s)))))
 
 (define (symbol-binding? binding)
   (symbol-node? (ast-binding-val binding)))
