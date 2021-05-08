@@ -28,6 +28,7 @@
 (load-once "../test/compiler/letrec-bindings.scm")
 (load-once "../test/compiler/letrec-fix.scm")
 (load-once "../test/compiler/builtins.scm")
+(load-once "../test/compiler/lambdas.scm")
 (load-once "../test/compiler/cpc.scm")
 (load-once "../test/compiler/closures.scm")
 (load-once "../test/compiler/rename.scm")
