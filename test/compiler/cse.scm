@@ -90,7 +90,16 @@
                         (assert cse-sym1 sym1)
                         (assert cse-app1 app1)
                         (assert cse-var1 var1)
-                        (assert cse-app2 app2))))
+                        (assert cse-app2 app2)))
+     (check ((v gen-valid-symbol)
+             (var (gen-symbol-node v))
+             (op (apply gen-one-of cse-able-primops))
+             (app (gen-primop-app-node op var var))
+             (b (gen-with-fv (gen-binding-node var app)
+                             (set v)))
+             (node (gen-with-bv (gen-let-node (list b) app)
+                                (set v))))
+            (assert (cse '() node) node)))
 
  (it "should not optimize out letrec bindings"
      (check ((v1 gen-valid-symbol)
