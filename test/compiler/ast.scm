@@ -360,3 +360,22 @@
             (assert (not (recoursive? (list non-rec-binding))))
             (assert (recoursive? (list rec-binding)))
             (assert (recoursive? multiple-bindings)))))
+
+(describe
+ "ast-size"
+ (it "should estimate AST size"
+     (check ((node (gen-one-of (gen-number-node gen-number)
+                               (gen-string-node (gen-integer 10 20))
+                               gen-valid-symbol-node
+                               gen-const-node)))
+            (assert (ast-size node) 1))
+     (check ((size (gen-integer 1 10))
+             (node (gen-do-node size gen-const-node)))
+            (assert (ast-size node) size))
+     (check ((f gen-valid-lambda-node))
+            (assert (ast-size f)
+                    (ast-size (ast-lambda-body f)))))
+
+ (it "computes AST size for any node"
+     (check ((node gen-ast-node))
+            (assert (>= (ast-size node) 0)))))
