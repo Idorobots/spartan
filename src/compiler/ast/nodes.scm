@@ -76,7 +76,8 @@
   (get-context* node '()))
 
 (define (free-vars vars node)
-  (cond ((set-empty? vars)
+  (cond ((and (set-empty? vars)
+              (set-empty? (get-free-vars node)))
          node)
         ((symbol-node? node)
          ;; NOTE Symbols always are their own free var, no need to store that in the AST.
@@ -90,7 +91,8 @@
       (ast-get* node 'free-vars (set))))
 
 (define (bound-vars vars node)
-  (if (set-empty? vars)
+  (if (and (set-empty? vars)
+           (set-empty? (get-bound-vars node)))
       node
       (ast-set node 'bound-vars vars)))
 

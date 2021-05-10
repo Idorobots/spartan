@@ -48,7 +48,46 @@
                          (location 5 0))
              #f)
      (assert (location<? (location 0 23)
-                         (location 5 23)))))
+                         (location 5 23))))
+
+ (it "free-vars allow setting free vars"
+     (let ((node (at (location 5 23)
+                 (ast-node 'type 'not-a-symbol 'value 'value)))
+           (sym (at (location 5 23)
+                    (make-symbol-node 'foo))))
+       (assert (get-free-vars sym)
+               (set 'foo))
+       (assert (free-vars (set 'foo 'bar)
+                           sym)
+               sym)
+       (assert (free-vars (set)
+                           node)
+               node)
+       (assert (get-free-vars
+                (free-vars (set 'foo 'bar)
+                           node))
+               (set 'foo 'bar))
+       (assert (get-free-vars
+                (free-vars (set)
+                           (free-vars (set 'foo 'bar)
+                                      node)))
+               (set))))
+
+ (it "bound-vars allow setting bound vars"
+     (let ((node (at (location 5 23)
+                     (ast-node 'type 'not-a-symbol 'value 'value))))
+       (assert (bound-vars (set)
+                           node)
+               node)
+       (assert (get-bound-vars
+                (bound-vars (set 'foo 'bar)
+                            node))
+               (set 'foo 'bar))
+       (assert (get-bound-vars
+                (bound-vars (set)
+                            (bound-vars (set 'foo 'bar)
+                                        node)))
+               (set)))))
 
 (describe
  "AST map"
