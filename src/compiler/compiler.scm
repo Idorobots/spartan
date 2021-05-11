@@ -93,6 +93,12 @@
                              passes)
                       acc))))))
 
+(define debug-ast
+  (pass (schema "debug")
+        (lambda (env)
+          (pretty-print (ast->plain (env-get env 'ast)))
+          env)))
+
 (define generate-target-code
   (pass (schema "generate-target-code"
                 'ast (ast-subset? '(const symbol if do let binding lambda primop-app)))
