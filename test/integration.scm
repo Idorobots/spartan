@@ -9,6 +9,7 @@
      (test-file "../test/foof/hello.foo")
      (test-file "../test/foof/fibonacci.foo")
      (test-file "../test/foof/logger.foo"))
+
  (it "should support continuations"
      (with-test-bindings
       (;; Silence task info logs since these might vary in the specific timings.
@@ -21,6 +22,7 @@
       (test-file "../test/foof/coroutines.foo")
       (test-file "../test/foof/coroutines2.foo")
       (test-file "../test/foof/coroutines3.foo")))
+
  (it "should support Actor Model"
      (with-test-bindings
       (;; Silence task info logs since these might vary in the specific timings.
@@ -36,6 +38,7 @@
       (test-file "../test/foof/msgwait.foo")
       (test-file "../test/foof/fibonacci2.foo")
       (test-file "../test/foof/errors2.foo")))
+
  (it "should support the RBS"
      (with-test-bindings
       (;; Silence task info logs since these might vary in the specific timings.
@@ -55,4 +58,25 @@
                                 r)))))
       (test-file "../test/foof/rbs2.foo")
       (test-file "../test/foof/rbs.foo")
-      (test-file "../test/foof/cep.foo"))))
+      (test-file "../test/foof/cep.foo")))
+
+ (ignore "handles reused variables correctly"
+         (assert (run '(letrec ((fact (lambda (n)
+                                        (if (< n 2)
+                                            n
+                                            (* n ;; NOTE the `n` here would be propagated into the `let` resulting in wrong computation.
+                                               (let ((n (- n 1)))
+                                                 (if (< n 2)
+                                                     n
+                                                     (* n (fact (- n 1))))))))))
+                         (if (< 10 2)
+                             10
+                             (* 10 (fact 9)))))
+                 3628800))
+
+ (it "optimizes bindings out correctly"
+     (assert (run '(list
+                    (let ((x1 '7)) (if (= '0 x1) 't nil))
+                    ;; NOTE This `x2` would remain as a free variable (and therefore an undefined variable) despite being optimized out.
+                    (let ((x2 '7)) (if (= '0 x2) nil 't))))
+             '(() t))))

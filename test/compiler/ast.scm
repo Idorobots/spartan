@@ -48,7 +48,46 @@
                          (location 5 0))
              #f)
      (assert (location<? (location 0 23)
-                         (location 5 23)))))
+                         (location 5 23))))
+
+ (it "free-vars allow setting free vars"
+     (let ((node (at (location 5 23)
+                 (ast-node 'type 'not-a-symbol 'value 'value)))
+           (sym (at (location 5 23)
+                    (make-symbol-node 'foo))))
+       (assert (get-free-vars sym)
+               (set 'foo))
+       (assert (free-vars (set 'foo 'bar)
+                           sym)
+               sym)
+       (assert (free-vars (set)
+                           node)
+               node)
+       (assert (get-free-vars
+                (free-vars (set 'foo 'bar)
+                           node))
+               (set 'foo 'bar))
+       (assert (get-free-vars
+                (free-vars (set)
+                           (free-vars (set 'foo 'bar)
+                                      node)))
+               (set))))
+
+ (it "bound-vars allow setting bound vars"
+     (let ((node (at (location 5 23)
+                     (ast-node 'type 'not-a-symbol 'value 'value))))
+       (assert (bound-vars (set)
+                           node)
+               node)
+       (assert (get-bound-vars
+                (bound-vars (set 'foo 'bar)
+                            node))
+               (set 'foo 'bar))
+       (assert (get-bound-vars
+                (bound-vars (set)
+                            (bound-vars (set 'foo 'bar)
+                                        node)))
+               (set)))))
 
 (describe
  "AST map"
@@ -360,3 +399,22 @@
             (assert (not (recoursive? (list non-rec-binding))))
             (assert (recoursive? (list rec-binding)))
             (assert (recoursive? multiple-bindings)))))
+
+(describe
+ "ast-size"
+ (it "should estimate AST size"
+     (check ((node (gen-one-of (gen-number-node gen-number)
+                               (gen-string-node (gen-integer 10 20))
+                               gen-valid-symbol-node
+                               gen-const-node)))
+            (assert (ast-size node) 1))
+     (check ((size (gen-integer 1 10))
+             (node (gen-do-node size gen-const-node)))
+            (assert (ast-size node) size))
+     (check ((f gen-valid-lambda-node))
+            (assert (ast-size f)
+                    (ast-size (ast-lambda-body f)))))
+
+ (it "computes AST size for any node"
+     (check ((node gen-ast-node))
+            (assert (>= (ast-size node) 0)))))

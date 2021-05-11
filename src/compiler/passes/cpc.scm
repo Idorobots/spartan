@@ -1,5 +1,6 @@
 ;; Continuation Passing Converter
-;; Assumes macro- & letrec-expanded code. This phase contorts the code so much that it invalidates free-vars & bindings annotations.
+;; Assumes macro- & letrec-expanded as well as alpha-converted code.
+;; This phase contorts the code so much that it invalidates free-vars & bindings annotations.
 
 (load-once "compiler/utils/gensym.scm")
 (load-once "compiler/utils/utils.scm")

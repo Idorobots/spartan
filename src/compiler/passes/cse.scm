@@ -25,23 +25,21 @@
           (replace expr (ast-binding-var e))
           (walk-ast (partial cse subexprs) expr))))
    ((let ,bindings _)
-    (let* ((filtered (filter-subexprs subexprs (get-bound-vars expr)))
-           (updated (append (extract-subexprs bindings)
-                            filtered)))
+    (let* ((updated (append (extract-subexprs bindings)
+                            subexprs))
+           (filtered (filter-subexprs updated (get-bound-vars expr))))
       (ast-update (ast-update expr 'bindings (partial map (partial cse subexprs)))
                 'body
-                (partial cse updated))))
+                (partial cse filtered))))
    ((letrec ,bindings _)
-    (let* ((filtered (filter-subexprs subexprs (get-bound-vars expr)))
-           (updated (append (extract-subexprs bindings)
-                            filtered)))
-      (ast-update (ast-update expr 'body (partial cse updated))
+    (let* ((updated (append (extract-subexprs bindings)
+                            subexprs))
+           (filtered (filter-subexprs updated (get-bound-vars expr))))
+      (ast-update (ast-update expr 'body (partial cse filtered))
                   'bindings (partial map
                                      (lambda (b)
-                                       (cse (append (extract-subexprs
-                                                     ;; NOTE Can't use the current expression as it'll match itself and optimize out.
-                                                     (filter (compose not (partial equal? b))
-                                                             bindings))
+                                       ;; NOTE Can't use the current expression as it'll match itself and optimize out.
+                                       (cse (filter (compose not (partial equal? b))
                                                     filtered)
                                             b))))))
    ((fix ,bindings _)

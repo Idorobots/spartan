@@ -29,6 +29,7 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - binding form analysis,
 - syntax tree validation,
 - built-in function inlining,
+- user function inlining,
 - constant propagation,
 - constant folding,
 - common subexpression elimination,

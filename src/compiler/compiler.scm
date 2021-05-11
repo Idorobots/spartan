@@ -19,6 +19,7 @@
 
 ;; The backend
 (load-once "compiler/passes/builtins.scm")
+(load-once "compiler/passes/lambdas.scm")
 (load-once "compiler/passes/copy-propagation.scm")
 (load-once "compiler/passes/const-propagation.scm")
 (load-once "compiler/passes/const-folding.scm")
@@ -49,7 +50,10 @@
                validate
                report-errors
                (optimize
-                (list inline-builtins
+                (list annotate-free-vars
+                      inline-lambdas
+                      annotate-free-vars
+                      inline-builtins
                       propagate-constants
                       fold-constants
                       eliminate-common-subexpressions
@@ -60,9 +64,11 @@
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
-               annotate-free-vars ;; FIXME Needed for proper dead code ellimination.
                (optimize
-                (list propagate-constants
+                (list annotate-free-vars
+                      inline-lambdas
+                      annotate-free-vars
+                      propagate-constants
                       fold-constants
                       eliminate-common-subexpressions
                       propagate-copies
@@ -86,6 +92,12 @@
                              acc
                              passes)
                       acc))))))
+
+(define debug-ast
+  (pass (schema "debug")
+        (lambda (env)
+          (pretty-print (ast->plain (env-get env 'ast)))
+          env)))
 
 (define generate-target-code
   (pass (schema "generate-target-code"

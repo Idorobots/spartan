@@ -44,6 +44,35 @@
         (post (walk-ast m (pre expr))))
       (compiler-bug "Non-AST object passed to map-ast:" expr)))
 
+(define (ast-size ast)
+  (map-ast id
+           (lambda (expr)
+             (case (get-type expr)
+               ((number symbol string list const quote quasiquote unquote unquote-splicing) 1)
+               ((if) (+ (ast-if-condition expr)
+                        (ast-if-then expr)
+                        (ast-if-else expr)))
+               ((do) (apply + (ast-do-exprs expr)))
+               ((body) (apply + (ast-body-exprs expr)))
+               ((lambda) (ast-lambda-body expr))
+               ((let) (foldl +
+                             (ast-let-body expr)
+                             (ast-let-bindings expr)))
+               ((letrec) (foldl +
+                                (ast-letrec-body expr)
+                                (ast-letrec-bindings expr)))
+               ((fix) (foldl +
+                             (ast-fix-body expr)
+                             (ast-fix-bindings expr)))
+               ((binding) (ast-binding-val expr))
+               ((app) (foldl +
+                             (ast-app-op expr)
+                             (ast-app-args expr)))
+               ((primop-app) (apply + (ast-app-args expr)))
+               ((def) (ast-def-value expr))
+               (else 0)))
+           ast))
+
 (define (ast->plain ast)
   (map-ast id
            (lambda (expr)
@@ -69,7 +98,7 @@
                ((quasiquote) (list 'quasiquote (ast-quoted-expr expr)))
                ((unquote) (list 'unquote (ast-quoted-expr expr)))
                ((unquote-splicing) (list 'unquote-splicing (ast-quoted-expr expr)))
-               ((def) (list 'define (ast-get expr 'name) (ast-quoted-expr expr)))
+               ((def) (list 'define (ast-def-name expr) (ast-def-value expr)))
                ((app primop-app) (list* (ast-app-op expr) (ast-app-args expr)))
                (else (compiler-bug "Unexpected expression: " expr))))
            ast))
