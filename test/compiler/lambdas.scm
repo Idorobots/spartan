@@ -8,11 +8,13 @@
              (f (gen-lambda-node formals body))
              (args (gen-arg-list (length (ast-lambda-formals f))))
              (app (apply gen-app-node f args)))
+            (gensym-reset!)
             (assert-ast (lambda-inlining '() app)
                         (let ,bindings
                           ,body1)
                         (assert body1 body)
-                        (assert (map ast-binding-var bindings) (ast-lambda-formals f))
+                        (gensym-reset!)
+                        (assert (map ast-binding-var bindings) (map temporary-name formals))
                         (assert (map ast-binding-val bindings) args))))
 
 (it "doesn't beta reduce unreducable applications"
@@ -31,11 +33,13 @@
              (f (gen-lambda-node formals body))
              (args (gen-arg-list (length (ast-lambda-formals f))))
              (app (apply gen-app-node sym args)))
+            (gensym-reset!)
             (assert-ast (lambda-inlining (list (cons var f)) app)
                         (let ,bindings
                           ,body1)
                         (assert body1 body)
-                        (assert (map ast-binding-var bindings) (ast-lambda-formals f))
+                        (gensym-reset!)
+                        (assert (map ast-binding-var bindings) (map temporary-name formals))
                         (assert (map ast-binding-val bindings) args)))
      (check ((var gen-valid-symbol)
              (sym (gen-symbol-node var))
@@ -56,6 +60,7 @@
              (args (gen-arg-list (length (ast-lambda-formals f))))
              (app (apply gen-app-node sym args))
              (node (gen-let-node (list b) app)))
+            (gensym-reset!)
             (assert-ast (lambda-inlining '() node)
                         (let ((binding ,sym1 ,f1))
                           (let ,bindings
@@ -63,7 +68,8 @@
                         (assert sym1 sym)
                         (assert f1 f)
                         (assert body1 body)
-                        (assert (map ast-binding-var bindings) (ast-lambda-formals f))
+                        (gensym-reset!)
+                        (assert (map ast-binding-var bindings) (map temporary-name formals))
                         (assert (map ast-binding-val bindings) args))))
 
  (it "doesn't inline too large lambdas"
@@ -90,6 +96,7 @@
              (args (gen-arg-list (length (ast-lambda-formals f))))
              (app (apply gen-app-node sym args))
              (node (gen-letrec-node (list b) app)))
+            (gensym-reset!)
             (assert-ast (lambda-inlining '() node)
                         (letrec ((binding ,sym1
                                           (lambda ,formals1
@@ -98,12 +105,18 @@
                           (let ,bindings2
                             ,body2))
                         (assert sym1 sym)
-                        (assert body1 body)
-                        (assert body2 body)
-                        (assert (map ast-binding-var bindings1) formals)
-                        (assert (map ast-binding-val bindings1) formals)
-                        (assert (map ast-binding-var bindings2) formals)
-                        (assert (map ast-binding-val bindings2) args))))
+                        (assert formals1 formals)
+                        (gensym-reset!)
+                        (let ((first (map temporary-name formals))
+                              (second (map temporary-name formals)))
+                          (assert (ast-app-op body1) (ast-app-op body))
+                          (assert (ast-app-args body1) second)
+                          (assert (ast-app-op body2) (ast-app-op body))
+                          (assert (ast-app-args body2) first)
+                          (assert (map ast-binding-var bindings1) second)
+                          (assert (map ast-binding-val bindings1) formals)
+                          (assert (map ast-binding-var bindings2) first)
+                          (assert (map ast-binding-val bindings2) args)))))
 
  (it "respects free variable scope"
      (check ((var1 gen-valid-symbol)
