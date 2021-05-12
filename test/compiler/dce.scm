@@ -1,8 +1,8 @@
 ;; DCE tests.
 
 (describe
- "dead-code-ellimination"
- (it "should elliminated redundant lets"
+ "dead-code-elimination"
+ (it "should eliminated redundant lets"
      (check ((var gen-valid-symbol-node)
              (val gen-const-node)
              (b (gen-binding-node var val))
@@ -10,7 +10,7 @@
             (assert (dce (set) node)
                     val)))
 
- (it "should elliminate dead do statements"
+ (it "should eliminate dead do statements"
      (check ((non-consts (gen-list (gen-integer 2 5) gen-valid-app-node))
              (symbols (gen-list (gen-integer 2 5) gen-valid-symbol-node))
              (consts (gen-list (gen-integer 2 5) gen-const-node))
@@ -45,19 +45,17 @@
                         (assert dce-non-const non-const)
                         (assert dce-const const))))
 
- (it "should elliminate dead if branches"
+ (it "should eliminate dead if branches"
      (check ((then gen-valid-symbol-node)
              (els gen-valid-symbol-node)
-             (cnd (gen-one-of gen-valid-symbol-node
-                              gen-valid-let-node
-                              gen-valid-letrec-node))
+             (cnd gen-valid-app-node)
              (node (gen-if-node cnd then els)))
             (assert (dce (set) node)
                     node))
      (check ((then gen-valid-symbol-node)
              (els gen-valid-symbol-node)
              (cnd (gen-one-of (gen-specific-const-node gen-valid-symbol-node)
-                              (gen-specific-const-node (gen-list-node (gen-integer 1 5)))
+                              (gen-specific-const-node (gen-list-node (gen-integer 1 5))) ;; NOTE Needs at least 1 element.
                               (gen-specific-const-node (gen-number-node gen-number))
                               (gen-specific-const-node (gen-string-node (gen-integer 0 20)))
                               gen-valid-lambda-node))
@@ -71,6 +69,48 @@
             (assert (dce (set) node)
                     els)))
 
+ (it "should eliminate unused variables"
+     (check ((var1 gen-valid-symbol)
+             (sym1 (gen-symbol-node var1))
+             (val1 gen-const-node)
+             (var2 gen-valid-symbol)
+             (sym2 (gen-symbol-node var2))
+             (val2 gen-const-node)
+             (b1 (gen-with-bv (gen-binding-node sym1 val1)
+                              (set var1)))
+             (b2 (gen-with-bv (gen-binding-node sym2 val2)
+                              (set var2)))
+             (body (gen-with-fv gen-const-node
+                                (set var2)))
+             (node (gen-let-node (list b1 b2) body)))
+            (assert-ast (dce (set) node)
+                        (let ((binding ,converted-sym2 ,converted-val2))
+                          ,converted-body)
+                        (assert converted-sym2 sym2)
+                        (assert converted-val2 val2)
+                        (assert converted-body body)))
+     (check ((var1 gen-valid-symbol)
+             (sym1 (gen-symbol-node var1))
+             (val1 gen-const-node)
+             (b1 (gen-with-bv (gen-binding-node sym1 val1)
+                              (set var1)))
+             (body (gen-with-fv gen-const-node
+                                (set)))
+             (node (gen-let-node (list b1) body)))
+            (assert (dce (set) node) body)))
+
+ (it "should not eliminate unused effectful variables"
+     (check ((var1 gen-valid-symbol)
+             (sym1 (gen-symbol-node var1))
+             (val1 gen-valid-app-node)
+             (b1 (gen-with-bv (gen-binding-node sym1 val1)
+                              (set var1)))
+             (body (gen-with-fv gen-const-node
+                                (set)))
+             (node (gen-with-bv (gen-let-node (list b1) body)
+                                (set var1))))
+            (assert (dce (set) node) node)))
+
  (it "should perform eta reduction"
      (check ((args (gen-arg-list (gen-integer 0 5)))
              (op gen-valid-symbol-node)
@@ -83,7 +123,8 @@
      (check ((args (gen-arg-list (gen-integer 0 5)))
              (var gen-valid-symbol)
              (op (gen-symbol-node var))
-             (body (apply gen-app-node op args))
+             (body (gen-with-fv (apply gen-app-node op args)
+                                (set var)))
              (fun (gen-lambda-node args body))
              (binding (gen-with-bv (gen-binding-node op fun)
                                    (set var)))

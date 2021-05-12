@@ -6,6 +6,7 @@
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
+(load-once "compiler/propagate.scm") ;; NOTE For reconstruct-*-node
 
 (define eliminate-dead-code
   (pass (schema "eliminate-dead-code"
@@ -46,6 +47,16 @@
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
           (else (walk-ast (partial dce (set)) expr))))
+   ((let ,bindings ,body)
+    (let* ((free (get-free-vars body))
+           (filtered (filter (lambda (b)
+                               (or (effectful? (ast-binding-val b))
+                                   (not (set-empty? (set-intersection (get-bound-vars b)
+                                                                      free)))))
+                             bindings)))
+      (reconstruct-let-node expr
+                            (map (partial dce (set)) filtered)
+                            (dce (set) body))))
    (else
     (walk-ast (partial dce (set)) expr))))
 

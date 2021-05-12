@@ -16,4 +16,13 @@
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'input (slurp "../test/foof/math.foo")))
-             '(display '(5 1462731 23)))))
+             '(display '(5 1462731 23)))
+     (assert (compile (env 'module "optimize"
+                           'input "(letrec ((q (lambda () 8))
+                                            (f (lambda (x) (+  x (q))))
+                                            (r (lambda () (f (q))))
+                                            (s (lambda () (+ (r) (f 2))))
+                                            (g (lambda () (+ (r) (s))))
+                                            (t (lambda () (g))))
+                                     (t))"))
+             ''42)))
