@@ -417,74 +417,74 @@
  58 [33m|[39m(define () 23)
     [33m|[39m        [31m^^[39m
  59 [33m|[39m(define (bar) 23)
- 60 [33m|[39m(define (bar x) x)
+ 60 [33m|[39m(define (bar1 x) x)
 
 ../test/foof/errors/syntax-forms.foo(61,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
  59 [33m|[39m(define (bar) 23)
- 60 [33m|[39m(define (bar x) x)
+ 60 [33m|[39m(define (bar1 x) x)
  61 [33m|[39m(define (bar))
     [33m|[39m [31m^^^^^^[39m
- 62 [33m|[39m(define (bar 23) 5)
+ 62 [33m|[39m(define (bar2 23) 5)
  63 [33m|[39m()
 
-../test/foof/errors/syntax-forms.foo(62,13): Bad `define` function signature syntax, expected a symbol but got a number instead:
- 60 [33m|[39m(define (bar x) x)
+../test/foof/errors/syntax-forms.foo(62,14): Bad `define` function signature syntax, expected a symbol but got a number instead:
+ 60 [33m|[39m(define (bar1 x) x)
  61 [33m|[39m(define (bar))
- 62 [33m|[39m(define (bar 23) 5)
-    [33m|[39m             [31m^^[39m
+ 62 [33m|[39m(define (bar2 23) 5)
+    [33m|[39m              [31m^^[39m
  63 [33m|[39m()
  64 [33m|[39m(foo)
 
 ../test/foof/errors/syntax-forms.foo(63,0): Bad call syntax, expected at least one expression within the call:
  61 [33m|[39m(define (bar))
- 62 [33m|[39m(define (bar 23) 5)
+ 62 [33m|[39m(define (bar2 23) 5)
  63 [33m|[39m()
     [33m|[39m[31m^^[39m
  64 [33m|[39m(foo)
- 65 [33m|[39m((foo))
+ 65 [33m|[39m((bar1))
 
 ../test/foof/errors/syntax-forms.foo(66,1): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
  64 [33m|[39m(foo)
- 65 [33m|[39m((foo))
+ 65 [33m|[39m((bar1))
  66 [33m|[39m(23)
     [33m|[39m [31m^^[39m
  67 [33m|[39m((23))
- 68 [33m|[39m((foo 23) 5)
+ 68 [33m|[39m((bar2 23) 5)
 
 ../test/foof/errors/syntax-forms.foo(67,2): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
- 65 [33m|[39m((foo))
+ 65 [33m|[39m((bar1))
  66 [33m|[39m(23)
  67 [33m|[39m((23))
     [33m|[39m  [31m^^[39m
- 68 [33m|[39m((foo 23) 5)
+ 68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
 
 ../test/foof/errors/syntax-forms.foo(69,1): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
  67 [33m|[39m((23))
- 68 [33m|[39m((foo 23) 5)
+ 68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
     [33m|[39m [31m^^^^^^^^^^^^^^^^^^[39m
- 70 [33m|[39m((do 23 foo) 23)
+ 70 [33m|[39m((do 23 bar) 23)
  71 [33m|[39m((if 5 foo bar) 23)
 
 ../test/foof/errors/syntax-forms.foo(69,1): Bad `define` syntax, not allowed in this context:
  67 [33m|[39m((23))
- 68 [33m|[39m((foo 23) 5)
+ 68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
     [33m|[39m [31m^^^^^^^^^^^^^^^^^^[39m
- 70 [33m|[39m((do 23 foo) 23)
+ 70 [33m|[39m((do 23 bar) 23)
  71 [33m|[39m((if 5 foo bar) 23)
 
 ../test/foof/errors/syntax-forms.foo(69,10): Unused variable `faz`, rename to `_` to avoid this error:
  67 [33m|[39m((23))
- 68 [33m|[39m((foo 23) 5)
+ 68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
     [33m|[39m          [31m^^^[39m
- 70 [33m|[39m((do 23 foo) 23)
+ 70 [33m|[39m((do 23 bar) 23)
  71 [33m|[39m((if 5 foo bar) 23)
 
 ../test/foof/errors/syntax-forms.foo(72,1): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
- 70 [33m|[39m((do 23 foo) 23)
+ 70 [33m|[39m((do 23 bar) 23)
  71 [33m|[39m((if 5 foo bar) 23)
  72 [33m|[39m("some function")
     [33m|[39m [31m^^^^^^^^^^^^^^^[39m
