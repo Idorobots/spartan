@@ -1,0 +1,13 @@
+(define x 23)
+(define x 5)
+x
+(define (foo x x x) x)
+(define (foo x) x)
+foo
+(lambda (x x x) x)
+(let ((x 23)
+      (x 5))
+  x)
+(letrec ((x 23)
+         (x 5))
+  x)

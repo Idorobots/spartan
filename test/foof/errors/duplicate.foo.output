@@ -1,0 +1,49 @@
+../test/foof/errors/duplicate.foo(4,15): Bad `define` function signature syntax, duplicate formal argument `x`:
+  2 [33m|[39m(define x 5)
+  3 [33m|[39mx
+  4 [33m|[39m(define (foo x x x) x)
+    [33m|[39m               [31m^[39m
+  5 [33m|[39m(define (foo x) x)
+  6 [33m|[39mfoo
+
+../test/foof/errors/duplicate.foo(4,17): Bad `define` function signature syntax, duplicate formal argument `x`:
+  2 [33m|[39m(define x 5)
+  3 [33m|[39mx
+  4 [33m|[39m(define (foo x x x) x)
+    [33m|[39m                 [31m^[39m
+  5 [33m|[39m(define (foo x) x)
+  6 [33m|[39mfoo
+
+../test/foof/errors/duplicate.foo(7,11): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+  5 [33m|[39m(define (foo x) x)
+  6 [33m|[39mfoo
+  7 [33m|[39m(lambda (x x x) x)
+    [33m|[39m           [31m^[39m
+  8 [33m|[39m(let ((x 23)
+  9 [33m|[39m      (x 5))
+
+../test/foof/errors/duplicate.foo(7,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+  5 [33m|[39m(define (foo x) x)
+  6 [33m|[39mfoo
+  7 [33m|[39m(lambda (x x x) x)
+    [33m|[39m             [31m^[39m
+  8 [33m|[39m(let ((x 23)
+  9 [33m|[39m      (x 5))
+
+../test/foof/errors/duplicate.foo(9,6): Bad `let` bindings syntax, duplicate variable `x`:
+  7 [33m|[39m(lambda (x x x) x)
+  8 [33m|[39m(let ((x 23)
+  9 [33m|[39m      (x 5))
+    [33m|[39m      [31m^^^^^[39m
+ 10 [33m|[39m  x)
+ 11 [33m|[39m(letrec ((x 23)
+
+../test/foof/errors/duplicate.foo(12,9): Bad `letrec` bindings syntax, duplicate variable `x`:
+ 10 [33m|[39m  x)
+ 11 [33m|[39m(letrec ((x 23)
+ 12 [33m|[39m         (x 5))
+    [33m|[39m         [31m^^^^^[39m
+ 13 [33m|[39m  x)
+ 14 [33m|[39m
+
+Compilation aborted due to 6 errors.

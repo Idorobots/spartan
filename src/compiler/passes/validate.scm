@@ -41,9 +41,7 @@
        (ast-update (ast-update expr
                                'formals
                                (partial map
-                                        (partial validate-ast
-                                                 (set)
-                                                 unused)))
+                                        (partial validate-ast (set) unused)))
                    'body
                    (partial validate-ast
                             (set-difference undefined bound)
@@ -53,7 +51,8 @@
             (unused (set-difference bound (get-free-vars body))))
        (ast-update (ast-update expr
                                'bindings
-                               (partial map (partial validate-ast undefined unused)))
+                               (partial map
+                                        (partial validate-ast undefined unused)))
                    'body
                    (partial validate-ast
                             (set-difference undefined bound)
@@ -66,7 +65,8 @@
                                                (set-sum (map get-free-vars bindings))))))
        (ast-update (ast-update expr
                                'bindings
-                               (partial map (partial validate-ast without-bound unused)))
+                               (partial map
+                                        (partial validate-ast without-bound unused)))
                    'body
                    (partial validate-ast
                             without-bound

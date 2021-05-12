@@ -135,13 +135,32 @@
 
 (define (valid-formals args prefix)
   (if (is-type? args 'list)
-      (map (lambda (e)
-             (valid-symbol e prefix))
-           (ast-list-values args))
+      (unique-formals (map (lambda (e)
+                             (valid-symbol e prefix))
+                           (ast-list-values args))
+                      prefix)
       (list
        (raise-compilation-error
         args
         (format "~a, expected a list of identifiers:" prefix)))))
+
+(define (unique-formals args prefix)
+  (define (check-uniqueness name rest)
+    (cond ((empty? rest)
+           name)
+          ((and (symbol-node? name)
+                (symbol-node? (car rest))
+                (equal? (ast-symbol-value name)
+                        (ast-symbol-value (car rest))))
+           (raise-compilation-error
+            (car rest)
+            (format "~a, duplicate formal argument `~a`:" prefix (ast-symbol-value (car rest)))))
+          (else
+           (check-uniqueness name (cdr rest)))))
+  (if (empty? args)
+      '()
+      (cons (check-uniqueness (car args) (cdr args))
+            (unique-formals (cdr args) prefix))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
@@ -173,9 +192,28 @@
                (ast-symbol-value node)))))))
 
 (define (valid-bindings bindings prefix)
-  (map (lambda (b)
-         (valid-binding b prefix))
-       bindings))
+  (unique-bindings (map (lambda (b)
+                          (valid-binding b prefix))
+                        bindings)
+                   prefix))
+
+(define (unique-bindings bindings prefix)
+  (define (check-uniqueness b rest)
+    (cond ((empty? rest)
+           b)
+          ((and (symbol-node? (ast-binding-var b))
+                (symbol-node? (ast-binding-var (car rest)))
+                (equal? (ast-symbol-value (ast-binding-var b))
+                        (ast-symbol-value (ast-binding-var (car rest)))))
+           (raise-compilation-error
+            (car rest)
+            (format "~a, duplicate variable `~a`:" prefix (ast-symbol-value (ast-binding-var b)))))
+          (else
+           (check-uniqueness b (cdr rest)))))
+  (if (empty? bindings)
+      '()
+      (cons (check-uniqueness (car bindings) (cdr bindings))
+            (unique-bindings (cdr bindings) prefix))))
 
 (define (valid-binding binding prefix)
   (replace binding
