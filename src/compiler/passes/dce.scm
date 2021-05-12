@@ -27,10 +27,6 @@
         (dce (set) op)))
    ((lambda ,args (primop-app '&yield-cont ,cont . ,args))
     (dce (set) cont))
-   ((letrec ,bindings _)
-    (disallow-recoursive-eta expr))
-   ((fix ,bindings _)
-    (disallow-recoursive-eta expr))
    ;; Actual dead code elimination
    ((do . ,exprs)
     (let ((final (last exprs))
@@ -49,26 +45,32 @@
           (else (walk-ast (partial dce (set)) expr))))
    ((let ,bindings ,body)
     (let* ((free (get-free-vars body))
-           (filtered (filter (lambda (b)
-                               (or (effectful? (ast-binding-val b))
-                                   (not (set-empty? (set-intersection (get-bound-vars b)
-                                                                      free)))))
-                             bindings)))
+           (filtered (filter (flip used? free) bindings)))
       (reconstruct-let-node expr
                             (map (partial dce (set)) filtered)
                             (dce (set) body))))
+   ((letrec ,bindings ,body)
+    (let* ((free (set-union (get-free-vars body)
+                            (set-sum (map get-free-vars bindings))))
+           (filtered (filter (flip used? free) bindings)))
+      (reconstruct-letrec-node expr
+                               (map (lambda (b)
+                                      (walk-ast (partial dce (get-bound-vars expr))
+                                                b))
+                                    filtered)
+                               (dce (set) body))))
+   ((fix ,bindings ,body)
+    (let* ((free (set-union (get-free-vars body)
+                            (set-sum (map get-free-vars bindings))))
+           (filtered (filter (flip used? free) bindings)))
+      (reconstruct-fix-node expr
+                            (map (lambda (b)
+                                   (walk-ast (partial dce (get-bound-vars expr))
+                                             b))
+                                 filtered)
+                            (dce (set) body))))
    (else
     (walk-ast (partial dce (set)) expr))))
-
-(define (disallow-recoursive-eta expr)
-  (ast-update (ast-update expr 'body (partial dce (set)))
-              'bindings
-              (lambda (bs)
-                ;; NOTE Disallows eta-reduction on self-recoursive functions.
-                (map (lambda (b)
-                       (walk-ast (partial dce (get-bound-vars expr))
-                                 b))
-                     bs))))
 
 (define (effectful? node)
   (not (or (const-node? node)
@@ -85,3 +87,8 @@
   (and (not (falsy? node))
        (or (const-node? node)
            (lambda-node? node))))
+
+(define (used? b free)
+  (or (effectful? (ast-binding-val b))
+      (not (set-empty? (set-intersection (get-bound-vars b)
+                                         free)))))
