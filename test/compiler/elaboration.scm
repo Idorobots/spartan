@@ -116,33 +116,42 @@
                        "Bad `lambda` body syntax"))))))
 
  (it "disallows bad lambda syntax"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'lambda)))))))
-             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'lambda))
-                                              (make-symbol-node 'x))))))
-             "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (make-symbol-node 'lambda)
-                                              (at (location 7 13)
-                                                  (make-list-node
-                                                   (list (make-symbol-node 'x)
-                                                         (at (location 10 11)
-                                                             (make-number-node 23)))))
-                                              (make-symbol-node 'x))))))
-             "Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:"))
+     (check ((node (gen-specific-list-node (gen-symbol-node 'lambda))))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `lambda` syntax, expected a formal arguments specification followed by a body:"))
+     (check ((args (gen-one-of gen-valid-symbol-node
+                               (gen-arg-list (gen-integer 0 5))))
+             (node (gen-specific-list-node (gen-symbol-node 'lambda) args)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `lambda` syntax, expected a formal arguments specification followed by a body:"))
+     (check ((contents (gen-list (gen-integer 1 5) (gen-number-node gen-number)))
+             (args (apply gen-specific-list-node contents))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node (gen-symbol-node 'lambda) args body)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:"))
+     (check ((var gen-valid-symbol)
+             (arg (gen-symbol-node var))
+             (args (gen-specific-list-node arg arg))
+             (node (gen-specific-list-node (gen-symbol-node 'lambda) args arg)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    (format "Bad `lambda` formal arguments syntax, duplicate formal argument `~a`:" var)))
+     (check ((var (apply gen-one-of +reserved-keywords+))
+             (arg (gen-symbol-node var))
+             (args (gen-specific-list-node arg))
+             (node (gen-specific-list-node (gen-symbol-node 'lambda) args arg)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    (format "Bad `lambda` formal arguments syntax, reserved keyword `~a` used as a formal argument:" var))))
 
  (it "elaborates valid let"
      (assert (elaborate-unquoted (at (location 5 23)
@@ -218,43 +227,59 @@
                                  "Bad `let` body syntax"))))))
 
  (it "disallows bad let syntax"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'let)))))))
-             "Bad `let` syntax, expected a list of bindings followed by a body:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'let))
-                                              (make-symbol-node 'x))))))
-             "Bad `let` syntax, expected a list of bindings followed by a body:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (make-symbol-node 'let)
-                                              (make-list-node
-                                               (list (at (location 7 13)
-                                                         (make-number-node 23))))
-                                              (make-symbol-node 'x))))))
-             "Bad `let` bindings syntax, expected a pair of an identifier and a value:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (make-symbol-node 'let)
-                                              (make-list-node
-                                               (list (make-list-node
-                                                      (list (at (location 7 13)
-                                                                (make-number-node 23))
-                                                            (make-number-node 23)))))
-                                              (make-symbol-node 'x))))))
-             "Bad `let` bindings syntax, expected a symbol but got a number instead:"))
+     (check ((node (gen-specific-list-node (gen-symbol-node 'let))))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `let` syntax, expected a list of bindings followed by a body:"))
+     (check ((identifier gen-valid-symbol-node)
+             (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
+             (bindings (gen-one-of b1
+                                   (gen-specific-list-node b1)
+                                   gen-valid-symbol-node))
+             (node (gen-specific-list-node (gen-symbol-node 'let) bindings)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `let` syntax, expected a list of bindings followed by a body:"))
+     (check ((identifier gen-valid-symbol-node)
+             (bindings (gen-specific-list-node identifier gen-valid-symbol-node))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `let` bindings syntax, expected a pair of an identifier and a value:"))
+     (check ((identifier (gen-number-node gen-number))
+             (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
+             (bindings (gen-specific-list-node b1))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `let` bindings syntax, expected a symbol but got a number instead:"))
+     (check ((var gen-valid-symbol)
+             (identifier (gen-symbol-node var))
+             (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
+             (b2 (gen-specific-list-node identifier gen-valid-symbol-node))
+             (bindings (gen-specific-list-node b1 b2))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    (format "Bad `let` bindings syntax, duplicate binding identifier `~a`:" var)))
+     (check ((var (apply gen-one-of +reserved-keywords+))
+             (identifier (gen-symbol-node var))
+             (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
+             (bindings (gen-specific-list-node b1))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    (format "Bad `let` bindings syntax, reserved keyword `~a` used as a binding identifier:" var))))
 
  (it "elaborates valid letrec"
      (assert (elaborate-unquoted (at (location 5 23)
