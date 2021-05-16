@@ -303,184 +303,88 @@
                     (format "Bad `~a` syntax, expected exactly one expression to follow:" sym))))
 
  (it "handles valid defines"
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (make-symbol-node 'define)
-                                            (make-symbol-node 'foo)
-                                            (make-number-node 23)))))
-             (at (location 5 23)
-                 (make-def-node
-                  (make-symbol-node 'foo)
-                  (make-number-node 23))))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (make-symbol-node 'define)
-                                            (at (location 7 13)
-                                                (make-list-node
-                                                 (list (make-symbol-node 'foo))))
-                                            (at (location 15 19)
-                                                (make-number-node 23))))))
-             (at (location 5 23)
-                 (make-def-node
-                  (make-symbol-node 'foo)
-                  (at (location 5 23)
-                      (generated
-                       (make-lambda-node
-                        '()
-                        (at (location 5 23)
-                            (make-body-node
-                             (list (at (location 15 19)
-                                       (make-number-node 23)))
-                             "Bad `define` function body syntax"))))))))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (make-symbol-node 'define)
-                                            (at (location 7 13)
-                                                (make-list-node
-                                                 (list (make-symbol-node 'foo)
-                                                       (make-symbol-node 'x))))
-                                            (at (location 15 19)
-                                                (make-symbol-node 'x))))))
-             (at (location 5 23)
-                 (make-def-node
-                  (make-symbol-node 'foo)
-                  (at (location 5 23)
-                      (generated
-                       (make-lambda-node
-                        (list (make-symbol-node 'x))
-                        (at (location 5 23)
-                            (make-body-node
-                             (list (at (location 15 19)
-                                       (make-symbol-node 'x)))
-                             "Bad `define` function body syntax"))))))))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (make-symbol-node 'define)
-                                            (at (location 7 13)
-                                                (make-list-node
-                                                 (list (make-symbol-node 'foo)
-                                                       (make-symbol-node 'x))))
-                                            (at (location 14 15)
-                                                (make-symbol-node 'y))
-                                            (at (location 17 18)
-                                                (make-symbol-node 'x))))))
-             (at (location 5 23)
-                 (make-def-node
-                  (make-symbol-node 'foo)
-                  (at (location 5 23)
-                      (generated
-                       (make-lambda-node
-                        (list (make-symbol-node 'x))
-                        (at (location 5 23)
-                            (make-body-node
-                             (list (at (location 14 15)
-                                       (make-symbol-node 'y))
-                                   (at (location 17 18)
-                                       (make-symbol-node 'x)))
-                             "Bad `define` function body syntax")))))))))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (value (gen-one-of (gen-number-node gen-number)
+                                gen-valid-symbol-node))
+             (node (gen-specific-list-node sym name value)))
+            (let ((result (elaborate-unquoted node)))
+              (assert (get-location result)
+                      (get-location node))
+              (assert-ast result
+                          (def ,name1 ,value1)
+                          (assert name1 name)
+                          (assert value1 value))))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (formals (gen-arg-list (gen-integer 0 3)))
+             (signature (apply gen-specific-list-node name formals))
+             (body (gen-one-of (gen-number-node gen-number)
+                                gen-valid-symbol-node))
+             (node (gen-specific-list-node sym signature body)))
+            (let ((result (elaborate-unquoted node)))
+              (assert (get-location result)
+                      (get-location node))
+              (assert (generated? (ast-def-value result)))
+              (assert (get-location (ast-lambda-body (ast-def-value result)))
+                      (get-location node))
+              (assert (get-context (ast-lambda-body (ast-def-value result)))
+                      "Bad `define` function body syntax")
+              (assert-ast result
+                          (def ,name1
+                               (lambda ,formals1
+                                 (body ,body1)))
+                          (assert name1 name)
+                          (assert formals1 formals)
+                          (assert body1 body)))))
 
  (it "disallows invalid defines"
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list
-                                         (at (location 7 13)
-                                             (make-symbol-node 'define)))))))
-             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'define))
-                                              (make-symbol-node 'foo))))))
-             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'define))
-                                              (at (location 9 10)
-                                                  (make-number-node 23))
-                                              (make-symbol-node 'foo))))))
-             "Bad `define` syntax, expected a symbol but got a number instead:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-symbol-node 'define))
-                                              (make-list-node
-                                               (list (make-symbol-node 'foo)
-                                                     (make-number-node 23))))))))
-             "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 5 7)
-                                                  (make-symbol-node 'define))
-                                              (at (location 7 13)
-                                                  (make-list-node
-                                                   (list (make-symbol-node 'foo)
-                                                         (at (location 9 10)
-                                                             (make-number-node 23)))))
-                                              (make-number-node 23))))))
-             "Bad `define` function signature syntax, expected a symbol but got a number instead:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 5 7)
-                                                  (make-symbol-node 'define))
-                                              (at (location 7 13)
-                                                  (make-list-node
-                                                   (list (at (location 9 10)
-                                                             (make-number-node 23))
-                                                         (make-symbol-node 'foo))))
-                                              (make-number-node 23))))))
-             "Bad `define` syntax, expected a symbol but got a number instead:"))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (formals (gen-arg-list (gen-integer 0 3)))
+             (signature (apply gen-specific-list-node name formals))
+             (value (gen-one-of (gen-number-node gen-number)
+                                gen-valid-symbol-node))
+             (node (gen-one-of (gen-specific-list-node sym)
+                               (gen-specific-list-node sym name)
+                               (gen-specific-list-node sym name value value)
+                               (gen-specific-list-node sym signature))))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:"))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (value (gen-number-node gen-number))
+             (node (gen-specific-list-node sym value name)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `define` syntax, expected a symbol but got a number instead:"))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (formals (gen-list (gen-integer 1 3) (gen-number-node gen-number)))
+             (signature (apply gen-specific-list-node name formals))
+             (value (gen-number-node gen-number))
+             (node (gen-specific-list-node sym signature value)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
+                    "Bad `define` function signature syntax, expected a symbol but got a number instead:")))
 
  (it "elaborates valid applications"
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node (list (make-symbol-node 'foo)))))
-             (at (location 5 23)
-                 (make-app-node (make-symbol-node 'foo) '())))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (make-symbol-node 'foo)
-                                            (make-symbol-node 'bar)))))
-             (at (location 5 23)
-                 (make-app-node (make-symbol-node 'foo)
-                                (list (make-symbol-node 'bar)))))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (at (location 7 13)
-                                                (make-list-node
-                                                 (list (make-symbol-node 'do)
-                                                       (make-number-node 23)
-                                                       (make-symbol-node 'foo))))
-                                            (make-symbol-node 'bar)))))
-             (at (location 5 23)
-                 (make-app-node
-                  (at (location 7 13)
-                      (make-body-node
-                       (list (make-number-node 23)
-                             (make-symbol-node 'foo))
-                       "Bad `do` syntax"))
-                  (list (make-symbol-node 'bar)))))
-     (assert (elaborate-unquoted (at (location 5 23)
-                                     (make-list-node
-                                      (list (at (location 7 13)
-                                                (make-list-node
-                                                 (list (make-symbol-node 'foo))))))))
-             (at (location 5 23)
-                 (make-app-node
-                  (at (location 7 13)
-                      (make-app-node (make-symbol-node 'foo) '()))
-                  '()))))
+     (check ((name gen-valid-symbol-node)
+             (args (gen-list (gen-integer 0 5)
+                             (gen-one-of gen-valid-symbol-node
+                                         (gen-number-node gen-number))))
+             (node (apply gen-specific-list-node name args)))
+            (let ((result (elaborate-unquoted node)))
+              (assert (get-location result)
+                      (get-location node))
+              (assert-ast result
+                        (app ,name1 . ,args1)
+                        (assert name1 name)
+                        (assert args1 args)))))
 
  (it "doesn't allow bad applications"
      (assert (with-handlers ((compilation-error?
@@ -488,18 +392,12 @@
                (elaborate-unquoted (at (location 5 23)
                                        (make-list-node '()))))
              "Bad call syntax, expected at least one expression within the call:")
-     (assert (with-handlers ((compilation-error?
+     (check ((contents (gen-list (gen-integer 1 3)
+                                 (gen-one-of (gen-number-node gen-number)
+                                             (gen-quote-node gen-simple-node))))
+             (node (apply gen-specific-list-node contents)))
+            (assert (with-handlers ((compilation-error?
                               compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-number-node 23)))))))
-             "Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:")
-     (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node
-                                        (list (at (location 7 13)
-                                                  (make-quote-node
-                                                   (make-number-node 23))))))))
-             "Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:")))
+               (elaborate-unquoted node))
+                    (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
+                            (get-type (car contents)))))))
