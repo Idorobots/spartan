@@ -6,6 +6,7 @@
  "FOOF"
  (it "should support basic language features"
      (test-file "../test/foof/math.foo")
+     (test-file "../test/foof/rsa.foo")
      (test-file "../test/foof/hello.foo")
      (test-file "../test/foof/fibonacci.foo")
      (test-file "../test/foof/logger.foo"))

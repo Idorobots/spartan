@@ -56,4 +56,17 @@
                               (run-code compiled))))
                   ;; NOTE The GC time makes this test very flakey.
                   (list (car time)
+                        (cadr time)))))
+
+ (it "rsa"
+     (test-perf "../test/foof/rsa.foo.perf" 2
+                (collect-garbage 'major)
+                (let* ((compiled (compile
+                                  (env 'input (slurp "../test/foof/rsa.foo")
+                                       'module "perf"
+                                       'no-validation #t)))
+                       (time (time-execution
+                              (run-code compiled))))
+                  ;; NOTE The GC time makes this test very flakey.
+                  (list (car time)
                         (cadr time))))))

@@ -21,7 +21,8 @@
   (apply set
          '(nil car cadr cdr cddr list cons append concat
            equal? nil? true false not
-           * + - / = < random zero?
+           * + - / = < <= > >=
+           quotient remainder modulo random zero?
            ref deref assign!
            call/current-continuation call/reset call/shift call/handler raise
            sleep self send recv spawn task-info monitor

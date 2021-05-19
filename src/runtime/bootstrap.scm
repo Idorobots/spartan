@@ -45,8 +45,15 @@
 (define __DIV (bootstrap /))
 (define __zeroQUEST (bootstrap zero?))
 
+(define __modulo (bootstrap modulo))
+(define __quotient (bootstrap quotient))
+(define __remainder (bootstrap remainder))
+
 (define __EQUAL (bootstrap =))
 (define __LESS (bootstrap <))
+(define __LESSEQUAL (bootstrap <=))
+(define __GREATER (bootstrap >))
+(define __GREATEREQUAL (bootstrap >=))
 
 (define __ref (bootstrap ref))
 (define __deref (bootstrap deref))
