@@ -22,7 +22,10 @@
    ;; NOTE Eta reduction.
    ((lambda ,args (app ,op . ,args))
     (if (and (symbol-node? op)
-             (set-member? eta-disallow (ast-symbol-value op)))
+             (set-member? (set-union eta-disallow
+                                     ;; NOTE Or else (letcc k (k k)) eta reduces to k, which is then undefined.
+                                     (get-bound-vars expr))
+                          (ast-symbol-value op)))
         (walk-ast (partial dce (set)) expr)
         (dce (set) op)))
    ((lambda ,args (primop-app '&yield-cont ,cont . ,args))

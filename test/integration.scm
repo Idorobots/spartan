@@ -21,7 +21,8 @@
       (test-file "../test/foof/errors3.foo")
       (test-file "../test/foof/coroutines.foo")
       (test-file "../test/foof/coroutines2.foo")
-      (test-file "../test/foof/coroutines3.foo")))
+      (test-file "../test/foof/coroutines3.foo")
+      (test-file "../test/foof/amb.foo")))
 
  (it "should support Actor Model"
      (with-test-bindings

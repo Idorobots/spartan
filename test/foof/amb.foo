@@ -1,0 +1,40 @@
+(do
+  (define fail-stack (ref '()))
+
+  (define (current-continuation)
+    (letcc k (k k)))
+
+  (define (fail)
+    (let ((s (deref fail-stack)))
+      (if (nil? fail-stack)
+          (raise "backtracking stack exhausted!")
+          (let ((point (car s)))
+            (assign! fail-stack (cdr s))
+            (point point)))))
+
+  (define (amb choices)
+    (let ((mut-choices (ref choices)))
+      (let* ((cc (current-continuation))
+             (cs (deref mut-choices)))
+        (if (nil? cs)
+            (fail)
+            (let ((c (car cs)))
+              (assign! mut-choices (cdr cs))
+              (assign! fail-stack (cons cc
+                                        (deref fail-stack)))
+              c)))))
+
+  (define (assert condition)
+    (if (not condition)
+        (fail)
+        true))
+
+  (let ((a (amb (list 1 2 3 4 5 6 7)))
+        (b (amb (list 1 2 3 4 5 6 7)))
+        (c (amb (list 1 2 3 4 5 6 7))))
+    (assert (= (* c c)
+               (+ (* a a)
+                  (* b b))))
+    (assert (< b a))
+    (display (list a b c))
+    (newline)))
