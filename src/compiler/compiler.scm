@@ -31,7 +31,7 @@
 (load-once "compiler/passes/closures.scm")
 (load-once "compiler/passes/rename.scm")
 
-(define +optimization-loops+ 10)
+(define +optimization-loops+ 23)
 
 (define (compile env)
   (foldl run-pass
