@@ -99,6 +99,14 @@
  15 [33m|[39m(letrec ((u v)
  16 [33m|[39m         (v w))
 
+../test/foof/errors/undefined.foo(15,12): Variable `v` used before its definition:
+ 13 [33m|[39m      (t u))
+ 14 [33m|[39m  (* s t u))
+ 15 [33m|[39m(letrec ((u v)
+    [33m|[39m            [31m^[39m
+ 16 [33m|[39m         (v w))
+ 17 [33m|[39m  (* u v w))
+
 ../test/foof/errors/undefined.foo(16,12): Undefined variable `w`:
  14 [33m|[39m  (* s t u))
  15 [33m|[39m(letrec ((u v)
@@ -114,4 +122,4 @@
     [33m|[39m         [31m^[39m
  18 [33m|[39m
 
-Compilation aborted due to 15 errors.
+Compilation aborted due to 16 errors.
