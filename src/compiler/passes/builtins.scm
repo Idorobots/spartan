@@ -38,7 +38,8 @@
                     (apply set
                            '(car cadr cdr cddr list cons append concat
                              equal? nil? not
-                             * + - / = < zero?
+                             * + - / = < <= > >=
+                             remainder quotient modulo zero?
                              ref deref assign!
                              self send spawn
                              assert! signal! retract! select notify-whenever

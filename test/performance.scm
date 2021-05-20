@@ -7,6 +7,19 @@
                    ""
                    (make-list reps expr)))))
 
+(define (run-perf-test filename)
+  (test-perf (string-append filename ".perf") 2
+             (collect-garbage 'major)
+             (let* ((compiled (compile
+                               (env 'input (slurp filename)
+                                    'module "perf"
+                                    'no-validation #t)))
+                    (time (time-execution
+                           (run-code compiled))))
+               (list (car time)
+                     (cadr time)))))
+
+;; NOTE The GC time makes these test very flakey, so it is mostly skipped.
 (describe
  "performance"
  (it "parser"
@@ -46,14 +59,10 @@
              inputs))))
 
  (it "fibonacci"
-     (test-perf "../test/foof/fibonacci.foo.perf" 2
-                (collect-garbage 'major)
-                (let* ((compiled (compile
-                                  (env 'input (slurp "../test/foof/fibonacci.foo")
-                                       'module "perf"
-                                       'no-validation #t)))
-                       (time (time-execution
-                              (run-code compiled))))
-                  ;; NOTE The GC time makes this test very flakey.
-                  (list (car time)
-                        (cadr time))))))
+     (run-perf-test "../test/foof/fibonacci.foo"))
+
+ (it "rsa"
+     (run-perf-test "../test/foof/rsa.foo"))
+
+ (it "amb"
+     (run-perf-test "../test/foof/amb.foo")))

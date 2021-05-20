@@ -2,6 +2,8 @@
 
 (load-once "compiler/utils/utils.scm")
 
+(load-once "compiler/passes/elaboration.scm") ;; FIXME For unique-bindings
+
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
@@ -30,7 +32,8 @@
       (if (> (length defs) 0)
           (replace expr
                    (generated
-                    (make-letrec-node (map expand-body defs)
+                    (make-letrec-node (unique-bindings (map expand-body defs)
+                                                       (get-context expr))
                                       (reconstruct-simple-body
                                        (map expand-body non-defs)
                                        expr))))
@@ -48,8 +51,11 @@
 (define (extract-defs exprs)
   (foldr (lambda (e acc)
            (ast-case e
-             ((def ,name ,value) (cons (replace e (generated (make-binding-node name value)))
-                                       acc))
+            ((def ,name ,value)
+             (cons (replace e
+                            (generated
+                             (make-binding-node name value)))
+                   acc))
             (else acc)))
          '()
          exprs))

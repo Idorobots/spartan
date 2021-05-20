@@ -6,6 +6,7 @@
  "FOOF"
  (it "should support basic language features"
      (test-file "../test/foof/math.foo")
+     (test-file "../test/foof/rsa.foo")
      (test-file "../test/foof/hello.foo")
      (test-file "../test/foof/fibonacci.foo")
      (test-file "../test/foof/logger.foo"))
@@ -21,7 +22,8 @@
       (test-file "../test/foof/errors3.foo")
       (test-file "../test/foof/coroutines.foo")
       (test-file "../test/foof/coroutines2.foo")
-      (test-file "../test/foof/coroutines3.foo")))
+      (test-file "../test/foof/coroutines3.foo")
+      (test-file "../test/foof/amb.foo")))
 
  (it "should support Actor Model"
      (with-test-bindings

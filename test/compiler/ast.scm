@@ -257,8 +257,8 @@
             (assert (ast-eqv? a b))))
 
  (it "should not find different trees equivalent"
-     (check ((a gen-ast-node)
-             (b gen-ast-node))
+     (check ((a (gen-list (gen-integer 1 5) gen-ast-node))
+             (b (gen-list (gen-integer 1 5) gen-ast-node)))
             (assert (not (ast-eqv? a b))))))
 
 (describe

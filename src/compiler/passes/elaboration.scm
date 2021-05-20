@@ -133,15 +133,53 @@
        node
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
 
+(define +reserved-keywords+
+  '(lambda let letrec if do))
+
 (define (valid-formals args prefix)
   (if (is-type? args 'list)
-      (map (lambda (e)
-             (valid-symbol e prefix))
-           (ast-list-values args))
+      (legal-formals
+       (unique-formals
+        (map (lambda (s)
+               (valid-symbol s prefix))
+             (ast-list-values args))
+        prefix)
+       prefix)
       (list
        (raise-compilation-error
         args
         (format "~a, expected a list of identifiers:" prefix)))))
+
+(define (legal-formals args prefix)
+  (map (lambda (f)
+         (if (and (symbol-node? f)
+                  (member (ast-symbol-value f) +reserved-keywords+))
+             (raise-compilation-error
+              f
+              (format "~a, reserved keyword `~a` used as a formal argument:" prefix (ast-symbol-value f)))
+             f))
+       args))
+
+(define (unique-formals args prefix)
+  (define (check-uniqueness name rest)
+    (cond ((empty? rest)
+           name)
+          ((and (symbol-node? name)
+                (equal? (ast-symbol-value name) '_))
+           name)
+          ((and (symbol-node? name)
+                (symbol-node? (car rest))
+                (equal? (ast-symbol-value name)
+                        (ast-symbol-value (car rest))))
+           (raise-compilation-error
+            (car rest)
+            (format "~a, duplicate formal argument `~a`:" prefix (ast-symbol-value (car rest)))))
+          (else
+           (check-uniqueness name (cdr rest)))))
+  (if (empty? args)
+      '()
+      (cons (check-uniqueness (car args) (cdr args))
+            (unique-formals (cdr args) prefix))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
@@ -173,9 +211,50 @@
                (ast-symbol-value node)))))))
 
 (define (valid-bindings bindings prefix)
+  (legal-bindings
+   (unique-bindings
+    (map (lambda (b)
+           (valid-binding b prefix))
+         bindings)
+    prefix)
+   prefix))
+
+(define (legal-bindings bindings prefix)
   (map (lambda (b)
-         (valid-binding b prefix))
+         (let ((var (ast-binding-var b)))
+           (if (and (symbol-node? var)
+                    (member (ast-symbol-value var) +reserved-keywords+))
+               (let ((e (raise-compilation-error
+                         b
+                         (format "~a, reserved keyword `~a` used as a binding identifier:" prefix (ast-symbol-value var)))))
+                 (at (get-location b)
+                     (make-binding-node e e)))
+               b)))
        bindings))
+
+(define (unique-bindings bindings prefix)
+  (define (check-uniqueness b rest)
+    (let ((var (ast-binding-var b)))
+      (cond ((empty? rest)
+             b)
+            ((and (symbol-node? var)
+                  (equal? (ast-symbol-value var) '_))
+             b)
+            ((and (symbol-node? var)
+                  (symbol-node? (ast-binding-var (car rest)))
+                  (equal? (ast-symbol-value var)
+                          (ast-symbol-value (ast-binding-var (car rest)))))
+             (let ((e (raise-compilation-error
+                       (car rest)
+                       (format "~a, duplicate binding identifier `~a`:" prefix (ast-symbol-value var)))))
+               (at (get-location b)
+                   (make-binding-node e e))))
+            (else
+             (check-uniqueness b (cdr rest))))))
+  (if (empty? bindings)
+      '()
+      (cons (check-uniqueness (car bindings) (cdr bindings))
+            (unique-bindings (cdr bindings) prefix))))
 
 (define (valid-binding binding prefix)
   (replace binding
@@ -186,7 +265,8 @@
                (let ((e (raise-compilation-error
                          binding
                          (format "~a, expected a pair of an identifier and a value:" prefix))))
-                 (make-binding-node e e)))))
+                 (at (get-location binding)
+                     (make-binding-node e e))))))
 
 (define (reconstruct-quote expr)
   (ast-case expr

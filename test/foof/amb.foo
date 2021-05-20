@@ -1,0 +1,46 @@
+(do
+  (define fail-stack (ref '()))
+
+  (define (current-continuation)
+    (letcc k (k k)))
+
+  (define (fail)
+    (let ((s (deref fail-stack)))
+      (if (nil? s)
+          (raise "backtracking stack exhausted!")
+          (let ((point (car s)))
+            (assign! fail-stack (cdr s))
+            (point point)))))
+
+  (define (amb choices)
+    (let ((mut-choices (ref choices)))
+      (let* ((cc (current-continuation))
+             (cs (deref mut-choices)))
+        (if (nil? cs)
+            (fail)
+            (let ((c (car cs)))
+              (assign! mut-choices (cdr cs))
+              (assign! fail-stack (cons cc
+                                        (deref fail-stack)))
+              c)))))
+
+  (define (assert condition)
+    (unless condition
+        (fail)))
+
+  (define (iota from to)
+    (if (> from to)
+        '()
+        (cons from (iota (+ 1 from) to))))
+
+  ;; Find all pythagorean triangles for lengths between 1 and 50, no duplicates.
+  (let ((a (amb (iota 1 50)))
+        (b (amb (iota 1 50)))
+        (c (amb (iota 1 50))))
+    (assert (= (* c c)
+               (+ (* a a)
+                  (* b b))))
+    (assert (< b a))
+    (display (list a b c))
+    (newline)
+    (fail)))

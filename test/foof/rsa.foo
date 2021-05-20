@@ -1,0 +1,65 @@
+;; Adapted from Matt Might's implementation.
+;; https://matt.might.net/articles/implementation-of-rsa-public-key-cryptography-algorithm-in-scheme-dialect-of-lisp/
+
+(do
+  (define (gcd a b)
+    (if (= b 0)
+        a
+        (gcd b (modulo a b))))
+
+  (define (extended-gcd a b)
+    (if (= (modulo a b) 0)
+        (cons 0 1)
+        (let* ((x:y (extended-gcd b (modulo a b)))
+               (x (car x:y))
+               (y (cdr x:y)))
+          (cons y (- x (* y (quotient a b)))))))
+
+  (define (modulo-inverse a n)
+    (modulo (car (extended-gcd a n)) n))
+
+  (define (totient p q) (* (- p 1) (- q 1)))
+
+  (define (square x) (* x x))
+
+  (define (odd? x)
+    (= 1 (modulo x 2)))
+
+  (define (modulo-power base exp n)
+    (if (= exp 0)
+        1
+        (if (odd? exp)
+            (modulo (* base (modulo-power base (- exp 1) n)) n)
+            (modulo (square (modulo-power base (/ exp 2) n)) n))))
+
+  (define (is-legal-public-exponent? e p q)
+    (and (< 1 e)
+         (< e (totient p q))
+         (= 1 (gcd e (totient p q)))))
+
+  (define (private-exponent e p q)
+    (if (is-legal-public-exponent? e p q)
+        (modulo-inverse e (totient p q))
+        (raise "Not a legal public exponent for that modulus.")))
+
+  (define (encrypt m e n)
+    (if (> m n)
+        (raise "The modulus is too small to encrypt the message.")
+        (modulo-power m e n)))
+
+  (define (decrypt c d n)
+    (modulo-power c d n))
+
+  (let* ((p 398075086424064937397125500550386491199064362342526708406385189575946388957261768583317)
+         (q 472772146107435302536223071973048224632914695302097116459852171130520711256363590397527)
+         (n (* p q))
+         (e 47388090603832016196633832303788951973268922921040957944741354648812028493909367)
+         (d (private-exponent e p q))
+         (plaintext 123456789012345678901234567890)
+         (ciphertext (encrypt plaintext e n))
+         (decrypted (decrypt ciphertext d n)))
+    (display "Plaintext: ") (display plaintext) (newline)
+    (display "Encrypted: ") (display ciphertext) (newline)
+    (display "Decrypted: ") (display decrypted) (newline)
+    (unless (equal? plaintext decrypted)
+      (raise "Decrypted plaintext is not correct!"))))
