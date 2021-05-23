@@ -1,6 +1,4 @@
-<img align="left" src="foof.png" style="height: 50px;" />
-
-# Spartan
+<img align="left" src="foof.png" height="75" /> <h1>Spartan</h1>
 
 Spartan is a small Lisp dialect that serves me as a test bed for programming language features. Currently implemented features are:
 
