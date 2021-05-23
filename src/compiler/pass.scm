@@ -45,6 +45,11 @@
                (> (length val) 0))
     (schema-validation-error "Not a non-empty list" val)))
 
+(define (non-empty-hash? val)
+  (unless (and (hash? val)
+               (> (hash-count val) 0))
+    (schema-validation-error "Not a non-empty hash" val)))
+
 (define (a-list? val)
   (unless (list? val)
     (schema-validation-error "Not a list" val)))

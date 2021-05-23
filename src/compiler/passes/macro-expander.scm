@@ -9,7 +9,7 @@
 
 (define macro-expand
   (pass (schema "macro-expand"
-                'macros non-empty-list?
+                'macros non-empty-hash?
                 'errors a-list?
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list
@@ -34,9 +34,9 @@
    ((list 'quasiquote . ,rest)
     expr)
    ((list (symbol ,head) . ,rest)
-    (let ((macro (assoc (ast-symbol-value head) macros)))
-      (if macro
-          (expand-macros ((cdr macro) expr)
+    (let ((sym (ast-symbol-value head)))
+      (if (hash-has-key? macros sym)
+          (expand-macros ((hash-ref macros sym) expr)
                          macros)
           (walk-ast (flip expand-macros macros)
                     expr))))
@@ -45,19 +45,18 @@
               expr))))
 
 (define (make-builtin-macros)
-  (list (cons 'when when-macro)
-        (cons 'unless unless-macro)
-        (cons 'cond cond-macro)
-        (cons 'and and-macro)
-        (cons 'or or-macro)
-        (cons 'let* let*-macro)
-        (cons 'letcc letcc-macro)
-        (cons 'handle handle-macro)
-        (cons 'shift shift-macro)
-        (cons 'reset reset-macro)
-        ;; FIXME These should be moved to semantic elaboration phase.
-        (cons 'structure structure-macro)
-        (cons 'module module-macro)))
+  (hasheqv 'when when-macro
+           'unless unless-macro
+           'cond cond-macro
+           'and and-macro
+           'or or-macro
+           'let* let*-macro
+           'letcc letcc-macro
+           'handle handle-macro
+           'shift shift-macro
+           'reset reset-macro
+           'structure structure-macro
+           'module module-macro))
 
 (define (when-macro expr)
   (ast-case expr
