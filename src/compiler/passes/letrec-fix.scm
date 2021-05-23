@@ -125,11 +125,12 @@
 
 (define (derefy refs expr)
   (substitute-symbols
-   (map (lambda (ref)
-          (cons ref
-                (lambda (expr)
-                  (free-vars (set ref)
-                             (at (get-location expr)
-                                 (make-primop-app-node 'deref (list expr)))))))
-        refs)
+   (make-subs
+    (map (lambda (ref)
+           (cons ref
+                 (lambda (expr)
+                   (free-vars (set ref)
+                              (at (get-location expr)
+                                  (make-primop-app-node 'deref (list expr)))))))
+         refs))
    expr))

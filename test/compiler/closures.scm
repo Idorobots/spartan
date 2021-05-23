@@ -46,7 +46,7 @@
  (it "should create environment substitutions correctly"
      (check ((env gen-valid-symbol-node)
              (free-vars '()))
-            (assert (empty? (make-env-subs env free-vars))))
+            (assert (empty-subs? (make-env-subs env free-vars))))
      (check ((env gen-valid-symbol-node)
              (nodes (gen-arg-list 1))
              (node (apply gen-specific-do-node nodes))

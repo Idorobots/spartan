@@ -18,35 +18,36 @@
   (substitute (lambda (subs expr kont)
                 (kont (ast-case expr
                        ((app (symbol ,op) . ,args)
-                        (let ((b (assoc (ast-symbol-value op) subs)))
-                          (if b
-                              ((cdr b) expr)
-                              expr)))
+                        (apply-sub subs
+                                   (ast-symbol-value op)
+                                   expr
+                                   (constantly expr)))
                        (else
                         expr))))
-              (map (lambda (b)
-                     (cons b
-                           (lambda (expr)
-                             (let ((args (ast-app-args expr)))
-                               (replace expr
-                                      ;; NOTE The op no longer needs to be stored in free vars.
-                                      (free-vars
-                                       (set-sum (map get-free-vars args))
-                                       (make-primop-app-node b args)))))))
-                   (set-intersection
-                    builtins
-                    (apply set
-                           '(car cadr cdr cddr list cons append concat
-                             equal? nil? not
-                             * + - / = < <= > >=
-                             remainder quotient modulo zero?
-                             ref deref assign!
-                             self send spawn
-                             assert! signal! retract! select notify-whenever
-                             display newline debug
-                             ;; NOTE These ones use the continuations, so they cannot be inlined.
-                             ;; call/current-continuation call/reset call/shift call/handler raise recv
-                             ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
-                             ;; sleep random
-                             ))))
+              (make-subs
+               (map (lambda (b)
+                      (cons b
+                            (lambda (expr)
+                              (let ((args (ast-app-args expr)))
+                                (replace expr
+                                         ;; NOTE The op no longer needs to be stored in free vars.
+                                         (free-vars
+                                          (set-sum (map get-free-vars args))
+                                          (make-primop-app-node b args)))))))
+                    (set-intersection
+                     builtins
+                     (apply set
+                            '(car cadr cdr cddr list cons append concat
+                                  equal? nil? not
+                                  * + - / = < <= > >=
+                                  remainder quotient modulo zero?
+                                  ref deref assign!
+                                  self send spawn
+                                  assert! signal! retract! select notify-whenever
+                                  display newline debug
+                                  ;; NOTE These ones use the continuations, so they cannot be inlined.
+                                  ;; call/current-continuation call/reset call/shift call/handler raise recv
+                                  ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
+                                  ;; sleep random
+                                  )))))
               expr))

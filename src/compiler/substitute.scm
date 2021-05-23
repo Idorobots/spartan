@@ -6,16 +6,16 @@
 (define (substitute-symbols subs expr)
   (substitute (lambda (subs expr kont)
                 (if (symbol-node? expr)
-                    (let ((s (assoc (ast-symbol-value expr) subs)))
-                      (if s
-                          ((cdr s) expr)
-                          expr))
+                    (apply-sub subs
+                               (ast-symbol-value expr)
+                               expr
+                               (constantly expr))
                     (kont expr)))
               subs
               expr))
 
 (define (substitute f subs expr)
-  (if (empty? subs)
+  (if (empty-subs? subs)
       expr
       (f subs
          expr
@@ -46,7 +46,19 @@
              (else
               (walk-ast (partial substitute f subs) expr)))))))
 
+(define (apply-sub subs name value default)
+  (if (hash-has-key? subs name)
+      ((hash-ref subs name) value)
+      (default)))
+
+(define (empty-subs? subs)
+  (= (hash-count subs) 0))
+
+(define (make-subs assocs)
+  (make-immutable-hasheq assocs))
+
 (define (filter-subs subs vars)
-  (filter (lambda (s)
-            (not (set-member? vars (car s))))
-          subs))
+  (foldl (lambda (var subs)
+           (hash-remove subs var))
+         subs
+         vars))

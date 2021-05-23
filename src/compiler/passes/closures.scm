@@ -65,7 +65,8 @@
            (full-env (make-env loc free closure-vars))
            ;; NOTE So that we don't reference undefined (yet) variables.
            (actual-env (substitute-symbols
-                        (map (flip cons (compose make-nil get-location)) bound)
+                        (make-subs
+                         (map (flip cons (compose make-nil get-location)) bound))
                         full-env))
            (env-binding (at loc (make-binding-node env-var actual-env)))
            (setters (make-env-setters full-env env-var free bound closure-vars))
@@ -139,34 +140,35 @@
          vars))
 
 (define (make-env-subs env free)
-  (case (length free)
-    ((1)
-     (list (cons (car free)
-                 (flip replace env))))
-    ((2)
-     (map (lambda (var accessor)
-            (cons var
-                  (lambda (expr)
-                    (replace expr
-                             (make-primop-app-node
-                              accessor
-                              (list env))))))
-          free
-          (list 'car 'cdr)))
-    (else
-     (map (lambda (var)
-            (cons var
-                  (lambda (expr)
-                    (replace expr
-                             (make-primop-app-node
-                              '&env-ref
-                              (list env
-                                    (at (get-location expr)
-                                        (make-const-node
-                                         (at (get-location expr)
-                                             (generated
-                                              (make-number-node (offset var free))))))))))))
-          free))))
+  (make-subs
+   (case (length free)
+     ((1)
+      (list (cons (car free)
+                  (flip replace env))))
+     ((2)
+      (map (lambda (var accessor)
+             (cons var
+                   (lambda (expr)
+                     (replace expr
+                              (make-primop-app-node
+                               accessor
+                               (list env))))))
+           free
+           (list 'car 'cdr)))
+     (else
+      (map (lambda (var)
+             (cons var
+                   (lambda (expr)
+                     (replace expr
+                              (make-primop-app-node
+                               '&env-ref
+                               (list env
+                                     (at (get-location expr)
+                                         (make-const-node
+                                          (at (get-location expr)
+                                              (generated
+                                               (make-number-node (offset var free))))))))))))
+           free)))))
 
 (define (make-env-setters env env-var free bound closures)
   (case (length free)

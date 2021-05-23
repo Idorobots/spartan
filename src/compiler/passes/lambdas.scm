@@ -88,13 +88,14 @@
 
 (define (beta-reduce original formals args body)
   (let* ((renamed (map temporary-name formals))
-         (subs (map (lambda (formal tmp)
-                      (cons (ast-symbol-value formal)
-                            (lambda (orig)
-                              (at (get-location orig)
-                                  tmp))))
-                    formals
-                    renamed)))
+         (subs (make-subs
+                (map (lambda (formal tmp)
+                       (cons (ast-symbol-value formal)
+                             (lambda (orig)
+                               (at (get-location orig)
+                                   tmp))))
+                     formals
+                     renamed))))
     (reconstruct-let-node original
                           (map (lambda (var val)
                                  (at (get-location val)
