@@ -1,7 +1,7 @@
 ;; Perf tests
 
 (define (build-input-program reps)
-  (let* ((expr (slurp "../test/foof/coroutines2.foo")))
+  (let* ((expr (slurp "../test/sprtn/coroutines2.sprtn")))
     (format "(do 23 ~a)"
             (foldl string-append
                    ""
@@ -59,10 +59,10 @@
              inputs))))
 
  (it "fibonacci"
-     (run-perf-test "../test/foof/fibonacci.foo"))
+     (run-perf-test "../test/sprtn/fibonacci.sprtn"))
 
  (it "rsa"
-     (run-perf-test "../test/foof/rsa.foo"))
+     (run-perf-test "../test/sprtn/rsa.sprtn"))
 
  (it "amb"
-     (run-perf-test "../test/foof/amb.foo")))
+     (run-perf-test "../test/sprtn/amb.sprtn")))

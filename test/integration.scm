@@ -3,13 +3,13 @@
 (define *random* 0.05)
 
 (describe
- "FOOF"
+ "Spartan"
  (it "should support basic language features"
-     (test-file "../test/foof/math.foo")
-     (test-file "../test/foof/rsa.foo")
-     (test-file "../test/foof/hello.foo")
-     (test-file "../test/foof/fibonacci.foo")
-     (test-file "../test/foof/logger.foo"))
+     (test-file "../test/sprtn/math.sprtn")
+     (test-file "../test/sprtn/rsa.sprtn")
+     (test-file "../test/sprtn/hello.sprtn")
+     (test-file "../test/sprtn/fibonacci.sprtn")
+     (test-file "../test/sprtn/logger.sprtn"))
 
  (it "should support continuations"
      (with-test-bindings
@@ -18,12 +18,12 @@
        ;; Ensure that timeouts take very short time.
        (__sleep (bootstrap (lambda (time)
                              (wait 25)))))
-      (test-file "../test/foof/errors.foo")
-      (test-file "../test/foof/errors3.foo")
-      (test-file "../test/foof/coroutines.foo")
-      (test-file "../test/foof/coroutines2.foo")
-      (test-file "../test/foof/coroutines3.foo")
-      (test-file "../test/foof/amb.foo")))
+      (test-file "../test/sprtn/errors.sprtn")
+      (test-file "../test/sprtn/errors3.sprtn")
+      (test-file "../test/sprtn/coroutines.sprtn")
+      (test-file "../test/sprtn/coroutines2.sprtn")
+      (test-file "../test/sprtn/coroutines3.sprtn")
+      (test-file "../test/sprtn/amb.sprtn")))
 
  (it "should support Actor Model"
      (with-test-bindings
@@ -35,11 +35,11 @@
        ;; Ensure that monitor task doesn't ever hang the execution.
        (__monitor (bootstrap (lambda (time)
                                '()))))
-      (test-file "../test/foof/uprocs.foo")
-      (test-file "../test/foof/uprocs2.foo" sort-lines)
-      (test-file "../test/foof/msgwait.foo")
-      (test-file "../test/foof/fibonacci2.foo")
-      (test-file "../test/foof/errors2.foo")))
+      (test-file "../test/sprtn/uprocs.sprtn")
+      (test-file "../test/sprtn/uprocs2.sprtn" sort-lines)
+      (test-file "../test/sprtn/msgwait.sprtn")
+      (test-file "../test/sprtn/fibonacci2.sprtn")
+      (test-file "../test/sprtn/errors2.sprtn")))
 
  (it "should support the RBS"
      (with-test-bindings
@@ -58,9 +58,9 @@
                                 (when (> *random* 1.0)
                                   (set! *random* 0.05))
                                 r)))))
-      (test-file "../test/foof/rbs2.foo")
-      (test-file "../test/foof/rbs.foo")
-      (test-file "../test/foof/cep.foo")))
+      (test-file "../test/sprtn/rbs2.sprtn")
+      (test-file "../test/sprtn/rbs.sprtn")
+      (test-file "../test/sprtn/cep.sprtn")))
 
  (ignore "handles reused variables correctly"
          (assert (run '(letrec ((fact (lambda (n)
