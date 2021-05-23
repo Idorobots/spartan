@@ -111,20 +111,20 @@
 
 (define (test-propagate subs expr)
   (propagate (compose symbol-node? ast-binding-val)
-             (lambda (binding)
-               (cons (ast-symbol-value (ast-binding-var binding))
-                     (make-number-node 23)))
+             (lambda (bindings subs)
+               (extend-subs (map (lambda (binding)
+                                   (cons (ast-symbol-value (ast-binding-var binding))
+                                         (make-number-node 23)))
+                                 bindings)
+                            subs))
              (lambda (subs expr kont)
                (ast-case
                 expr
                 ((symbol ,value)
-                 (let ((s (assoc (ast-symbol-value value) subs)))
-                   (if s
-                       (cdr s)
-                       expr)))
+                 (replace-sub subs (ast-symbol-value value) (constantly expr)))
                 (else
                  (kont expr))))
-             subs
+             (make-subs subs)
              expr))
 
 (describe

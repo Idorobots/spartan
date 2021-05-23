@@ -3,10 +3,11 @@
 (load-once "compiler/utils/utils.scm")
 
 (load-once "compiler/ast.scm")
+(load-once "compiler/substitute.scm") ;; FIXME For subs-related functions.
 
 (load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
 
-(define (propagate partition-by make-sub replace-with subs expr)
+(define (propagate partition-by make-subs replace-with subs expr)
   (define (loop subs expr)
     (replace-with subs
                   expr
@@ -18,12 +19,12 @@
                       (ast-update expr
                                   'body
                                   (partial loop
-                                           (filter-propagate-subs subs
-                                                                  (get-bound-vars expr)))))
+                                           (filter-subs subs
+                                                        (get-bound-vars expr)))))
                      ((let ,bindings ,body)
                       (let* ((bs (partition-bindings partition-by bindings))
-                             (updated-subs (append (map make-sub (car bs))
-                                                   (filter-propagate-subs subs (get-bound-vars expr))))
+                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop subs)
                                                     (cdr bs))))
                         (reconstruct-let-node expr
@@ -32,8 +33,8 @@
                      ((letrec ,bindings ,body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings));; NOTE Can't use all propagatable bindings as they might interfere.
-                             (updated-subs (append (map make-sub (car bs))
-                                                   (filter-propagate-subs subs (get-bound-vars expr))))
+                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop updated-subs)
                                                     (cdr bs))))
                         (reconstruct-letrec-node expr
@@ -42,8 +43,8 @@
                      ((fix ,bindings ,body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings)) ;; NOTE Can't use all propagatable bindings as they might interfere.
-                             (updated-subs (append (map make-sub (car bs))
-                                                   (filter-propagate-subs subs (get-bound-vars expr))))
+                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop updated-subs)
                                                     (cdr bs))))
                         (reconstruct-fix-node expr
@@ -54,11 +55,6 @@
                      (else
                       (walk-ast (partial loop subs) expr))))))
   (loop subs expr))
-
-(define (filter-propagate-subs subs vars)
-  (filter (lambda (s)
-            (not (set-member? vars (car s))))
-          subs))
 
 (define (partition-bindings pred bindings)
   (foldr (lambda (b acc)

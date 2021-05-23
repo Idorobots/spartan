@@ -46,19 +46,28 @@
              (else
               (walk-ast (partial substitute f subs) expr)))))))
 
-(define (apply-sub subs name value default)
-  (if (hash-has-key? subs name)
-      ((hash-ref subs name) value)
-      (default)))
-
-(define (empty-subs? subs)
-  (= (hash-count subs) 0))
-
 (define (make-subs assocs)
   (make-immutable-hasheq assocs))
+
+(define (extend-subs assocs subs)
+  (make-subs (append assocs
+                     (hash->list subs))))
+
+(define (empty-subs? subs)
+  (hash-empty? subs))
 
 (define (filter-subs subs vars)
   (foldl (lambda (var subs)
            (hash-remove subs var))
          subs
          vars))
+
+(define (apply-sub subs name value default)
+  (if (hash-has-key? subs name)
+      ((hash-ref subs name) value)
+      (default)))
+
+(define (replace-sub subs name default)
+  (if (hash-has-key? subs name)
+      (hash-ref subs name)
+      (default)))

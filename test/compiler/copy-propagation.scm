@@ -9,10 +9,10 @@
              (node (gen-if-node gen-valid-symbol-node
                                 sym
                                 gen-valid-symbol-node)))
-            (assert (copy-propagation (list (cons var copy))
+            (assert (copy-propagation (make-subs (list (cons var copy)))
                                       sym)
                     copy)
-            (assert-ast (constant-propagation (list (cons var copy))
+            (assert-ast (constant-propagation (make-subs (list (cons var copy)))
                                               node)
                         (if ,converted-cond
                             ,converted-then
@@ -21,7 +21,7 @@
                         (assert converted-then copy)
                         (assert converted-else (ast-if-else node)))))
 
-  (it "should preserve lambda-bound variables"
+ (it "should preserve lambda-bound variables"
      (check ((var gen-valid-symbol)
              (arg1 (gen-symbol-node var))
              (copy gen-valid-symbol-node)
@@ -33,15 +33,15 @@
              (node2 (gen-with-fv-bv (gen-lambda-node (list arg2) arg1)
                                     (set var)
                                     (set other-var))))
-            (assert (copy-propagation (list (cons var copy))
-                                          node1)
+            (assert (copy-propagation (make-subs (list (cons var copy)))
+                                      node1)
                     node1)
-            (assert-ast (copy-propagation (list (cons var copy))
-                                              node2)
+            (assert-ast (copy-propagation (make-subs (list (cons var copy)))
+                                          node2)
                         (lambda _ ,converted-body)
                         (assert converted-body copy))))
 
-  (it "should handle let bound copies"
+ (it "should handle let bound copies"
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
              (copy gen-valid-symbol-node)
@@ -49,7 +49,7 @@
              (node (gen-with-fv-bv (gen-let-node (list b1) sym1)
                                    (set var1)
                                    (set var1))))
-            (assert-ast (copy-propagation '() node)
+            (assert-ast (copy-propagation (make-subs '()) node)
                         (let (,converted-binding)
                           ,converted-body)
                         (assert converted-binding b1)
@@ -65,7 +65,7 @@
              (node (gen-with-fv-bv (gen-let-node (list b1 b2) sym1)
                                    (set var1)
                                    (set var2 var1))))
-            (assert-ast (copy-propagation '() node)
+            (assert-ast (copy-propagation (make-subs '()) node)
                         (let ((binding ,converted-sym2 ,converted-val2))
                           ,converted-body)
                         (assert converted-sym2 sym2)
@@ -85,7 +85,7 @@
              (node (gen-with-fv-bv (gen-let-node (list b1) body)
                                    (set var2)
                                    (set var1))))
-            (assert (copy-propagation '() node)
+            (assert (copy-propagation (make-subs '()) node)
                     sym2))
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
@@ -101,10 +101,10 @@
              (node (gen-with-fv-bv (gen-let-node (list b1) body)
                                    (set var2)
                                    (set var1))))
-            (assert (copy-propagation '() node)
+            (assert (copy-propagation (make-subs '()) node)
                     sym2)))
 
-  (it "should handle letrec bound copies"
+ (it "should handle letrec bound copies"
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
              (copy gen-valid-symbol-node)
@@ -112,7 +112,7 @@
              (node (gen-with-fv-bv (gen-letrec-node (list b1) sym1)
                                    (set var1)
                                    (set var1))))
-            (assert-ast (copy-propagation '() node)
+            (assert-ast (copy-propagation (make-subs '()) node)
                         (letrec (,converted-binding)
                           ,converted-body)
                         (assert converted-binding b1)
@@ -128,7 +128,7 @@
              (node (gen-with-fv-bv (gen-letrec-node (list b1 b2) sym1)
                                    (set var1)
                                    (set var2 var1))))
-            (assert-ast (copy-propagation '() node)
+            (assert-ast (copy-propagation (make-subs '()) node)
                         (letrec ((binding ,converted-sym2 (app ,converted-sym1)))
                           ,converted-body)
                         (assert converted-sym2 sym2)
