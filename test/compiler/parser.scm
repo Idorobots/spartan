@@ -191,10 +191,10 @@
               (assert (ast->plain (p contents))
                       (expected-read contents))))
           (filter (lambda (filename)
-                    (not (equal? filename "../test/foof/logger.foo")))
+                    (not (equal? filename "../test/sprtn/logger.sprtn")))
                   (filter (lambda (filename)
-                            (string-suffix? filename ".foo"))
+                            (string-suffix? filename ".sprtn"))
                           (map (lambda (path)
-                                 (string-append "../test/foof/"
+                                 (string-append "../test/sprtn/"
                                                 (path->string path)))
-                               (directory-list "../test/foof/")))))))
+                               (directory-list "../test/sprtn/")))))))

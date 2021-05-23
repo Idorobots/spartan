@@ -1,17 +1,17 @@
-../test/foof/errors/symbol-format.foo(1,0): Undefined variable `this`:
+../test/sprtn/errors/symbol-format.sprtn(1,0): Undefined variable `this`:
   1 [33m|[39mthis.is.actually.valid
     [33m|[39m[31m^^^^^^^^^^^^^^^^^^^^^^[39m
   2 [33m|[39mthis.wont.fly.though.
   3 [33m|[39mits-not-a-sentence.
 
-../test/foof/errors/symbol-format.foo(2,0): Invalid symbol `this.wont.fly.though.` specified at:
+../test/sprtn/errors/symbol-format.sprtn(2,0): Invalid symbol `this.wont.fly.though.` specified at:
   1 [33m|[39mthis.is.actually.valid
   2 [33m|[39mthis.wont.fly.though.
     [33m|[39m[31m^^^^^^^^^^^^^^^^^^^^^[39m
   3 [33m|[39mits-not-a-sentence.
   4 [33m|[39m.neitherIsItJava
 
-../test/foof/errors/symbol-format.foo(3,0): Invalid symbol `its-not-a-sentence.` specified at:
+../test/sprtn/errors/symbol-format.sprtn(3,0): Invalid symbol `its-not-a-sentence.` specified at:
   1 [33m|[39mthis.is.actually.valid
   2 [33m|[39mthis.wont.fly.though.
   3 [33m|[39mits-not-a-sentence.
@@ -19,7 +19,7 @@
   4 [33m|[39m.neitherIsItJava
   5 [33m|[39m.
 
-../test/foof/errors/symbol-format.foo(4,0): Invalid symbol `.neitherIsItJava` specified at:
+../test/sprtn/errors/symbol-format.sprtn(4,0): Invalid symbol `.neitherIsItJava` specified at:
   2 [33m|[39mthis.wont.fly.though.
   3 [33m|[39mits-not-a-sentence.
   4 [33m|[39m.neitherIsItJava
@@ -27,7 +27,7 @@
   5 [33m|[39m.
   6 [33m|[39m..
 
-../test/foof/errors/symbol-format.foo(5,0): Invalid symbol `.` specified at:
+../test/sprtn/errors/symbol-format.sprtn(5,0): Invalid symbol `.` specified at:
   3 [33m|[39mits-not-a-sentence.
   4 [33m|[39m.neitherIsItJava
   5 [33m|[39m.
@@ -35,7 +35,7 @@
   6 [33m|[39m..
   7 [33m|[39m...
 
-../test/foof/errors/symbol-format.foo(6,0): Invalid symbol `..` specified at:
+../test/sprtn/errors/symbol-format.sprtn(6,0): Invalid symbol `..` specified at:
   4 [33m|[39m.neitherIsItJava
   5 [33m|[39m.
   6 [33m|[39m..
@@ -43,7 +43,7 @@
   7 [33m|[39m...
   8 [33m|[39mfrom..to
 
-../test/foof/errors/symbol-format.foo(7,0): Invalid symbol `...` specified at:
+../test/sprtn/errors/symbol-format.sprtn(7,0): Invalid symbol `...` specified at:
   5 [33m|[39m.
   6 [33m|[39m..
   7 [33m|[39m...
@@ -51,7 +51,7 @@
   8 [33m|[39mfrom..to
   9 [33m|[39m
 
-../test/foof/errors/symbol-format.foo(8,0): Invalid symbol `from..to` specified at:
+../test/sprtn/errors/symbol-format.sprtn(8,0): Invalid symbol `from..to` specified at:
   6 [33m|[39m..
   7 [33m|[39m...
   8 [33m|[39mfrom..to

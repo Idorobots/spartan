@@ -247,7 +247,7 @@
                                                 (raise-compilation-error
                                                  (at (location 0 (string-length input))
                                                      (make-location-node))
-                                                 "Not a valid FOOF file:")))))))
+                                                 "Not a valid Spartan file:")))))))
             (env-set env
                      'ast (car result)
                      'errors (cadr result))))))

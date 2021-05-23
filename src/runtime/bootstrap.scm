@@ -145,7 +145,7 @@
 
 (define (notify-whenever who pattern)
   (whenever pattern
-            ;; FIXME We can't use FOOF functions, since they yield execution.
+            ;; FIXME We can't use Spartan functions, since they yield execution.
             (lambda (b)
               (send who b))))
 
