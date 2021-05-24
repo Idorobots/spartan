@@ -33,7 +33,7 @@
                  (constantly expr))))
 
 (define (symbol-binding? binding)
-  (symbol-node? (ast-binding-val binding)))
+  (ast-symbol? (ast-binding-val binding)))
 
 (define (make-copy-subs bindings subs)
   (extend-subs (map (lambda (binding)
@@ -41,7 +41,7 @@
                         (cons (ast-symbol-value (ast-binding-var binding))
                               ;; NOTE To avoid reintroducing potentially no-longer-defined variables...
                               ;; NOTE ...but also not overwrite copy substitutions with values bound later.
-                              (if (symbol-node? val)
+                              (if (ast-symbol? val)
                                   (replace-copy subs val)
                                   val))))
                     bindings)

@@ -5,7 +5,7 @@
 
 (define (substitute-symbols subs expr)
   (substitute (lambda (subs expr kont)
-                (if (symbol-node? expr)
+                (if (ast-symbol? expr)
                     (apply-sub subs
                                (ast-symbol-value expr)
                                expr

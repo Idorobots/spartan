@@ -36,7 +36,7 @@
      (walk-ast expand-quasiquote expr))))
 
 (define (expand-no-splicing expr context)
-  (if (unquote-splicing-node? expr)
+  (if (ast-unquote-splicing? expr)
       (raise-compilation-error
        expr
        "Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:")
@@ -68,7 +68,7 @@
            (generated
             (make-list-node '())))
        context)
-      ((if (unquote-splicing-node? (car exprs))
+      ((if (ast-unquote-splicing? (car exprs))
            make-concat
            make-cons)
        (expand-splicing (car exprs) (car exprs))

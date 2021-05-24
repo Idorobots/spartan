@@ -397,8 +397,8 @@
                                (list first2 second2 third2)
                                (list converted-var4 converted-var5 converted-var6))
                           ;; NOTE We expect three empty lists and one extra-fv symbol.
-                          (assert (length (filter const-node? converted-args)) 3)
-                          (assert (ast-symbol-value (car (filter symbol-node? converted-args))) extra-fv))
+                          (assert (length (filter ast-const? converted-args)) 3)
+                          (assert (ast-symbol-value (car (filter ast-symbol? converted-args))) extra-fv))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (generated? result))))))

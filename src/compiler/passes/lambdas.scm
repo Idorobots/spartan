@@ -47,7 +47,7 @@
                        (cons (ast-symbol-value (ast-binding-var b))
                              (ast-binding-val b)))
                      (filter suitable-lambda?
-                             (filter (compose lambda-node? ast-binding-val)
+                             (filter (compose ast-lambda? ast-binding-val)
                                      bindings))))
             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr))))
         (ast-update (ast-update expr 'bindings (partial map loop))
@@ -58,7 +58,7 @@
                         (cons (ast-symbol-value (ast-binding-var b))
                               (ast-binding-val b)))
                       (filter suitable-lambda?
-                              (filter (compose lambda-node? ast-binding-val)
+                              (filter (compose ast-lambda? ast-binding-val)
                                       bindings))))
              (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))

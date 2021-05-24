@@ -61,7 +61,7 @@
          exprs))
 
 (define (extract-non-defs exprs)
-  (filter (compose not def-node?)
+  (filter (compose not ast-def?)
           exprs))
 
 (define (reconstruct-simple-body exprs parent)

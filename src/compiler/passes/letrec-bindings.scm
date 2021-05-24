@@ -55,7 +55,7 @@
 
 (define (reorder-letrec expr)
   (map-ast (lambda (expr)
-             (if (letrec-node? expr)
+             (if (ast-letrec? expr)
                  (replace expr
                           (scc-reorder (derive-graph expr) expr))
                  expr))

@@ -21,7 +21,7 @@
     (dce (set) val))
    ;; NOTE Eta reduction.
    ((lambda ,args (app ,op . ,args))
-    (if (and (symbol-node? op)
+    (if (and (ast-symbol? op)
              (set-member? (set-union eta-disallow
                                      ;; NOTE Or else (letcc k (k k)) eta reduces to k, which is then undefined.
                                      (ast-node-bound-vars expr))
@@ -76,20 +76,20 @@
     (walk-ast (partial dce (set)) expr))))
 
 (define (effectful? node)
-  (not (or (const-node? node)
-           (symbol-node? node)
-           (lambda-node? node))))
+  (not (or (ast-const? node)
+           (ast-symbol? node)
+           (ast-lambda? node))))
 
 (define (falsy? node)
   ;; FIXME Implement proper booleans.
-  (and (const-node? node)
-       (list-node? (ast-const-value node))
+  (and (ast-const? node)
+       (ast-list? (ast-const-value node))
        (equal? 0 (ast-list-length (ast-const-value node)))))
 
 (define (truthy? node)
   (and (not (falsy? node))
-       (or (const-node? node)
-           (lambda-node? node))))
+       (or (ast-const? node)
+           (ast-lambda? node))))
 
 (define (used? b free)
   (or (effectful? (ast-binding-val b))

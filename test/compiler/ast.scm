@@ -371,7 +371,7 @@
              (error (gen-error-node node)))
             (assert (safe-symbol-value error) name))
      (check ((error gen-random-error-node))
-            (unless (symbol-node? (ast-error-expr error))
+            (unless (ast-symbol? (ast-error-expr error))
               (assert (safe-symbol-value error) '<error>)))))
 
 (describe

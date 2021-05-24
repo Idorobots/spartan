@@ -30,7 +30,7 @@
              expr))
 
 (define (const-binding? binding)
-  (const-node? (ast-binding-val binding)))
+  (ast-const? (ast-binding-val binding)))
 
 (define (make-const-subs bindings subs)
   (extend-subs (map (lambda (binding)

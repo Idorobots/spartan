@@ -152,7 +152,7 @@
 
 (define (legal-formals args prefix)
   (map (lambda (f)
-         (if (and (symbol-node? f)
+         (if (and (ast-symbol? f)
                   (member (ast-symbol-value f) +reserved-keywords+))
              (raise-compilation-error
               f
@@ -164,11 +164,11 @@
   (define (check-uniqueness name rest)
     (cond ((empty? rest)
            name)
-          ((and (symbol-node? name)
+          ((and (ast-symbol? name)
                 (equal? (ast-symbol-value name) '_))
            name)
-          ((and (symbol-node? name)
-                (symbol-node? (car rest))
+          ((and (ast-symbol? name)
+                (ast-symbol? (car rest))
                 (equal? (ast-symbol-value name)
                         (ast-symbol-value (car rest))))
            (raise-compilation-error
@@ -222,7 +222,7 @@
 (define (legal-bindings bindings prefix)
   (map (lambda (b)
          (let ((var (ast-binding-var b)))
-           (if (and (symbol-node? var)
+           (if (and (ast-symbol? var)
                     (member (ast-symbol-value var) +reserved-keywords+))
                (let ((e (raise-compilation-error
                          b
@@ -237,11 +237,11 @@
     (let ((var (ast-binding-var b)))
       (cond ((empty? rest)
              b)
-            ((and (symbol-node? var)
+            ((and (ast-symbol? var)
                   (equal? (ast-symbol-value var) '_))
              b)
-            ((and (symbol-node? var)
-                  (symbol-node? (ast-binding-var (car rest)))
+            ((and (ast-symbol? var)
+                  (ast-symbol? (ast-binding-var (car rest)))
                   (equal? (ast-symbol-value var)
                           (ast-symbol-value (ast-binding-var (car rest)))))
              (let ((e (raise-compilation-error

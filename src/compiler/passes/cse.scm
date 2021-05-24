@@ -67,7 +67,7 @@
          (common-subexpr (cdr subexprs) expr))))
 
 (define (eliminatable-expr? node)
-  (and (primop-app-node? node)
+  (and (ast-primop-app? node)
        (member (ast-primop-app-op node)
                '(car cadr cdr cddr list cons append concat
                  equal? nil? not
