@@ -116,7 +116,7 @@
 (define (validate-use-before-definition bound undefined unused used-before-def bindings)
   ;; NOTE Simple values are considered seen since they will be extracted outward.
   (let loop ((seen (set-sum (map ast-node-bound-vars
-                                 (filter (compose (partial equal? 'simple) get-complexity)
+                                 (filter (compose (partial equal? 'simple) ast-binding-complexity)
                                          bindings))))
              (bs bindings))
     (if (empty? bs)

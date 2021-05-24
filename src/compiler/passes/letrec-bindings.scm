@@ -91,7 +91,7 @@
 (define (derive-ordering expr)
   (let ((vars (map (compose safe-symbol-value ast-binding-var)
                    ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
-                   (filter (compose (partial equal? 'complex) get-complexity)
+                   (filter (compose (partial equal? 'complex) ast-binding-complexity)
                            (ast-letrec-bindings expr)))))
     (if (empty? vars)
         '()

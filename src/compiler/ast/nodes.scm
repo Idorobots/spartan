@@ -246,10 +246,10 @@
 (define (ast-binding-val binding)
   (ast-get binding 'val))
 
-(define (complexity complexity binding)
+(define (set-ast-binding-complexity binding complexity)
   (ast-set binding 'complexity complexity))
 
-(define (get-complexity binding)
+(define (ast-binding-complexity binding)
   (ast-get binding 'complexity))
 
 (define (set-ast-binding-self-recursive binding rec?)

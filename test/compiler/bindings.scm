@@ -31,7 +31,7 @@
              (parent (gen-let-node bindings gen-simple-node)))
             (let* ((result (analyze-bindings #f parent))
                    (bindings (ast-let-bindings result)))
-              (assert (map get-complexity bindings)
+              (assert (map ast-binding-complexity bindings)
                       '(complex lambda))
               (assert (map ast-node-self-recursive bindings)
                       '(#f #f)))))
@@ -66,7 +66,7 @@
              (parent (gen-letrec-node bindings gen-simple-node)))
             (let* ((result (analyze-bindings #f parent))
                    (bindings (ast-letrec-bindings result)))
-              (assert (map get-complexity bindings)
+              (assert (map ast-binding-complexity bindings)
                       '(simple complex lambda lambda complex complex))
               (assert (map ast-node-self-recursive bindings)
                       ;; NOTE The last complex value is not considered self-recursive. At least not directly.

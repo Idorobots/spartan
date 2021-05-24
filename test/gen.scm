@@ -176,9 +176,9 @@
   (lambda (rand)
     (let ((val (sample gen-value rand)))
       (at (sample gen-location rand)
-          (complexity (compute-complexity val)
-                      (make-binding-node (sample gen-name rand)
-                                         val))))))
+          (set-ast-binding-complexity
+           (make-binding-node (sample gen-name rand) val)
+           (compute-complexity val))))))
 
 (define (gen-valid-binding-node rand)
   (sample (gen-binding-node gen-valid-symbol-node gen-simple-node)

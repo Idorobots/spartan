@@ -57,11 +57,11 @@
 ;; The fix expression can be handled directly during the closure conversion phase by allocating a fat closure for all of these functions.
 
 (define (waddell fix let-void-set parent bindings body)
-  (let* ((simple (filter (compose (partial equal? 'simple) get-complexity)
+  (let* ((simple (filter (compose (partial equal? 'simple) ast-binding-complexity)
                          bindings))
-         (lambdas (filter (compose (partial equal? 'lambda) get-complexity)
+         (lambdas (filter (compose (partial equal? 'lambda) ast-binding-complexity)
                           bindings))
-         (complex (filter (compose (partial equal? 'complex) get-complexity)
+         (complex (filter (compose (partial equal? 'complex) ast-binding-complexity)
                           bindings))
          (lambdas-builder (if (empty? lambdas)
                               id
@@ -88,8 +88,7 @@
       (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
                           (at (ast-node-location b)
-                              (complexity
-                               'simple
+                              (set-ast-binding-complexity
                                (make-binding-node
                                 (ast-binding-var b)
                                 (let* ((val (ast-binding-val b))
@@ -101,7 +100,8 @@
                                                                        (make-const-node
                                                                         (at val-loc
                                                                             (generated
-                                                                             (make-list-node '()))))))))))))))
+                                                                             (make-list-node '())))))))))))
+                               'simple)))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
