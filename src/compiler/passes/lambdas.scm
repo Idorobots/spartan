@@ -49,7 +49,7 @@
                      (filter suitable-lambda?
                              (filter (compose lambda-node? ast-binding-val)
                                      bindings))))
-            (lambdas (filter-lambdas lambdas (get-bound-vars expr))))
+            (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr))))
         (ast-update (ast-update expr 'bindings (partial map loop))
                     'body
                     (partial lambda-inlining (append ls lambdas)))))
@@ -60,7 +60,7 @@
                       (filter suitable-lambda?
                               (filter (compose lambda-node? ast-binding-val)
                                       bindings))))
-             (lambdas (filter-lambdas lambdas (get-bound-vars expr)))
+             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
         (ast-update (ast-update expr 'body loop)
                     'bindings
@@ -71,7 +71,7 @@
                               (ast-binding-val b)))
                       (filter suitable-lambda?
                               bindings)))
-             (lambdas (filter-lambdas lambdas (get-bound-vars expr)))
+             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
         (ast-update (ast-update expr 'body loop)
                     'bindings
@@ -81,7 +81,7 @@
 
 (define (filter-lambdas lambdas bound-vars)
   (filter (lambda (l)
-            (set-empty? (set-intersection (get-free-vars (cdr l))
+            (set-empty? (set-intersection (ast-node-free-vars (cdr l))
                                           bound-vars)))
           lambdas))
 

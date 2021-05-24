@@ -20,10 +20,10 @@
                                   'body
                                   (partial loop
                                            (filter-subs subs
-                                                        (get-bound-vars expr)))))
+                                                        (ast-node-bound-vars expr)))))
                      ((let ,bindings ,body)
                       (let* ((bs (partition-bindings partition-by bindings))
-                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
                              (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop subs)
                                                     (cdr bs))))
@@ -33,7 +33,7 @@
                      ((letrec ,bindings ,body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings));; NOTE Can't use all propagatable bindings as they might interfere.
-                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
                              (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop updated-subs)
                                                     (cdr bs))))
@@ -43,7 +43,7 @@
                      ((fix ,bindings ,body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings)) ;; NOTE Can't use all propagatable bindings as they might interfere.
-                             (filtered-subs (filter-subs subs (get-bound-vars expr)))
+                             (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
                              (updated-subs (make-subs (car bs) filtered-subs))
                              (updated-bindings (map (partial loop updated-subs)
                                                     (cdr bs))))

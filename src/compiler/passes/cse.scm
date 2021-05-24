@@ -27,14 +27,14 @@
    ((let ,bindings _)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
-           (filtered (filter-subexprs updated (get-bound-vars expr))))
+           (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
       (ast-update (ast-update expr 'bindings (partial map (partial cse subexprs)))
                 'body
                 (partial cse filtered))))
    ((letrec ,bindings _)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
-           (filtered (filter-subexprs updated (get-bound-vars expr))))
+           (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
       (ast-update (ast-update expr 'body (partial cse filtered))
                   'bindings (partial map
                                      (lambda (b)
@@ -43,7 +43,7 @@
                                                     filtered)
                                             b))))))
    ((fix ,bindings _)
-    (let* ((filtered (filter-subexprs subexprs (get-bound-vars expr))))
+    (let* ((filtered (filter-subexprs subexprs (ast-node-bound-vars expr))))
       ;; NOTE These are only lambdas, so there's nothing to eliminate.
       (walk-ast (partial cse filtered) expr)))
    (else
@@ -54,7 +54,7 @@
           bindings))
 
 (define (filter-subexprs subexprs redefined)
-  (filter (compose set-empty? (flip set-intersection redefined) get-free-vars)
+  (filter (compose set-empty? (flip set-intersection redefined) ast-node-free-vars)
           subexprs))
 
 (define (common-subexpr subexprs expr)

@@ -41,7 +41,7 @@
                        (cons op args))))))
    ((lambda ,formals ,body)
     (let ((free (set->list
-                 (set-difference (get-free-vars expr)
+                 (set-difference (ast-node-free-vars expr)
                                  globals))))
       (recreate-closure expr
                         ;; NOTE This is an anonymous function, so we can't really reuse it's names location for the environment.
@@ -52,7 +52,7 @@
     (let* ((loc (get-location expr))
            (env-var (at loc (make-gensym-node 'env)))
            (free (set->list
-                  (set-difference (set-sum (map get-free-vars bindings))
+                  (set-difference (set-sum (map ast-node-free-vars bindings))
                                   globals)))
            (env-subs (flip make-env-subs free))
            (closures (map (lambda (b)
@@ -64,7 +64,7 @@
                                                             globals))))
                           bindings))
            (closure-vars (map ast-binding-var closures))
-           (bound (get-bound-vars expr))
+           (bound (ast-node-bound-vars expr))
            (full-env (make-env loc free closure-vars))
            ;; NOTE So that we don't reference undefined (yet) variables.
            (actual-env (substitute-symbols

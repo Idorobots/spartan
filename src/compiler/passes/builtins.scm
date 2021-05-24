@@ -31,8 +31,8 @@
                               (let ((args (ast-app-args expr)))
                                 (replace expr
                                          ;; NOTE The op no longer needs to be stored in free vars.
-                                         (free-vars
-                                          (set-sum (map get-free-vars args))
+                                         (set-ast-node-free-vars
+                                          (set-sum (map ast-node-free-vars args))
                                           (make-primop-app-node b args)))))))
                     (set->list
                      (set-intersection

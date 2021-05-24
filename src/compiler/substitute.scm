@@ -28,16 +28,16 @@
                           'body (partial substitute
                                          f
                                          (filter-subs subs
-                                                      (get-bound-vars expr)))))
+                                                      (ast-node-bound-vars expr)))))
              ((let)
               (let ((unbound-subs (filter-subs subs
-                                               (get-bound-vars expr))))
+                                               (ast-node-bound-vars expr))))
                 (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
                             'bindings
                             (partial map (partial substitute f subs)))))
              ((letrec fix)
               (let ((unbound-subs (filter-subs subs
-                                               (get-bound-vars expr))))
+                                               (ast-node-bound-vars expr))))
                 (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
                             'bindings
                             (partial map (partial substitute f unbound-subs)))))

@@ -11,18 +11,18 @@
 (define fix-letrec
   (pass (schema "fix-letrec"
                 'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app primop-app)))
+                                          if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast fixing-letrec))))
 
 (define (fixing-letrec expr)
   (map-ast (lambda (expr)
              (ast-case expr
-              ((letrec ,bindings ,body)
-               (replace expr
-                        (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
-              (else
-               expr)))
+                       ((letrec ,bindings ,body)
+                        (replace expr
+                                 (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
+                       (else
+                        expr)))
            expr))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly:
@@ -106,9 +106,9 @@
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
-                               (free-vars (set-insert (get-free-vars val) (safe-symbol-value var))
-                                          (at (get-location val)
-                                              (make-primop-app-node 'assign! (list var val))))))
+                               (set-ast-node-free-vars (set-insert (ast-node-free-vars val) (safe-symbol-value var))
+                                                       (at (get-location val)
+                                                           (make-primop-app-node 'assign! (list var val))))))
                            bindings))
              (body (derefy vars body)))
         (generated
@@ -116,11 +116,11 @@
                                refs
                                (if (empty? setters)
                                    body
-                                   (free-vars (set-union (get-free-vars body)
-                                                         (set-sum (map get-free-vars setters)))
-                                              (at (get-location body)
-                                                  (generated
-                                                   (make-do-node (append setters (list body))))))))))))
+                                   (set-ast-node-free-vars (set-union (ast-node-free-vars body)
+                                                                      (set-sum (map ast-node-free-vars setters)))
+                                                           (at (get-location body)
+                                                               (generated
+                                                                (make-do-node (append setters (list body))))))))))))
 
 (define (derefy refs expr)
   (substitute-symbols
@@ -128,8 +128,8 @@
     (map (lambda (ref)
            (cons ref
                  (lambda (expr)
-                   (free-vars (set ref)
-                              (at (get-location expr)
-                                  (make-primop-app-node 'deref (list expr)))))))
+                   (set-ast-node-free-vars (set ref)
+                                           (at (get-location expr)
+                                               (make-primop-app-node 'deref (list expr)))))))
          refs))
    expr))

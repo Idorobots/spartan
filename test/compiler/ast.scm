@@ -50,43 +50,37 @@
      (assert (location<? (location 0 23)
                          (location 5 23))))
 
- (it "free-vars allow setting free vars"
+ (it "ast-node-free-vars allow setting free vars"
      (let ((node (at (location 5 23)
-                 (ast-node 'type 'not-a-symbol 'value 'value)))
+                     (ast-node 'type 'not-a-symbol 'value 'value)))
            (sym (at (location 5 23)
                     (make-symbol-node 'foo))))
-       (assert (get-free-vars sym)
+       (assert (ast-node-free-vars sym)
                (set 'foo))
-       (assert (free-vars (set 'foo 'bar)
-                           sym)
+       (assert (set-ast-node-free-vars (set 'foo 'bar) sym)
                sym)
-       (assert (free-vars (set)
-                           node)
+       (assert (set-ast-node-free-vars (set) node)
                node)
-       (assert (get-free-vars
-                (free-vars (set 'foo 'bar)
-                           node))
+       (assert (ast-node-free-vars
+                (set-ast-node-free-vars (set 'foo 'bar) node))
                (set 'foo 'bar))
-       (assert (get-free-vars
-                (free-vars (set)
-                           (free-vars (set 'foo 'bar)
-                                      node)))
+       (assert (ast-node-free-vars
+                (set-ast-node-free-vars (set)
+                                        (set-ast-node-free-vars (set 'foo 'bar) node)))
                (set))))
 
- (it "bound-vars allow setting bound vars"
+ (it "ast-node-bound-vars allow setting bound vars"
      (let ((node (at (location 5 23)
                      (ast-node 'type 'not-a-symbol 'value 'value))))
-       (assert (bound-vars (set)
-                           node)
+       (assert (set-ast-node-bound-vars (set) node)
                node)
-       (assert (get-bound-vars
-                (bound-vars (set 'foo 'bar)
-                            node))
+       (assert (ast-node-bound-vars
+                (set-ast-node-bound-vars (set 'foo 'bar) node))
                (set 'foo 'bar))
-       (assert (get-bound-vars
-                (bound-vars (set)
-                            (bound-vars (set 'foo 'bar)
-                                        node)))
+       (assert (ast-node-bound-vars
+                (set-ast-node-bound-vars (set)
+                                         (set-ast-node-bound-vars (set 'foo 'bar)
+                                                                  node)))
                (set)))))
 
 (describe
@@ -378,7 +372,7 @@
             (assert (safe-symbol-value error) name))
      (check ((error gen-random-error-node))
             (unless (symbol-node? (ast-error-expr error))
-                (assert (safe-symbol-value error) '<error>)))))
+              (assert (safe-symbol-value error) '<error>)))))
 
 (describe
  "recoursive?"

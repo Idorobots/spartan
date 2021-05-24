@@ -5,7 +5,7 @@
   (assert-ast result (primop-app 'deref ,inserted-node)
               (assert inserted-node node))
   (assert (generated? result))
-  (assert (get-free-vars result) (set arg))
+  (assert (ast-node-free-vars result) (set arg))
   (assert (get-location result) (get-location node)))
 
 (describe
@@ -137,14 +137,14 @@
                                            (list (at (get-location b)
                                                      (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
-                                           (free-vars
+                                           (set-ast-node-free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
                                                            (set v)))
                                             (at (get-location body)
                                                 (generated
                                                  (make-do-node
-                                                  (list (free-vars
+                                                  (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
                                                          (let ((l (get-location val)))
@@ -170,13 +170,13 @@
                                            (list (at (get-location b)
                                                      (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
-                                           (free-vars
+                                           (set-ast-node-free-vars
                                             (set-union (apply set val-fv)
                                                        (set v))
                                             (at (get-location var)
                                                 (generated
                                                  (make-do-node
-                                                  (list (free-vars
+                                                  (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
                                                          (let ((l (get-location val)))

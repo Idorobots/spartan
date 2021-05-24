@@ -353,18 +353,20 @@
 (define (gen-with-fv gen fv)
   (lambda (rand)
     (let ((vars (sample fv rand)))
-      (free-vars (if (set? vars)
-                     vars
-                     (apply set vars))
-                 (sample gen rand)))))
+      (set-ast-node-free-vars
+       (if (set? vars)
+           vars
+           (apply set vars))
+       (sample gen rand)))))
 
 (define (gen-with-bv gen bv)
   (lambda (rand)
     (let ((vars (sample bv rand)))
-      (bound-vars (if (set? vars)
-                      vars
-                      (apply set vars))
-                  (sample gen rand)))))
+      (set-ast-node-bound-vars
+       (if (set? vars)
+           vars
+           (apply set vars))
+       (sample gen rand)))))
 
 (define (gen-with-fv-bv gen fv bv)
   (gen-with-fv (gen-with-bv gen bv) fv))

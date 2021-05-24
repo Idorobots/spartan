@@ -13,9 +13,9 @@
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
                               (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                                  (set-ast-node-free-vars (set fv)
+                                                          (set-ast-node-bound-vars (set sym)
+                                                                                   (make-binding-node var val)))))
                             let-bv
                             vars
                             vals
@@ -28,8 +28,8 @@
             (let ((result (reconstruct-letrec-node parent bindings body)))
               (assert (letrec-node? result))
               (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-letrec-body result) body)
               (assert (ast-letrec-bindings result) bindings)))))
 
@@ -46,9 +46,9 @@
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
                               (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                                  (set-ast-node-free-vars (set fv)
+                                                          (set-ast-node-bound-vars (set sym)
+                                                                                   (make-binding-node var val)))))
                             let-bv
                             vars
                             vals
@@ -61,8 +61,8 @@
             (let ((result (reconstruct-let-node parent bindings body)))
               (assert (let-node? result))
               (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-let-body result) body)
               (assert (ast-let-bindings result) bindings)))))
 
@@ -79,9 +79,9 @@
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
                               (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                                  (set-ast-node-free-vars (set fv)
+                                                          (set-ast-node-bound-vars (set sym)
+                                                                                   (make-binding-node var val)))))
                             let-bv
                             vars
                             vals
@@ -94,8 +94,8 @@
             (let ((result (reconstruct-fix-node parent bindings body)))
               (assert (fix-node? result))
               (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-fix-body result) body)
               (assert (ast-fix-bindings result) bindings)))))
 
@@ -140,7 +140,7 @@
                                         node)
                         (do ,unchanged-node1
                             (number ,x)
-                            ,unchanged-node2)
+                          ,unchanged-node2)
                         (assert unchanged-node1 (car (ast-do-exprs node)))
                         (assert x subbed)
                         (assert unchanged-node2 (caddr (ast-do-exprs node))))))
@@ -181,7 +181,7 @@
                         (let ((binding _ (app ,unchanged-value)))
                           (do (number '23) ;; NOTE Not subbed.
                               (number '23)
-                              ,unchanged-node))
+                            ,unchanged-node))
                         (assert unchanged-value sym2)
                         (assert unchanged-node sym3)))
      (check ((var1 gen-valid-symbol)
@@ -204,7 +204,7 @@
                                  (binding _ (app (number '23))))
                           (do (number '23) ;; NOTE Not subbed.
                               ,unchanged-sym2
-                              ,unchanged-node))
+                            ,unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3)))
@@ -227,9 +227,9 @@
                                         node)
                         (fix (,unchanged-b2
                               (binding _ (app (number '23))))
-                          (do (number '23) ;; NOTE Not subbed.
-                              ,unchanged-sym2
-                              ,unchanged-node))
+                             (do (number '23) ;; NOTE Not subbed.
+                                 ,unchanged-sym2
+                               ,unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3))))

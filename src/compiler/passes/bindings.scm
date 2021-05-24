@@ -24,8 +24,8 @@
    ((binding _ ,val)
     (complexity (compute-complexity val)
                 (self-recoursive (and within-letrec?
-                                      (not (set-empty? (set-intersection (get-bound-vars expr)
-                                                                         (get-free-vars expr)))))
+                                      (not (set-empty? (set-intersection (ast-node-bound-vars expr)
+                                                                         (ast-node-free-vars expr)))))
                                  (walk-ast (partial analyze-bindings within-letrec?) expr))))
    (else
     (walk-ast (partial analyze-bindings within-letrec?) expr))))
