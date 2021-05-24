@@ -23,7 +23,7 @@
                      'errors (cadr result))))))
 
 (define (expand-quasiquote expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote) expr)
     ((quasiquote)
      (expand-no-splicing (ast-quoted-expr expr)
@@ -31,7 +31,7 @@
     ((unquote unquote-splicing)
      (raise-compilation-error
       expr
-      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
+      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (ast-node-type expr))))
     (else
      (walk-ast expand-quasiquote expr))))
 
@@ -43,7 +43,7 @@
       (expand-splicing expr context)))
 
 (define (expand-splicing expr context)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote number string) expr)
     ((quasiquote) (expand-quasiquote expr))
     ((unquote unquote-splicing) (ast-quoted-expr expr))

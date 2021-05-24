@@ -31,7 +31,7 @@
     (walk-ast (partial analyze-bindings within-letrec?) expr))))
 
 (define (compute-complexity expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ;; Simple values.
     ((const) 'simple)
     ;; Function values, used by letrec-conversion later on.

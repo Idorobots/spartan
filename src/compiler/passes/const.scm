@@ -16,7 +16,7 @@
           (env-update env 'ast wrap-constants))))
 
 (define (wrap-constants expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote)
      (replace expr
               (make-const-node
@@ -28,7 +28,7 @@
     (walk-ast wrap-constants expr))))
 
 (define (plainify-quote expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote quasiquote unquote unquote-splicing)
     ;; NOTE Within `quote` all the semantic AST nodes have to be dumbed down to plain old data.
      (replace expr
@@ -36,7 +36,7 @@
                (make-list-node
                 (list (at (get-location expr)
                           (generated
-                           (make-symbol-node (get-type expr))))
+                           (make-symbol-node (ast-node-type expr))))
                       (ast-quoted-expr expr))))))
     (else
      (walk-ast plainify-quote expr))))

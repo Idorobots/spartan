@@ -60,7 +60,7 @@
 
 (define (ast-subset? types)
   (lambda (expr)
-    (let ((t (get-type expr)))
+    (let ((t (ast-node-type expr)))
       (unless (member t types)
         (schema-validation-error (format "Unhandled AST node type `~a`" t) expr))
       ;; NOTE Contents of these are technically not part of the subset.

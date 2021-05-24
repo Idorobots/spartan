@@ -48,6 +48,6 @@
                                (list ,quoted-symbol ,simple-node2)
                                ,simple-node3))
                         (assert simple-node1 (ast-list-nth list 0))
-                        (assert (ast-symbol-value quoted-symbol) (get-type quoted))
+                        (assert (ast-symbol-value quoted-symbol) (ast-node-type quoted))
                         (assert simple-node2 (ast-quoted-expr quoted))
                         (assert simple-node3 (ast-list-nth list 2))))))

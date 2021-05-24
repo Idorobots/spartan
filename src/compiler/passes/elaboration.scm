@@ -24,7 +24,7 @@
                      'errors (cadr result))))))
 
 (define (elaborate-unquoted expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((<error> quote number symbol string) expr)
     ((do body)
      (ast-update expr 'exprs (partial map elaborate-unquoted)))
@@ -53,7 +53,7 @@
 
 (define (elaborate-quoted expr)
   ;; NOTE We don't want the value within quasiquote to be elaborated.
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((<error> quote number symbol string) expr)
     ((unquote unquote-splicing)
      (ast-update expr 'value elaborate-unquoted))
@@ -186,7 +186,7 @@
       symbol
       (raise-compilation-error
        symbol
-       (format "~a, expected a symbol but got a ~a instead:" prefix (get-type symbol)))))
+       (format "~a, expected a symbol but got a ~a instead:" prefix (ast-node-type symbol)))))
 
 (define (reconstruct-let expr)
   (ast-case expr
@@ -333,7 +333,7 @@
      "Bad call syntax, expected at least one expression within the call:"))))
 
 (define (valid-app-procedure op)
-  (let ((type (get-type op)))
+  (let ((type (ast-node-type op)))
     (if (member type '(symbol if do body lambda let letrec app primop-app))
         op
         (raise-compilation-error

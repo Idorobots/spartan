@@ -15,7 +15,7 @@
           (env-update env 'ast mangle-names))))
 
 (define (mangle-names expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((const)
      expr)
     ((symbol)

@@ -99,11 +99,11 @@
 (define (ast-node-bound-vars node)
   (ast-get* node 'bound-vars (set)))
 
-(define (get-type node)
+(define (ast-node-type node)
   (ast-get node 'type))
 
 (define (is-type? node type)
-  (equal? (get-type node)
+  (equal? (ast-node-type node)
           type))
 
 ;; AST nodes

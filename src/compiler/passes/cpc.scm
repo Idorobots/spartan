@@ -21,7 +21,7 @@
   id)
 
 (define (cpc expr kont)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((symbol const) (kont expr))
     ((if) (cpc-if expr kont))
     ((do) (cpc-do expr kont))

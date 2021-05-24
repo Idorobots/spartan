@@ -20,7 +20,7 @@
       (f subs
          expr
          (lambda (expr)
-           (case (get-type expr)
+           (case (ast-node-type expr)
              ((const)
               expr)
              ((lambda)

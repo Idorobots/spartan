@@ -287,7 +287,7 @@
             (let ((result (elaborate-unquoted node)))
               (assert (get-location result)
                       (get-location node))
-              (assert (get-type result)
+              (assert (ast-node-type result)
                       sym)
               (assert (ast-quoted-expr result)
                       val))))
@@ -400,4 +400,4 @@
                               compilation-error-what))
                (elaborate-unquoted node))
                     (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
-                            (get-type (car contents)))))))
+                            (ast-node-type (car contents)))))))

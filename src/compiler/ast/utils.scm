@@ -8,7 +8,7 @@
 
 (define (walk-ast f expr)
   (let* ((mf (partial map f)))
-    (case (get-type expr)
+    (case (ast-node-type expr)
       ((number symbol string <location>)
        expr)
       ((if)
@@ -45,7 +45,7 @@
 
 (define (ast-size ast)
   (map-ast (lambda (expr)
-             (case (get-type expr)
+             (case (ast-node-type expr)
                ((number symbol string list const quote quasiquote unquote unquote-splicing) 1)
                ((if) (+ (ast-if-condition expr)
                         (ast-if-then expr)
@@ -73,7 +73,7 @@
 
 (define (ast->plain ast)
   (map-ast (lambda (expr)
-             (case (get-type expr)
+             (case (ast-node-type expr)
                ((number symbol string list) (ast-get expr 'value))
                ((if) (list 'if
                            (ast-if-condition expr)
