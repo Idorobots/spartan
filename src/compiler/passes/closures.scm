@@ -56,12 +56,11 @@
                                   globals)))
            (env-subs (flip make-env-subs free))
            (closures (map (lambda (b)
-                            (ast-update b 'val
-                                        (lambda (fun)
-                                          (recreate-closure fun
-                                                            env-var
-                                                            env-subs
-                                                            globals))))
+                            (set-ast-binding-val b
+                                                 (recreate-closure (ast-binding-val b)
+                                                                   env-var
+                                                                   env-subs
+                                                                   globals)))
                           bindings))
            (closure-vars (map ast-binding-var closures))
            (bound (ast-node-bound-vars expr))

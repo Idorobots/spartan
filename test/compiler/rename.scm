@@ -11,18 +11,22 @@
 (describe
  "mangle-names"
  (it "correctly renames simple cases"
-     (check ((symbol gen-valid-symbol-node))
+     (check ((val gen-valid-symbol)
+             (symbol (gen-symbol-node val)))
             (assert (mangle-names symbol)
-                    (ast-update symbol 'value symbol->safe)))
+                    (set-ast-symbol-value symbol (symbol->safe val))))
      (check ((formals (gen-arg-list (gen-integer 0 5)))
-             (body gen-valid-symbol-node)
+             (val gen-valid-symbol)
+             (body (gen-symbol-node val))
              (fun (gen-lambda-node formals body)))
             (assert-ast (mangle-names fun)
                         (lambda ,renamed-formals
                           ,renamed-body)
-                        (assert renamed-body (ast-update body 'value symbol->safe))
+                        (assert renamed-body
+                                (set-ast-symbol-value body (symbol->safe val)))
                         (map (lambda (original renamed)
-                               (assert renamed (ast-update original 'value symbol->safe)))
+                               (assert renamed
+                                       (set-ast-symbol-value original (symbol->safe (ast-symbol-value original)))))
                              formals
                              renamed-formals))))
 
@@ -41,7 +45,7 @@
                         (primop-app ,renamed-op . ,renamed-args)
                         (assert (ast-symbol-value renamed-op) op)
                         (map (lambda (original renamed)
-                               (assert renamed (ast-update original 'value symbol->safe)))
+                               (set-ast-symbol-value original (symbol->safe (ast-symbol-value original))))
                              args
                              renamed-args))))
 
@@ -50,5 +54,5 @@
              (list (gen-specific-do-node symbol symbol symbol)))
             (gensym-reset!)
             (assert-ast (mangle-names list)
-                        (do 'WILD1 'WILD2 'WILD3)
+                        (do '__WILD1 '__WILD2 '__WILD3)
                         (assert #t)))))

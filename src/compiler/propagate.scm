@@ -15,12 +15,10 @@
                     (ast-case expr
                      ((const _)
                       expr)
-                     ((lambda _ _)
-                      (ast-update expr
-                                  'body
-                                  (partial loop
-                                           (filter-subs subs
-                                                        (ast-node-bound-vars expr)))))
+                     ((lambda _ ,body)
+                      (set-ast-lambda-body expr (loop (filter-subs subs
+                                                                   (ast-node-bound-vars expr))
+                                                      body)))
                      ((let ,bindings ,body)
                       (let* ((bs (partition-bindings partition-by bindings))
                              (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
@@ -50,8 +48,8 @@
                         (reconstruct-fix-node expr
                                               updated-bindings
                                               (loop updated-subs body))))
-                     ((binding _ _)
-                      (ast-update expr 'val (partial loop subs)))
+                     ((binding _ ,val)
+                      (set-ast-binding-val expr (loop subs val)))
                      (else
                       (walk-ast (partial loop subs) expr))))))
   (loop subs expr))

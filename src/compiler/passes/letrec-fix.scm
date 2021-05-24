@@ -72,9 +72,9 @@
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)
-                                (ast-update (let-void-set parent complex body)
-                                            'body
-                                            lambdas-builder)))))
+                                (let ((inner (let-void-set parent complex body)))
+                                  (set-ast-let-body inner
+                                                    (lambdas-builder (ast-let-body inner))))))))
     (generated
      (reconstruct-let-node parent
                            simple

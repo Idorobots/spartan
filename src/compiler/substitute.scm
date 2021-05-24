@@ -24,25 +24,27 @@
              ((const)
               expr)
              ((lambda)
-              (ast-update expr
-                          'body (partial substitute
-                                         f
-                                         (filter-subs subs
-                                                      (ast-node-bound-vars expr)))))
+              (set-ast-lambda-body expr
+                                   (substitute f
+                                               (filter-subs subs
+                                                            (ast-node-bound-vars expr))
+                                               (ast-lambda-body expr))))
              ((let)
               (let ((unbound-subs (filter-subs subs
                                                (ast-node-bound-vars expr))))
-                (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
-                            'bindings
-                            (partial map (partial substitute f subs)))))
+                (-> expr
+                    (set-ast-let-body (substitute f unbound-subs (ast-let-body expr)))
+                    (set-ast-let-bindings (map (partial substitute f subs)
+                                               (ast-let-bindings expr))))))
              ((letrec fix)
               (let ((unbound-subs (filter-subs subs
                                                (ast-node-bound-vars expr))))
-                (ast-update (ast-update expr 'body (partial substitute f unbound-subs))
-                            'bindings
-                            (partial map (partial substitute f unbound-subs)))))
+                (-> expr
+                    (set-ast-letrec-body (substitute f unbound-subs (ast-letrec-body expr)))
+                    (set-ast-letrec-bindings (map (partial substitute f unbound-subs)
+                                                  (ast-letrec-bindings expr))))))
              ((binding)
-              (ast-update expr 'val (partial substitute f subs)))
+              (set-ast-binding-val expr (substitute f subs (ast-binding-val expr))))
              (else
               (walk-ast (partial substitute f subs) expr)))))))
 

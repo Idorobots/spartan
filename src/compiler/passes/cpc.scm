@@ -67,7 +67,7 @@
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)
                 (lambda (exprs)
-                  (kont (ast-update expr 'exprs (constantly exprs))))))
+                  (kont (set-ast-do-exprs expr exprs)))))
 
 (define (cpc-sequence exprs kont)
   (if (> (length exprs) 0)
@@ -98,7 +98,7 @@
                     ;; NOTE The let could be ommited for non-side-effecting primops, but this way presents more
                     ;; NOTE opportunities for common subexpression elimination.
                     (at loc
-                        (make-ast-let-1 value (ast-update expr 'args (constantly args))
+                        (make-ast-let-1 value (set-ast-primop-app-args expr args)
                                         (kont value)))))))
 
 (define (cpc-app expr kont)
@@ -121,7 +121,8 @@
            (make-ast-fix (map (lambda (b)
                                 ;; NOTE These are guaranteed to be pure lambda expressions,
                                 ;; NOTE so no need to propagate the current continuation there.
-                                (ast-update b 'val (flip cpc (make-identity-continuation))))
+                                (set-ast-binding-val b (cpc (ast-binding-val b)
+                                                            (make-identity-continuation))))
                               (ast-fix-bindings expr))
                          (cpc (ast-fix-body expr)
                               kont))))

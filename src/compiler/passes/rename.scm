@@ -15,17 +15,15 @@
           (env-update env 'ast mangle-names))))
 
 (define (mangle-names expr)
-  (case (ast-node-type expr)
-    ((const)
-     expr)
-    ((symbol)
-     (if (equal? (ast-symbol-value expr) '_)
-         (ast-update expr 'value (constantly (gensym 'WILD)))
-         (ast-update expr 'value symbol->safe)))
-    ((primop-app)
-     (ast-update expr 'args (partial map mangle-names)))
-    (else
-     (walk-ast mangle-names expr))))
+  (ast-case expr
+   ((const _)
+    expr)
+   ((symbol '_)
+    (set-ast-symbol-value expr (gensym '__WILD)))
+   ((symbol _)
+    (set-ast-symbol-value expr (symbol->safe (ast-symbol-value expr))))
+   (else
+    (walk-ast mangle-names expr))))
 
 (define (symbol->safe s)
   (string->symbol (apply string-append

@@ -25,9 +25,6 @@
 (define (ast-set node property value)
   (hash-set node property value))
 
-(define (ast-update node property f)
-  (ast-set node property (f (ast-get* node property '()))))
-
 ;; AST metadata
 
 (define (location start end)
@@ -127,6 +124,9 @@
 (define (ast-number-value node)
   (ast-get node 'value))
 
+(define (set-ast-number-value node value)
+  (ast-set node 'value value))
+
 ;; Symbol
 (define (make-ast-symbol value)
   (ast-node 'type 'symbol 'value value))
@@ -140,6 +140,9 @@
 
 (define (ast-symbol-value node)
   (ast-get node 'value))
+
+(define (set-ast-symbol-value node value)
+  (ast-set node 'value value))
 
 (define (safe-symbol-value expr)
   (cond ((ast-symbol? expr)

@@ -50,9 +50,9 @@
                              (filter (compose ast-lambda? ast-binding-val)
                                      bindings))))
             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr))))
-        (ast-update (ast-update expr 'bindings (partial map loop))
-                    'body
-                    (partial lambda-inlining (append ls lambdas)))))
+        (-> expr
+            (set-ast-let-bindings (map loop bindings))
+            (set-ast-let-body (lambda-inlining (append ls lambdas) body)))))
      ((letrec ,bindings ,body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
@@ -62,9 +62,9 @@
                                       bindings))))
              (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
-        (ast-update (ast-update expr 'body loop)
-                    'bindings
-                    (partial map loop))))
+        (-> expr
+            (set-ast-letrec-body (loop body))
+            (set-ast-letrec-bindings (map loop bindings)))))
      ((fix ,bindings ,body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
@@ -73,9 +73,9 @@
                               bindings)))
              (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
-        (ast-update (ast-update expr 'body loop)
-                    'bindings
-                    (partial map loop))))
+        (-> expr
+            (set-ast-fix-body (loop body))
+            (set-ast-fix-bindings (map loop bindings)))))
      (else
       (loop expr)))))
 

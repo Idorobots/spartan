@@ -36,50 +36,53 @@
     ((const _)
      ;; TODO Validate number ranges, string escape sequences, unicode well-formedness etc.
      expr)
-    ((lambda _ ,body)
+    ((lambda ,formals ,body)
      (let* ((bound (ast-node-bound-vars expr))
             (body-fv (ast-node-free-vars body))
             (unused (set-difference bound body-fv))
             (before-def (set-difference used-before-def body-fv)))
-       (ast-update (ast-update expr
-                               'formals
-                               (partial map
-                                        (partial validate-ast (set) unused before-def)))
-                   'body
-                   (partial validate-ast
-                            (set-difference undefined bound)
-                            (set)
-                            before-def))))
-    ((let _ ,body)
+       (-> expr
+           (set-ast-lambda-formals (map (partial validate-ast (set) unused before-def) formals))
+           (set-ast-lambda-body (validate-ast (set-difference undefined bound)
+                                              (set)
+                                              before-def
+                                              body)))))
+    ((let ,bindings ,body)
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars body))))
-       (ast-update (ast-update expr
-                               'bindings
-                               (partial map
-                                        (partial validate-ast undefined unused used-before-def)))
-                   'body
-                   (partial validate-ast
-                            (set-difference undefined bound)
-                            (set)
-                            used-before-def))))
+       (-> expr
+           (set-ast-let-bindings (map (partial validate-ast undefined unused used-before-def) bindings))
+           (set-ast-let-body (validate-ast (set-difference undefined bound)
+                                           (set)
+                                           used-before-def
+                                           body)))))
     ((letrec ,bindings ,body)
      (let* ((bound (ast-node-bound-vars expr))
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
                                     (set-union (ast-node-free-vars body)
                                                (set-sum (map ast-node-free-vars bindings))))))
-       (ast-update (ast-update expr
-                               'bindings
-                               (partial validate-use-before-definition bound without-bound unused used-before-def))
-                   'body
-                   (partial validate-ast
-                            without-bound
-                            (set)
-                            used-before-def))))
-    ((binding _ _)
-     (ast-update (ast-update expr 'var (partial validate-ast (set) unused (set-difference used-before-def
-                                                                                          (ast-node-bound-vars expr))))
-                 'val (partial validate-ast undefined (set) used-before-def)))
+       (-> expr
+           (set-ast-letrec-bindings (validate-use-before-definition bound
+                                                                    without-bound
+                                                                    unused
+                                                                    used-before-def
+                                                                    bindings))
+           (set-ast-letrec-body (validate-ast without-bound
+                                              (set)
+                                              used-before-def
+                                              body)))))
+    ((binding ,var ,val)
+     (-> expr
+         (set-ast-binding-var (validate-ast (set)
+                                            unused
+                                            (set-difference used-before-def
+                                                            (ast-node-bound-vars expr))
+                                            var))
+         (set-ast-binding-val (validate-ast undefined
+                                            (set)
+                                            used-before-def
+                                            val))))
     ((symbol '_)
      expr)
     ((symbol _)
@@ -99,16 +102,19 @@
                (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
              (else
               expr))))
-    ((def _ ,value)
+    ((def ,name ,value)
      ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars value))))
-       (ast-update (ast-update expr 'name (partial validate-ast (set) unused used-before-def))
-                   'value
-                   (partial validate-ast
-                            (set-difference undefined bound)
-                            (set)
-                            used-before-def))))
+       (-> expr
+           (set-ast-def-name (validate-ast (set)
+                                           unused
+                                           used-before-def
+                                           name))
+           (set-ast-def-value (validate-ast (set-difference undefined bound)
+                                            (set)
+                                            used-before-def
+                                            value)))))
     (else
      (walk-ast (partial validate-ast undefined unused used-before-def)
                expr))))

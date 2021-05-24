@@ -18,30 +18,31 @@
    ((lambda _ ,body)
     ;; NOTE CSE is performed locally within a procedure not to inflate closure envs too much,
     ;; NOTE so this essentially cuts of all the propagated expressions thus far.
-    (ast-update expr 'body (partial cse '())))
+    (set-ast-lambda-body expr (cse '() body)))
    ((primop-app _ . ,rest)
     (let ((e (common-subexpr subexprs expr)))
       (if e
           (replace expr (ast-binding-var e))
           (walk-ast (partial cse subexprs) expr))))
-   ((let ,bindings _)
+   ((let ,bindings ,body)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
            (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
-      (ast-update (ast-update expr 'bindings (partial map (partial cse subexprs)))
-                'body
-                (partial cse filtered))))
-   ((letrec ,bindings _)
+      (-> expr
+          (set-ast-let-body (cse filtered body))
+          (set-ast-let-bindings (map (partial cse subexprs) bindings)))))
+   ((letrec ,bindings ,body)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
            (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
-      (ast-update (ast-update expr 'body (partial cse filtered))
-                  'bindings (partial map
-                                     (lambda (b)
-                                       ;; NOTE Can't use the current expression as it'll match itself and optimize out.
-                                       (cse (filter (compose not (partial equal? b))
-                                                    filtered)
-                                            b))))))
+      (-> expr
+          (set-ast-letrec-body (cse filtered body))
+          (set-ast-letrec-bindings (map (lambda (b)
+                                          ;; NOTE Can't use the current expression as it'll match itself and optimize out.
+                                          (cse (filter (compose not (partial equal? b))
+                                                       filtered)
+                                               b))
+                                        bindings)))))
    ((fix ,bindings _)
     (let* ((filtered (filter-subexprs subexprs (ast-node-bound-vars expr))))
       ;; NOTE These are only lambdas, so there's nothing to eliminate.
