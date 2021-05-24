@@ -274,15 +274,16 @@
   (ast-case expr
    ((list 'module (list ,name . ,deps) . ,body)
     (replace expr
-             (context "Bad `module` syntax"
-                      (make-def-node name
-                                     (at (ast-node-location expr)
-                                         (make-lambda-node (map (flip valid-symbol "Bad `module` dependencies syntax") deps)
-                                                           (at (ast-node-location expr)
-                                                               (make-list-node
-                                                                (cons (at (ast-node-location expr)
-                                                                          (make-symbol-node 'structure))
-                                                                      body)))))))))
+             (set-ast-node-context
+              (make-def-node name
+                             (at (ast-node-location expr)
+                                 (make-lambda-node (map (flip valid-symbol "Bad `module` dependencies syntax") deps)
+                                                   (at (ast-node-location expr)
+                                                       (make-list-node
+                                                        (cons (at (ast-node-location expr)
+                                                                  (make-symbol-node 'structure))
+                                                              body))))))
+              "Bad `module` syntax")))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error

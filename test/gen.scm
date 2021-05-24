@@ -373,8 +373,7 @@
 
 (define (gen-with-ctx gen ctx)
   (lambda (rand)
-    (context ctx
-             (sample gen rand))))
+    (set-ast-node-context (sample gen rand) ctx)))
 
 (define (gen-self-recoursive gen)
   (lambda (rand)

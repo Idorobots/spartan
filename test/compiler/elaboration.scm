@@ -35,7 +35,7 @@
             (let ((result (elaborate-unquoted node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
-              (assert (get-context result)
+              (assert (ast-node-context result)
                       "Bad `do` syntax")
               (assert-ast result
                           (body . ,exprs1)
@@ -60,7 +60,7 @@
                       (ast-node-location node))
               (assert (ast-node-location (ast-lambda-body result))
                       (ast-node-location node))
-              (assert (get-context (ast-lambda-body result))
+              (assert (ast-node-context (ast-lambda-body result))
                       "Bad `lambda` body syntax")
               (assert-ast result
                           (lambda ,formals1
@@ -125,7 +125,7 @@
                       (ast-node-location node))
               (assert (ast-node-location (ast-let-body result))
                       (ast-node-location node))
-              (assert (get-context (ast-let-body result))
+              (assert (ast-node-context (ast-let-body result))
                       "Bad `let` body syntax")
               (assert-ast result
                           (let ,bindings1
@@ -211,7 +211,7 @@
                       (ast-node-location node))
               (assert (ast-node-location (ast-letrec-body result))
                       (ast-node-location node))
-              (assert (get-context (ast-letrec-body result))
+              (assert (ast-node-context (ast-letrec-body result))
                       "Bad `letrec` body syntax")
               (assert-ast result
                           (letrec ,bindings1
@@ -328,7 +328,7 @@
               (assert (generated? (ast-def-value result)))
               (assert (ast-node-location (ast-lambda-body (ast-def-value result)))
                       (ast-node-location node))
-              (assert (get-context (ast-lambda-body (ast-def-value result)))
+              (assert (ast-node-context (ast-lambda-body (ast-def-value result)))
                       "Bad `define` function body syntax")
               (assert-ast result
                           (def ,name1

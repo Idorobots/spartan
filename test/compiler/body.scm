@@ -68,4 +68,4 @@
      (check ((ctx (gen-text (gen-integer 10 20)))
              (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx exprs)))
-            (assert (get-context (expand-body node)) ctx))))
+            (assert (ast-node-context (expand-body node)) ctx))))

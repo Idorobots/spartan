@@ -63,25 +63,28 @@
       ((if (generated? old) generated id)
        new)))
 
-(define (generated node)
-  (set-ast-node-generated node #t))
-
 (define (set-ast-node-generated node gen)
   (ast-set node 'generated gen))
 
-(define (generated? node)
+(define (ast-node-generated node)
   (ast-get* node 'generated #f))
 
-(define (context ctx node)
+(define (generated node)
+  (set-ast-node-generated node #t))
+
+(define (generated? node)
+  (ast-node-generated node))
+
+(define (set-ast-node-context node ctx)
   (ast-set node 'context ctx))
 
-(define (get-context* node default)
+(define (ast-node-context* node default)
   (ast-get* node 'context default))
 
-(define (get-context node)
-  (get-context* node '()))
+(define (ast-node-context node)
+  (ast-node-context* node '()))
 
-(define (set-ast-node-free-vars vars node)
+(define (set-ast-node-free-vars vars node) ;; FIXME Parameter order.
   (cond ((and (set-empty? vars)
               (set-empty? (ast-node-free-vars node)))
          node)
@@ -96,7 +99,7 @@
       (set (ast-symbol-value node))
       (ast-get* node 'free-vars (set))))
 
-(define (set-ast-node-bound-vars vars node)
+(define (set-ast-node-bound-vars vars node) ;; FIXME Parameter order.
   (if (and (set-empty? vars)
            (set-empty? (ast-node-bound-vars node)))
       node
@@ -207,8 +210,9 @@
 ;; Implicit body
 (define (make-body-node exprs ctx)
   (generated
-   (context ctx
-            (ast-node 'type 'body 'exprs exprs))))
+   (set-ast-node-context
+    (ast-node 'type 'body 'exprs exprs)
+    ctx)))
 
 (define (body-node? node)
   (is-type? node 'body))

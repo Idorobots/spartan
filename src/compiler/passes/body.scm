@@ -33,7 +33,7 @@
           (replace expr
                    (generated
                     (make-letrec-node (unique-bindings (map expand-body defs)
-                                                       (get-context expr))
+                                                       (ast-node-context expr))
                                       (reconstruct-simple-body
                                        (map expand-body non-defs)
                                        expr))))
@@ -44,7 +44,7 @@
     (raise-compilation-error
      ;; NOTE So that we might find more meaningful errors in the future passes.
      (walk-ast expand-body expr)
-     (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax"))))
+     (format "~a, not allowed in this context:" (ast-node-context* expr "Bad `define` syntax"))))
    (else
     (walk-ast expand-body expr))))
 
@@ -65,7 +65,7 @@
           exprs))
 
 (define (reconstruct-simple-body exprs parent)
-  (let ((ctx (get-context* parent "Bad `do` syntax")))
+  (let ((ctx (ast-node-context* parent "Bad `do` syntax")))
     (cond ((= (length exprs) 0)
            (raise-compilation-error
             parent
@@ -76,5 +76,4 @@
            (at (ast-node-location parent)
                (generated
                 ;; NOTE The context should be preserved.
-                (context ctx
-                         (make-do-node exprs))))))))
+                (set-ast-node-context (make-do-node exprs) ctx)))))))
