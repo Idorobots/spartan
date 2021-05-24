@@ -116,7 +116,7 @@
                              bindings)))
              ;; NOTE Nodes resulting from reordering are artificially created, hence they are marked as such.
              (generated
-              (if (recoursive? bs)
+              (if (recursive? bs)
                   (reconstruct-letrec-node parent bs acc)
                   (reconstruct-let-node parent bs acc)))))
          body

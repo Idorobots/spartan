@@ -119,7 +119,7 @@
             (assert (dce (set) node)
                     op)))
 
- (it "should not eta-reduce self-recoursive functions"
+ (it "should not eta-reduce self-recursive functions"
      (check ((args (gen-arg-list (gen-integer 0 5)))
              (var gen-valid-symbol)
              (op (gen-symbol-node var))

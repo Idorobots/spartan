@@ -216,16 +216,16 @@
                                                                                         (list b3)
                                                                                         body))))))))
 
- (it "should fix recoursive lambdas"
+ (it "should fix recursive lambdas"
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
-             (b1 (gen-self-recoursive (gen-binding-node n1 gen-valid-lambda-node)))
+             (b1 (gen-self-recursive (gen-binding-node n1 gen-valid-lambda-node)))
              (bindings (list b1))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
             (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
-                     ;; NOTE Recoursive lambda is fixed.
+                     ;; NOTE Recursive lambda is fixed.
                      (reconstruct-fix-node parent
                                            (list b1)
                                            body)))))

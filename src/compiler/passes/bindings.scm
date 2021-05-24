@@ -23,10 +23,11 @@
     (walk-ast (partial analyze-bindings #t) expr))
    ((binding _ ,val)
     (complexity (compute-complexity val)
-                (self-recoursive (and within-letrec?
-                                      (not (set-empty? (set-intersection (ast-node-bound-vars expr)
-                                                                         (ast-node-free-vars expr)))))
-                                 (walk-ast (partial analyze-bindings within-letrec?) expr))))
+                (set-ast-binding-self-recursive
+                 (walk-ast (partial analyze-bindings within-letrec?) expr)
+                 (and within-letrec?
+                      (not (set-empty? (set-intersection (ast-node-bound-vars expr)
+                                                         (ast-node-free-vars expr))))))))
    (else
     (walk-ast (partial analyze-bindings within-letrec?) expr))))
 

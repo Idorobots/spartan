@@ -375,7 +375,6 @@
   (lambda (rand)
     (set-ast-node-context (sample gen rand) ctx)))
 
-(define (gen-self-recoursive gen)
+(define (gen-self-recursive gen)
   (lambda (rand)
-    (self-recoursive #t
-                     (sample gen rand))))
+    (set-ast-binding-self-recursive (sample gen rand) #t)))

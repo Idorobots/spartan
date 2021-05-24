@@ -66,7 +66,7 @@
          (lambdas-builder (if (empty? lambdas)
                               id
                               (compose generated
-                                       (if (recoursive? lambdas)
+                                       (if (recursive? lambdas)
                                            (partial fix parent lambdas)
                                            (partial reconstruct-let-node parent lambdas)))))
          (complex-builder (if (empty? complex)

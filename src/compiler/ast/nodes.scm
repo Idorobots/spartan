@@ -252,17 +252,17 @@
 (define (get-complexity binding)
   (ast-get binding 'complexity))
 
-(define (self-recoursive rec? binding)
+(define (set-ast-binding-self-recursive binding rec?)
   (if rec?
-      (ast-set binding 'self-recoursive rec?)
+      (ast-set binding 'self-recursive rec?)
       binding))
 
-(define (get-self-recoursive binding)
-  (ast-get* binding 'self-recoursive #f))
+(define (ast-node-self-recursive binding)
+  (ast-get* binding 'self-recursive #f))
 
-(define (recoursive? bindings)
+(define (recursive? bindings)
   (or (> (length bindings) 1)
-      (some? get-self-recoursive bindings)))
+      (some? ast-node-self-recursive bindings)))
 
 ;; Let
 (define (make-let-node bindings body)

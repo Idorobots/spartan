@@ -375,18 +375,18 @@
               (assert (safe-symbol-value error) '<error>)))))
 
 (describe
- "recoursive?"
- (it "should correctly assess recoursivity of binding groups"
+ "recursive?"
+ (it "should correctly assess recursivity of binding groups"
      (check ((var gen-valid-symbol)
              (node (gen-symbol-node var))
              (rec gen-complex-node)
-             (rec-binding (gen-self-recoursive (gen-binding-node node rec)))
+             (rec-binding (gen-self-recursive (gen-binding-node node rec)))
              (non-rec-binding gen-valid-binding-node)
              (multiple-bindings (gen-binding-list (gen-integer 2 5))))
-            (assert (not (recoursive? '())))
-            (assert (not (recoursive? (list non-rec-binding))))
-            (assert (recoursive? (list rec-binding)))
-            (assert (recoursive? multiple-bindings)))))
+            (assert (not (recursive? '())))
+            (assert (not (recursive? (list non-rec-binding))))
+            (assert (recursive? (list rec-binding)))
+            (assert (recursive? multiple-bindings)))))
 
 (describe
  "ast-size"
