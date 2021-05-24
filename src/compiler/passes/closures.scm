@@ -2,6 +2,7 @@
 ;; Assumes macro-expanded code.
 
 (load-once "compiler/utils/utils.scm")
+(load-once "compiler/utils/set.scm")
 (load-once "compiler/utils/gensym.scm")
 
 (load-once "compiler/env.scm")
@@ -11,7 +12,7 @@
 
 (define closure-convert
   (pass (schema "closure-convert"
-                'globals a-list?
+                'globals a-set?
                 'ast (ast-subset? '(const symbol
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
@@ -39,8 +40,9 @@
                   (map (flip convert-closures globals)
                        (cons op args))))))
    ((lambda ,formals ,body)
-    (let ((free (set-difference (get-free-vars expr)
-                                globals)))
+    (let ((free (set->list
+                 (set-difference (get-free-vars expr)
+                                 globals))))
       (recreate-closure expr
                         ;; NOTE This is an anonymous function, so we can't really reuse it's names location for the environment.
                         (make-env (get-location expr) free '())
@@ -49,8 +51,9 @@
    ((fix ,bindings ,body)
     (let* ((loc (get-location expr))
            (env-var (at loc (make-gensym-node 'env)))
-           (free (set-difference (set-sum (map get-free-vars bindings))
-                                 globals))
+           (free (set->list
+                  (set-difference (set-sum (map get-free-vars bindings))
+                                  globals)))
            (env-subs (flip make-env-subs free))
            (closures (map (lambda (b)
                             (ast-update b 'val
@@ -66,7 +69,8 @@
            ;; NOTE So that we don't reference undefined (yet) variables.
            (actual-env (substitute-symbols
                         (make-subs
-                         (map (flip cons (compose make-nil get-location)) bound))
+                         (map (flip cons (compose make-nil get-location))
+                              (set->list bound)))
                         full-env))
            (env-binding (at loc (make-binding-node env-var actual-env)))
            (setters (make-env-setters full-env env-var free bound closure-vars))

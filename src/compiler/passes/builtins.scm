@@ -9,7 +9,7 @@
 
 (define inline-builtins
   (pass (schema "inline-builtins"
-                'globals a-list?
+                'globals a-set?
                 'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
@@ -34,20 +34,21 @@
                                          (free-vars
                                           (set-sum (map get-free-vars args))
                                           (make-primop-app-node b args)))))))
-                    (set-intersection
-                     builtins
-                     (apply set
-                            '(car cadr cdr cddr list cons append concat
-                                  equal? nil? not
-                                  * + - / = < <= > >=
-                                  remainder quotient modulo zero?
-                                  ref deref assign!
-                                  self send spawn
-                                  assert! signal! retract! select notify-whenever
-                                  display newline debug
-                                  ;; NOTE These ones use the continuations, so they cannot be inlined.
-                                  ;; call/current-continuation call/reset call/shift call/handler raise recv
-                                  ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
-                                  ;; sleep random
-                                  )))))
+                    (set->list
+                     (set-intersection
+                      builtins
+                      (apply set
+                             '(car cadr cdr cddr list cons append concat
+                                   equal? nil? not
+                                   * + - / = < <= > >=
+                                   remainder quotient modulo zero?
+                                   ref deref assign!
+                                   self send spawn
+                                   assert! signal! retract! select notify-whenever
+                                   display newline debug
+                                   ;; NOTE These ones use the continuations, so they cannot be inlined.
+                                   ;; call/current-continuation call/reset call/shift call/handler raise recv
+                                   ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
+                                   ;; sleep random
+                                   ))))))
               expr))

@@ -11,6 +11,7 @@
 (define validate
   (pass (schema "validate"
                 'errors a-list?
+                'globals a-set?
                 'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
                                     primop-app <error>)))
@@ -28,8 +29,7 @@
                 'errors (cadr result))))))
 
 (define (get-undefined-vars expr globals)
-  (set-difference (get-free-vars expr)
-                  (apply set globals)))
+  (set-difference (get-free-vars expr) globals))
 
 (define (validate-ast undefined unused used-before-def expr)
   (ast-case expr

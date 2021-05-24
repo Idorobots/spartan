@@ -60,7 +60,7 @@
   (foldl (lambda (var subs)
            (hash-remove subs var))
          subs
-         vars))
+         (set->list vars)))
 
 (define (apply-sub subs name value default)
   (if (hash-has-key? subs name)

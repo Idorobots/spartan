@@ -54,6 +54,10 @@
   (unless (list? val)
     (schema-validation-error "Not a list" val)))
 
+(define (a-set? val)
+  (unless (set? val)
+    (schema-validation-error "Not a set" val)))
+
 (define (ast-subset? types)
   (lambda (expr)
     (let ((t (get-type expr)))

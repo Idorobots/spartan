@@ -77,15 +77,16 @@
         deps)))
 
 (define (derive-dependencies expr)
-  (let ((vars (apply set (get-bound-vars expr))))
+  (let ((vars (get-bound-vars expr)))
     (foldl append
            '()
            (map (lambda (b)
                   (map (lambda (e)
                          ;; NOTE So that we can process somewhat malformed expressions.
                          (list (safe-symbol-value (ast-binding-var b)) e))
-                       (set-intersection vars
-                                         (get-free-vars (ast-binding-val b)))))
+                       (set->list
+                        (set-intersection vars
+                                          (get-free-vars (ast-binding-val b))))))
                 (ast-letrec-bindings expr)))))
 
 (define (derive-ordering expr)
@@ -104,7 +105,7 @@
 (define (scc-reorder dep-graph expr)
   (let ((bindings (ast-letrec-bindings expr))
         (body (ast-letrec-body expr))
-        (scc (scc (get-bound-vars expr)
+        (scc (scc (set->list (get-bound-vars expr))
                   dep-graph)))
     (if (empty? scc)
         (reconstruct-let-node expr bindings body)

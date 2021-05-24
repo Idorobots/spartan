@@ -125,11 +125,11 @@
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
+             (val (gen-with-fv gen-non-value-node val-fv))
              (b (gen-binding-node var val))
              (bindings (list b))
              (body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v))))
             (assert (let-ref-assign parent bindings body)
                     (generated
@@ -160,7 +160,7 @@
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
+             (val (gen-with-fv gen-non-value-node val-fv))
              (b (gen-binding-node var val))
              (bindings (list b))
              (parent (gen-with-bv (gen-letrec-node bindings var) (set v))))
@@ -186,7 +186,7 @@
                                                                  'assign!
                                                                  (list var
                                                                        val))))))
-                                                        (derefy (set v)
+                                                        (derefy (list v)
                                                                 var))))))))))))
 
 (describe

@@ -100,10 +100,10 @@
      (check ((env-var gen-valid-symbol-node)
              (loc gen-location)
              (closures (gen-arg-list (gen-integer 1 2)))
-             (bound (apply set (map ast-symbol-value closures)))
+             (bound (map ast-symbol-value closures))
              (free bound))
             (let* ((env (make-env loc free closures))
-                   (result (make-env-setters env env-var free bound closures)))
+                   (result (make-env-setters env env-var free (apply set bound) closures)))
               (assert (length result) (length closures))
               (map (lambda (setter var)
                      (assert-ast setter
@@ -117,11 +117,11 @@
      (check ((env-var gen-valid-symbol-node)
              (loc gen-location)
              (closures (gen-arg-list (gen-integer 3 5)))
-             (bound (apply set (map ast-symbol-value closures)))
+             (bound (map ast-symbol-value closures))
              (extra-free (gen-list (gen-integer 0 5) gen-valid-symbol))
-             (free (apply set (append bound extra-free))))
+             (free (append bound extra-free)))
             (let* ((env (make-env loc free closures))
-                   (result (make-env-setters env env-var free bound closures)))
+                   (result (make-env-setters env env-var free (apply set bound) closures)))
               (assert (length result) (length closures))
               (map (lambda (setter var)
                      (assert-ast setter
@@ -136,7 +136,7 @@
  "closure-convert"
  (it "should convert application correctly"
      (check ((app gen-valid-app-node))
-            (let ((result (convert-closures app '())))
+            (let ((result (convert-closures app (set))))
               (assert-ast result
                           (primop-app '&apply ,op . ,args)
                           (assert op (ast-app-op app))
@@ -147,7 +147,7 @@
  (it "should convert lambdas correctly"
      (check ((node gen-valid-lambda-node))
             (gensym-reset!)
-            (let ((result (convert-closures node '())))
+            (let ((result (convert-closures node (set))))
               (assert-ast result
                           (primop-app '&make-closure
                                       (const (list))
@@ -162,7 +162,7 @@
              (var (ast-symbol-value body))
              (node (gen-with-fv (gen-lambda-node (list arg) body) (set var))))
             (gensym-reset!)
-            (let ((result (convert-closures node '())))
+            (let ((result (convert-closures node (set))))
               (assert-ast result
                           (primop-app '&make-closure
                                       ,arg
@@ -173,44 +173,57 @@
                       (get-location node))))
      (check ((nodes (gen-arg-list 2))
              (free-vars (apply set (map ast-symbol-value nodes)))
-             ;; NOTE These nodes need to be sorted, or othrwise the order of cars & cdrs is unpredictable.
-             (body (apply gen-specific-do-node (sort nodes
-                                                     (lambda (a b)
-                                                       (symbol<? (ast-symbol-value a)
-                                                                 (ast-symbol-value b))))))
+             (body (apply gen-specific-do-node nodes))
              (node (gen-with-fv (gen-lambda-node '() body) free-vars)))
             (gensym-reset!)
-            (let ((result (convert-closures node '())))
+            (let ((result (convert-closures node (set))))
               (assert-ast result
                           (primop-app '&make-closure
                                       (primop-app 'cons . ,args)
                                       (lambda ('env1)
-                                        (do (primop-app 'car 'env1)
-                                            (primop-app 'cdr 'env1))))
-                          (assert (map ast-symbol-value args) free-vars))
+                                        ;; NOTE The order of cars and cdrs is unpredictable.
+                                        (do (primop-app ,first 'env1)
+                                            (primop-app ,second 'env1))))
+                          (assert (apply set (map ast-symbol-value args)) free-vars)
+                          (if (equal? (ast-symbol-value first) 'car)
+                              (begin (assert (ast-symbol-value second) 'cdr)
+                                     (assert (map ast-symbol-value args)
+                                             (map ast-symbol-value nodes)))
+                              (begin (assert (ast-symbol-value second) 'car)
+                                     (assert (map ast-symbol-value args)
+                                             (map ast-symbol-value (reverse nodes))))))
               (assert (get-location result)
                       (get-location node))))
      (check ((nodes (gen-arg-list (gen-integer 3 5)))
              (free-vars (apply set (map ast-symbol-value nodes)))
-             ;; NOTE These nodes need to be sorted, or othrwise the order of cars & cdrs is unpredictable.
-             (body (apply gen-specific-do-node (sort nodes
-                                                     (lambda (a b)
-                                                       (symbol<? (ast-symbol-value a)
-                                                                 (ast-symbol-value b))))))
+             (body (apply gen-specific-do-node nodes))
              (node (gen-with-fv (gen-lambda-node '() body) free-vars)))
             (gensym-reset!)
-            (let ((result (convert-closures node '())))
+            (let ((result (convert-closures node (set))))
               (assert-ast result
                           (primop-app '&make-closure
                                       (primop-app '&make-env . ,args)
                                       (lambda ('env1)
-                                        (do (primop-app '&env-ref 'env1 (const '0))
-                                            (primop-app '&env-ref 'env1 (const '1))
-                                            (primop-app '&env-ref 'env1 (const '2))
+                                        ;; NOTE The order of the offsets is unpredictable as well.
+                                        (do (primop-app '&env-ref 'env1 ,first)
+                                            (primop-app '&env-ref 'env1 ,second)
+                                            (primop-app '&env-ref 'env1 ,third)
                                             .
                                             ,rest)))
-                          (assert (map ast-symbol-value args) free-vars)
-                          (assert (length rest) (- (length free-vars) 3)))
+                          (assert (apply set (map ast-symbol-value args)) free-vars)
+                          (let ((first-val (ast-number-value (ast-const-value first)))
+                                (second-val (ast-number-value (ast-const-value second)))
+                                (third-val (ast-number-value (ast-const-value third))))
+                            (assert (not (empty? (member first-val '(0 1 2 3 4)))))
+                            (assert (not (empty? (member second-val '(0 1 2 3 4)))))
+                            (assert (not (empty? (member third-val '(0 1 2 3 4)))))
+                            (assert (ast-symbol-value (list-ref nodes 0))
+                                    (ast-symbol-value (list-ref args first-val)))
+                            (assert (ast-symbol-value (list-ref nodes 1))
+                                    (ast-symbol-value (list-ref args second-val)))
+                            (assert (ast-symbol-value (list-ref nodes 2))
+                                    (ast-symbol-value (list-ref args third-val))))
+                          (assert (length rest) (- (length nodes) 3)))
               (assert (get-location result)
                       (get-location node)))))
 
@@ -265,10 +278,7 @@
              (arg1 gen-valid-symbol-node)
              (lambda1 (gen-lambda-node (list arg1) var1))
              (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
-             ;; NOTE This symbol needs to be lexicographically behind sym1 to make the test predictable.
-             (sym2 (string->symbol
-                    (string-append (symbol->string sym1)
-                                   "-2")))
+             (sym2 gen-valid-symbol)
              (var2 (gen-symbol-node sym2))
              (arg2 gen-valid-symbol-node)
              (lambda2 (gen-lambda-node (list arg2) var2))
@@ -285,12 +295,12 @@
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env2 ,converted-arg1)
-                                                         (primop-app 'car 'env2))))
+                                                         (primop-app ,first 'env2))))
                                   (binding ,converted-var2
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env3 ,converted-arg2)
-                                                         (primop-app 'cdr 'env3)))))
+                                                         (primop-app ,second 'env3)))))
                               (do (primop-app '&set-closure-env!
                                               ,converted-var3
                                               (primop-app 'cons
@@ -302,18 +312,22 @@
                                                           ,converted-var7
                                                           ,converted-var8))
                                 ,converted-body)))
-                          (map (lambda (var)
-                                 (assert var var1))
-                               (list converted-var1
-                                     converted-var3
-                                     converted-var4
-                                     converted-var7))
-                          (map (lambda (var)
-                                 (assert var var2))
-                               (list converted-var2
-                                     converted-var5
-                                     converted-var6
-                                     converted-var8))
+                          (assert converted-var1 var1)
+                          (assert converted-var2 var2)
+                          (assert converted-var3 var1)
+                          (assert converted-var6 var2)
+                          ;; NOTE The order of the consed values is unpredictable.
+                          (if (equal? (ast-symbol-value first) 'car)
+                              (begin (assert (ast-symbol-value second) 'cdr)
+                                     (assert converted-var4 var1)
+                                     (assert converted-var5 var2)
+                                     (assert converted-var7 var1)
+                                     (assert converted-var8 var2))
+                              (begin (assert (ast-symbol-value second) 'car)
+                                     (assert converted-var4 var2)
+                                     (assert converted-var5 var1)
+                                     (assert converted-var7 var2)
+                                     (assert converted-var8 var1)))
                           (assert converted-arg1 arg1)
                           (assert converted-arg2 arg2)
                           (assert converted-body body))
@@ -321,70 +335,70 @@
                       (get-location node))
               (assert (generated? result))))
 
-     (define (add-suffix symbol suffix)
-       (string->symbol
-        (string-append (symbol->string symbol)
-                       suffix)))
-
      (check ((sym1 gen-valid-symbol)
              (var1 (gen-symbol-node sym1))
              (arg1 gen-valid-symbol-node)
              (lambda1 (gen-lambda-node (list arg1) var1))
              (b1 (gen-with-fv-bv (gen-binding-node var1 lambda1) (set sym1) (set sym1)))
-             ;; NOTE This symbol needs to be lexicographically behind sym1 to make the test predictable.
-             (sym2 (add-suffix sym1 "-2"))
+             (sym2 gen-valid-symbol)
              (var2 (gen-symbol-node sym2))
              (arg2 gen-valid-symbol-node)
              (lambda2 (gen-lambda-node (list arg2) var2))
              (b2 (gen-with-fv-bv (gen-binding-node var2 lambda2) (set sym2) (set sym2)))
-             ;; NOTE This symbol needs to be lexicographically behind sym2 to make the test predictable.
-             (sym3 (add-suffix sym1 "-3"))
+             (sym3 gen-valid-symbol)
              (var3 (gen-symbol-node sym3))
              (arg3 gen-valid-symbol-node)
              (lambda3 (gen-lambda-node (list arg3) var3))
-             ;; NOTE This symbol needs to be lexicographically behind sym3 to make the test predictable.
-             (extra-fv (add-suffix sym1 "-3-fv"))
+             (extra-fv gen-valid-symbol)
              (b3 (gen-with-fv-bv (gen-binding-node var3 lambda3) (set sym3 extra-fv) (set sym3)))
              (body gen-simple-node)
              (node (gen-with-bv (gen-fix-node (list b1 b2 b3) body) (set sym1 sym2 sym3))))
             (gensym-reset!)
             (let ((result (convert-closures node (set))))
               (assert-ast result
-                          (let ((binding 'env1 (primop-app '&make-env
-                                                           (const (list))
-                                                           (const (list))
-                                                           (const (list))
-                                                           ,converted-extra-fv)))
+                          (let ((binding 'env1 (primop-app '&make-env . ,converted-args)))
                             (let ((binding ,converted-var1
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env2 ,converted-arg1)
-                                                         (primop-app '&env-ref 'env2 (const '0)))))
+                                                         (primop-app '&env-ref 'env2 ,first1))))
                                   (binding ,converted-var2
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env3 ,converted-arg2)
-                                                         (primop-app '&env-ref 'env3 (const '1)))))
+                                                         (primop-app '&env-ref 'env3 ,second1))))
                                   (binding ,converted-var3
                                            (primop-app '&make-closure
                                                        'env1
                                                        (lambda ('env4 ,converted-arg3)
-                                                         (primop-app '&env-ref 'env4 (const '2))))))
-                              (do (primop-app '&set-env! 'env1 (const '0) ,converted-var4)
-                                  (primop-app '&set-env! 'env1 (const '1) ,converted-var5)
-                                  (primop-app '&set-env! 'env1 (const '2) ,converted-var6)
+                                                         (primop-app '&env-ref 'env4 ,third1)))))
+                              (do (primop-app '&set-env! 'env1 ,first2 ,converted-var4)
+                                  (primop-app '&set-env! 'env1 ,second2 ,converted-var5)
+                                  (primop-app '&set-env! 'env1 ,third2 ,converted-var6)
                                   ,converted-body)))
                           (assert converted-var1 var1)
-                          (assert converted-var4 var1)
                           (assert converted-var2 var2)
-                          (assert converted-var5 var2)
                           (assert converted-var3 var3)
-                          (assert converted-var6 var3)
-                          (assert (ast-symbol-value converted-extra-fv) extra-fv)
                           (assert converted-arg1 arg1)
                           (assert converted-arg2 arg2)
                           (assert converted-arg3 arg3)
-                          (assert converted-body body))
+                          (assert converted-body body)
+                          ;; NOTE The order of these is unpredictable.
+                          (map (lambda (i v)
+                                 (cond ((equal? (ast-number-value (ast-const-value i))
+                                                (ast-number-value (ast-const-value first1)))
+                                        (assert v var1))
+                                       ((equal? (ast-number-value (ast-const-value i))
+                                                (ast-number-value (ast-const-value second1)))
+                                        (assert v var2))
+                                       ((equal? (ast-number-value (ast-const-value i))
+                                                (ast-number-value (ast-const-value third1)))
+                                        (assert v var3))))
+                               (list first2 second2 third2)
+                               (list converted-var4 converted-var5 converted-var6))
+                          ;; NOTE We expect three empty lists and one extra-fv symbol.
+                          (assert (length (filter const-node? converted-args)) 3)
+                          (assert (ast-symbol-value (car (filter symbol-node? converted-args))) extra-fv))
               (assert (get-location result)
                       (get-location node))
               (assert (generated? result))))))

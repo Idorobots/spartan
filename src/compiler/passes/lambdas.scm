@@ -11,7 +11,6 @@
 
 (define inline-lambdas
   (pass (schema "inline-lambdas"
-                'globals a-list?
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial lambda-inlining '())))))

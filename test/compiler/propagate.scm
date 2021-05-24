@@ -4,7 +4,7 @@
  "reconstruct-letrec-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -37,7 +37,7 @@
  "reconstruct-let-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-complex-node (apply set body-fv)))
+             (body (gen-with-fv gen-complex-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -70,7 +70,7 @@
  "reconstruct-fix-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)

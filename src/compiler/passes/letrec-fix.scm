@@ -86,7 +86,7 @@
 (define (let-ref-assign parent bindings body)
   (if (empty? bindings)
       body
-      (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
+      (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
                           (at (get-location b)
                               (complexity
