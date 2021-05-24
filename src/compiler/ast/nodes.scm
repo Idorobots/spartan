@@ -172,6 +172,9 @@
 (define (ast-list-values expr)
   (ast-get expr 'value))
 
+(define (set-ast-list-values expr values)
+  (ast-set expr 'value values))
+
 (define (ast-list-car expr)
   (list-ref (ast-get expr 'value) 0))
 
@@ -191,11 +194,20 @@
 (define (ast-if-condition node)
   (ast-get node 'condition))
 
+(define (set-ast-if-condition node condition)
+  (ast-set node 'condition condition))
+
 (define (ast-if-then node)
   (ast-get node 'then))
 
+(define (set-ast-if-then node then)
+  (ast-set node 'then then))
+
 (define (ast-if-else node)
   (ast-get node 'else))
+
+(define (set-ast-if-else node else)
+  (ast-set node 'else else))
 
 ;; Do
 (define (make-ast-do exprs)
@@ -206,6 +218,9 @@
 
 (define (ast-do-exprs node)
   (ast-get node 'exprs))
+
+(define (set-ast-do-exprs node exprs)
+  (ast-set node 'exprs exprs))
 
 ;; Implicit body
 (define (make-ast-body exprs ctx)
@@ -220,6 +235,9 @@
 (define (ast-body-exprs node)
   (ast-get node 'exprs))
 
+(define (set-ast-body-exprs node exprs)
+  (ast-set node 'exprs exprs))
+
 ;; Lambda
 (define (make-ast-lambda formals body)
   (ast-node 'type 'lambda 'formals formals 'body body))
@@ -230,8 +248,14 @@
 (define (ast-lambda-body node)
   (ast-get node 'body))
 
+(define (set-ast-lambda-body node body)
+  (ast-set node 'body body))
+
 (define (ast-lambda-formals node)
   (ast-get node 'formals))
+
+(define (set-ast-lambda-formals node formals)
+  (ast-set node 'formals formals))
 
 ;; Binding
 (define (make-ast-binding var val)
@@ -243,8 +267,14 @@
 (define (ast-binding-var binding)
   (ast-get binding 'var))
 
+(define (set-ast-binding-var binding var)
+  (ast-set binding 'var var))
+
 (define (ast-binding-val binding)
   (ast-get binding 'val))
+
+(define (set-ast-binding-val binding val)
+  (ast-set binding 'val val))
 
 (define (set-ast-binding-complexity binding complexity)
   (ast-set binding 'complexity complexity))
@@ -274,8 +304,14 @@
 (define (ast-let-bindings node)
   (ast-get node 'bindings))
 
+(define (set-ast-let-bindings node bindings)
+  (ast-set node 'bindings bindings))
+
 (define (ast-let-body node)
   (ast-get node 'body))
+
+(define (set-ast-let-body node body)
+  (ast-set node 'body body))
 
 ;; Letrec
 (define (make-ast-letrec bindings body)
@@ -290,6 +326,12 @@
 (define (ast-letrec-body node)
   (ast-get node 'body))
 
+(define (set-ast-letrec-bindings node bindings)
+  (ast-set node 'bindings bindings))
+
+(define (set-ast-letrec-body node body)
+  (ast-set node 'body body))
+
 ;; Fix
 (define (make-ast-fix bindings body)
   (ast-node 'type 'fix 'bindings bindings 'body body))
@@ -303,31 +345,65 @@
 (define (ast-fix-body node)
   (ast-get node 'body))
 
-;; Quotation
+(define (set-ast-fix-bindings node bindings)
+  (ast-set node 'bindings bindings))
+
+(define (set-ast-fix-body node body)
+  (ast-set node 'body body))
+
+;; Quote
 (define (make-ast-quote value)
   (ast-node 'type 'quote 'value value))
 
 (define (ast-quote? node)
   (is-type? node 'quote))
 
+(define (ast-quote-expr node)
+  (ast-get node 'value))
+
+(define (set-ast-quote-expr node expr)
+  (ast-set node 'value expr))
+
+;; Quasiquote
 (define (make-ast-quasiquote value)
   (ast-node 'type 'quasiquote 'value value))
 
 (define (ast-quasiquote? node)
   (is-type? node 'quasiquote))
 
+(define (ast-quasiquote-expr node)
+  (ast-get node 'value))
+
+(define (set-ast-quasiquote-expr node expr)
+  (ast-set node 'value expr))
+
+;; Unquote
 (define (make-ast-unquote value)
   (ast-node 'type 'unquote 'value value))
 
 (define (ast-unquote? node)
   (is-type? node 'unquote))
 
+(define (ast-unquote-expr node)
+  (ast-get node 'value))
+
+(define (set-ast-unquote-expr node expr)
+  (ast-set node 'value expr))
+
+;; Unquote splicing
 (define (make-ast-unquote-splicing value)
   (ast-node 'type 'unquote-splicing 'value value))
 
 (define (ast-unquote-splicing? node)
   (is-type? node 'unquote-splicing))
 
+(define (ast-unquote-splicing-expr node)
+  (ast-get node 'value))
+
+(define (set-ast-unquote-splicing-expr node expr)
+  (ast-set node 'value expr))
+
+;; FIXME This should be removed
 (define (ast-quoted-expr node)
   (ast-get node 'value))
 
@@ -342,6 +418,9 @@
 (define (ast-const-value node)
   (ast-get node 'value))
 
+(define (set-ast-const-value node value)
+  (ast-set node 'value value))
+
 ;; Definition
 (define (make-ast-def name value)
   (ast-node 'type 'def 'name name 'value value))
@@ -352,8 +431,14 @@
 (define (ast-def-name node)
   (ast-get node 'name))
 
+(define (set-ast-def-name node name)
+  (ast-set node 'name name))
+
 (define (ast-def-value node)
   (ast-get node 'value))
+
+(define (set-ast-def-value node value)
+  (ast-set node 'value value))
 
 ;; Application
 (define (make-ast-app op args)
@@ -365,8 +450,14 @@
 (define (ast-app-op node)
   (ast-get node 'op))
 
+(define (set-ast-app-op node op)
+  (ast-set node 'op op))
+
 (define (ast-app-args node)
   (ast-get node 'args))
+
+(define (set-ast-app-args node args)
+  (ast-set node 'args args))
 
 ;; Primop application
 (define (make-ast-primop-app op args)
@@ -381,6 +472,9 @@
 
 (define (ast-primop-app-args node)
   (ast-get node 'args))
+
+(define (set-ast-primop-app-args node args)
+  (ast-set node 'args args))
 
 ;; Parse location marker
 (define (make-ast-location)
@@ -398,3 +492,6 @@
 
 (define (ast-error-expr node)
   (ast-get node 'expr))
+
+(define (set-ast-error-expr node expr)
+  (ast-set node 'expr expr))

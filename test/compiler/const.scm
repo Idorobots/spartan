@@ -36,10 +36,11 @@
                     node)))
 
  (it "should turn quoted values into plain old data inside of quote"
-     (check ((quoted (gen-one-of (gen-quote-node gen-non-const-node)
-                                 (gen-quasiquote-node gen-non-const-node)
-                                 (gen-unquote-node gen-non-const-node)
-                                 (gen-unquote-splicing-node gen-non-const-node)))
+     (check ((non-const gen-non-const-node)
+             (quoted (gen-one-of (gen-quote-node non-const)
+                                 (gen-quasiquote-node non-const)
+                                 (gen-unquote-node non-const)
+                                 (gen-unquote-splicing-node non-const)))
              (list (gen-specific-list-node gen-non-const-node quoted gen-non-const-node))
              (node (gen-quote-node list)))
             (assert-ast (wrap-constants node)
@@ -49,5 +50,5 @@
                                ,simple-node3))
                         (assert simple-node1 (ast-list-nth list 0))
                         (assert (ast-symbol-value quoted-symbol) (ast-node-type quoted))
-                        (assert simple-node2 (ast-quoted-expr quoted))
+                        (assert simple-node2 non-const)
                         (assert simple-node3 (ast-list-nth list 2))))))

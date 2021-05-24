@@ -44,6 +44,15 @@
   (vector-set! array index value))
 
 ;; Other stuff
+(define-syntax ->
+  (syntax-rules ()
+    ((-> last)
+     last)
+    ((-> expr (op args ...) rest ...)
+     (-> (op expr args ...) rest ...))
+    ((-> expr op rest ...)
+     (-> (op expr) rest ...))))
+
 (define-syntax do
   (syntax-rules ()
     ((do expression ...)

@@ -26,7 +26,7 @@
   (case (ast-node-type expr)
     ((quote) expr)
     ((quasiquote)
-     (expand-no-splicing (ast-quoted-expr expr)
+     (expand-no-splicing (ast-quasiquote-expr expr)
                          expr))
     ((unquote unquote-splicing)
      (raise-compilation-error
@@ -46,7 +46,8 @@
   (case (ast-node-type expr)
     ((quote number string) expr)
     ((quasiquote) (expand-quasiquote expr))
-    ((unquote unquote-splicing) (ast-quoted-expr expr))
+    ((unquote) (ast-unquote-expr expr))
+    ((unquote-splicing) (ast-unquote-splicing-expr expr))
     ((symbol) (reconstruct-quoted-value
                expr
                context))
