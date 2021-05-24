@@ -13,7 +13,7 @@
 (define continuation-passing-convert
   (pass (schema "continuation-passing-convert"
                 'ast (ast-subset? '(const symbol
-                                    if do let fix binding lambda app primop-app)))
+                                          if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip cpc (make-identity-continuation))))))
 
@@ -34,35 +34,35 @@
 
 (define (cpc-if expr kont)
   (let* ((loc (ast-node-location expr))
-         (ct (at loc (make-gensym-node 'cont)))
-         (value (at loc (make-gensym-node 'value)))
+         (ct (at loc (make-ast-gensym 'cont)))
+         (value (at loc (make-ast-gensym 'value)))
          (rest (lambda (v)
                  (at loc
-                     (make-yield-node ct v)))))
+                     (make-ast-yield ct v)))))
     (cpc (ast-if-condition expr)
          (lambda (condition)
            (at loc
-               (make-let-1-node ct
-                                (at loc
-                                    (make-cont-node value (kont value)))
-                                (replace expr
-                                         (make-if-node condition
-                                                       (cpc (ast-if-then expr) rest)
-                                                       (cpc (ast-if-else expr) rest)))))))))
+               (make-ast-let-1 ct
+                               (at loc
+                                   (make-ast-cont value (kont value)))
+                               (replace expr
+                                        (make-ast-if condition
+                                                     (cpc (ast-if-then expr) rest)
+                                                     (cpc (ast-if-else expr) rest)))))))))
 
-(define (make-let-1-node var val body)
+(define (make-ast-let-1 var val body)
   (generated
-   (make-let-node (list (at (ast-node-location var)
-                            (generated
-                             (make-binding-node var val))))
-                  body)))
+   (make-ast-let (list (at (ast-node-location var)
+                           (generated
+                            (make-ast-binding var val))))
+                 body)))
 
-(define (make-cont-node arg body)
+(define (make-ast-cont arg body)
   (generated
-   (make-lambda-node (list arg) body)))
+   (make-ast-lambda (list arg) body)))
 
-(define (make-yield-node cont hole)
-  (make-primop-app-node '&yield-cont (list cont hole)))
+(define (make-ast-yield cont hole)
+  (make-ast-primop-app '&yield-cont (list cont hole)))
 
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)
@@ -80,60 +80,60 @@
 
 (define (cpc-lambda expr kont)
   (let* ((loc (ast-node-location expr))
-         (ct (at loc (make-gensym-node 'cont))))
+         (ct (at loc (make-ast-gensym 'cont))))
     (kont (replace expr
-                   (make-lambda-node (append (ast-lambda-formals expr)
-                                             (list ct))
-                                     (cpc (ast-lambda-body expr)
-                                          (lambda (s)
-                                            (at loc
-                                                (make-yield-node ct s)))))))))
+                   (make-ast-lambda (append (ast-lambda-formals expr)
+                                            (list ct))
+                                    (cpc (ast-lambda-body expr)
+                                         (lambda (s)
+                                           (at loc
+                                               (make-ast-yield ct s)))))))))
 
 (define (cpc-primop-app expr kont)
   (let* ((args (ast-primop-app-args expr))
          (loc (ast-node-location expr))
-         (value (at loc (make-gensym-node 'value))))
+         (value (at loc (make-ast-gensym 'value))))
     (cpc-sequence args
                   (lambda (args)
                     ;; NOTE The let could be ommited for non-side-effecting primops, but this way presents more
                     ;; NOTE opportunities for common subexpression elimination.
                     (at loc
-                        (make-let-1-node value (ast-update expr 'args (constantly args))
-                                         (kont value)))))))
+                        (make-ast-let-1 value (ast-update expr 'args (constantly args))
+                                        (kont value)))))))
 
 (define (cpc-app expr kont)
   (let* ((loc (ast-node-location expr))
-         (value (at loc (make-gensym-node 'value)))
+         (value (at loc (make-ast-gensym 'value)))
          (cont (at loc
-                   (make-cont-node value (kont value))))
+                   (make-ast-cont value (kont value))))
          (args (ast-app-args expr)))
     (cpc (ast-app-op expr)
          (lambda (op)
            (cpc-sequence args
                          (lambda (args)
                            (replace expr
-                                    (make-app-node op
-                                                   (append args
-                                                           (list cont))))))))))
+                                    (make-ast-app op
+                                                  (append args
+                                                          (list cont))))))))))
 
 (define (cpc-fix expr kont)
   (replace expr
-           (make-fix-node (map (lambda (b)
-                                 ;; NOTE These are guaranteed to be pure lambda expressions,
-                                 ;; NOTE so no need to propagate the current continuation there.
-                                 (ast-update b 'val (flip cpc (make-identity-continuation))))
-                               (ast-fix-bindings expr))
-                          (cpc (ast-fix-body expr)
-                               kont))))
+           (make-ast-fix (map (lambda (b)
+                                ;; NOTE These are guaranteed to be pure lambda expressions,
+                                ;; NOTE so no need to propagate the current continuation there.
+                                (ast-update b 'val (flip cpc (make-identity-continuation))))
+                              (ast-fix-bindings expr))
+                         (cpc (ast-fix-body expr)
+                              kont))))
 
 (define (cpc-let expr kont)
   (let ((bindings (ast-let-bindings expr)))
     (cpc-sequence (map ast-binding-val (ast-let-bindings expr))
                   (lambda (vals)
                     (replace expr
-                             (make-let-node (map (lambda (var val)
-                                                   (make-binding-node var val))
-                                                 (map ast-binding-var bindings)
-                                                 vals)
-                                            (cpc (ast-let-body expr)
-                                                 kont)))))))
+                             (make-ast-let (map (lambda (var val)
+                                                  (make-ast-binding var val))
+                                                (map ast-binding-var bindings)
+                                                vals)
+                                           (cpc (ast-let-body expr)
+                                                kont)))))))

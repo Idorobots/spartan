@@ -58,7 +58,7 @@
 (define (reconstruct-quoted-value expr context)
   (at (ast-node-location context)
       (generated
-       (make-quote-node
+       (make-ast-quote
         expr))))
 
 (define (reconstruct-quoted-list exprs context)
@@ -66,7 +66,7 @@
       (reconstruct-quoted-value
        (at (ast-node-location context)
            (generated
-            (make-list-node '())))
+            (make-ast-list '())))
        context)
       ((if (ast-unquote-splicing? (car exprs))
            make-concat
@@ -77,8 +77,8 @@
 
 (define (make-concat a b context)
   (at (ast-node-location context)
-      (make-primop-app-node 'concat (list a b))))
+      (make-ast-primop-app 'concat (list a b))))
 
 (define (make-cons a b context)
   (at (ast-node-location context)
-      (make-primop-app-node 'cons (list a b))))
+      (make-ast-primop-app 'cons (list a b))))

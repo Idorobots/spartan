@@ -33,7 +33,7 @@
                                          ;; NOTE The op no longer needs to be stored in free vars.
                                          (set-ast-node-free-vars
                                           (set-sum (map ast-node-free-vars args))
-                                          (make-primop-app-node b args)))))))
+                                          (make-ast-primop-app b args)))))))
                     (set->list
                      (set-intersection
                       builtins

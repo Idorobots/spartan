@@ -19,11 +19,11 @@
   (case (ast-node-type expr)
     ((quote)
      (replace expr
-              (make-const-node
+              (make-ast-const
                (plainify-quote (ast-quoted-expr expr)))))
    ((number string)
     (replace expr
-             (make-const-node expr)))
+             (make-ast-const expr)))
    (else
     (walk-ast wrap-constants expr))))
 
@@ -33,10 +33,10 @@
     ;; NOTE Within `quote` all the semantic AST nodes have to be dumbed down to plain old data.
      (replace expr
               (generated
-               (make-list-node
+               (make-ast-list
                 (list (at (ast-node-location expr)
                           (generated
-                           (make-symbol-node (ast-node-type expr))))
+                           (make-ast-symbol (ast-node-type expr))))
                       (ast-quoted-expr expr))))))
     (else
      (walk-ast plainify-quote expr))))

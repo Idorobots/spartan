@@ -15,7 +15,7 @@
                               (at (ast-node-location var)
                                   (set-ast-node-free-vars (set fv)
                                                           (set-ast-node-bound-vars (set sym)
-                                                                                   (make-binding-node var val)))))
+                                                                                   (make-ast-binding var val)))))
                             let-bv
                             vars
                             vals
@@ -48,7 +48,7 @@
                               (at (ast-node-location var)
                                   (set-ast-node-free-vars (set fv)
                                                           (set-ast-node-bound-vars (set sym)
-                                                                                   (make-binding-node var val)))))
+                                                                                   (make-ast-binding var val)))))
                             let-bv
                             vars
                             vals
@@ -81,7 +81,7 @@
                               (at (ast-node-location var)
                                   (set-ast-node-free-vars (set fv)
                                                           (set-ast-node-bound-vars (set sym)
-                                                                                   (make-binding-node var val)))))
+                                                                                   (make-ast-binding var val)))))
                             let-bv
                             vars
                             vals
@@ -114,7 +114,7 @@
              (lambda (bindings subs)
                (extend-subs (map (lambda (binding)
                                    (cons (ast-symbol-value (ast-binding-var binding))
-                                         (make-number-node 23)))
+                                         (make-ast-number 23)))
                                  bindings)
                             subs))
              (lambda (subs expr kont)

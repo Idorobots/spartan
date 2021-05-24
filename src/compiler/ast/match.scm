@@ -96,7 +96,7 @@
                                      ;; NOTE Spoofs a full symbol node for the op to make matching easier.
                                      (unify-bindings (ast-matches? (at (ast-node-location expr)
                                                                        (generated
-                                                                        (make-symbol-node
+                                                                        (make-ast-symbol
                                                                          (ast-primop-app-op expr))))
                                                                    (cadr pattern))
                                                      (ast-list-matches? (ast-primop-app-args expr) (cddr pattern)))))

@@ -3,67 +3,67 @@
 (describe
  "free-vars"
  (it "handles values correctly"
-     (assert (compute-free-vars (make-number-node 23))
-             (make-number-node 23))
-     (assert (compute-free-vars (make-list-node '()))
-             (make-list-node '()))
+     (assert (compute-free-vars (make-ast-number 23))
+             (make-ast-number 23))
+     (assert (compute-free-vars (make-ast-list '()))
+             (make-ast-list '()))
      (assert (compute-free-vars
-              (make-quote-node
-               (make-list-node
-                (list (make-symbol-node 'foo)
-                      (make-number-node 23)))))
-             (make-quote-node
-              (make-list-node
-               (list (make-symbol-node 'foo)
-                     (make-number-node 23)))))
-     (assert (compute-free-vars (make-string-node "foo"))
-             (make-string-node "foo"))
-     (assert (compute-free-vars (make-error-node
-                                 (make-location-node)))
-             (make-error-node
-              (make-location-node))))
+              (make-ast-quote
+               (make-ast-list
+                (list (make-ast-symbol 'foo)
+                      (make-ast-number 23)))))
+             (make-ast-quote
+              (make-ast-list
+               (list (make-ast-symbol 'foo)
+                     (make-ast-number 23)))))
+     (assert (compute-free-vars (make-ast-string "foo"))
+             (make-ast-string "foo"))
+     (assert (compute-free-vars (make-ast-error
+                                 (make-ast-location)))
+             (make-ast-error
+              (make-ast-location))))
 
  (it "handles syntax forms correctly"
      (assert (compute-free-vars
-              (make-do-node
-               (list (make-symbol-node 'a)
-                     (make-symbol-node 'b)
-                     (make-symbol-node 'c))))
+              (make-ast-do
+               (list (make-ast-symbol 'a)
+                     (make-ast-symbol 'b)
+                     (make-ast-symbol 'c))))
              (set-ast-node-free-vars
               (set 'a 'b 'c)
-              (make-do-node
-               (list (make-symbol-node 'a)
-                     (make-symbol-node 'b)
-                     (make-symbol-node 'c)))))
+              (make-ast-do
+               (list (make-ast-symbol 'a)
+                     (make-ast-symbol 'b)
+                     (make-ast-symbol 'c)))))
      (assert (compute-free-vars
-              (make-if-node (make-symbol-node 'a)
-                            (make-symbol-node 'b)
-                            (make-symbol-node 'c)))
+              (make-ast-if (make-ast-symbol 'a)
+                           (make-ast-symbol 'b)
+                           (make-ast-symbol 'c)))
              (set-ast-node-free-vars
               (set 'a 'b 'c)
-              (make-if-node (make-symbol-node 'a)
-                            (make-symbol-node 'b)
-                            (make-symbol-node 'c))))
+              (make-ast-if (make-ast-symbol 'a)
+                           (make-ast-symbol 'b)
+                           (make-ast-symbol 'c))))
      (assert (compute-free-vars
-              (make-app-node (make-symbol-node 'a)
-                             (list (make-symbol-node 'b)
-                                   (make-symbol-node 'c))))
+              (make-ast-app (make-ast-symbol 'a)
+                            (list (make-ast-symbol 'b)
+                                  (make-ast-symbol 'c))))
              (set-ast-node-free-vars
               (set 'a 'b 'c)
-              (make-app-node (make-symbol-node 'a)
-                             (list (make-symbol-node 'b)
-                                   (make-symbol-node 'c)))))
+              (make-ast-app (make-ast-symbol 'a)
+                            (list (make-ast-symbol 'b)
+                                  (make-ast-symbol 'c)))))
      (assert (compute-free-vars
               (at (location 5 23)
-                  (make-primop-app-node 'a
-                                        (list (make-symbol-node 'b)
-                                              (make-symbol-node 'c)))))
+                  (make-ast-primop-app 'a
+                                       (list (make-ast-symbol 'b)
+                                             (make-ast-symbol 'c)))))
              (set-ast-node-free-vars
               (set 'b 'c)
               (at (location 5 23)
-                  (make-primop-app-node 'a
-                                        (list (make-symbol-node 'b)
-                                              (make-symbol-node 'c)))))))
+                  (make-ast-primop-app 'a
+                                       (list (make-ast-symbol 'b)
+                                             (make-ast-symbol 'c)))))))
 
  (it "handles bindings correctly"
      (define (b-n-f-vars bv fv expr)
@@ -71,118 +71,118 @@
                                 (set-ast-node-free-vars fv
                                                         expr)))
      (assert (compute-free-vars
-              (make-lambda-node '()
-                                (make-symbol-node 'x)))
+              (make-ast-lambda '()
+                               (make-ast-symbol 'x)))
              (set-ast-node-free-vars
               (set 'x)
-              (make-lambda-node '()
-                                (make-symbol-node 'x))))
+              (make-ast-lambda '()
+                               (make-ast-symbol 'x))))
      (assert (compute-free-vars
-              (make-lambda-node (list (make-symbol-node 'x))
-                                (make-symbol-node 'x)))
+              (make-ast-lambda (list (make-ast-symbol 'x))
+                               (make-ast-symbol 'x)))
              (set-ast-node-bound-vars
               (set 'x)
-              (make-lambda-node (list (make-symbol-node 'x))
-                                (make-symbol-node 'x))))
+              (make-ast-lambda (list (make-ast-symbol 'x))
+                               (make-ast-symbol 'x))))
      (assert (compute-free-vars
-              (make-let-node (list (make-binding-node
-                                    (make-symbol-node 'x)
-                                    (make-symbol-node 'y)))
-                             (make-symbol-node 'z)))
+              (make-ast-let (list (make-ast-binding
+                                   (make-ast-symbol 'x)
+                                   (make-ast-symbol 'y)))
+                            (make-ast-symbol 'z)))
              (set-ast-node-bound-vars
               (set 'x)
               (set-ast-node-free-vars
                (set 'y 'z)
-               (make-let-node (list (b-n-f-vars
-                                     (set 'x) (set 'y)
-                                     (make-binding-node
-                                      (make-symbol-node 'x)
-                                      (make-symbol-node 'y))))
-                              (make-symbol-node 'z)))))
+               (make-ast-let (list (b-n-f-vars
+                                    (set 'x) (set 'y)
+                                    (make-ast-binding
+                                     (make-ast-symbol 'x)
+                                     (make-ast-symbol 'y))))
+                             (make-ast-symbol 'z)))))
      (assert (compute-free-vars
-              (make-let-node (list (make-binding-node
-                                    (make-symbol-node 'x)
-                                    (make-symbol-node 'y)))
-                             (make-symbol-node 'x)))
+              (make-ast-let (list (make-ast-binding
+                                   (make-ast-symbol 'x)
+                                   (make-ast-symbol 'y)))
+                            (make-ast-symbol 'x)))
              (set-ast-node-bound-vars
               (set 'x)
               (set-ast-node-free-vars
                (set 'y)
-               (make-let-node (list (b-n-f-vars
-                                     (set 'x) (set 'y)
-                                     (make-binding-node
-                                      (make-symbol-node 'x)
-                                      (make-symbol-node 'y))))
-                              (make-symbol-node 'x)))))
+               (make-ast-let (list (b-n-f-vars
+                                    (set 'x) (set 'y)
+                                    (make-ast-binding
+                                     (make-ast-symbol 'x)
+                                     (make-ast-symbol 'y))))
+                             (make-ast-symbol 'x)))))
      (assert (compute-free-vars
-              (make-let-node (list (make-binding-node
-                                    (make-symbol-node 'x)
-                                    (make-symbol-node 'y))
-                                   (make-binding-node
-                                    (make-symbol-node 'z)
-                                    (make-symbol-node 'x)))
-                             (make-symbol-node 'z)))
+              (make-ast-let (list (make-ast-binding
+                                   (make-ast-symbol 'x)
+                                   (make-ast-symbol 'y))
+                                  (make-ast-binding
+                                   (make-ast-symbol 'z)
+                                   (make-ast-symbol 'x)))
+                            (make-ast-symbol 'z)))
              (set-ast-node-bound-vars
               (set 'x 'z)
               (set-ast-node-free-vars
                (set 'x 'y)
-               (make-let-node (list (b-n-f-vars
-                                     (set 'x) (set 'y)
-                                     (make-binding-node
-                                      (make-symbol-node 'x)
-                                      (make-symbol-node 'y)))
-                                    (b-n-f-vars
-                                     (set 'z) (set 'x)
-                                     (make-binding-node
-                                      (make-symbol-node 'z)
-                                      (make-symbol-node 'x))))
-                              (make-symbol-node 'z)))))
+               (make-ast-let (list (b-n-f-vars
+                                    (set 'x) (set 'y)
+                                    (make-ast-binding
+                                     (make-ast-symbol 'x)
+                                     (make-ast-symbol 'y)))
+                                   (b-n-f-vars
+                                    (set 'z) (set 'x)
+                                    (make-ast-binding
+                                     (make-ast-symbol 'z)
+                                     (make-ast-symbol 'x))))
+                             (make-ast-symbol 'z)))))
      (assert (compute-free-vars
-              (make-letrec-node (list (make-binding-node (make-symbol-node 'x)
-                                                         (make-symbol-node 'y)))
-                                (make-symbol-node 'z)))
+              (make-ast-letrec (list (make-ast-binding (make-ast-symbol 'x)
+                                                       (make-ast-symbol 'y)))
+                               (make-ast-symbol 'z)))
              (set-ast-node-bound-vars
               (set 'x)
               (set-ast-node-free-vars
                (set 'y 'z)
-               (make-letrec-node (list (b-n-f-vars
-                                        (set 'x) (set 'y)
-                                        (make-binding-node
-                                         (make-symbol-node 'x)
-                                         (make-symbol-node 'y))))
-                                 (make-symbol-node 'z)))))
+               (make-ast-letrec (list (b-n-f-vars
+                                       (set 'x) (set 'y)
+                                       (make-ast-binding
+                                        (make-ast-symbol 'x)
+                                        (make-ast-symbol 'y))))
+                                (make-ast-symbol 'z)))))
      (assert (compute-free-vars
-              (make-letrec-node (list (make-binding-node (make-symbol-node 'x)
-                                                         (make-symbol-node 'y)))
-                                (make-symbol-node 'x)))
+              (make-ast-letrec (list (make-ast-binding (make-ast-symbol 'x)
+                                                       (make-ast-symbol 'y)))
+                               (make-ast-symbol 'x)))
              (set-ast-node-bound-vars
               (set 'x)
               (set-ast-node-free-vars
                (set 'y)
-               (make-letrec-node (list (b-n-f-vars
-                                        (set 'x) (set 'y)
-                                        (make-binding-node
-                                         (make-symbol-node 'x)
-                                         (make-symbol-node 'y))))
-                                 (make-symbol-node 'x)))))
+               (make-ast-letrec (list (b-n-f-vars
+                                       (set 'x) (set 'y)
+                                       (make-ast-binding
+                                        (make-ast-symbol 'x)
+                                        (make-ast-symbol 'y))))
+                                (make-ast-symbol 'x)))))
      (assert (compute-free-vars
-              (make-letrec-node (list (make-binding-node (make-symbol-node 'x)
-                                                         (make-symbol-node 'y))
-                                      (make-binding-node (make-symbol-node 'z)
-                                                         (make-symbol-node 'x)))
-                                (make-symbol-node 'z)))
+              (make-ast-letrec (list (make-ast-binding (make-ast-symbol 'x)
+                                                       (make-ast-symbol 'y))
+                                     (make-ast-binding (make-ast-symbol 'z)
+                                                       (make-ast-symbol 'x)))
+                               (make-ast-symbol 'z)))
              (set-ast-node-bound-vars
               (set 'x 'z)
               (set-ast-node-free-vars
                (set 'y)
-               (make-letrec-node (list (b-n-f-vars
-                                        (set 'x) (set 'y)
-                                        (make-binding-node
-                                         (make-symbol-node 'x)
-                                         (make-symbol-node 'y)))
-                                       (b-n-f-vars
-                                        (set 'z) (set 'x)
-                                        (make-binding-node
-                                         (make-symbol-node 'z)
-                                         (make-symbol-node 'x))))
-                                 (make-symbol-node 'z)))))))
+               (make-ast-letrec (list (b-n-f-vars
+                                       (set 'x) (set 'y)
+                                       (make-ast-binding
+                                        (make-ast-symbol 'x)
+                                        (make-ast-symbol 'y)))
+                                      (b-n-f-vars
+                                       (set 'z) (set 'x)
+                                       (make-ast-binding
+                                        (make-ast-symbol 'z)
+                                        (make-ast-symbol 'x))))
+                                (make-ast-symbol 'z)))))))

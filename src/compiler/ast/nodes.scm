@@ -118,7 +118,7 @@
 ;; AST nodes
 
 ;; Number
-(define (make-number-node value)
+(define (make-ast-number value)
   (ast-node 'type 'number 'value value))
 
 (define (ast-number? node)
@@ -128,12 +128,12 @@
   (ast-get node 'value))
 
 ;; Symbol
-(define (make-symbol-node value)
+(define (make-ast-symbol value)
   (ast-node 'type 'symbol 'value value))
 
-(define (make-gensym-node root)
+(define (make-ast-gensym root)
   (generated
-   (make-symbol-node (gensym root))))
+   (make-ast-symbol (gensym root))))
 
 (define (ast-symbol? node)
   (is-type? node 'symbol))
@@ -150,7 +150,7 @@
         (else '<error>)))
 
 ;; String
-(define (make-string-node value)
+(define (make-ast-string value)
   (ast-node 'type 'string 'value value))
 
 (define (ast-string? node)
@@ -160,7 +160,7 @@
   (ast-get node 'value))
 
 ;; List
-(define (make-list-node values)
+(define (make-ast-list values)
   (ast-node 'type 'list 'value values))
 
 (define (ast-list? node)
@@ -182,7 +182,7 @@
   (length (ast-list-values expr)))
 
 ;; If
-(define (make-if-node condition then else)
+(define (make-ast-if condition then else)
   (ast-node 'type 'if 'condition condition 'then then 'else else))
 
 (define (ast-if? node)
@@ -198,7 +198,7 @@
   (ast-get node 'else))
 
 ;; Do
-(define (make-do-node exprs)
+(define (make-ast-do exprs)
   (ast-node 'type 'do 'exprs exprs))
 
 (define (ast-do? node)
@@ -208,7 +208,7 @@
   (ast-get node 'exprs))
 
 ;; Implicit body
-(define (make-body-node exprs ctx)
+(define (make-ast-body exprs ctx)
   (generated
    (set-ast-node-context
     (ast-node 'type 'body 'exprs exprs)
@@ -221,7 +221,7 @@
   (ast-get node 'exprs))
 
 ;; Lambda
-(define (make-lambda-node formals body)
+(define (make-ast-lambda formals body)
   (ast-node 'type 'lambda 'formals formals 'body body))
 
 (define (ast-lambda? node)
@@ -234,7 +234,7 @@
   (ast-get node 'formals))
 
 ;; Binding
-(define (make-binding-node var val)
+(define (make-ast-binding var val)
   (ast-node 'type 'binding 'var var 'val val))
 
 (define (ast-binding? node)
@@ -265,7 +265,7 @@
       (some? ast-node-self-recursive bindings)))
 
 ;; Let
-(define (make-let-node bindings body)
+(define (make-ast-let bindings body)
   (ast-node 'type 'let 'bindings bindings 'body body))
 
 (define (ast-let? node)
@@ -278,7 +278,7 @@
   (ast-get node 'body))
 
 ;; Letrec
-(define (make-letrec-node bindings body)
+(define (make-ast-letrec bindings body)
   (ast-node 'type 'letrec 'bindings bindings 'body body))
 
 (define (ast-letrec? node)
@@ -291,7 +291,7 @@
   (ast-get node 'body))
 
 ;; Fix
-(define (make-fix-node bindings body)
+(define (make-ast-fix bindings body)
   (ast-node 'type 'fix 'bindings bindings 'body body))
 
 (define (ast-fix? node)
@@ -304,25 +304,25 @@
   (ast-get node 'body))
 
 ;; Quotation
-(define (make-quote-node value)
+(define (make-ast-quote value)
   (ast-node 'type 'quote 'value value))
 
 (define (ast-quote? node)
   (is-type? node 'quote))
 
-(define (make-quasiquote-node value)
+(define (make-ast-quasiquote value)
   (ast-node 'type 'quasiquote 'value value))
 
 (define (ast-quasiquote? node)
   (is-type? node 'quasiquote))
 
-(define (make-unquote-node value)
+(define (make-ast-unquote value)
   (ast-node 'type 'unquote 'value value))
 
 (define (ast-unquote? node)
   (is-type? node 'unquote))
 
-(define (make-unquote-splicing-node value)
+(define (make-ast-unquote-splicing value)
   (ast-node 'type 'unquote-splicing 'value value))
 
 (define (ast-unquote-splicing? node)
@@ -332,7 +332,7 @@
   (ast-get node 'value))
 
 ;; Constant
-(define (make-const-node value)
+(define (make-ast-const value)
   (generated
    (ast-node 'type 'const 'value value)))
 
@@ -343,7 +343,7 @@
   (ast-get node 'value))
 
 ;; Definition
-(define (make-def-node name value)
+(define (make-ast-def name value)
   (ast-node 'type 'def 'name name 'value value))
 
 (define (ast-def? node)
@@ -356,7 +356,7 @@
   (ast-get node 'value))
 
 ;; Application
-(define (make-app-node op args)
+(define (make-ast-app op args)
   (ast-node 'type 'app 'op op 'args args))
 
 (define (ast-app? node)
@@ -369,7 +369,7 @@
   (ast-get node 'args))
 
 ;; Primop application
-(define (make-primop-app-node op args)
+(define (make-ast-primop-app op args)
   (generated
    (ast-node 'type 'primop-app 'op op 'args args)))
 
@@ -383,14 +383,14 @@
   (ast-get node 'args))
 
 ;; Parse location marker
-(define (make-location-node)
+(define (make-ast-location)
   (ast-node 'type '<location>))
 
 (define (ast-location? node)
   (is-type? node '<location>))
 
 ;; Error within parse tree
-(define (make-error-node expr)
+(define (make-ast-error expr)
   (ast-node 'type '<error> 'expr expr))
 
 (define (ast-error? node)

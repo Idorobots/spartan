@@ -39,7 +39,7 @@
                          ((compilation-error-restart error)
                           (at (compilation-error-location error)
                               (generated
-                               (make-error-node
+                               (make-ast-error
                                 (compilation-error-where error))))))))
                    (thunk))))
     (list result (deref errors))))

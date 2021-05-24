@@ -38,7 +38,7 @@
       (if (empty? filtered)
           (dce (set) final)
           (replace expr
-                   (make-do-node
+                   (make-ast-do
                     (map (partial dce (set))
                          (append filtered
                                  (list final))))))))

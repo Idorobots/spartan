@@ -390,7 +390,7 @@
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
                (elaborate-unquoted (at (location 5 23)
-                                       (make-list-node '()))))
+                                       (make-ast-list '()))))
              "Bad call syntax, expected at least one expression within the call:")
      (check ((contents (gen-list (gen-integer 1 3)
                                  (gen-one-of (gen-number-node gen-number)

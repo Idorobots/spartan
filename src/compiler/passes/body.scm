@@ -32,7 +32,7 @@
       (if (> (length defs) 0)
           (replace expr
                    (generated
-                    (make-letrec-node (unique-bindings (map expand-body defs)
+                    (make-ast-letrec (unique-bindings (map expand-body defs)
                                                        (ast-node-context expr))
                                       (reconstruct-simple-body
                                        (map expand-body non-defs)
@@ -54,7 +54,7 @@
             ((def ,name ,value)
              (cons (replace e
                             (generated
-                             (make-binding-node name value)))
+                             (make-ast-binding name value)))
                    acc))
             (else acc)))
          '()
@@ -76,4 +76,4 @@
            (at (ast-node-location parent)
                (generated
                 ;; NOTE The context should be preserved.
-                (set-ast-node-context (make-do-node exprs) ctx)))))))
+                (set-ast-node-context (make-ast-do exprs) ctx)))))))

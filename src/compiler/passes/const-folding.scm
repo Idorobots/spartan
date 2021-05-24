@@ -17,61 +17,61 @@
              (ast-case expr
               ((primop-app 'car (const (list ,first . ,rest)))
                (replace expr
-                        (make-const-node first)))
+                        (make-ast-const first)))
               ((primop-app 'cdr (const (list _ . ,rest)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-list-node rest))))))
+                              (make-ast-list rest))))))
               ((primop-app 'cadr (const (list _ ,second . ,rest)))
                (replace expr
-                        (make-const-node second)))
+                        (make-ast-const second)))
               ((primop-app 'cddr (const (list _ _ . ,rest)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-list-node rest))))))
+                              (make-ast-list rest))))))
               ((primop-app 'list (const (list . ,values)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-list-node values))))))
+                              (make-ast-list values))))))
               ((primop-app 'cons (const ,first) (const (list . ,rest)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-list-node (cons first rest)))))))
+                              (make-ast-list (cons first rest)))))))
               ((primop-app '* (const (number ,a)) (const (number ,b)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-number-node (* (ast-number-value a)
+                              (make-ast-number (* (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '+ (const (number ,a)) (const (number ,b)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-number-node (+ (ast-number-value a)
+                              (make-ast-number (+ (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '/ (const (number ,a)) (const (number ,b)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-number-node (/ (ast-number-value a)
+                              (make-ast-number (/ (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '- (const (number ,a)) (const (number ,b)))
                (replace expr
-                        (make-const-node
+                        (make-ast-const
                          (at (ast-node-location expr)
                              (generated
-                              (make-number-node (- (ast-number-value a)
+                              (make-ast-number (- (ast-number-value a)
                                                    (ast-number-value b))))))))
               ;; TODO
               ;; append, concat & boolean returning values.

@@ -110,14 +110,14 @@
   (let ((l (ast-node-location value)))
     (at l
         (generated
-         (make-primop-app-node
+         (make-ast-primop-app
           'ref
           (list (at l
                     (generated
-                     (make-const-node
+                     (make-ast-const
                       (at l
                           (generated
-                           (make-list-node '()))))))))))))
+                           (make-ast-list '()))))))))))))
 
 (describe
  "let-ref-assign"
@@ -136,7 +136,7 @@
                      (reconstruct-let-node parent
                                            (list (at (ast-node-location b)
                                                      (set-ast-binding-complexity
-                                                      (make-binding-node var (gen-ref val))
+                                                      (make-ast-binding var (gen-ref val))
                                                       'simple)))
                                            (set-ast-node-free-vars
                                             (set-sum (list (apply set val-fv)
@@ -144,14 +144,14 @@
                                                            (set v)))
                                             (at (ast-node-location body)
                                                 (generated
-                                                 (make-do-node
+                                                 (make-ast-do
                                                   (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
                                                          (let ((l (ast-node-location val)))
                                                            (at l
                                                                (generated
-                                                                (make-primop-app-node
+                                                                (make-ast-primop-app
                                                                  'assign!
                                                                  (list var
                                                                        val))))))
@@ -170,21 +170,21 @@
                      (reconstruct-let-node parent
                                            (list (at (ast-node-location b)
                                                      (set-ast-binding-complexity
-                                                      (make-binding-node var (gen-ref val))
+                                                      (make-ast-binding var (gen-ref val))
                                                       'simple)))
                                            (set-ast-node-free-vars
                                             (set-union (apply set val-fv)
                                                        (set v))
                                             (at (ast-node-location var)
                                                 (generated
-                                                 (make-do-node
+                                                 (make-ast-do
                                                   (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
                                                          (let ((l (ast-node-location val)))
                                                            (at l
                                                                (generated
-                                                                (make-primop-app-node
+                                                                (make-ast-primop-app
                                                                  'assign!
                                                                  (list var
                                                                        val))))))

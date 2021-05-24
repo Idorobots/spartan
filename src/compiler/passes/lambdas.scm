@@ -99,7 +99,7 @@
                           (map (lambda (var val)
                                  (at (ast-node-location val)
                                      (generated
-                                      (make-binding-node var val))))
+                                      (make-ast-binding var val))))
                                renamed
                                args)
                           (substitute-symbols subs body))))
@@ -107,7 +107,7 @@
 (define (temporary-name original)
   (at (ast-node-location original)
       (generated
-       (make-symbol-node
+       (make-ast-symbol
         (gensym (ast-symbol-value original))))))
 
 (define +max-inlineable-size+ 10)

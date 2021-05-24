@@ -99,7 +99,7 @@
   (ast-case expr
    ((list 'if ,condition ,then ,else)
     (replace expr
-             (make-if-node condition
+             (make-ast-if condition
                            then
                            else)))
    (else
@@ -113,7 +113,7 @@
    ((list 'do ,first . ,rest)
     (replace expr
              ;; NOTE User-supplied do needs to be body-expanded as well.
-             (make-body-node (cons first rest) "Bad `do` syntax")))
+             (make-ast-body (cons first rest) "Bad `do` syntax")))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -124,9 +124,9 @@
   (ast-case expr
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
-             (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
+             (make-ast-lambda (valid-formals formals "Bad `lambda` formal arguments syntax")
                                (at (ast-node-location expr)
-                                   (make-body-node (cons first rest) "Bad `lambda` body syntax")))))
+                                   (make-ast-body (cons first rest) "Bad `lambda` body syntax")))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -192,17 +192,17 @@
   (ast-case expr
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
-             (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
+             (make-ast-let (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
                             (at (ast-node-location expr)
-                                (make-body-node (cons first-body rest-body) "Bad `let` body syntax")))))
+                                (make-ast-body (cons first-body rest-body) "Bad `let` body syntax")))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
-             (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
+             (make-ast-letrec (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
                                (at (ast-node-location expr)
-                                   (make-body-node (cons first-body rest-body) "Bad `letrec` body syntax")))))
+                                   (make-ast-body (cons first-body rest-body) "Bad `letrec` body syntax")))))
    ((list _ () ,first . ,rest)
     (replace expr
-             (make-do-node (cons first rest))))
+             (make-ast-do (cons first rest))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -228,7 +228,7 @@
                          b
                          (format "~a, reserved keyword `~a` used as a binding identifier:" prefix (ast-symbol-value var)))))
                  (at (ast-node-location b)
-                     (make-binding-node e e)))
+                     (make-ast-binding e e)))
                b)))
        bindings))
 
@@ -248,7 +248,7 @@
                        (car rest)
                        (format "~a, duplicate binding identifier `~a`:" prefix (ast-symbol-value var)))))
                (at (ast-node-location b)
-                   (make-binding-node e e))))
+                   (make-ast-binding e e))))
             (else
              (check-uniqueness b (cdr rest))))))
   (if (empty? bindings)
@@ -260,22 +260,22 @@
   (replace binding
            (if (and (is-type? binding 'list)
                     (equal? (length (ast-list-values binding)) 2))
-               (make-binding-node (valid-symbol (ast-list-car binding) prefix)
+               (make-ast-binding (valid-symbol (ast-list-car binding) prefix)
                                   (ast-list-nth binding 1))
                (let ((e (raise-compilation-error
                          binding
                          (format "~a, expected a pair of an identifier and a value:" prefix))))
                  (at (ast-node-location binding)
-                     (make-binding-node e e))))))
+                     (make-ast-binding e e))))))
 
 (define (reconstruct-quote expr)
   (ast-case expr
    ((list 'quote ,value)
     (replace expr
-             (make-quote-node value)))
+             (make-ast-quote value)))
    ((list 'quasiquote ,value)
     (replace expr
-             (make-quasiquote-node value)))
+             (make-ast-quasiquote value)))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -287,10 +287,10 @@
   (ast-case expr
    ((list 'unquote ,value)
     (replace expr
-             (make-unquote-node value)))
+             (make-ast-unquote value)))
    ((list 'unquote-splicing ,value)
     (replace expr
-             (make-unquote-splicing-node value)))
+             (make-ast-unquote-splicing value)))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -303,18 +303,18 @@
    ((list 'define (list ,name . ,formals) ,first . ,rest)
     (let ((func-def (ast-list-nth expr 1)))
       (replace expr
-               (make-def-node (valid-symbol name "Bad `define` syntax")
+               (make-ast-def (valid-symbol name "Bad `define` syntax")
                               (at (ast-node-location expr)
                                   (generated
-                                   (make-lambda-node (valid-formals (at (ast-node-location func-def)
+                                   (make-ast-lambda (valid-formals (at (ast-node-location func-def)
                                                                         (generated
-                                                                         (make-list-node formals)))
+                                                                         (make-ast-list formals)))
                                                                     "Bad `define` function signature syntax")
                                                      (at (ast-node-location expr)
-                                                         (make-body-node (cons first rest) "Bad `define` function body syntax")))))))))
+                                                         (make-ast-body (cons first rest) "Bad `define` function body syntax")))))))))
    ((list 'define ,name ,value)
     (replace expr
-             (make-def-node (valid-symbol name "Bad `define` syntax")
+             (make-ast-def (valid-symbol name "Bad `define` syntax")
                             value)))
    (else
     (let ((node (ast-list-car expr)))
@@ -326,7 +326,7 @@
   (ast-case expr
    ((list ,op . ,args)
     (replace expr
-             (make-app-node op args)))
+             (make-ast-app op args)))
    (else
     (raise-compilation-error
      expr

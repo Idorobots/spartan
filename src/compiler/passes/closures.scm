@@ -35,7 +35,7 @@
    ((app ,op . ,args)
     (replace expr
              (at (ast-node-location op)
-                 (make-primop-app-node
+                 (make-ast-primop-app
                   '&apply
                   (map (flip convert-closures globals)
                        (cons op args))))))
@@ -50,7 +50,7 @@
                         globals)))
    ((fix ,bindings ,body)
     (let* ((loc (ast-node-location expr))
-           (env-var (at loc (make-gensym-node 'env)))
+           (env-var (at loc (make-ast-gensym 'env)))
            (free (set->list
                   (set-difference (set-sum (map ast-node-free-vars bindings))
                                   globals)))
@@ -72,18 +72,18 @@
                          (map (flip cons (compose make-nil ast-node-location))
                               (set->list bound)))
                         full-env))
-           (env-binding (at loc (make-binding-node env-var actual-env)))
+           (env-binding (at loc (make-ast-binding env-var actual-env)))
            (setters (make-env-setters full-env env-var free bound closure-vars))
            (converted-body (convert-closures body globals)))
       (replace expr
                (generated
-                (make-let-node (list env-binding)
+                (make-ast-let (list env-binding)
                                (at loc
                                    (generated
-                                    (make-let-node closures
+                                    (make-ast-let closures
                                                    (at loc
                                                        (generated
-                                                        (make-do-node
+                                                        (make-ast-do
                                                          (append setters
                                                                  (list converted-body)))))))))))))
    (else (walk-ast (flip convert-closures globals) expr))))
@@ -92,13 +92,13 @@
   (let* ((formals (ast-lambda-formals expr))
          (body (ast-lambda-body expr))
          (loc (ast-node-location expr))
-         (env-var (at loc (make-gensym-node 'env))))
+         (env-var (at loc (make-ast-gensym 'env))))
     (replace expr
-             (make-primop-app-node
+             (make-ast-primop-app
               '&make-closure
               (list env
                     (at loc
-                        (make-lambda-node
+                        (make-ast-lambda
                          (cons env-var formals)
                          (substitute-symbols
                           (make-subs env-var)
@@ -107,10 +107,10 @@
 (define (make-nil loc)
   (at loc
       (generated
-       (make-const-node
+       (make-ast-const
         (at loc
             (generated
-             (make-list-node '())))))))
+             (make-ast-list '())))))))
 
 (define (make-env loc free closures)
   (case (length free)
@@ -120,14 +120,14 @@
      (pick-matching-var loc (car free) closures))
     ((2)
      (at loc
-         (make-primop-app-node
+         (make-ast-primop-app
           'cons
           (map (lambda (var)
                  (pick-matching-var loc var closures))
                free))))
     (else
      (at loc
-         (make-primop-app-node
+         (make-ast-primop-app
           '&make-env
           (map (lambda (var)
                  (pick-matching-var loc var closures))
@@ -140,7 +140,7 @@
                acc))
          (at loc
              (generated
-              (make-symbol-node name)))
+              (make-ast-symbol name)))
          vars))
 
 (define (make-env-subs env free)
@@ -154,7 +154,7 @@
              (cons var
                    (lambda (expr)
                      (replace expr
-                              (make-primop-app-node
+                              (make-ast-primop-app
                                accessor
                                (list env))))))
            free
@@ -164,14 +164,14 @@
              (cons var
                    (lambda (expr)
                      (replace expr
-                              (make-primop-app-node
+                              (make-ast-primop-app
                                '&env-ref
                                (list env
                                      (at (ast-node-location expr)
-                                         (make-const-node
+                                         (make-ast-const
                                           (at (ast-node-location expr)
                                               (generated
-                                               (make-number-node (offset var free))))))))))))
+                                               (make-ast-number (offset var free))))))))))))
            free)))))
 
 (define (make-env-setters env env-var free bound closures)
@@ -184,7 +184,7 @@
      ;; NOTE so we can assume that each closure needs update in this case.
      (map (lambda (var)
             (at (ast-node-location env)
-                (make-primop-app-node
+                (make-ast-primop-app
                  '&set-closure-env!
                  (list var env))))
           closures))
@@ -195,14 +195,14 @@
                (map (lambda (arg i)
                       (if (set-member? bound (ast-symbol-value arg))
                           (at (ast-node-location arg)
-                              (make-primop-app-node
+                              (make-ast-primop-app
                                '&set-env!
                                (list env-var
                                      (at (ast-node-location arg)
-                                         (make-const-node
+                                         (make-ast-const
                                           (at (ast-node-location arg)
                                               (generated
-                                               (make-number-node i)))))
+                                               (make-ast-number i)))))
                                      arg)))
                           '()))
                     args

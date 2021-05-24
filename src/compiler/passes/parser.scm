@@ -18,7 +18,7 @@
        (matches (if (= (length exprs) 1)
                     (car exprs)
                     (at (location start end)
-                        (make-body-node exprs "Bad script")))
+                        (make-ast-body exprs "Bad script")))
                 start
                 end))))
 
@@ -33,7 +33,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (at (location start end)
-                     (make-location-node))
+                     (make-ast-location))
                  "Unmatched `)`, expected an opening `(` to come before:")
                 start
                 end))))
@@ -47,7 +47,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-quote-node (caddr matching)))
+                    (make-ast-quote (caddr matching)))
                 start
                 end))))
  '(Quasiquote
@@ -57,7 +57,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-quasiquote-node (caddr matching)))
+                    (make-ast-quasiquote (caddr matching)))
                 start
                 end))))
  '(Unquote
@@ -67,7 +67,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-unquote-node (caddr matching)))
+                    (make-ast-unquote (caddr matching)))
                 start
                 end))))
  '(UnquoteSplicing
@@ -77,7 +77,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-unquote-splicing-node (caddr matching)))
+                    (make-ast-unquote-splicing (caddr matching)))
                 start
                 end))))
  '(UnterminatedQuote
@@ -88,7 +88,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (at (location start end)
-                     (make-location-node))
+                     (make-ast-location))
                  (format "No expression following `~a`:"
                          (cadr matching)))
                 start
@@ -104,7 +104,7 @@
             (end (match-end result))
             (content (caddr matching)))
        (matches (at (location start end)
-                    (make-string-node content))
+                    (make-ast-string content))
                 start
                 end))))
  '(UnterminatedString
@@ -116,7 +116,7 @@
             (content (caddr matching)))
        (matches (raise-compilation-error
                  (at (location start end)
-                     (make-location-node))
+                     (make-ast-location))
                  "Unterminated string literal, expected a closing `\"` to follow:")
                 start
                 end))))
@@ -132,7 +132,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-list-node (caddr matching)))
+                    (make-ast-list (caddr matching)))
                 start
                 end))))
  '(UnterminatedList
@@ -143,7 +143,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (at (location start end)
-                     (make-location-node))
+                     (make-ast-location))
                  "Unterminated list, expected a closing `)` to follow:")
                 start
                 end))))
@@ -161,7 +161,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-number-node (string->number (cadr matching))))
+                    (make-ast-number (string->number (cadr matching))))
                 start
                 end))))
 
@@ -174,7 +174,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (at (location start end)
-                    (make-symbol-node (string->symbol (cadr matching))))
+                    (make-ast-symbol (string->symbol (cadr matching))))
                 start
                 end))))
  '(StructureRef
@@ -196,7 +196,7 @@
             (end (match-end result)))
        (matches (raise-compilation-error
                  (at (location start end)
-                     (make-location-node))
+                     (make-ast-location))
                  (format "Invalid symbol `~a` specified at:"
                          (cadr matching)))
                 start
@@ -219,19 +219,19 @@
 (define (expand-structure-refs loc head rest)
   (foldl (lambda (part acc)
            (at loc
-               (make-primop-app-node
+               (make-ast-primop-app
                 '&structure-ref
                 (list acc
                       (at loc
                           (generated
-                           (make-quote-node part)))))))
+                           (make-ast-quote part)))))))
          (wrap-symbol loc head)
          (map (partial wrap-symbol loc)
               rest)))
 
 (define (wrap-symbol loc s)
   (at loc
-      (make-symbol-node s)))
+      (make-ast-symbol s)))
 
 (define parse
   (pass (schema "parse"
@@ -246,7 +246,7 @@
                                                 (match-match parsed)
                                                 (raise-compilation-error
                                                  (at (location 0 (string-length input))
-                                                     (make-location-node))
+                                                     (make-ast-location))
                                                  "Not a valid Spartan file:")))))))
             (env-set env
                      'ast (car result)
