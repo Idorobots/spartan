@@ -16,8 +16,7 @@
           (env-update env 'ast compute-free-vars))))
 
 (define (compute-free-vars expr)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (ast-case expr
               ((do . ,exprs)
                (free-vars (set-sum (map get-free-vars exprs))

@@ -13,8 +13,7 @@
           (env-update env 'ast constant-folding))))
 
 (define (constant-folding expr)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (ast-case expr
               ((primop-app 'car (const (list ,first . ,rest)))
                (replace expr

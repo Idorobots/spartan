@@ -94,23 +94,16 @@
  (it "maps various AST nodes"
      (define ast (make-list-node (list (make-symbol-node 'foo)
                                        (make-number-node 23))))
-     (assert (map-ast id id ast)
+     (assert (map-ast id ast)
              ast)
-     (assert (map-ast (lambda (_)
-                        (make-number-node 23))
-                      id
-                      ast)
-             (make-number-node 23))
-     (assert (map-ast id
-                      (lambda (e)
+     (assert (map-ast (lambda (e)
                         (if (equal? 'number (ast-get e 'type))
                             (ast-update e 'value (lambda (x) (* 2 x)))
                             e))
                       ast)
              (make-list-node (list (make-symbol-node 'foo)
                                    (make-number-node 46))))
-     (assert (map-ast id
-                      (lambda (e)
+     (assert (map-ast (lambda (e)
                         (if (equal? 'number (ast-get e 'type))
                             (ast-update e 'value (lambda (x) (+ 2 x)))
                             e))
@@ -120,8 +113,7 @@
              (make-if-node (make-number-node 25)
                            (make-number-node 7)
                            (make-number-node 2)))
-     (assert (map-ast id
-                      (lambda (e)
+     (assert (map-ast (lambda (e)
                         (if (equal? 'number (ast-get e 'type))
                             (ast-update e 'value (lambda (x) (+ 2 x)))
                             e))
@@ -139,7 +131,7 @@
                   (list (at (location 5 23)
                             (make-symbol-node 'foo))
                         (generated (make-number-node 23)))))
-     (assert (map-ast id id ast)
+     (assert (map-ast id ast)
              ast)))
 
 (describe
@@ -232,17 +224,19 @@
                                   (make-number-node 2)
                                   (make-number-node 3)))
                            '(list ,one ,two ,three))
-             (bindings 'one (make-number-node 1)
-                       'two (make-number-node 2)
-                       'three (make-number-node 3)))
+             (make-bindings
+              (list (cons 'one (make-number-node 1))
+                    (cons 'two (make-number-node 2))
+                    (cons 'three (make-number-node 3)))))
      (assert (ast-matches? (make-list-node
                             (list (make-number-node 1)
                                   (make-number-node 2)
                                   (make-number-node 3)))
                            '(list ,one . ,rest))
-             (bindings 'one (make-number-node 1)
-                       'rest (list (make-number-node 2)
-                                   (make-number-node 3))))))
+             (make-bindings
+              (list (cons 'one (make-number-node 1))
+                    (cons 'rest (list (make-number-node 2)
+                                      (make-number-node 3))))))))
 
 (describe
  "ast-eqv?"

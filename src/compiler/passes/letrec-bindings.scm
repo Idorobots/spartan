@@ -54,8 +54,7 @@
           (env-update env 'ast reorder-letrec))))
 
 (define (reorder-letrec expr)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (if (letrec-node? expr)
                  (replace expr
                           (scc-reorder (derive-graph expr) expr))

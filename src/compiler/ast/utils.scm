@@ -38,15 +38,13 @@
        (ast-update expr 'expr f))
       (else (compiler-bug "Unexpected expression: " expr)))))
 
-(define (map-ast pre post expr)
+(define (map-ast f expr)
   (if (ast-node? expr)
-      (let ((m (partial map-ast pre post)))
-        (post (walk-ast m (pre expr))))
+      (f (walk-ast (partial map-ast f) expr))
       (compiler-bug "Non-AST object passed to map-ast:" expr)))
 
 (define (ast-size ast)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (case (get-type expr)
                ((number symbol string list const quote quasiquote unquote unquote-splicing) 1)
                ((if) (+ (ast-if-condition expr)
@@ -74,8 +72,7 @@
            ast))
 
 (define (ast->plain ast)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (case (get-type expr)
                ((number symbol string list) (ast-get expr 'value))
                ((if) (list 'if

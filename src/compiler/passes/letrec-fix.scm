@@ -16,8 +16,7 @@
           (env-update env 'ast fixing-letrec))))
 
 (define (fixing-letrec expr)
-  (map-ast id
-           (lambda (expr)
+  (map-ast (lambda (expr)
              (ast-case expr
               ((letrec ,bindings ,body)
                (replace expr
