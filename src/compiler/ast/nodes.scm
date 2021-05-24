@@ -43,25 +43,31 @@
   (< (location-start a)
      (location-start b)))
 
-(define (get-location node)
+(define (ast-node-location node)
   (ast-get node 'location))
 
-(define (get-location-start node)
-  (car (get-location node)))
+(define (ast-node-location-start node)
+  (car (ast-node-location node)))
 
-(define (get-location-end node)
-  (cdr (get-location node)))
+(define (ast-node-location-end node)
+  (cdr (ast-node-location node)))
 
-(define (at location node)
+(define (set-ast-node-location node location)
   (ast-set node 'location location))
 
+(define (at location node)
+  (set-ast-node-location node location))
+
 (define (replace old new)
-  (at (get-location old)
+  (at (ast-node-location old)
       ((if (generated? old) generated id)
        new)))
 
 (define (generated node)
-  (ast-set node 'generated #t))
+  (set-ast-node-generated node #t))
+
+(define (set-ast-node-generated node gen)
+  (ast-set node 'generated gen))
 
 (define (generated? node)
   (ast-get* node 'generated #f))

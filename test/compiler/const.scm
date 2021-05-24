@@ -17,8 +17,8 @@
                           (const ,expr)
                           (assert expr unquoted))
               (assert (generated? result))
-              (assert (get-location result)
-                      (get-location unquoted))))
+              (assert (ast-node-location result)
+                      (ast-node-location unquoted))))
      (check ((unquoted (gen-one-of (gen-number-node gen-number)
                                    (gen-string-node (gen-text (gen-integer 0 50)))))
              (quoted (gen-quote-node unquoted)))
@@ -27,8 +27,8 @@
                           (const ,expr)
                           (assert expr unquoted))
               (assert (generated? result))
-              (assert (get-location result)
-                      (get-location quoted)))))
+              (assert (ast-node-location result)
+                      (ast-node-location quoted)))))
 
  (it "should not wrap anything else"
      (check ((node gen-non-const-node))

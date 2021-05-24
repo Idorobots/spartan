@@ -125,7 +125,7 @@
    ((list 'lambda ,formals ,first . ,rest)
     (replace expr
              (make-lambda-node (valid-formals formals "Bad `lambda` formal arguments syntax")
-                               (at (get-location expr)
+                               (at (ast-node-location expr)
                                    (make-body-node (cons first rest) "Bad `lambda` body syntax")))))
    (else
     (let ((node (ast-list-car expr)))
@@ -193,12 +193,12 @@
    ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-let-node (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
-                            (at (get-location expr)
+                            (at (ast-node-location expr)
                                 (make-body-node (cons first-body rest-body) "Bad `let` body syntax")))))
    ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
     (replace expr
              (make-letrec-node (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
-                               (at (get-location expr)
+                               (at (ast-node-location expr)
                                    (make-body-node (cons first-body rest-body) "Bad `letrec` body syntax")))))
    ((list _ () ,first . ,rest)
     (replace expr
@@ -227,7 +227,7 @@
                (let ((e (raise-compilation-error
                          b
                          (format "~a, reserved keyword `~a` used as a binding identifier:" prefix (ast-symbol-value var)))))
-                 (at (get-location b)
+                 (at (ast-node-location b)
                      (make-binding-node e e)))
                b)))
        bindings))
@@ -247,7 +247,7 @@
              (let ((e (raise-compilation-error
                        (car rest)
                        (format "~a, duplicate binding identifier `~a`:" prefix (ast-symbol-value var)))))
-               (at (get-location b)
+               (at (ast-node-location b)
                    (make-binding-node e e))))
             (else
              (check-uniqueness b (cdr rest))))))
@@ -265,7 +265,7 @@
                (let ((e (raise-compilation-error
                          binding
                          (format "~a, expected a pair of an identifier and a value:" prefix))))
-                 (at (get-location binding)
+                 (at (ast-node-location binding)
                      (make-binding-node e e))))))
 
 (define (reconstruct-quote expr)
@@ -304,13 +304,13 @@
     (let ((func-def (ast-list-nth expr 1)))
       (replace expr
                (make-def-node (valid-symbol name "Bad `define` syntax")
-                              (at (get-location expr)
+                              (at (ast-node-location expr)
                                   (generated
-                                   (make-lambda-node (valid-formals (at (get-location func-def)
+                                   (make-lambda-node (valid-formals (at (ast-node-location func-def)
                                                                         (generated
                                                                          (make-list-node formals)))
                                                                     "Bad `define` function signature syntax")
-                                                     (at (get-location expr)
+                                                     (at (ast-node-location expr)
                                                          (make-body-node (cons first rest) "Bad `define` function body syntax")))))))))
    ((list 'define ,name ,value)
     (replace expr

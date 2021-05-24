@@ -94,7 +94,7 @@
                                               (ast-list-matches? (ast-app-args expr) (cddr pattern)))))
                   ((primop-app) (and (primop-app-node? expr)
                                      ;; NOTE Spoofs a full symbol node for the op to make matching easier.
-                                     (unify-bindings (ast-matches? (at (get-location expr)
+                                     (unify-bindings (ast-matches? (at (ast-node-location expr)
                                                                        (generated
                                                                         (make-symbol-node
                                                                          (ast-primop-app-op expr))))
@@ -162,6 +162,9 @@
 (define (bindings . vars)
   (apply hasheq vars))
 
+(define (make-bindings assocs)
+  (make-immutable-hasheq assocs))
+
 (define (unify-bindings a b)
   (if (or (false? a)
           (false? b))
@@ -172,11 +175,11 @@
                           (ast-eqv? (cdr kv)
                                     (hash-ref b (car kv)))))
                     as)
-            (make-immutable-hasheq (append as
-                                           (hash->list b)))
+            (make-bindings (append as (hash->list b)))
             #f))))
 
 (define (get-var vars var)
   (hash-ref vars var))
+
 (define (empty-bindings)
   (hasheq))

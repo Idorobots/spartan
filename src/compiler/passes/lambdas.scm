@@ -91,13 +91,13 @@
                 (map (lambda (formal tmp)
                        (cons (ast-symbol-value formal)
                              (lambda (orig)
-                               (at (get-location orig)
+                               (at (ast-node-location orig)
                                    tmp))))
                      formals
                      renamed))))
     (reconstruct-let-node original
                           (map (lambda (var val)
-                                 (at (get-location val)
+                                 (at (ast-node-location val)
                                      (generated
                                       (make-binding-node var val))))
                                renamed
@@ -105,7 +105,7 @@
                           (substitute-symbols subs body))))
 
 (define (temporary-name original)
-  (at (get-location original)
+  (at (ast-node-location original)
       (generated
        (make-symbol-node
         (gensym (ast-symbol-value original))))))

@@ -80,7 +80,7 @@
   (if (empty? bindings)
       body
       (compute-let-fv
-       (at (get-location parent)
+       (at (ast-node-location parent)
            (make-let-node bindings
                           body)))))
 
@@ -88,7 +88,7 @@
   (if (empty? bindings)
       body
       (compute-letrec-fv
-       (at (get-location parent)
+       (at (ast-node-location parent)
            (make-letrec-node bindings
                              body)))))
 
@@ -96,6 +96,6 @@
   (if (empty? bindings)
       body
       (compute-fix-fv
-       (at (get-location parent)
+       (at (ast-node-location parent)
            (make-fix-node bindings
                           body)))))

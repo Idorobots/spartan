@@ -6,7 +6,7 @@
               (assert inserted-node node))
   (assert (generated? result))
   (assert (ast-node-free-vars result) (set arg))
-  (assert (get-location result) (get-location node)))
+  (assert (ast-node-location result) (ast-node-location node)))
 
 (describe
  "derefy"
@@ -52,7 +52,7 @@
               (assert-ast result (app ,operator ,deref)
                           (assert operator op)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location app)))))
+              (assert (ast-node-location result) (ast-node-location app)))))
 
  (it "replaces assigned free variables with derefs in lambda"
      (check ((arg gen-valid-symbol)
@@ -61,7 +61,7 @@
             (let ((result (derefy (list arg) fun)))
               (assert-ast result (lambda _ ,body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location fun)))))
+              (assert (ast-node-location result) (ast-node-location fun)))))
 
  (it "replaces assigned free variables with derefs in let"
      (check ((arg gen-valid-symbol)
@@ -70,7 +70,7 @@
             (let ((result (derefy (list arg) l)))
               (assert-ast result (let _ ,body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result) (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (binding (gen-binding-node gen-valid-symbol-node node))
@@ -78,7 +78,7 @@
             (let ((result (derefy (list arg) l)))
               (assert-ast result (let ((binding _ ,deref)) _)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result) (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (binding (gen-binding-node node node))
@@ -87,7 +87,7 @@
               (assert-ast result (let ((binding ,var ,deref)) _)
                           (assert var node)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location let-node)))))
+              (assert (ast-node-location result) (ast-node-location let-node)))))
 
  (it "replaces assigned free variables with derefs in letrec"
      (check ((arg gen-valid-symbol)
@@ -96,7 +96,7 @@
             (let ((result (derefy (list arg) l)))
               (assert-ast result (letrec _ ,body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result) (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (binding (gen-binding-node gen-valid-symbol-node node))
@@ -104,10 +104,10 @@
             (let ((result (derefy (list arg) l)))
               (assert-ast result (letrec ((binding _ ,deref)) _)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location l))))))
+              (assert (ast-node-location result) (ast-node-location l))))))
 
 (define (gen-ref value)
-  (let ((l (get-location value)))
+  (let ((l (ast-node-location value)))
     (at l
         (generated
          (make-primop-app-node
@@ -134,20 +134,20 @@
             (assert (let-ref-assign parent bindings body)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (get-location b)
+                                           (list (at (ast-node-location b)
                                                      (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
                                            (set-ast-node-free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
                                                            (set v)))
-                                            (at (get-location body)
+                                            (at (ast-node-location body)
                                                 (generated
                                                  (make-do-node
                                                   (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
-                                                         (let ((l (get-location val)))
+                                                         (let ((l (ast-node-location val)))
                                                            (at l
                                                                (generated
                                                                 (make-primop-app-node
@@ -167,19 +167,19 @@
             (assert (let-ref-assign parent bindings var)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (get-location b)
+                                           (list (at (ast-node-location b)
                                                      (complexity 'simple
                                                                  (make-binding-node var (gen-ref val)))))
                                            (set-ast-node-free-vars
                                             (set-union (apply set val-fv)
                                                        (set v))
-                                            (at (get-location var)
+                                            (at (ast-node-location var)
                                                 (generated
                                                  (make-do-node
                                                   (list (set-ast-node-free-vars
                                                          (set-union (apply set val-fv)
                                                                     (set v))
-                                                         (let ((l (get-location val)))
+                                                         (let ((l (ast-node-location val)))
                                                            (at l
                                                                (generated
                                                                 (make-primop-app-node

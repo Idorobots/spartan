@@ -9,12 +9,12 @@
               (assert-ast result
                           (const (list))
                           (assert (generated? result))
-                          (assert (get-location result) loc))))
+                          (assert (ast-node-location result) loc))))
      (check ((free-vars (gen-list 1 gen-valid-symbol))
              (loc gen-location))
             (let ((result (make-env loc free-vars '())))
               (assert (ast-symbol-value result) (car free-vars))
-              (assert (get-location result) loc)))
+              (assert (ast-node-location result) loc)))
      (check ((free-vars (gen-list 2 gen-valid-symbol))
              (loc gen-location))
             (let ((result (make-env loc free-vars '())))
@@ -22,14 +22,14 @@
                           (primop-app 'cons ,first ,second)
                           (assert (ast-symbol-value first) (car free-vars))
                           (assert (ast-symbol-value second) (cadr free-vars))
-                          (assert (get-location result) loc))))
+                          (assert (ast-node-location result) loc))))
      (check ((free-vars (gen-list (gen-integer 3 5) gen-valid-symbol))
              (loc gen-location))
             (let ((result (make-env loc free-vars '())))
               (assert-ast result
                           (primop-app '&make-env . ,args)
                           (assert (map ast-symbol-value args) free-vars)
-                          (assert (get-location result) loc)))))
+                          (assert (ast-node-location result) loc)))))
 
  (it "should re-use bound names to preserve proper source locations"
      (check ((closures (gen-list (gen-integer 3 5) gen-valid-symbol-node))
@@ -39,7 +39,7 @@
               (assert-ast result
                           (primop-app '&make-env . ,args)
                           (assert args closures)
-                          (assert (get-location result) loc))))))
+                          (assert (ast-node-location result) loc))))))
 
 (describe
  "make-env-subs"
@@ -56,7 +56,7 @@
               (assert-ast result
                           (do ,converted-var)
                           (assert converted-var
-                                  (at (get-location (car nodes))
+                                  (at (ast-node-location (car nodes))
                                       env)))))
      (check ((env gen-valid-symbol-node)
              (nodes (gen-arg-list 2))
@@ -141,8 +141,8 @@
                           (primop-app '&apply ,op . ,args)
                           (assert op (ast-app-op app))
                           (assert args (ast-app-args app)))
-              (assert (get-location result)
-                      (get-location app)))))
+              (assert (ast-node-location result)
+                      (ast-node-location app)))))
 
  (it "should convert lambdas correctly"
      (check ((node gen-valid-lambda-node))
@@ -155,8 +155,8 @@
                                         ,body))
                           (assert formals (ast-lambda-formals node))
                           (assert body (ast-lambda-body node)))
-              (assert (get-location result)
-                      (get-location node))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))
      (check ((arg gen-valid-symbol-node)
              (body gen-valid-symbol-node)
              (var (ast-symbol-value body))
@@ -169,8 +169,8 @@
                                       (lambda ('env1 _)
                                         'env1))
                           (assert (ast-symbol-value arg) var))
-              (assert (get-location result)
-                      (get-location node))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))
      (check ((nodes (gen-arg-list 2))
              (free-vars (apply set (map ast-symbol-value nodes)))
              (body (apply gen-specific-do-node nodes))
@@ -192,8 +192,8 @@
                               (begin (assert (ast-symbol-value second) 'car)
                                      (assert (map ast-symbol-value args)
                                              (map ast-symbol-value (reverse nodes))))))
-              (assert (get-location result)
-                      (get-location node))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))
      (check ((nodes (gen-arg-list (gen-integer 3 5)))
              (free-vars (apply set (map ast-symbol-value nodes)))
              (body (apply gen-specific-do-node nodes))
@@ -224,8 +224,8 @@
                             (assert (ast-symbol-value (list-ref nodes 2))
                                     (ast-symbol-value (list-ref args third-val))))
                           (assert (length rest) (- (length nodes) 3)))
-              (assert (get-location result)
-                      (get-location node)))))
+              (assert (ast-node-location result)
+                      (ast-node-location node)))))
 
  (it "should take global values into account"
      (check ((arg gen-valid-symbol-node)
@@ -240,8 +240,8 @@
                                       (lambda ('env1 _)
                                         ,converted-body))
                           (assert converted-body body))
-              (assert (get-location result)
-                      (get-location node)))))
+              (assert (ast-node-location result)
+                      (ast-node-location node)))))
 
  (it "should convert fix correctly"
      (check ((sym1 gen-valid-symbol)
@@ -269,8 +269,8 @@
                           (assert converted-var2 var1)
                           (assert converted-var3 var1)
                           (assert converted-body body))
-              (assert (get-location result)
-                      (get-location node))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
               (assert (generated? result))))
 
      (check ((sym1 gen-valid-symbol)
@@ -331,8 +331,8 @@
                           (assert converted-arg1 arg1)
                           (assert converted-arg2 arg2)
                           (assert converted-body body))
-              (assert (get-location result)
-                      (get-location node))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
               (assert (generated? result))))
 
      (check ((sym1 gen-valid-symbol)
@@ -399,6 +399,6 @@
                           ;; NOTE We expect three empty lists and one extra-fv symbol.
                           (assert (length (filter const-node? converted-args)) 3)
                           (assert (ast-symbol-value (car (filter symbol-node? converted-args))) extra-fv))
-              (assert (get-location result)
-                      (get-location node))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
               (assert (generated? result))))))

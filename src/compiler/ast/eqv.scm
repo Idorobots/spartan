@@ -67,8 +67,8 @@
                                       (ast-primop-app-op b))
                               (ast-list-eqv? (ast-primop-app-args a)
                                              (ast-primop-app-args b))))
-           ((<location>) (equal? (get-location a)
-                                 (get-location b)))
+           ((<location>) (equal? (ast-node-location a)
+                                 (ast-node-location b)))
            ((<error>) (ast-eqv? (ast-error-expr a)
                                 (ast-error-expr b)))
            (else

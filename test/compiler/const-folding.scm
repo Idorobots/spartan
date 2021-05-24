@@ -33,5 +33,5 @@
                           (const ,converted-value)
                           (assert converted-value (car vals)))
               (assert (generated? result))
-              (assert (get-location result)
-                      (get-location node))))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))))

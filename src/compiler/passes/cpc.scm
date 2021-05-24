@@ -33,7 +33,7 @@
     (else (compiler-bug "Unexpected expression passed to cpc:" expr))))
 
 (define (cpc-if expr kont)
-  (let* ((loc (get-location expr))
+  (let* ((loc (ast-node-location expr))
          (ct (at loc (make-gensym-node 'cont)))
          (value (at loc (make-gensym-node 'value)))
          (rest (lambda (v)
@@ -52,7 +52,7 @@
 
 (define (make-let-1-node var val body)
   (generated
-   (make-let-node (list (at (get-location var)
+   (make-let-node (list (at (ast-node-location var)
                             (generated
                              (make-binding-node var val))))
                   body)))
@@ -79,7 +79,7 @@
       (kont '())))
 
 (define (cpc-lambda expr kont)
-  (let* ((loc (get-location expr))
+  (let* ((loc (ast-node-location expr))
          (ct (at loc (make-gensym-node 'cont))))
     (kont (replace expr
                    (make-lambda-node (append (ast-lambda-formals expr)
@@ -91,7 +91,7 @@
 
 (define (cpc-primop-app expr kont)
   (let* ((args (ast-primop-app-args expr))
-         (loc (get-location expr))
+         (loc (ast-node-location expr))
          (value (at loc (make-gensym-node 'value))))
     (cpc-sequence args
                   (lambda (args)
@@ -102,7 +102,7 @@
                                          (kont value)))))))
 
 (define (cpc-app expr kont)
-  (let* ((loc (get-location expr))
+  (let* ((loc (ast-node-location expr))
          (value (at loc (make-gensym-node 'value)))
          (cont (at loc
                    (make-cont-node value (kont value))))

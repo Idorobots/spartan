@@ -334,7 +334,7 @@
 (define (gen-error-node gen-node)
   (lambda (rand)
     (let ((n (sample gen-node rand)))
-      (at (get-location n)
+      (at (ast-node-location n)
           (make-error-node n)))))
 
 (define gen-random-error-node

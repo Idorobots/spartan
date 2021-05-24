@@ -73,7 +73,7 @@
           ((= (length exprs) 1)
            (car exprs))
           (else
-           (at (get-location parent)
+           (at (ast-node-location parent)
                (generated
                 ;; NOTE The context should be preserved.
                 (context ctx

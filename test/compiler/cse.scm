@@ -20,7 +20,7 @@
                           (let _
                               ,cse-sym1))
                         (assert (ast-symbol-value cse-sym1) (ast-symbol-value sym1))
-                        (assert (get-location cse-sym1) (get-location app2))
+                        (assert (ast-node-location cse-sym1) (ast-node-location app2))
                         (assert cse-app1 app1))))
 
  (it "should be procedure-local"
@@ -120,5 +120,5 @@
                           ,cse-sym1)
                         (assert cse-app1 app1)
                         (assert (ast-symbol-value cse-sym1) s1)
-                        (assert (get-location cse-sym1)
-                                (get-location app2))))))
+                        (assert (ast-node-location cse-sym1)
+                                (ast-node-location app2))))))

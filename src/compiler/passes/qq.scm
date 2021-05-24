@@ -56,7 +56,7 @@
     (else (compiler-bug "Unexpected quasiquote expansion expression:" expr))))
 
 (define (reconstruct-quoted-value expr context)
-  (at (get-location context)
+  (at (ast-node-location context)
       (generated
        (make-quote-node
         expr))))
@@ -64,7 +64,7 @@
 (define (reconstruct-quoted-list exprs context)
   (if (empty? exprs)
       (reconstruct-quoted-value
-       (at (get-location context)
+       (at (ast-node-location context)
            (generated
             (make-list-node '())))
        context)
@@ -76,9 +76,9 @@
        context)))
 
 (define (make-concat a b context)
-  (at (get-location context)
+  (at (ast-node-location context)
       (make-primop-app-node 'concat (list a b))))
 
 (define (make-cons a b context)
-  (at (get-location context)
+  (at (ast-node-location context)
       (make-primop-app-node 'cons (list a b))))

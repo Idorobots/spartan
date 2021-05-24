@@ -34,7 +34,7 @@
   (ast-case expr
    ((app ,op . ,args)
     (replace expr
-             (at (get-location op)
+             (at (ast-node-location op)
                  (make-primop-app-node
                   '&apply
                   (map (flip convert-closures globals)
@@ -45,11 +45,11 @@
                                  globals))))
       (recreate-closure expr
                         ;; NOTE This is an anonymous function, so we can't really reuse it's names location for the environment.
-                        (make-env (get-location expr) free '())
+                        (make-env (ast-node-location expr) free '())
                         (flip make-env-subs free)
                         globals)))
    ((fix ,bindings ,body)
-    (let* ((loc (get-location expr))
+    (let* ((loc (ast-node-location expr))
            (env-var (at loc (make-gensym-node 'env)))
            (free (set->list
                   (set-difference (set-sum (map ast-node-free-vars bindings))
@@ -69,7 +69,7 @@
            ;; NOTE So that we don't reference undefined (yet) variables.
            (actual-env (substitute-symbols
                         (make-subs
-                         (map (flip cons (compose make-nil get-location))
+                         (map (flip cons (compose make-nil ast-node-location))
                               (set->list bound)))
                         full-env))
            (env-binding (at loc (make-binding-node env-var actual-env)))
@@ -91,7 +91,7 @@
 (define (recreate-closure expr env make-subs globals)
   (let* ((formals (ast-lambda-formals expr))
          (body (ast-lambda-body expr))
-         (loc (get-location expr))
+         (loc (ast-node-location expr))
          (env-var (at loc (make-gensym-node 'env))))
     (replace expr
              (make-primop-app-node
@@ -167,9 +167,9 @@
                               (make-primop-app-node
                                '&env-ref
                                (list env
-                                     (at (get-location expr)
+                                     (at (ast-node-location expr)
                                          (make-const-node
-                                          (at (get-location expr)
+                                          (at (ast-node-location expr)
                                               (generated
                                                (make-number-node (offset var free))))))))))))
            free)))))
@@ -183,7 +183,7 @@
      ;; NOTE This is a fix, therfore at least one of these values is going to be a bound closure,
      ;; NOTE so we can assume that each closure needs update in this case.
      (map (lambda (var)
-            (at (get-location env)
+            (at (ast-node-location env)
                 (make-primop-app-node
                  '&set-closure-env!
                  (list var env))))
@@ -194,13 +194,13 @@
        (filter (compose not empty?)
                (map (lambda (arg i)
                       (if (set-member? bound (ast-symbol-value arg))
-                          (at (get-location arg)
+                          (at (ast-node-location arg)
                               (make-primop-app-node
                                '&set-env!
                                (list env-var
-                                     (at (get-location arg)
+                                     (at (ast-node-location arg)
                                          (make-const-node
-                                          (at (get-location arg)
+                                          (at (ast-node-location arg)
                                               (generated
                                                (make-number-node i)))))
                                      arg)))

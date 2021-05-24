@@ -1,5 +1,6 @@
 (load-once "compiler/utils/utils.scm")
 (load-once "compiler/utils/refs.scm")
+(load-once "compiler/ast/nodes.scm")
 
 ;; Syntax error
 
@@ -10,7 +11,7 @@
   (tagged-list? 'compilation-error e))
 
 (define (compilation-error-location e)
-  (get-location (compilation-error-where e)))
+  (ast-node-location (compilation-error-where e)))
 
 (define (compilation-error-where e)
   (cadr e))

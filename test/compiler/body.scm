@@ -22,8 +22,8 @@
               (assert-ast result
                           (do . ,expanded-exprs)
                           (assert expanded-exprs exprs))
-              (assert (get-location result)
-                      (get-location node))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))
      (check ((ctx (gen-text (gen-integer 10 20)))
              (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
              (non-defs (gen-list (gen-integer 2 5) gen-body-neutral-node))
@@ -42,10 +42,10 @@
                                bindings
                                defs)
                           (assert body non-defs))
-              (assert (get-location result)
-                      (get-location node))
-              (assert (get-location (ast-letrec-body result))
-                      (get-location node)))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert (ast-node-location (ast-letrec-body result))
+                      (ast-node-location node)))))
 
  (it "should disallow not well-formed bodies"
      (check ((exprs (gen-list (gen-integer 0 5) gen-valid-def-node))

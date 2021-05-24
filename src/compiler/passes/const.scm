@@ -34,7 +34,7 @@
      (replace expr
               (generated
                (make-list-node
-                (list (at (get-location expr)
+                (list (at (ast-node-location expr)
                           (generated
                            (make-symbol-node (ast-node-type expr))))
                       (ast-quoted-expr expr))))))

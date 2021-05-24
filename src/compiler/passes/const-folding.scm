@@ -21,7 +21,7 @@
               ((primop-app 'cdr (const (list _ . ,rest)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-list-node rest))))))
               ((primop-app 'cadr (const (list _ ,second . ,rest)))
@@ -30,46 +30,46 @@
               ((primop-app 'cddr (const (list _ _ . ,rest)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-list-node rest))))))
               ((primop-app 'list (const (list . ,values)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-list-node values))))))
               ((primop-app 'cons (const ,first) (const (list . ,rest)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-list-node (cons first rest)))))))
               ((primop-app '* (const (number ,a)) (const (number ,b)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-number-node (* (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '+ (const (number ,a)) (const (number ,b)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-number-node (+ (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '/ (const (number ,a)) (const (number ,b)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-number-node (/ (ast-number-value a)
                                                    (ast-number-value b))))))))
               ((primop-app '- (const (number ,a)) (const (number ,b)))
                (replace expr
                         (make-const-node
-                         (at (get-location expr)
+                         (at (ast-node-location expr)
                              (generated
                               (make-number-node (- (ast-number-value a)
                                                    (ast-number-value b))))))))

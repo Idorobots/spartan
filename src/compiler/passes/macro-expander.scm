@@ -61,7 +61,7 @@
 (define (when-macro expr)
   (ast-case expr
    ((list 'when ,cond ,first . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-if-node cond
                              (at loc
@@ -77,7 +77,7 @@
 (define (unless-macro expr)
   (ast-case expr
    ((list 'unless ,cond ,first . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-if-node cond
                              (at loc
@@ -93,10 +93,10 @@
 (define (cond-macro expr)
   (ast-case expr
    ((list 'cond (list 'else ,else-first . ,else-rest))
-    (at (get-location expr)
+    (at (ast-node-location expr)
         (make-body-node (cons else-first else-rest) "Bad `cond` else clause")))
    ((list 'cond (list ,cond ,branch-first . ,branch-rest) . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-if-node cond
                              (at loc
@@ -118,10 +118,10 @@
    ((list ,and ,first . ,rest)
     (replace expr
              (make-if-node first
-                           (at (get-location expr)
+                           (at (ast-node-location expr)
                                (make-list-node
                                 (cons and rest)))
-                           (at (get-location expr)
+                           (at (ast-node-location expr)
                                (make-symbol-node 'false)))))
    (else
     (let ((node (ast-list-car expr)))
@@ -136,9 +136,9 @@
    ((list ,or ,first . ,rest)
     (replace expr
              (make-if-node first
-                           (at (get-location expr)
+                           (at (ast-node-location expr)
                                (make-symbol-node 'true))
-                           (at (get-location expr)
+                           (at (ast-node-location expr)
                                (make-list-node
                                 (cons or rest))))))
    (else
@@ -150,16 +150,16 @@
 (define (let*-macro expr)
   (ast-case expr
    ((list 'let* () ,first . ,rest)
-    (at (get-location expr)
+    (at (ast-node-location expr)
         (make-body-node (cons first rest) "Bad `let*` body syntax")))
    ((list 'let* (list ,first-binding . ,rest-bindings) . ,body)
     (replace expr
              (make-let-node (valid-bindings (list first-binding) "Bad `let*` bindings syntax")
-                           (at (get-location expr)
+                           (at (ast-node-location expr)
                                (make-list-node
-                                (list* (at (get-location expr)
+                                (list* (at (ast-node-location expr)
                                            (make-symbol-node 'let*))
-                                       (at (get-location expr) ;; FIXME Could use a better location.
+                                       (at (ast-node-location expr) ;; FIXME Could use a better location.
                                            (make-list-node rest-bindings))
                                        body))))))
    (else
@@ -171,7 +171,7 @@
 (define (letcc-macro expr)
   (ast-case expr
    ((list 'letcc ,name ,first . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-app-node (at loc
                                   (make-symbol-node 'call/current-continuation))
@@ -188,7 +188,7 @@
 (define (shift-macro expr)
   (ast-case expr
    ((list 'shift ,name ,first . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-app-node (at loc
                                   (make-symbol-node 'call/shift))
@@ -205,7 +205,7 @@
 (define (reset-macro expr)
   (ast-case expr
    ((list 'reset ,first . ,rest)
-    (let ((loc (get-location expr)))
+    (let ((loc (ast-node-location expr)))
       (replace expr
                (make-app-node (at loc
                                   (make-symbol-node 'call/reset))
@@ -223,10 +223,10 @@
   (ast-case expr
    ((list 'handle ,subexpr ,handler)
     (replace expr
-             (make-app-node (at (get-location expr)
+             (make-app-node (at (ast-node-location expr)
                                 (make-symbol-node 'call/handler))
                             (list handler
-                                  (at (get-location expr)
+                                  (at (ast-node-location expr)
                                       (make-lambda-node '()
                                                         subexpr))))))
    (else
@@ -241,14 +241,14 @@
     (let ((names (map extract-definition-name defs)))
       (replace expr
                (make-body-node (append defs
-                                       (list (at (get-location expr)
+                                       (list (at (ast-node-location expr)
                                                  (make-primop-app-node
                                                   '&make-structure
                                                   (map (lambda (n)
-                                                         (at (get-location n)
+                                                         (at (ast-node-location n)
                                                              (make-primop-app-node
                                                               '&structure-binding
-                                                              (list (at (get-location n)
+                                                              (list (at (ast-node-location n)
                                                                         (make-quote-node n))
                                                                     n))))
                                                        names)))))
@@ -276,11 +276,11 @@
     (replace expr
              (context "Bad `module` syntax"
                       (make-def-node name
-                                     (at (get-location expr)
+                                     (at (ast-node-location expr)
                                          (make-lambda-node (map (flip valid-symbol "Bad `module` dependencies syntax") deps)
-                                                           (at (get-location expr)
+                                                           (at (ast-node-location expr)
                                                                (make-list-node
-                                                                (cons (at (get-location expr)
+                                                                (cons (at (ast-node-location expr)
                                                                           (make-symbol-node 'structure))
                                                                       body)))))))))
    (else
