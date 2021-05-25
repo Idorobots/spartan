@@ -90,25 +90,20 @@
          (subs (make-subs
                 (map (lambda (formal tmp)
                        (cons (ast-symbol-value formal)
-                             (lambda (orig)
-                               (at (ast-node-location orig)
-                                   tmp))))
+                             (constantly tmp)))
                      formals
                      renamed))))
     (reconstruct-let-node original
                           (map (lambda (var val)
-                                 (at (ast-node-location val)
-                                     (generated
-                                      (make-ast-binding var val))))
+                                 (generated
+                                  (make-ast-binding (ast-node-location val) var val)))
                                renamed
                                args)
                           (substitute-symbols subs body))))
 
 (define (temporary-name original)
-  (at (ast-node-location original)
-      (generated
-       (make-ast-symbol
-        (gensym (ast-symbol-value original))))))
+  (make-ast-gensym (ast-node-location original)
+                   (ast-symbol-value original)))
 
 (define +max-inlineable-size+ 10)
 

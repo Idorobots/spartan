@@ -30,13 +30,13 @@
     (let* ((defs (extract-defs exprs))
            (non-defs (extract-non-defs exprs)))
       (if (> (length defs) 0)
-          (replace expr
-                   (generated
-                    (make-ast-letrec (unique-bindings (map expand-body defs)
-                                                       (ast-node-context expr))
-                                      (reconstruct-simple-body
-                                       (map expand-body non-defs)
-                                       expr))))
+          (generated
+           (make-ast-letrec (ast-node-location expr)
+                            (unique-bindings (map expand-body defs)
+                                             (ast-node-context expr))
+                            (reconstruct-simple-body
+                             (map expand-body non-defs)
+                             expr)))
           (reconstruct-simple-body
            (map expand-body exprs)
            expr))))
@@ -52,9 +52,8 @@
   (foldr (lambda (e acc)
            (ast-case e
             ((def ,name ,value)
-             (cons (replace e
-                            (generated
-                             (make-ast-binding name value)))
+             (cons (generated
+                    (make-ast-binding (ast-node-location e) name value))
                    acc))
             (else acc)))
          '()
@@ -73,7 +72,9 @@
           ((= (length exprs) 1)
            (car exprs))
           (else
-           (at (ast-node-location parent)
-               (generated
-                ;; NOTE The context should be preserved.
-                (set-ast-node-context (make-ast-do exprs) ctx)))))))
+           (generated
+            ;; NOTE The context should be preserved.
+            (set-ast-node-context
+             (make-ast-do (ast-node-location parent)
+                          exprs)
+             ctx))))))

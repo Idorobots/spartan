@@ -12,10 +12,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (ast-node-location var)
-                                  (set-ast-node-free-vars (set fv)
-                                                          (set-ast-node-bound-vars (set sym)
-                                                                                   (make-ast-binding var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -45,10 +46,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (ast-node-location var)
-                                  (set-ast-node-free-vars (set fv)
-                                                          (set-ast-node-bound-vars (set sym)
-                                                                                   (make-ast-binding var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -78,10 +80,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (ast-node-location var)
-                                  (set-ast-node-free-vars (set fv)
-                                                          (set-ast-node-bound-vars (set sym)
-                                                                                   (make-ast-binding var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -114,7 +117,7 @@
              (lambda (bindings subs)
                (extend-subs (map (lambda (binding)
                                    (cons (ast-symbol-value (ast-binding-var binding))
-                                         (make-ast-number 23)))
+                                         (make-ast-number (location 5 23) 23)))
                                  bindings)
                             subs))
              (lambda (subs expr kont)

@@ -94,10 +94,9 @@
                                               (ast-list-matches? (ast-app-args expr) (cddr pattern)))))
                   ((primop-app) (and (ast-primop-app? expr)
                                      ;; NOTE Spoofs a full symbol node for the op to make matching easier.
-                                     (unify-bindings (ast-matches? (at (ast-node-location expr)
-                                                                       (generated
-                                                                        (make-ast-symbol
-                                                                         (ast-primop-app-op expr))))
+                                     (unify-bindings (ast-matches? (generated
+                                                                    (make-ast-symbol (ast-node-location expr)
+                                                                                     (ast-primop-app-op expr)))
                                                                    (cadr pattern))
                                                      (ast-list-matches? (ast-primop-app-args expr) (cddr pattern)))))
                   ((lambda) (and (ast-lambda? expr)

@@ -8,34 +8,19 @@
      (assert (ast-set (ast-node 'value 23) 'other-value 5)
              (ast-node 'value 23 'other-value 5)))
 
- (it "`at` can add location"
-     (assert (at (location 5 23)
-                 (ast-node 'value 'value))
-             (ast-node 'value 'value 'location (location 5 23)))
-     (assert (at (location 5 23)
-                 (ast-node 'value 'value 'location (location 10 15)))
-             (ast-node 'value 'value 'location (location 5 23))))
-
  (it "`generate` can mark node artificial"
      (assert (generated (ast-node 'value 'value))
              (ast-node 'value 'value 'generated #t))
      (assert (generated (ast-node 'value 'value 'generated #f))
              (ast-node 'value 'value 'generated #t)))
 
- (it "`at` preserves artificial state"
-     (assert (at (location 5 23)
-                 (generated (ast-node 'value 'value)))
-             (ast-node 'value 'value 'location (location 5 23) 'generated #t)))
-
  (it "`replace` preserves location & generated state"
-     (let ((node (at (location 5 23)
-                     (generated (ast-node 'value 'value)))))
+     (let ((node (generated (ast-node 'value 'value 'location (location 5 23)))))
        (assert (replace node
                         (ast-node 'value 'another-value))
                (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))
        (assert (replace node
-                        (at (location 23 5)
-                            (ast-node 'value 'another-value)))
+                        (ast-node 'value 'another-value 'location (location 23 5)))
                (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))))
 
  (it "`location<?` correctly compares locations"
@@ -51,10 +36,8 @@
                          (location 5 23))))
 
  (it "ast-node-free-vars allow setting free vars"
-     (let ((node (at (location 5 23)
-                     (ast-node 'type 'not-a-symbol 'value 'value)))
-           (sym (at (location 5 23)
-                    (make-ast-symbol 'foo))))
+     (let ((node (ast-node 'type 'not-a-symbol 'value 'value 'location (location 5 23)))
+           (sym (make-ast-symbol (location 5 23) 'foo)))
        (assert (ast-node-free-vars sym)
                (set 'foo))
        (assert (set-ast-node-free-vars (set 'foo 'bar) sym)
@@ -70,8 +53,7 @@
                (set))))
 
  (it "ast-node-bound-vars allow setting bound vars"
-     (let ((node (at (location 5 23)
-                     (ast-node 'type 'not-a-symbol 'value 'value))))
+     (let ((node (ast-node 'type 'not-a-symbol 'value 'value 'location (location 5 23))))
        (assert (set-ast-node-bound-vars (set) node)
                node)
        (assert (ast-node-bound-vars
@@ -86,8 +68,9 @@
 (describe
  "AST map"
  (it "maps various AST nodes"
-     (define ast (make-ast-list (list (make-ast-symbol 'foo)
-                                      (make-ast-number 23))))
+     (define l (location 5 23))
+     (define ast (make-ast-list l (list (make-ast-symbol l 'foo)
+                                        (make-ast-number l 23))))
      (assert (map-ast id ast)
              ast)
      (assert (map-ast (lambda (e)
@@ -95,142 +78,146 @@
                             (set-ast-number-value e (* 2 (ast-number-value e)))
                             e))
                       ast)
-             (make-ast-list (list (make-ast-symbol 'foo)
-                                  (make-ast-number 46))))
+             (make-ast-list l (list (make-ast-symbol l 'foo)
+                                    (make-ast-number l 46))))
      (assert (map-ast (lambda (e)
                         (if (ast-number? e)
                             (set-ast-number-value e (+ 2 (ast-number-value e)))
                             e))
-                      (make-ast-if (make-ast-number 23)
-                                   (make-ast-number 5)
-                                   (make-ast-number 0)))
-             (make-ast-if (make-ast-number 25)
-                          (make-ast-number 7)
-                          (make-ast-number 2)))
+                      (make-ast-if l
+                                   (make-ast-number l 23)
+                                   (make-ast-number l 5)
+                                   (make-ast-number l 0)))
+             (make-ast-if l
+                          (make-ast-number l 25)
+                          (make-ast-number l 7)
+                          (make-ast-number l 2)))
      (assert (map-ast (lambda (e)
                         (if (ast-number? e)
                             (set-ast-number-value e (+ 2 (ast-number-value e)))
                             e))
-                      (make-ast-do
-                       (list (make-ast-number 23)
-                             (make-ast-number 5)
-                             (make-ast-number 0))))
-             (make-ast-do
-              (list (make-ast-number 25)
-                    (make-ast-number 7)
-                    (make-ast-number 2)))))
+                      (make-ast-do l
+                                   (list (make-ast-number l 23)
+                                         (make-ast-number l 5)
+                                         (make-ast-number l 0))))
+             (make-ast-do l
+                          (list (make-ast-number l 25)
+                                (make-ast-number l 7)
+                                (make-ast-number l 2)))))
 
  (it "preserves property values"
-     (define ast (make-ast-list
-                  (list (at (location 5 23)
-                            (make-ast-symbol 'foo))
-                        (generated (make-ast-number 23)))))
+     (define ast (make-ast-list (location 5 23)
+                                (list (make-ast-symbol (location 5 23) 'foo)
+                                      (generated (make-ast-number (location 7 13) 23)))))
      (assert (map-ast id ast)
              ast)))
 
 (describe
  "ast-matches?"
  (it "underscore matches anything"
-     (assert (ast-matches? (make-ast-symbol 'foo) '_)
+     (assert (ast-matches? (make-ast-symbol (location 5 23) 'foo) '_)
              (empty-bindings))
-     (assert (ast-matches? (make-ast-number 23) '_)
+     (assert (ast-matches? (make-ast-number (location 5 23) 23) '_)
              (empty-bindings))
-     (assert (ast-matches? (make-ast-list (list)) '_)
+     (assert (ast-matches? (make-ast-list (location 5 23) (list)) '_)
              (empty-bindings)))
 
  (it "quoted symbols match only the same symbol nodes"
-     (assert (ast-matches? (make-ast-symbol 'foo) ''foo)
+     (assert (ast-matches? (make-ast-symbol (location 5 23) 'foo) ''foo)
              (empty-bindings))
-     (assert (not (ast-matches? (make-ast-symbol 'bar) ''foo)))
-     (assert (not (ast-matches? (make-ast-number 23) ''foo)))
-     (assert (not (ast-matches? (make-ast-list (list)) ''foo))))
+     (assert (not (ast-matches? (make-ast-symbol (location 5 23) 'bar) ''foo)))
+     (assert (not (ast-matches? (make-ast-number (location 5 23) 23) ''foo)))
+     (assert (not (ast-matches? (make-ast-list (location 5 23) (list)) ''foo))))
 
  (it "lists map the same length list nodes"
+     (define l (location 5 23))
      (assert (ast-list-matches? '() '())
              (empty-bindings))
-     (assert (ast-list-matches? (list (make-ast-symbol 'foo)
-                                      (make-ast-symbol 'bar))
+     (assert (ast-list-matches? (list (make-ast-symbol l 'foo)
+                                      (make-ast-symbol l 'bar))
                                 '(_ _))
              (empty-bindings))
-     (assert (not (ast-list-matches? (list (make-ast-symbol 'foo)
-                                           (make-ast-symbol 'bar))
+     (assert (not (ast-list-matches? (list (make-ast-symbol l 'foo)
+                                           (make-ast-symbol l 'bar))
                                      '(_))))
-     (assert (not (ast-list-matches? (list (make-ast-symbol 'foo)
-                                           (make-ast-symbol 'bar))
+     (assert (not (ast-list-matches? (list (make-ast-symbol l 'foo)
+                                           (make-ast-symbol l 'bar))
                                      '(_ _ _))))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-symbol 'foo)
-                                  (make-ast-symbol 'bar)))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-symbol l 'foo)
+                                                (make-ast-symbol l 'bar)))
                            '(list _ _))
              (empty-bindings))
-     (assert (ast-matches? (make-ast-list '())
+     (assert (ast-matches? (make-ast-list l '())
                            '())
              (empty-bindings))
-     (assert (not (ast-matches? (make-ast-list
-                                 (list (make-ast-symbol 'foo)
-                                       (make-ast-symbol 'bar)))
+     (assert (not (ast-matches? (make-ast-list l
+                                               (list (make-ast-symbol l 'foo)
+                                                     (make-ast-symbol l 'bar)))
                                 '(list _))))
-     (assert (not (ast-matches? (make-ast-list
-                                 (list (make-ast-symbol 'foo)
-                                       (make-ast-symbol 'bar)))
+     (assert (not (ast-matches? (make-ast-list l
+                                               (list (make-ast-symbol l 'foo)
+                                                     (make-ast-symbol l 'bar)))
                                 '(list _ _ _))))
-     (assert (not (ast-matches? (make-ast-symbol 'foo)
+     (assert (not (ast-matches? (make-ast-symbol l 'foo)
                                 '(list _ _)))))
 
  (it "allows matching multiple subexpressions"
-     (assert (ast-list-matches? (list (make-ast-symbol 'foo)
-                                      (make-ast-symbol 'bar))
+     (define l (location 5 23))
+     (assert (ast-list-matches? (list (make-ast-symbol l 'foo)
+                                      (make-ast-symbol l 'bar))
                                 '(_ . _))
              (empty-bindings))
-     (assert (ast-list-matches? (list (make-ast-symbol 'foo)
-                                      (make-ast-symbol 'bar)
-                                      (make-ast-symbol 'baz)
-                                      (make-ast-symbol 'faz))
+     (assert (ast-list-matches? (list (make-ast-symbol l 'foo)
+                                      (make-ast-symbol l 'bar)
+                                      (make-ast-symbol l 'baz)
+                                      (make-ast-symbol l 'faz))
                                 '(_ . _))
              (empty-bindings))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-symbol 'foo)
-                                  (make-ast-symbol 'bar)))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-symbol l 'foo)
+                                                (make-ast-symbol l 'bar)))
                            '(list _ . _))
              (empty-bindings))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-symbol 'foo)
-                                  (make-ast-symbol 'bar)
-                                  (make-ast-symbol 'baz)
-                                  (make-ast-symbol 'faz)))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-symbol l 'foo)
+                                                (make-ast-symbol l 'bar)
+                                                (make-ast-symbol l 'baz)
+                                                (make-ast-symbol l 'faz)))
                            '(list _ . _))
              (empty-bindings))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-symbol 'foo)))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-symbol l 'foo)))
                            '(list _ . _))
              (empty-bindings))
-     (assert (not (ast-matches? (make-ast-list '())
+     (assert (not (ast-matches? (make-ast-list l '())
                                 '(list _ . _))))
-     (assert (not (ast-matches? (make-ast-symbol 'foo)
+     (assert (not (ast-matches? (make-ast-symbol l 'foo)
                                 '(list _ . _)))))
 
  (it "allows binding subpatterns as variables"
-     (assert (ast-matches? (make-ast-symbol 'foo)
+     (define l (location 5 23))
+     (assert (ast-matches? (make-ast-symbol l 'foo)
                            '(unquote foo))
-             (bindings 'foo (make-ast-symbol 'foo)))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-number 1)
-                                  (make-ast-number 2)
-                                  (make-ast-number 3)))
+             (bindings 'foo (make-ast-symbol l 'foo)))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-number l 1)
+                                                (make-ast-number l 2)
+                                                (make-ast-number l 3)))
                            '(list ,one ,two ,three))
              (make-bindings
-              (list (cons 'one (make-ast-number 1))
-                    (cons 'two (make-ast-number 2))
-                    (cons 'three (make-ast-number 3)))))
-     (assert (ast-matches? (make-ast-list
-                            (list (make-ast-number 1)
-                                  (make-ast-number 2)
-                                  (make-ast-number 3)))
+              (list (cons 'one (make-ast-number l 1))
+                    (cons 'two (make-ast-number l 2))
+                    (cons 'three (make-ast-number l 3)))))
+     (assert (ast-matches? (make-ast-list l
+                                          (list (make-ast-number l 1)
+                                                (make-ast-number l 2)
+                                                (make-ast-number l 3)))
                            '(list ,one . ,rest))
              (make-bindings
-              (list (cons 'one (make-ast-number 1))
-                    (cons 'rest (list (make-ast-number 2)
-                                      (make-ast-number 3))))))))
+              (list (cons 'one (make-ast-number l 1))
+                    (cons 'rest (list (make-ast-number l 2)
+                                      (make-ast-number l 3))))))))
 
 (describe
  "ast-eqv?"

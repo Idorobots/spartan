@@ -37,10 +37,9 @@
                          (push! errors error)
                          ;; NOTE Continue analysis with a special "error" object.
                          ((compilation-error-restart error)
-                          (at (compilation-error-location error)
-                              (generated
-                               (make-ast-error
-                                (compilation-error-where error))))))))
+                          (generated
+                           (make-ast-error (compilation-error-location error)
+                                           (compilation-error-where error)))))))
                    (thunk))))
     (list result (deref errors))))
 

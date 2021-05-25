@@ -33,7 +33,7 @@
                    (bindings (ast-let-bindings result)))
               (assert (map ast-binding-complexity bindings)
                       '(complex lambda))
-              (assert (map ast-node-self-recursive bindings)
+              (assert (map ast-binding-self-recursive bindings)
                       '(#f #f)))))
 
  (it "should annotate letrec bindings with complexity & recursivity"
@@ -68,6 +68,6 @@
                    (bindings (ast-letrec-bindings result)))
               (assert (map ast-binding-complexity bindings)
                       '(simple complex lambda lambda complex complex))
-              (assert (map ast-node-self-recursive bindings)
+              (assert (map ast-binding-self-recursive bindings)
                       ;; NOTE The last complex value is not considered self-recursive. At least not directly.
                       '(#f #t #f #t #f #f))))))

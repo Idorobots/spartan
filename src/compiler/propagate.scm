@@ -78,22 +78,22 @@
   (if (empty? bindings)
       body
       (compute-let-fv
-       (at (ast-node-location parent)
-           (make-ast-let bindings
-                         body)))))
+       (make-ast-let (ast-node-location parent)
+                     bindings
+                     body))))
 
 (define (reconstruct-letrec-node parent bindings body)
   (if (empty? bindings)
       body
       (compute-letrec-fv
-       (at (ast-node-location parent)
-           (make-ast-letrec bindings
-                            body)))))
+       (make-ast-letrec (ast-node-location parent)
+                        bindings
+                        body))))
 
 (define (reconstruct-fix-node parent bindings body)
   (if (empty? bindings)
       body
       (compute-fix-fv
-       (at (ast-node-location parent)
-           (make-ast-fix bindings
-                         body)))))
+       (make-ast-fix (ast-node-location parent)
+                     bindings
+                     body))))

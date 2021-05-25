@@ -108,16 +108,13 @@
 
 (define (gen-ref value)
   (let ((l (ast-node-location value)))
-    (at l
-        (generated
-         (make-ast-primop-app
-          'ref
-          (list (at l
-                    (generated
-                     (make-ast-const
-                      (at l
-                          (generated
-                           (make-ast-list '()))))))))))))
+    (generated
+     (make-ast-primop-app l
+                          'ref
+                          (list (generated
+                                 (make-ast-const l
+                                                 (generated
+                                                  (make-ast-list l '())))))))))
 
 (describe
  "let-ref-assign"
@@ -134,28 +131,25 @@
             (assert (let-ref-assign parent bindings body)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (ast-node-location b)
-                                                     (set-ast-binding-complexity
-                                                      (make-ast-binding var (gen-ref val))
-                                                      'simple)))
+                                           (list (set-ast-binding-complexity
+                                                  (make-ast-binding (ast-node-location b)
+                                                                    var
+                                                                    (gen-ref val))
+                                                  'simple))
                                            (set-ast-node-free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
                                                            (set v)))
-                                            (at (ast-node-location body)
-                                                (generated
-                                                 (make-ast-do
-                                                  (list (set-ast-node-free-vars
-                                                         (set-union (apply set val-fv)
-                                                                    (set v))
-                                                         (let ((l (ast-node-location val)))
-                                                           (at l
-                                                               (generated
-                                                                (make-ast-primop-app
-                                                                 'assign!
-                                                                 (list var
-                                                                       val))))))
-                                                        body))))))))))
+                                            (generated
+                                             (make-ast-do (ast-node-location body)
+                                                          (list (set-ast-node-free-vars
+                                                                 (set-union (apply set val-fv)
+                                                                            (set v))
+                                                                 (generated
+                                                                  (make-ast-primop-app (ast-node-location val)
+                                                                                       'assign!
+                                                                                       (list var val))))
+                                                                body)))))))))
 
  (it "should correctly introduce derefs"
      (check ((v gen-valid-symbol)
@@ -168,28 +162,25 @@
             (assert (let-ref-assign parent bindings var)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (ast-node-location b)
-                                                     (set-ast-binding-complexity
-                                                      (make-ast-binding var (gen-ref val))
-                                                      'simple)))
+                                           (list (set-ast-binding-complexity
+                                                  (make-ast-binding (ast-node-location b)
+                                                                    var
+                                                                    (gen-ref val))
+                                                  'simple))
                                            (set-ast-node-free-vars
                                             (set-union (apply set val-fv)
                                                        (set v))
-                                            (at (ast-node-location var)
-                                                (generated
-                                                 (make-ast-do
-                                                  (list (set-ast-node-free-vars
-                                                         (set-union (apply set val-fv)
-                                                                    (set v))
-                                                         (let ((l (ast-node-location val)))
-                                                           (at l
-                                                               (generated
-                                                                (make-ast-primop-app
-                                                                 'assign!
-                                                                 (list var
-                                                                       val))))))
-                                                        (derefy (list v)
-                                                                var))))))))))))
+                                            (generated
+                                             (make-ast-do (ast-node-location var)
+                                                          (list (set-ast-node-free-vars
+                                                                 (set-union (apply set val-fv)
+                                                                            (set v))
+                                                                 (generated
+                                                                  (make-ast-primop-app (ast-node-location val)
+                                                                                       'assign!
+                                                                                       (list var val))))
+                                                                (derefy (list v)
+                                                                        var)))))))))))
 
 (describe
  "waddell"

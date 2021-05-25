@@ -24,74 +24,51 @@
  (it "`expand-structure-refs` expands symbol into proper structure accessors"
      (let ((loc (location 5 23)))
        (assert (expand-structure-refs loc 'foo '(bar))
-               (at loc
-                   (generated
-                    (make-ast-primop-app
-                     '&structure-ref
-                     (list (at loc
-                               (make-ast-symbol 'foo))
-                           (at loc
-                               (generated
-                                (make-ast-quote
-                                 (at loc
-                                     (make-ast-symbol 'bar))))))))))
+               (generated
+                (make-ast-primop-app loc
+                                     '&structure-ref
+                                     (list (make-ast-symbol loc 'foo)
+                                           (generated
+                                            (make-ast-quote loc
+                                                            (make-ast-symbol loc 'bar)))))))
        (assert (expand-structure-refs loc 'foo '(bar baz faz))
-               (at loc
-                   (generated
-                    (make-ast-primop-app
-                     '&structure-ref
-                     (list (at loc
-                               (generated
-                                (make-ast-primop-app
-                                 '&structure-ref
-                                 (list (at loc
+               (generated
+                (make-ast-primop-app loc
+                                     '&structure-ref
+                                     (list (generated
+                                            (make-ast-primop-app loc
+                                                                 '&structure-ref
+                                                                 (list (generated
+                                                                        (make-ast-primop-app loc
+                                                                                             '&structure-ref
+                                                                                             (list (make-ast-symbol loc 'foo)
+                                                                                                   (generated
+                                                                                                    (make-ast-quote loc
+                                                                                                                    (make-ast-symbol loc 'bar))))))
+                                                                       (generated
+                                                                        (make-ast-quote loc
+                                                                                        (make-ast-symbol loc 'baz))))))
                                            (generated
-                                            (make-ast-primop-app
-                                             '&structure-ref
-                                             (list (at loc
-                                                       (make-ast-symbol 'foo))
-                                                   (at loc
-                                                       (generated
-                                                        (make-ast-quote
-                                                         (at loc
-                                                             (make-ast-symbol 'bar)))))))))
-                                       (at loc
-                                           (generated
-                                            (make-ast-quote
-                                             (at loc
-                                                 (make-ast-symbol 'baz)))))))))
-                           (at loc
-                               (generated
-                                (make-ast-quote
-                                 (at loc
-                                     (make-ast-symbol 'faz))))))))))))
+                                            (make-ast-quote loc
+                                                            (make-ast-symbol loc 'faz)))))))))
 
  (it "parses simple expressions"
      (assert (p "foo")
-             (at (location 0 3)
-                 (make-ast-symbol 'foo)))
+             (make-ast-symbol (location 0 3) 'foo))
      (assert (p "(define (foo x) 23)")
-             (at (location 0 19)
-                 (make-ast-list (list (at (location 1 7)
-                                          (make-ast-symbol 'define))
-                                      (at (location 8 15)
-                                          (make-ast-list (list (at (location 9 12)
-                                                                   (make-ast-symbol 'foo))
-                                                               (at (location 13 14)
-                                                                   (make-ast-symbol 'x)))))
-                                      (at (location 16 18)
-                                          (make-ast-number 23))))))
+             (make-ast-list (location 0 19)
+                            (list (make-ast-symbol (location 1 7) 'define)
+                                  (make-ast-list (location 8 15)
+                                                 (list (make-ast-symbol (location 9 12) 'foo)
+                                                       (make-ast-symbol (location 13 14) 'x)))
+                                  (make-ast-number (location 16 18) 23))))
      (assert (p "(define (oof x) 32)")
-             (at (location 0 19)
-                 (make-ast-list (list (at (location 1 7)
-                                          (make-ast-symbol 'define))
-                                      (at (location 8 15)
-                                          (make-ast-list (list (at (location 9 12)
-                                                                   (make-ast-symbol 'oof))
-                                                               (at (location 13 14)
-                                                                   (make-ast-symbol 'x)))))
-                                      (at (location 16 18)
-                                          (make-ast-number 32)))))))
+             (make-ast-list (location 0 19)
+                            (list (make-ast-symbol (location 1 7) 'define)
+                                  (make-ast-list (location 8 15)
+                                                 (list (make-ast-symbol (location 9 12) 'oof)
+                                                       (make-ast-symbol (location 13 14) 'x)))
+                                  (make-ast-number (location 16 18) 32)))))
 
  (it "parses structure refs"
      (assert (p "foo.bar")
@@ -101,30 +78,22 @@
 
  (it "parses strings"
      (assert (p "\"this is a string\"")
-             (at (location 0 18)
-                 (make-ast-string "this is a string")))
+             (make-ast-string (location 0 18) "this is a string"))
      (assert (p "(define foo \"this is a string\")")
-             (at (location 0 31)
-                 (make-ast-list (list (at (location 1 7)
-                                          (make-ast-symbol 'define))
-                                      (at (location 8 11)
-                                          (make-ast-symbol 'foo))
-                                      (at (location 12 30)
-                                          (make-ast-string "this is a string")))))))
+             (make-ast-list (location 0 31)
+                            (list (make-ast-symbol (location 1 7) 'define)
+                                  (make-ast-symbol (location 8 11) 'foo)
+                                  (make-ast-string (location 12 30) "this is a string")))))
 
  (it "parses comments"
      (assert (p "(define (foo x) ;; Coments should be removed!
                    true)")
-             (at (location 0 70)
-                 (make-ast-list (list (at (location 1 7)
-                                          (make-ast-symbol 'define))
-                                      (at (location 8 15)
-                                          (make-ast-list (list (at (location 9 12)
-                                                                   (make-ast-symbol 'foo))
-                                                               (at (location 13 14)
-                                                                   (make-ast-symbol 'x)))))
-                                      (at (location 65 69)
-                                          (make-ast-symbol 'true)))))))
+             (make-ast-list (location 0 70)
+                            (list (make-ast-symbol (location 1 7) 'define)
+                                  (make-ast-list (location 8 15)
+                                                 (list (make-ast-symbol (location 9 12) 'foo)
+                                                       (make-ast-symbol (location 13 14) 'x)))
+                                  (make-ast-symbol (location 65 69) 'true)))))
 
  (it "handles invalid symbols gracefully"
      (assert (pe "foo.")

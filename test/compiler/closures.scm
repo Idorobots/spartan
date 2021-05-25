@@ -56,8 +56,7 @@
               (assert-ast result
                           (do ,converted-var)
                           (assert converted-var
-                                  (at (ast-node-location (car nodes))
-                                      env)))))
+                                  (set-ast-node-location env (ast-node-location (car nodes)))))))
      (check ((env gen-valid-symbol-node)
              (nodes (gen-arg-list 2))
              (node (apply gen-specific-do-node nodes))

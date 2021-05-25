@@ -22,7 +22,8 @@
    ((primop-app _ . ,rest)
     (let ((e (common-subexpr subexprs expr)))
       (if e
-          (replace expr (ast-binding-var e))
+          (replace expr
+                   (ast-binding-var e))
           (walk-ast (partial cse subexprs) expr))))
    ((let ,bindings ,body)
     (let* ((updated (append (extract-subexprs bindings)

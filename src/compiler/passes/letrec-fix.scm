@@ -87,28 +87,26 @@
       body
       (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
-                          (at (ast-node-location b)
-                              (set-ast-binding-complexity
-                               (make-ast-binding
-                                (ast-binding-var b)
-                                (let* ((val (ast-binding-val b))
-                                       (val-loc (ast-node-location val)))
-                                  (at val-loc
-                                      (make-ast-primop-app 'ref
-                                                            (list (at val-loc
-                                                                      (generated
-                                                                       (make-ast-const
-                                                                        (at val-loc
-                                                                            (generated
-                                                                             (make-ast-list '())))))))))))
-                               'simple)))
+                          (set-ast-binding-complexity
+                           (make-ast-binding (ast-node-location b)
+                                             (ast-binding-var b)
+                                             (let* ((val (ast-binding-val b))
+                                                    (val-loc (ast-node-location val)))
+                                               (make-ast-primop-app val-loc
+                                                                    'ref
+                                                                    (list (generated
+                                                                           (make-ast-const val-loc
+                                                                                           (generated
+                                                                                            (make-ast-list val-loc '()))))))))
+                           'simple))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
                                (set-ast-node-free-vars (set-insert (ast-node-free-vars val) (safe-symbol-value var))
-                                                       (at (ast-node-location val)
-                                                           (make-ast-primop-app 'assign! (list var val))))))
+                                                       (make-ast-primop-app (ast-node-location val)
+                                                                            'assign!
+                                                                            (list var val)))))
                            bindings))
              (body (derefy vars body)))
         (generated
@@ -118,9 +116,9 @@
                                    body
                                    (set-ast-node-free-vars (set-union (ast-node-free-vars body)
                                                                       (set-sum (map ast-node-free-vars setters)))
-                                                           (at (ast-node-location body)
-                                                               (generated
-                                                                (make-ast-do (append setters (list body))))))))))))
+                                                           (generated
+                                                                (make-ast-do (ast-node-location body)
+                                                                             (append setters (list body)))))))))))
 
 (define (derefy refs expr)
   (substitute-symbols
@@ -129,7 +127,8 @@
            (cons ref
                  (lambda (expr)
                    (set-ast-node-free-vars (set ref)
-                                           (at (ast-node-location expr)
-                                               (make-ast-primop-app 'deref (list expr)))))))
+                                           (make-ast-primop-app (ast-node-location expr)
+                                                                'deref
+                                                                (list expr))))))
          refs))
    expr))

@@ -63,11 +63,10 @@
    ((list 'when ,cond ,first . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-if cond
-                             (at loc
-                                 (make-ast-body (cons first rest) "Bad `when` body syntax"))
-                             (at loc
-                                 (make-ast-symbol 'nil))))))
+               (make-ast-if loc
+                            cond
+                             (make-ast-body loc (cons first rest) "Bad `when` body syntax")
+                             (make-ast-symbol loc 'nil)))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -79,11 +78,10 @@
    ((list 'unless ,cond ,first . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-if cond
-                             (at loc
-                                 (make-ast-symbol 'nil))
-                             (at loc
-                                 (make-ast-body (cons first rest) "Bad `unless` body syntax"))))))
+               (make-ast-if loc
+                            cond
+                             (make-ast-symbol loc 'nil)
+                             (make-ast-body loc (cons first rest) "Bad `unless` body syntax")))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -93,18 +91,18 @@
 (define (cond-macro expr)
   (ast-case expr
    ((list 'cond (list 'else ,else-first . ,else-rest))
-    (at (ast-node-location expr)
-        (make-ast-body (cons else-first else-rest) "Bad `cond` else clause")))
+    (make-ast-body (ast-node-location expr)
+                   (cons else-first else-rest)
+                   "Bad `cond` else clause"))
    ((list 'cond (list ,cond ,branch-first . ,branch-rest) . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-if cond
-                             (at loc
-                                 (make-ast-body (cons branch-first branch-rest) "Bad `cond` clause"))
-                             (at loc
-                                 (make-ast-list
-                                  (cons (ast-list-car expr)
-                                        rest)))))))
+               (make-ast-if loc
+                            cond
+                             (make-ast-body loc (cons branch-first branch-rest) "Bad `cond` clause")
+                             (make-ast-list loc
+                                            (cons (ast-list-car expr)
+                                                  rest))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -116,13 +114,12 @@
    ((list 'and ,last)
     last)
    ((list ,and ,first . ,rest)
-    (replace expr
-             (make-ast-if first
-                           (at (ast-node-location expr)
-                               (make-ast-list
-                                (cons and rest)))
-                           (at (ast-node-location expr)
-                               (make-ast-symbol 'false)))))
+    (let ((loc (ast-node-location expr)))
+      (replace expr
+             (make-ast-if loc
+                          first
+                          (make-ast-list loc (cons and rest))
+                           (make-ast-symbol loc 'false)))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -134,13 +131,12 @@
    ((list 'or ,last)
     last)
    ((list ,or ,first . ,rest)
-    (replace expr
-             (make-ast-if first
-                           (at (ast-node-location expr)
-                               (make-ast-symbol 'true))
-                           (at (ast-node-location expr)
-                               (make-ast-list
-                                (cons or rest))))))
+    (let ((loc (ast-node-location expr)))
+      (replace expr
+             (make-ast-if loc
+                          first
+                          (make-ast-symbol loc 'true)
+                          (make-ast-list loc (cons or rest))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -150,18 +146,18 @@
 (define (let*-macro expr)
   (ast-case expr
    ((list 'let* () ,first . ,rest)
-    (at (ast-node-location expr)
-        (make-ast-body (cons first rest) "Bad `let*` body syntax")))
+    (make-ast-body (ast-node-location expr)
+                   (cons first rest)
+                   "Bad `let*` body syntax"))
    ((list 'let* (list ,first-binding . ,rest-bindings) . ,body)
-    (replace expr
-             (make-ast-let (valid-bindings (list first-binding) "Bad `let*` bindings syntax")
-                           (at (ast-node-location expr)
-                               (make-ast-list
-                                (list* (at (ast-node-location expr)
-                                           (make-ast-symbol 'let*))
-                                       (at (ast-node-location expr) ;; FIXME Could use a better location.
-                                           (make-ast-list rest-bindings))
-                                       body))))))
+    (let ((loc (ast-node-location expr)))
+      (replace expr
+               (make-ast-let loc
+                             (valid-bindings (list first-binding) "Bad `let*` bindings syntax")
+                             (make-ast-list loc
+                                            (list* (make-ast-symbol loc 'let*)
+                                                   (make-ast-list loc rest-bindings) ;; FIXME Could use a better location.
+                                                 body))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -173,12 +169,11 @@
    ((list 'letcc ,name ,first . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-app (at loc
-                                  (make-ast-symbol 'call/current-continuation))
-                              (list (at loc
-                                        (make-ast-lambda (list (valid-symbol name "Bad `letcc` syntax"))
-                                                          (at loc
-                                                              (make-ast-body (cons first rest) "Bad `letcc` body syntax")))))))))
+               (make-ast-app loc
+                             (make-ast-symbol loc 'call/current-continuation)
+                             (list (make-ast-lambda loc
+                                                    (list (valid-symbol name "Bad `letcc` syntax"))
+                                                    (make-ast-body loc (cons first rest) "Bad `letcc` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -190,12 +185,11 @@
    ((list 'shift ,name ,first . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-app (at loc
-                                  (make-ast-symbol 'call/shift))
-                              (list (at loc
-                                        (make-ast-lambda (list (valid-symbol name "Bad `shift` syntax"))
-                                                          (at loc
-                                                              (make-ast-body (cons first rest) "Bad `shift` body syntax")))))))))
+               (make-ast-app loc
+                             (make-ast-symbol loc 'call/shift)
+                             (list (make-ast-lambda loc
+                                                    (list (valid-symbol name "Bad `shift` syntax"))
+                                                    (make-ast-body loc (cons first rest) "Bad `shift` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -207,12 +201,11 @@
    ((list 'reset ,first . ,rest)
     (let ((loc (ast-node-location expr)))
       (replace expr
-               (make-ast-app (at loc
-                                  (make-ast-symbol 'call/reset))
-                              (list (at loc
-                                        (make-ast-lambda '()
-                                                          (at loc
-                                                              (make-ast-body (cons first rest) "Bad `reset` body syntax")))))))))
+               (make-ast-app loc
+                             (make-ast-symbol loc 'call/reset)
+                             (list (make-ast-lambda loc
+                                                    '()
+                                                    (make-ast-body loc (cons first rest) "Bad `reset` body syntax")))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -222,13 +215,12 @@
 (define (handle-macro expr)
   (ast-case expr
    ((list 'handle ,subexpr ,handler)
-    (replace expr
-             (make-ast-app (at (ast-node-location expr)
-                                (make-ast-symbol 'call/handler))
-                            (list handler
-                                  (at (ast-node-location expr)
-                                      (make-ast-lambda '()
-                                                        subexpr))))))
+    (let ((loc (ast-node-location expr)))
+      (replace expr
+               (make-ast-app loc
+                             (make-ast-symbol loc 'call/handler)
+                             (list handler
+                                   (make-ast-lambda loc '() subexpr))))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -239,20 +231,18 @@
   (ast-case expr
    ((list 'structure . ,defs)
     (let ((names (map extract-definition-name defs)))
-      (replace expr
-               (make-ast-body (append defs
-                                       (list (at (ast-node-location expr)
-                                                 (make-ast-primop-app
-                                                  '&make-structure
-                                                  (map (lambda (n)
-                                                         (at (ast-node-location n)
-                                                             (make-ast-primop-app
-                                                              '&structure-binding
-                                                              (list (at (ast-node-location n)
-                                                                        (make-ast-quote n))
-                                                                    n))))
-                                                       names)))))
-                               "Bad `structure` syntax"))))
+      (let ((loc (ast-node-location expr)))
+        (make-ast-body loc
+                       (append defs
+                               (list (make-ast-primop-app loc
+                                                          '&make-structure
+                                                          (map (lambda (n)
+                                                                 (make-ast-primop-app (ast-node-location n)
+                                                                                      '&structure-binding
+                                                                                      (list (make-ast-quote (ast-node-location n) n)
+                                                                                            n)))
+                                                               names))))
+                       "Bad `structure` syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
@@ -273,17 +263,17 @@
 (define (module-macro expr)
   (ast-case expr
    ((list 'module (list ,name . ,deps) . ,body)
-    (replace expr
-             (set-ast-node-context
-              (make-ast-def name
-                             (at (ast-node-location expr)
-                                 (make-ast-lambda (map (flip valid-symbol "Bad `module` dependencies syntax") deps)
-                                                   (at (ast-node-location expr)
-                                                       (make-ast-list
-                                                        (cons (at (ast-node-location expr)
-                                                                  (make-ast-symbol 'structure))
-                                                              body))))))
-              "Bad `module` syntax")))
+    (let ((loc (ast-node-location expr)))
+      (replace expr
+               (set-ast-node-context
+                (make-ast-def loc
+                              name
+                              (make-ast-lambda loc
+                                               (map (flip valid-symbol "Bad `module` dependencies syntax") deps)
+                                               (make-ast-list loc
+                                                              (cons (make-ast-symbol loc 'structure)
+                                                                    body))))
+                "Bad `module` syntax"))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error

@@ -320,7 +320,7 @@
              (formals (gen-arg-list (gen-integer 0 3)))
              (signature (apply gen-specific-list-node name formals))
              (body (gen-one-of (gen-number-node gen-number)
-                                gen-valid-symbol-node))
+                               gen-valid-symbol-node))
              (node (gen-specific-list-node sym signature body)))
             (let ((result (elaborate-unquoted node)))
               (assert (ast-node-location result)
@@ -382,22 +382,21 @@
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
-                        (app ,name1 . ,args1)
-                        (assert name1 name)
-                        (assert args1 args)))))
+                          (app ,name1 . ,args1)
+                          (assert name1 name)
+                          (assert args1 args)))))
 
  (it "doesn't allow bad applications"
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
-               (elaborate-unquoted (at (location 5 23)
-                                       (make-ast-list '()))))
+               (elaborate-unquoted (make-ast-list (location 5 23) '())))
              "Bad call syntax, expected at least one expression within the call:")
      (check ((contents (gen-list (gen-integer 1 3)
                                  (gen-one-of (gen-number-node gen-number)
                                              (gen-quote-node gen-simple-node))))
              (node (apply gen-specific-list-node contents)))
             (assert (with-handlers ((compilation-error?
-                              compilation-error-what))
-               (elaborate-unquoted node))
+                                     compilation-error-what))
+                      (elaborate-unquoted node))
                     (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
                             (ast-node-type (car contents)))))))

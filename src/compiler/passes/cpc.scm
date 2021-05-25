@@ -34,35 +34,36 @@
 
 (define (cpc-if expr kont)
   (let* ((loc (ast-node-location expr))
-         (ct (at loc (make-ast-gensym 'cont)))
-         (value (at loc (make-ast-gensym 'value)))
+         (ct (make-ast-gensym loc 'cont))
+         (value (make-ast-gensym loc 'value))
          (rest (lambda (v)
-                 (at loc
-                     (make-ast-yield ct v)))))
+                 (make-ast-yield loc ct v))))
     (cpc (ast-if-condition expr)
          (lambda (condition)
-           (at loc
-               (make-ast-let-1 ct
-                               (at loc
-                                   (make-ast-cont value (kont value)))
-                               (replace expr
-                                        (make-ast-if condition
-                                                     (cpc (ast-if-then expr) rest)
-                                                     (cpc (ast-if-else expr) rest)))))))))
+           (make-ast-let-1 loc
+                           ct
+                           (make-ast-cont loc value (kont value))
+                           (replace expr
+                                    (make-ast-if loc
+                                                 condition
+                                                 (cpc (ast-if-then expr) rest)
+                                                 (cpc (ast-if-else expr) rest))))))))
 
-(define (make-ast-let-1 var val body)
+(define (make-ast-let-1 loc var val body)
   (generated
-   (make-ast-let (list (at (ast-node-location var)
-                           (generated
-                            (make-ast-binding var val))))
+   (make-ast-let loc
+                 (list (generated
+                        (make-ast-binding (ast-node-location var) var val)))
                  body)))
 
-(define (make-ast-cont arg body)
+(define (make-ast-cont loc arg body)
   (generated
-   (make-ast-lambda (list arg) body)))
+   (make-ast-lambda loc (list arg) body)))
 
-(define (make-ast-yield cont hole)
-  (make-ast-primop-app '&yield-cont (list cont hole)))
+(define (make-ast-yield loc cont hole)
+  (make-ast-primop-app loc
+                       '&yield-cont
+                       (list cont hole)))
 
 (define (cpc-do expr kont)
   (cpc-sequence (ast-do-exprs expr)
@@ -80,45 +81,45 @@
 
 (define (cpc-lambda expr kont)
   (let* ((loc (ast-node-location expr))
-         (ct (at loc (make-ast-gensym 'cont))))
-    (kont (replace expr
-                   (make-ast-lambda (append (ast-lambda-formals expr)
-                                            (list ct))
-                                    (cpc (ast-lambda-body expr)
-                                         (lambda (s)
-                                           (at loc
-                                               (make-ast-yield ct s)))))))))
+         (ct (make-ast-gensym loc 'cont)))
+    (kont (-> expr
+              (set-ast-lambda-formals (append (ast-lambda-formals expr)
+                                              (list ct)))
+              (set-ast-lambda-body (cpc (ast-lambda-body expr)
+                                        (lambda (s)
+                                          (make-ast-yield loc ct s))))))))
 
 (define (cpc-primop-app expr kont)
   (let* ((args (ast-primop-app-args expr))
          (loc (ast-node-location expr))
-         (value (at loc (make-ast-gensym 'value))))
+         (value (make-ast-gensym loc 'value)))
     (cpc-sequence args
                   (lambda (args)
                     ;; NOTE The let could be ommited for non-side-effecting primops, but this way presents more
                     ;; NOTE opportunities for common subexpression elimination.
-                    (at loc
-                        (make-ast-let-1 value (set-ast-primop-app-args expr args)
-                                        (kont value)))))))
+                    (make-ast-let-1 loc
+                                    value
+                                    (set-ast-primop-app-args expr args)
+                                    (kont value))))))
 
 (define (cpc-app expr kont)
   (let* ((loc (ast-node-location expr))
-         (value (at loc (make-ast-gensym 'value)))
-         (cont (at loc
-                   (make-ast-cont value (kont value))))
+         (value (make-ast-gensym loc 'value))
+         (cont (make-ast-cont loc value (kont value)))
          (args (ast-app-args expr)))
     (cpc (ast-app-op expr)
          (lambda (op)
            (cpc-sequence args
                          (lambda (args)
-                           (replace expr
-                                    (make-ast-app op
-                                                  (append args
-                                                          (list cont))))))))))
+                           (-> expr
+                               (set-ast-app-op op)
+                               (set-ast-app-args (append args
+                                                         (list cont))))))))))
 
 (define (cpc-fix expr kont)
   (replace expr
-           (make-ast-fix (map (lambda (b)
+           (make-ast-fix (ast-node-location expr)
+                         (map (lambda (b)
                                 ;; NOTE These are guaranteed to be pure lambda expressions,
                                 ;; NOTE so no need to propagate the current continuation there.
                                 (set-ast-binding-val b (cpc (ast-binding-val b)
@@ -129,12 +130,12 @@
 
 (define (cpc-let expr kont)
   (let ((bindings (ast-let-bindings expr)))
-    (cpc-sequence (map ast-binding-val (ast-let-bindings expr))
+    (cpc-sequence (map ast-binding-val bindings)
                   (lambda (vals)
-                    (replace expr
-                             (make-ast-let (map (lambda (var val)
-                                                  (make-ast-binding var val))
-                                                (map ast-binding-var bindings)
-                                                vals)
-                                           (cpc (ast-let-body expr)
-                                                kont)))))))
+                    (-> expr
+                        (set-ast-let-bindings (map (lambda (b val)
+                                                     (set-ast-binding-val b val))
+                                                   bindings
+                                                   vals))
+                        (set-ast-let-body (cpc (ast-let-body expr)
+                                               kont)))))))

@@ -38,10 +38,10 @@
       (if (empty? filtered)
           (dce (set) final)
           (replace expr
-                   (make-ast-do
-                    (map (partial dce (set))
-                         (append filtered
-                                 (list final))))))))
+                   (make-ast-do (ast-node-location expr)
+                                (map (partial dce (set))
+                                     (append filtered
+                                             (list final))))))))
    ((if ,condition ,then ,else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))

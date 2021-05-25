@@ -52,13 +52,10 @@
 (define (set-ast-node-location node location)
   (ast-set node 'location location))
 
-(define (at location node)
-  (set-ast-node-location node location))
-
 (define (replace old new)
-  (at (ast-node-location old)
-      ((if (generated? old) generated id)
-       new)))
+  (set-ast-node-location ((if (generated? old) generated id)
+                          new)
+                         (ast-node-location old)))
 
 (define (set-ast-node-generated node gen)
   (ast-set node 'generated gen))
@@ -115,8 +112,8 @@
 ;; AST nodes
 
 ;; Number
-(define (make-ast-number value)
-  (ast-node 'type 'number 'value value))
+(define (make-ast-number loc value)
+  (ast-node 'type 'number 'value value 'location loc))
 
 (define (ast-number? node)
   (is-type? node 'number))
@@ -128,12 +125,12 @@
   (ast-set node 'value value))
 
 ;; Symbol
-(define (make-ast-symbol value)
-  (ast-node 'type 'symbol 'value value))
+(define (make-ast-symbol loc value)
+  (ast-node 'type 'symbol 'value value 'location loc))
 
-(define (make-ast-gensym root)
+(define (make-ast-gensym loc root)
   (generated
-   (make-ast-symbol (gensym root))))
+   (make-ast-symbol loc (gensym root))))
 
 (define (ast-symbol? node)
   (is-type? node 'symbol))
@@ -153,8 +150,8 @@
         (else '<error>)))
 
 ;; String
-(define (make-ast-string value)
-  (ast-node 'type 'string 'value value))
+(define (make-ast-string loc value)
+  (ast-node 'type 'string 'value value 'location loc))
 
 (define (ast-string? node)
   (is-type? node 'string))
@@ -163,8 +160,8 @@
   (ast-get node 'value))
 
 ;; List
-(define (make-ast-list values)
-  (ast-node 'type 'list 'value values))
+(define (make-ast-list loc values)
+  (ast-node 'type 'list 'value values 'location loc))
 
 (define (ast-list? node)
   (is-type? node 'list))
@@ -188,8 +185,8 @@
   (length (ast-list-values expr)))
 
 ;; If
-(define (make-ast-if condition then else)
-  (ast-node 'type 'if 'condition condition 'then then 'else else))
+(define (make-ast-if loc condition then else)
+  (ast-node 'type 'if 'condition condition 'then then 'else else 'location loc))
 
 (define (ast-if? node)
   (is-type? node 'if))
@@ -213,8 +210,8 @@
   (ast-set node 'else else))
 
 ;; Do
-(define (make-ast-do exprs)
-  (ast-node 'type 'do 'exprs exprs))
+(define (make-ast-do loc exprs)
+  (ast-node 'type 'do 'exprs exprs 'location loc))
 
 (define (ast-do? node)
   (is-type? node 'do))
@@ -226,10 +223,10 @@
   (ast-set node 'exprs exprs))
 
 ;; Implicit body
-(define (make-ast-body exprs ctx)
+(define (make-ast-body loc exprs ctx)
   (generated
    (set-ast-node-context
-    (ast-node 'type 'body 'exprs exprs)
+    (ast-node 'type 'body 'exprs exprs 'location loc)
     ctx)))
 
 (define (ast-body? node)
@@ -242,8 +239,8 @@
   (ast-set node 'exprs exprs))
 
 ;; Lambda
-(define (make-ast-lambda formals body)
-  (ast-node 'type 'lambda 'formals formals 'body body))
+(define (make-ast-lambda loc formals body)
+  (ast-node 'type 'lambda 'formals formals 'body body 'location loc))
 
 (define (ast-lambda? node)
   (is-type? node 'lambda))
@@ -261,8 +258,8 @@
   (ast-set node 'formals formals))
 
 ;; Binding
-(define (make-ast-binding var val)
-  (ast-node 'type 'binding 'var var 'val val))
+(define (make-ast-binding loc var val)
+  (ast-node 'type 'binding 'var var 'val val 'location loc))
 
 (define (ast-binding? node)
   (is-type? node 'binding))
@@ -290,16 +287,16 @@
       (ast-set binding 'self-recursive rec?)
       binding))
 
-(define (ast-node-self-recursive binding)
+(define (ast-binding-self-recursive binding)
   (ast-get* binding 'self-recursive #f))
 
 (define (recursive? bindings)
   (or (> (length bindings) 1)
-      (some? ast-node-self-recursive bindings)))
+      (some? ast-binding-self-recursive bindings)))
 
 ;; Let
-(define (make-ast-let bindings body)
-  (ast-node 'type 'let 'bindings bindings 'body body))
+(define (make-ast-let loc bindings body)
+  (ast-node 'type 'let 'bindings bindings 'body body 'location loc))
 
 (define (ast-let? node)
   (is-type? node 'let))
@@ -317,8 +314,8 @@
   (ast-set node 'body body))
 
 ;; Letrec
-(define (make-ast-letrec bindings body)
-  (ast-node 'type 'letrec 'bindings bindings 'body body))
+(define (make-ast-letrec loc bindings body)
+  (ast-node 'type 'letrec 'bindings bindings 'body body 'location loc))
 
 (define (ast-letrec? node)
   (is-type? node 'letrec))
@@ -336,8 +333,8 @@
   (ast-set node 'body body))
 
 ;; Fix
-(define (make-ast-fix bindings body)
-  (ast-node 'type 'fix 'bindings bindings 'body body))
+(define (make-ast-fix loc bindings body)
+  (ast-node 'type 'fix 'bindings bindings 'body body 'location loc))
 
 (define (ast-fix? node)
   (is-type? node 'fix))
@@ -355,8 +352,8 @@
   (ast-set node 'body body))
 
 ;; Quote
-(define (make-ast-quote value)
-  (ast-node 'type 'quote 'value value))
+(define (make-ast-quote loc value)
+  (ast-node 'type 'quote 'value value 'location loc))
 
 (define (ast-quote? node)
   (is-type? node 'quote))
@@ -368,8 +365,8 @@
   (ast-set node 'value expr))
 
 ;; Quasiquote
-(define (make-ast-quasiquote value)
-  (ast-node 'type 'quasiquote 'value value))
+(define (make-ast-quasiquote loc value)
+  (ast-node 'type 'quasiquote 'value value 'location loc))
 
 (define (ast-quasiquote? node)
   (is-type? node 'quasiquote))
@@ -381,8 +378,8 @@
   (ast-set node 'value expr))
 
 ;; Unquote
-(define (make-ast-unquote value)
-  (ast-node 'type 'unquote 'value value))
+(define (make-ast-unquote loc value)
+  (ast-node 'type 'unquote 'value value 'location loc))
 
 (define (ast-unquote? node)
   (is-type? node 'unquote))
@@ -394,8 +391,8 @@
   (ast-set node 'value expr))
 
 ;; Unquote splicing
-(define (make-ast-unquote-splicing value)
-  (ast-node 'type 'unquote-splicing 'value value))
+(define (make-ast-unquote-splicing loc value)
+  (ast-node 'type 'unquote-splicing 'value value 'location loc))
 
 (define (ast-unquote-splicing? node)
   (is-type? node 'unquote-splicing))
@@ -411,9 +408,9 @@
   (ast-get node 'value))
 
 ;; Constant
-(define (make-ast-const value)
+(define (make-ast-const loc value)
   (generated
-   (ast-node 'type 'const 'value value)))
+   (ast-node 'type 'const 'value value 'location loc)))
 
 (define (ast-const? node)
   (is-type? node 'const))
@@ -425,8 +422,8 @@
   (ast-set node 'value value))
 
 ;; Definition
-(define (make-ast-def name value)
-  (ast-node 'type 'def 'name name 'value value))
+(define (make-ast-def loc name value)
+  (ast-node 'type 'def 'name name 'value value 'location loc))
 
 (define (ast-def? node)
   (is-type? node 'def))
@@ -444,8 +441,8 @@
   (ast-set node 'value value))
 
 ;; Application
-(define (make-ast-app op args)
-  (ast-node 'type 'app 'op op 'args args))
+(define (make-ast-app loc op args)
+  (ast-node 'type 'app 'op op 'args args 'location loc))
 
 (define (ast-app? node)
   (is-type? node 'app))
@@ -463,9 +460,9 @@
   (ast-set node 'args args))
 
 ;; Primop application
-(define (make-ast-primop-app op args)
+(define (make-ast-primop-app loc op args)
   (generated
-   (ast-node 'type 'primop-app 'op op 'args args)))
+   (ast-node 'type 'primop-app 'op op 'args args 'location loc)))
 
 (define (ast-primop-app? node)
   (is-type? node 'primop-app))
@@ -480,15 +477,15 @@
   (ast-set node 'args args))
 
 ;; Parse location marker
-(define (make-ast-location)
-  (ast-node 'type '<location>))
+(define (make-ast-location loc)
+  (ast-node 'type '<location> 'location loc))
 
 (define (ast-location? node)
   (is-type? node '<location>))
 
 ;; Error within parse tree
-(define (make-ast-error expr)
-  (ast-node 'type '<error> 'expr expr))
+(define (make-ast-error loc expr)
+  (ast-node 'type '<error> 'expr expr 'location loc))
 
 (define (ast-error? node)
   (is-type? node '<error>))
