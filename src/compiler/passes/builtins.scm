@@ -16,10 +16,10 @@
 
 (define (inline-app-ops builtins expr)
   (substitute (lambda (subs expr kont)
-                (kont (ast-case expr
-                       ((app (symbol ,op) . ,args)
+                (kont (match-ast expr
+                       ((app (symbol op) args ...)
                         (apply-sub subs
-                                   (ast-symbol-value op)
+                                   op
                                    expr
                                    (constantly expr)))
                        (else

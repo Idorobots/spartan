@@ -18,14 +18,12 @@
   (propagate const-binding?
              make-const-subs
              (lambda (subs expr kont)
-               (ast-case expr
-                ((symbol _)
-                 ;; NOTE Completely replaces the expr, together with its location.
-                 (replace-sub subs
-                              (ast-symbol-value expr)
-                              (constantly expr)))
-                (else
-                 (kont expr))))
+               (if (ast-symbol? expr)
+                   ;; NOTE Completely replaces the expr, together with its location.
+                   (replace-sub subs
+                                (ast-symbol-value expr)
+                                (constantly expr))
+                   (kont expr)))
              subs
              expr))
 

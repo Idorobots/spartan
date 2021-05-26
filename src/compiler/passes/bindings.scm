@@ -16,12 +16,12 @@
           (env-update env 'ast (partial analyze-bindings #f)))))
 
 (define (analyze-bindings within-letrec? expr)
-  (ast-case expr
+  (match-ast expr
    ((let _ _)
     (walk-ast (partial analyze-bindings #f) expr))
    ((letrec _ _)
     (walk-ast (partial analyze-bindings #t) expr))
-   ((binding _ ,val)
+   ((binding _ val)
     (set-ast-binding-complexity
      (set-ast-binding-self-recursive
       (walk-ast (partial analyze-bindings within-letrec?) expr)

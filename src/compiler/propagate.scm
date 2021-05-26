@@ -12,14 +12,14 @@
     (replace-with subs
                   expr
                   (lambda (expr)
-                    (ast-case expr
+                    (match-ast expr
                      ((const _)
                       expr)
-                     ((lambda _ ,body)
+                     ((lambda _ body)
                       (set-ast-lambda-body expr (loop (filter-subs subs
                                                                    (ast-node-bound-vars expr))
                                                       body)))
-                     ((let ,bindings ,body)
+                     ((let bindings body)
                       (let* ((bs (partition-bindings partition-by bindings))
                              (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
                              (updated-subs (make-subs (car bs) filtered-subs))
@@ -28,7 +28,7 @@
                         (reconstruct-let-node expr
                                               updated-bindings
                                               (loop updated-subs body))))
-                     ((letrec ,bindings ,body)
+                     ((letrec bindings body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings));; NOTE Can't use all propagatable bindings as they might interfere.
                              (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
@@ -38,7 +38,7 @@
                         (reconstruct-letrec-node expr
                                                  updated-bindings
                                                  (loop updated-subs body))))
-                     ((fix ,bindings ,body)
+                     ((fix bindings body)
                       (let* ((bs (select-first (partition-bindings partition-by bindings)
                                                bindings)) ;; NOTE Can't use all propagatable bindings as they might interfere.
                              (filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
@@ -48,7 +48,7 @@
                         (reconstruct-fix-node expr
                                               updated-bindings
                                               (loop updated-subs body))))
-                     ((binding _ ,val)
+                     ((binding _ val)
                       (set-ast-binding-val expr (loop subs val)))
                      (else
                       (walk-ast (partial loop subs) expr))))))

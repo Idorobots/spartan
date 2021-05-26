@@ -113,8 +113,8 @@
         (reconstruct-app expr))))
 
 (define (reconstruct-if expr)
-  (ast-case expr
-   ((list 'if ,condition ,then ,else)
+  (match-ast expr
+   ((list (symbol 'if) condition then else)
     (replace expr
              (make-ast-if (ast-node-location expr)
                           condition
@@ -127,8 +127,8 @@
        "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
 
 (define (reconstruct-do expr)
-  (ast-case expr
-   ((list 'do ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'do) first rest ...)
     ;; NOTE User-supplied do needs to be body-expanded as well.
     (make-ast-body (ast-node-location expr)
                    (cons first rest)
@@ -140,8 +140,8 @@
        "Bad `do` syntax, expected at least one expression to follow:")))))
 
 (define (reconstruct-lambda expr)
-  (ast-case expr
-   ((list 'lambda ,formals ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'lambda) formals first rest ...)
     (replace expr
              (make-ast-lambda (ast-node-location expr)
                               (valid-formals formals "Bad `lambda` formal arguments syntax")
@@ -210,22 +210,22 @@
        (format "~a, expected a symbol but got a ~a instead:" prefix (ast-node-type symbol)))))
 
 (define (reconstruct-let expr)
-  (ast-case expr
-   ((list 'let (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
+  (match-ast expr
+   ((list (symbol 'let) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
              (make-ast-let (ast-node-location expr)
                            (valid-bindings (cons first-binding rest-bindings) "Bad `let` bindings syntax")
                            (make-ast-body (ast-node-location expr)
                                           (cons first-body rest-body)
                                           "Bad `let` body syntax"))))
-   ((list 'letrec (list ,first-binding . ,rest-bindings) ,first-body . ,rest-body)
+   ((list (symbol 'letrec) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
              (make-ast-letrec (ast-node-location expr)
                               (valid-bindings (cons first-binding rest-bindings) "Bad `letrec` bindings syntax")
                               (make-ast-body (ast-node-location expr)
                                              (cons first-body rest-body)
                                              "Bad `letrec` body syntax"))))
-   ((list ,head () ,first . ,rest)
+   ((list head (list) first rest ...)
     (make-ast-body (ast-node-location expr)
                    (cons first rest)
                    (format "Bad `~a` body syntax" (safe-symbol-value head))))
@@ -293,12 +293,12 @@
                  (make-ast-binding (ast-node-location binding) e e)))))
 
 (define (reconstruct-quote expr)
-  (ast-case expr
-   ((list 'quote ,value)
+  (match-ast expr
+   ((list (symbol 'quote) value)
     (replace expr
              (make-ast-quote (ast-node-location expr)
                              value)))
-   ((list 'quasiquote ,value)
+   ((list (symbol 'quasiquote) value)
     (replace expr
              (make-ast-quasiquote (ast-node-location expr)
                                   value)))
@@ -310,12 +310,12 @@
                (ast-symbol-value node)))))))
 
 (define (reconstruct-unquote expr)
-  (ast-case expr
-   ((list 'unquote ,value)
+  (match-ast expr
+   ((list (symbol 'unquote) value)
     (replace expr
              (make-ast-unquote (ast-node-location expr)
                                value)))
-   ((list 'unquote-splicing ,value)
+   ((list (symbol 'unquote-splicing) value)
     (replace expr
              (make-ast-unquote-splicing (ast-node-location expr)
                                         value)))
@@ -327,8 +327,8 @@
                (ast-symbol-value node)))))))
 
 (define (reconstruct-def expr)
-  (ast-case expr
-   ((list 'define (list ,name . ,formals) ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'define) (list name formals ...) first rest ...)
     (let ((func-def (ast-list-nth expr 1))
           (loc (ast-node-location expr)))
       (replace expr
@@ -343,7 +343,7 @@
                                                (make-ast-body loc
                                                               (cons first rest)
                                                               "Bad `define` function body syntax")))))))
-   ((list 'define ,name ,value)
+   ((list (symbol 'define) name value)
     (replace expr
              (make-ast-def (ast-node-location expr)
                            (valid-symbol name "Bad `define` syntax")
@@ -355,8 +355,8 @@
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
 (define (reconstruct-app expr)
-  (ast-case expr
-   ((list ,op . ,args)
+  (match-ast expr
+   ((list op args ...)
     (replace expr
              (make-ast-app (ast-node-location expr)
                            op

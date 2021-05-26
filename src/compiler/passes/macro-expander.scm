@@ -24,22 +24,21 @@
                      'errors (cadr result))))))
 
 (define (expand-macros expr macros)
-  (ast-case expr
-   ((a-quote _)
+  (match-ast expr
+   ((ast-quote _)
     expr)
-   ((a-quasiquote _)
+   ((ast-quasiquote _)
     expr)
-   ((list 'quote . ,rest)
+   ((list (symbol 'quote) rest ...)
     expr)
-   ((list 'quasiquote . ,rest)
+   ((list (symbol 'quasiquote) rest ...)
     expr)
-   ((list (symbol ,head) . ,rest)
-    (let ((sym (ast-symbol-value head)))
-      (if (hash-has-key? macros sym)
-          (expand-macros ((hash-ref macros sym) expr)
-                         macros)
-          (walk-ast (flip expand-macros macros)
-                    expr))))
+   ((list (symbol sym) rest ...)
+    (if (hash-has-key? macros sym)
+        (expand-macros ((hash-ref macros sym) expr)
+                       macros)
+        (walk-ast (flip expand-macros macros)
+                  expr)))
    (else
     (walk-ast (flip expand-macros macros)
               expr))))
@@ -59,8 +58,8 @@
            'module module-macro))
 
 (define (when-macro expr)
-  (ast-case expr
-   ((list 'when ,cond ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'when) cond first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-if loc
@@ -74,8 +73,8 @@
        "Bad `when` syntax, expected a condition and a body to follow:")))))
 
 (define (unless-macro expr)
-  (ast-case expr
-   ((list 'unless ,cond ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'unless) cond first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-if loc
@@ -89,12 +88,12 @@
        "Bad `unless` syntax, expected a condition and a body to follow:")))))
 
 (define (cond-macro expr)
-  (ast-case expr
-   ((list 'cond (list 'else ,else-first . ,else-rest))
+  (match-ast expr
+   ((list (symbol 'cond) (list (symbol 'else) else-first else-rest ...))
     (make-ast-body (ast-node-location expr)
                    (cons else-first else-rest)
                    "Bad `cond` else clause"))
-   ((list 'cond (list ,cond ,branch-first . ,branch-rest) . ,rest)
+   ((list (symbol 'cond) (list cond branch-first branch-rest ...) rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-if loc
@@ -110,10 +109,10 @@
        "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
 
 (define (and-macro expr)
-  (ast-case expr
-   ((list 'and ,last)
+  (match-ast expr
+   ((list (symbol 'and) last)
     last)
-   ((list ,and ,first . ,rest)
+   ((list and first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
              (make-ast-if loc
@@ -127,10 +126,10 @@
        "Bad `and` syntax, expected a list of expressions to follow:")))))
 
 (define (or-macro expr)
-  (ast-case expr
-   ((list 'or ,last)
+  (match-ast expr
+   ((list (symbol 'or) last)
     last)
-   ((list ,or ,first . ,rest)
+   ((list or first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
              (make-ast-if loc
@@ -144,12 +143,12 @@
        "Bad `or` syntax, expected a list of expressions to follow:")))))
 
 (define (let*-macro expr)
-  (ast-case expr
-   ((list 'let* () ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'let*) (list) first rest ...)
     (make-ast-body (ast-node-location expr)
                    (cons first rest)
                    "Bad `let*` body syntax"))
-   ((list 'let* (list ,first-binding . ,rest-bindings) . ,body)
+   ((list (symbol 'let*) (list first-binding rest-bindings ...) body ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-let loc
@@ -165,8 +164,8 @@
        "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
 
 (define (letcc-macro expr)
-  (ast-case expr
-   ((list 'letcc ,name ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'letcc) name first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-app loc
@@ -181,8 +180,8 @@
        "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
 
 (define (shift-macro expr)
-  (ast-case expr
-   ((list 'shift ,name ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'shift) name first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-app loc
@@ -197,8 +196,8 @@
        "Bad `shift` syntax, expected an identifier and a body to follow:")))))
 
 (define (reset-macro expr)
-  (ast-case expr
-   ((list 'reset ,first . ,rest)
+  (match-ast expr
+   ((list (symbol 'reset) first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-app loc
@@ -213,8 +212,8 @@
        "Bad `reset` syntax, expected exactly one expression to follow:")))))
 
 (define (handle-macro expr)
-  (ast-case expr
-   ((list 'handle ,subexpr ,handler)
+  (match-ast expr
+   ((list (symbol 'handle) subexpr handler)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (make-ast-app loc
@@ -228,8 +227,8 @@
        "Bad `handle` syntax, expected exactly two expressions to follow:")))))
 
 (define (structure-macro expr)
-  (ast-case expr
-   ((list 'structure . ,defs)
+  (match-ast expr
+   ((list (symbol 'structure) defs ...)
     (let ((names (map extract-definition-name defs)))
       (let ((loc (ast-node-location expr)))
         (make-ast-body loc
@@ -250,10 +249,10 @@
        "Bad `structure` syntax, expected a module specification followed by a body:")))))
 
 (define (extract-definition-name expr)
-  (ast-case expr
-   ((list 'define (list ,name . ,rest) . ,body)
+  (match-ast expr
+   ((list (symbol 'define) (list name rest ...) body ...)
     name)
-   ((list 'define ,name ,value)
+   ((list (symbol 'define) name value)
     name)
    (else
     (raise-compilation-error
@@ -261,8 +260,8 @@
      "Bad `structure` syntax, expected a definition:"))))
 
 (define (module-macro expr)
-  (ast-case expr
-   ((list 'module (list ,name . ,deps) . ,body)
+  (match-ast expr
+   ((list (symbol 'module) (list name deps ...) body ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
                (set-ast-node-context

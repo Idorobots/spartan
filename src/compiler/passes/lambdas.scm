@@ -17,9 +17,9 @@
 
 (define (lambda-inlining lambdas expr)
   (let ((loop (partial walk-ast (partial lambda-inlining lambdas))))
-    (ast-case expr
+    (match-ast expr
      ;; Beta reduction
-     ((app (lambda ,formals ,body) . ,args)
+     ((app (lambda formals body) args ...)
       (if (equal? (length formals)
                   (length args))
           (beta-reduce expr
@@ -28,8 +28,8 @@
                        (loop body))
           (loop expr)))
      ;; Actual inlining
-     ((app (symbol ,op) . ,args)
-      (let ((l (assoc (ast-symbol-value op) lambdas)))
+     ((app (symbol op) args ...)
+      (let ((l (assoc op lambdas)))
         (if l
             (let ((formals (ast-lambda-formals (cdr l))))
               (if (equal? (length formals)
@@ -42,7 +42,7 @@
                   (loop expr)))
             (loop expr))))
      ;; Collect lambdas
-     ((let ,bindings ,body)
+     ((let bindings body)
       (let ((ls (map (lambda (b)
                        (cons (ast-symbol-value (ast-binding-var b))
                              (ast-binding-val b)))
@@ -53,7 +53,7 @@
         (-> expr
             (set-ast-let-bindings (map loop bindings))
             (set-ast-let-body (lambda-inlining (append ls lambdas) body)))))
-     ((letrec ,bindings ,body)
+     ((letrec bindings body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
                               (ast-binding-val b)))
@@ -65,7 +65,7 @@
         (-> expr
             (set-ast-letrec-body (loop body))
             (set-ast-letrec-bindings (map loop bindings)))))
-     ((fix ,bindings ,body)
+     ((fix bindings body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
                               (ast-binding-val b)))

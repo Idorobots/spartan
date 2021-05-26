@@ -14,25 +14,25 @@
           (env-update env 'ast (partial cse '())))))
 
 (define (cse subexprs expr)
-  (ast-case expr
-   ((lambda _ ,body)
+  (match-ast expr
+   ((lambda _ body)
     ;; NOTE CSE is performed locally within a procedure not to inflate closure envs too much,
     ;; NOTE so this essentially cuts of all the propagated expressions thus far.
     (set-ast-lambda-body expr (cse '() body)))
-   ((primop-app _ . ,rest)
+   ((primop-app _ rest ...)
     (let ((e (common-subexpr subexprs expr)))
       (if e
           (replace expr
                    (ast-binding-var e))
           (walk-ast (partial cse subexprs) expr))))
-   ((let ,bindings ,body)
+   ((let bindings body)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
            (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
       (-> expr
           (set-ast-let-body (cse filtered body))
           (set-ast-let-bindings (map (partial cse subexprs) bindings)))))
-   ((letrec ,bindings ,body)
+   ((letrec bindings body)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
            (filtered (filter-subexprs updated (ast-node-bound-vars expr))))
@@ -44,7 +44,7 @@
                                                        filtered)
                                                b))
                                         bindings)))))
-   ((fix ,bindings _)
+   ((fix bindings _)
     (let* ((filtered (filter-subexprs subexprs (ast-node-bound-vars expr))))
       ;; NOTE These are only lambdas, so there's nothing to eliminate.
       (walk-ast (partial cse filtered) expr)))

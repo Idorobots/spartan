@@ -25,8 +25,8 @@
                      'errors (cadr result))))))
 
 (define (expand-body expr)
-  (ast-case expr
-   ((body . ,exprs)
+  (match-ast expr
+   ((ast-body exprs ...)
     (let* ((defs (extract-defs exprs))
            (non-defs (extract-non-defs exprs)))
       (if (> (length defs) 0)
@@ -40,7 +40,7 @@
           (reconstruct-simple-body
            (map expand-body exprs)
            expr))))
-   ((def ,name ,value)
+   ((def name value)
     (raise-compilation-error
      ;; NOTE So that we might find more meaningful errors in the future passes.
      (walk-ast expand-body expr)
@@ -50,8 +50,8 @@
 
 (define (extract-defs exprs)
   (foldr (lambda (e acc)
-           (ast-case e
-            ((def ,name ,value)
+           (match-ast e
+            ((def name value)
              (cons (generated
                     (make-ast-binding (ast-node-location e) name value))
                    acc))

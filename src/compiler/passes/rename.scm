@@ -15,7 +15,7 @@
           (env-update env 'ast mangle-names))))
 
 (define (mangle-names expr)
-  (ast-case expr
+  (match-ast expr
    ((const _)
     expr)
    ((symbol '_)

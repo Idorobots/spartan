@@ -17,12 +17,12 @@
 
 (define (fixing-letrec expr)
   (map-ast (lambda (expr)
-             (ast-case expr
-                       ((letrec ,bindings ,body)
-                        (replace expr
-                                 (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
-                       (else
-                        expr)))
+             (match-ast expr
+              ((letrec bindings body)
+               (replace expr
+                        (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
+              (else
+               expr)))
            expr))
 
 ;; This conversion distributes the bindings into three groups - simple, lambdas & complex, and converts them accordingly:

@@ -31,14 +31,14 @@
            display newline debug)))
 
 (define (convert-closures expr globals)
-  (ast-case expr
-   ((app ,op . ,args)
+  (match-ast expr
+   ((app op args ...)
     (replace expr
              (make-ast-primop-app (ast-node-location op)
                   '&apply
                   (map (flip convert-closures globals)
                        (cons op args)))))
-   ((lambda ,formals ,body)
+   ((lambda formals body)
     (let ((free (set->list
                  (set-difference (ast-node-free-vars expr)
                                  globals))))
@@ -47,7 +47,7 @@
                         (make-env (ast-node-location expr) free '())
                         (flip make-env-subs free)
                         globals)))
-   ((fix ,bindings ,body)
+   ((fix bindings body)
     (let* ((loc (ast-node-location expr))
            (env-var (make-ast-gensym loc 'env))
            (free (set->list

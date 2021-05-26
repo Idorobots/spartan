@@ -15,12 +15,13 @@
           (env-update env 'ast (partial dce (set))))))
 
 (define (dce eta-disallow expr)
-  (ast-case expr
+  (match-ast expr
    ;; NOTE These are introduced by CPC.
-   ((let ((binding ,var ,val)) ,var)
+   ((let ((binding var val)) var)
     (dce (set) val))
    ;; NOTE Eta reduction.
-   ((lambda ,args (app ,op . ,args))
+   ((lambda formals (app op args ...))
+    #:when (ast-list-eqv? formals args)
     (if (and (ast-symbol? op)
              (set-member? (set-union eta-disallow
                                      ;; NOTE Or else (letcc k (k k)) eta reduces to k, which is then undefined.
@@ -28,10 +29,11 @@
                           (ast-symbol-value op)))
         (walk-ast (partial dce (set)) expr)
         (dce (set) op)))
-   ((lambda ,args (primop-app '&yield-cont ,cont . ,args))
+   ((lambda formals (primop-app '&yield-cont cont args ...))
+    #:when (ast-list-eqv? formals args)
     (dce (set) cont))
    ;; Actual dead code elimination
-   ((do . ,exprs)
+   ((do exprs ...)
     (let ((final (last exprs))
           (filtered (filter effectful?
                             (take exprs (- (length exprs) 1)))))
@@ -42,17 +44,17 @@
                                 (map (partial dce (set))
                                      (append filtered
                                              (list final))))))))
-   ((if ,condition ,then ,else)
+   ((if condition then else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
           (else (walk-ast (partial dce (set)) expr))))
-   ((let ,bindings ,body)
+   ((let bindings body)
     (let* ((free (ast-node-free-vars body))
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-let-node expr
                             (map (partial dce (set)) filtered)
                             (dce (set) body))))
-   ((letrec ,bindings ,body)
+   ((letrec bindings body)
     (let* ((free (set-union (ast-node-free-vars body)
                             (set-sum (map ast-node-free-vars bindings))))
            (filtered (filter (flip used? free) bindings)))
@@ -62,7 +64,7 @@
                                                 b))
                                     filtered)
                                (dce (set) body))))
-   ((fix ,bindings ,body)
+   ((fix bindings body)
     (let* ((free (set-union (ast-node-free-vars body)
                             (set-sum (map ast-node-free-vars bindings))))
            (filtered (filter (flip used? free) bindings)))

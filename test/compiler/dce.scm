@@ -113,9 +113,10 @@
 
  (it "should perform eta reduction"
      (check ((args (gen-arg-list (gen-integer 0 5)))
+             (formals (gen-specific-list gen-symbol-node (map ast-symbol-value args)))
              (op gen-valid-symbol-node)
              (body (apply gen-app-node op args))
-             (node (gen-lambda-node args body)))
+             (node (gen-lambda-node formals body)))
             (assert (dce (set) node)
                     op)))
 
@@ -173,9 +174,10 @@
 
  (it "should perform eta reduction on continuations"
      (check ((args (gen-arg-list (gen-integer 0 5)))
+             (formals (gen-specific-list gen-symbol-node (map ast-symbol-value args)))
              (cont gen-valid-symbol-node)
              (body (apply gen-primop-app-node '&yield-cont cont args))
-             (node (gen-lambda-node args body)))
+             (node (gen-lambda-node formals body)))
             (assert (dce (set) node)
                     cont))))
 

@@ -18,11 +18,9 @@
   (propagate symbol-binding?
              make-copy-subs
              (lambda (subs expr kont)
-               (ast-case expr
-                ((symbol _)
-                 (replace-copy subs expr))
-                (else
-                 (kont expr))))
+               (if (ast-symbol? expr)
+                   (replace-copy subs expr)
+                   (kont expr)))
              subs
              expr))
 

@@ -32,11 +32,11 @@
   (set-difference (ast-node-free-vars expr) globals))
 
 (define (validate-ast undefined unused used-before-def expr)
-  (ast-case expr
+  (match-ast expr
     ((const _)
      ;; TODO Validate number ranges, string escape sequences, unicode well-formedness etc.
      expr)
-    ((lambda ,formals ,body)
+    ((lambda formals body)
      (let* ((bound (ast-node-bound-vars expr))
             (body-fv (ast-node-free-vars body))
             (unused (set-difference bound body-fv))
@@ -47,7 +47,7 @@
                                               (set)
                                               before-def
                                               body)))))
-    ((let ,bindings ,body)
+    ((let bindings body)
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars body))))
        (-> expr
@@ -56,7 +56,7 @@
                                            (set)
                                            used-before-def
                                            body)))))
-    ((letrec ,bindings ,body)
+    ((letrec bindings body)
      (let* ((bound (ast-node-bound-vars expr))
             (without-bound (set-difference undefined bound))
             (unused (set-difference bound
@@ -72,7 +72,7 @@
                                               (set)
                                               used-before-def
                                               body)))))
-    ((binding ,var ,val)
+    ((binding var val)
      (-> expr
          (set-ast-binding-var (validate-ast (set)
                                             unused
@@ -102,7 +102,7 @@
                (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
              (else
               expr))))
-    ((def ,name ,value)
+    ((def name value)
      ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars value))))
