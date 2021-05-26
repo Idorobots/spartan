@@ -155,30 +155,38 @@
         (else
          #f)))
 
-(define (empty-bindings)
-  (hasheq))
+;; NOTE This is actually faster than using hasheq.
 
-(define (bindings . vars)
-  (apply hasheq vars))
+(define (empty-bindings)
+  '())
 
 (define (make-bindings assocs)
-  (make-immutable-hasheq assocs))
+  (sort assocs
+        (lambda (a b)
+          (symbol<? (car a)
+                    (car b)))))
 
-(define (unify-bindings a b)
-  (if (or (false? a)
-          (false? b))
+(define (bindings key value)
+  (list (cons key value)))
+
+(define (unify-bindings as bs)
+  (if (or (false? as)
+          (false? bs))
       #f
-      (let ((as (hash->list a)))
-        (if (every? (lambda (kv)
-                      (or (not (hash-has-key? b (car kv)))
+      (if (every? (lambda (kv)
+                    (let ((b (assoc (car kv) bs)))
+                      (or (not b)
                           (ast-eqv? (cdr kv)
-                                    (hash-ref b (car kv)))))
-                    as)
-            (make-bindings (append as (hash->list b)))
-            #f))))
+                                    (cdr b)))))
+                  as)
+          (sort (append bs as)
+                (lambda (a b)
+                  (symbol<? (car a)
+                            (car b))))
+          #f)))
 
 (define (get-var vars var)
-  (hash-ref vars var))
-
-(define (empty-bindings)
-  (hasheq))
+  (let ((b (assoc var vars)))
+    (if b
+        (cdr b)
+        (compiler-bug "pattern variable undefined" var))))
