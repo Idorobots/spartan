@@ -93,7 +93,7 @@
                ((app) (foldl +
                              (ast-app-op expr)
                              (ast-app-args expr)))
-               ((primop-app) (apply + (ast-app-args expr)))
+               ((primop-app) (apply + (ast-primop-app-args expr)))
                ((def) (ast-def-value expr))
                (else 0)))
            ast))
@@ -101,7 +101,7 @@
 (define (ast->plain ast)
   (map-ast (lambda (expr)
              (case (ast-node-type expr)
-               ((number symbol string list) (ast-get expr 'value))
+               ((number symbol string list) (ast-node-data expr))
                ((if) (list 'if
                            (ast-if-condition expr)
                            (ast-if-then expr)
@@ -123,6 +123,7 @@
                ((unquote) (list 'unquote (ast-unquote-expr expr)))
                ((unquote-splicing) (list 'unquote-splicing (ast-unquote-splicing-expr expr)))
                ((def) (list 'define (ast-def-name expr) (ast-def-value expr)))
-               ((app primop-app) (list* (ast-app-op expr) (ast-app-args expr)))
+               ((app) (list* (ast-app-op expr) (ast-app-args expr)))
+               ((primop-app) (list* (ast-primop-app-op expr) (ast-primop-app-args expr)))
                (else (compiler-bug "Unexpected expression: " expr))))
            ast))

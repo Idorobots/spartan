@@ -2,26 +2,14 @@
 
 (describe
  "AST node"
- (it "allows setting and getting arbitrary properties"
-     (assert (ast-get (ast-node 'value 23) 'value)
-             23)
-     (assert (ast-set (ast-node 'value 23) 'other-value 5)
-             (ast-node 'value 23 'other-value 5)))
-
  (it "`generate` can mark node artificial"
-     (assert (generated (ast-node 'value 'value))
-             (ast-node 'value 'value 'generated #t))
-     (assert (generated (ast-node 'value 'value 'generated #f))
-             (ast-node 'value 'value 'generated #t)))
+     (assert (generated? (generated (make-ast-number (location 5 23) 23)))))
 
  (it "`replace` preserves location & generated state"
-     (let ((node (generated (ast-node 'value 'value 'location (location 5 23)))))
+     (let ((node (generated (make-ast-number (location 5 23) 23))))
        (assert (replace node
-                        (ast-node 'value 'another-value))
-               (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))
-       (assert (replace node
-                        (ast-node 'value 'another-value 'location (location 23 5)))
-               (ast-node 'value 'another-value 'location (location 5 23) 'generated #t))))
+                        (make-ast-symbol (location 7 13) 5))
+               (generated (make-ast-symbol (location 5 23) 5)))))
 
  (it "`location<?` correctly compares locations"
      (assert (location<? (location 0 0)
@@ -36,7 +24,7 @@
                          (location 5 23))))
 
  (it "ast-node-free-vars allow setting free vars"
-     (let ((node (ast-node 'type 'not-a-symbol 'value 'value 'location (location 5 23)))
+     (let ((node (make-ast-number (location 5 23) 23))
            (sym (make-ast-symbol (location 5 23) 'foo)))
        (assert (ast-node-free-vars sym)
                (set 'foo))
@@ -53,7 +41,7 @@
                (set))))
 
  (it "ast-node-bound-vars allow setting bound vars"
-     (let ((node (ast-node 'type 'not-a-symbol 'value 'value 'location (location 5 23))))
+     (let ((node (make-ast-number (location 5 23) 23)))
        (assert (set-ast-node-bound-vars (set) node)
                node)
        (assert (ast-node-bound-vars
@@ -271,8 +259,8 @@
                        (assert op (ast-app-op node))
                        (assert args (ast-app-args node)))
                       ((primop-app ,op . ,args)
-                       (assert (ast-symbol-value op) (ast-app-op node))
-                       (assert args (ast-app-args node)))
+                       (assert (ast-symbol-value op) (ast-primop-app-op node))
+                       (assert args (ast-primop-app-args node)))
                       ((lambda ,formals ,body)
                        (assert formals (ast-lambda-formals node))
                        (assert body (ast-lambda-body node)))

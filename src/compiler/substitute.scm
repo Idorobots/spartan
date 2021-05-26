@@ -36,13 +36,20 @@
                     (set-ast-let-body (substitute f unbound-subs (ast-let-body expr)))
                     (set-ast-let-bindings (map (partial substitute f subs)
                                                (ast-let-bindings expr))))))
-             ((letrec fix)
+             ((letrec)
               (let ((unbound-subs (filter-subs subs
                                                (ast-node-bound-vars expr))))
                 (-> expr
                     (set-ast-letrec-body (substitute f unbound-subs (ast-letrec-body expr)))
                     (set-ast-letrec-bindings (map (partial substitute f unbound-subs)
                                                   (ast-letrec-bindings expr))))))
+             ((fix)
+              (let ((unbound-subs (filter-subs subs
+                                               (ast-node-bound-vars expr))))
+                (-> expr
+                    (set-ast-fix-body (substitute f unbound-subs (ast-fix-body expr)))
+                    (set-ast-fix-bindings (map (partial substitute f unbound-subs)
+                                                  (ast-fix-bindings expr))))))
              ((binding)
               (set-ast-binding-val expr (substitute f subs (ast-binding-val expr))))
              (else
