@@ -25,6 +25,13 @@
          #f
          lst))
 
+(define (sorted? lst pred)
+  (or (null? lst)
+      (null? (cdr lst))
+      (and (pred (car lst)
+                 (cadr lst))
+           (sorted? (cdr lst) pred))))
+
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
 

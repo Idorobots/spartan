@@ -5,7 +5,8 @@
 ;; NOTE This is actually performing better than the built-in set implementation.
 
 (define (set? s)
-  (list? s))
+  (and (list? s)
+       (sorted? s symbol<?)))
 
 (define (set . args)
   (sort args symbol<?))
@@ -15,12 +16,29 @@
 
 (define (set-difference as bs)
   (filter (lambda (a)
-            (not (member a bs)))
+            (not (set-member? bs a)))
           as))
 
+(define (set-merge as bs)
+  (cond ((empty? as)
+         bs)
+        ((empty? bs)
+         as)
+        ((symbol<? (car as)
+                   (car bs))
+         (cons (car as)
+               (set-merge (cdr as)
+                          bs)))
+        (else
+         (cons (car bs)
+               (set-merge as
+                          (cdr bs))))))
+
+;; (define (set-merge as bs)
+;;   (sort (append as bs) symbol<?))
+
 (define (set-union as bs)
-  (sort (append as (set-difference bs as))
-        symbol<?))
+  (set-merge as (set-difference bs as)))
 
 (define (set-sum sets)
   (foldl set-union (set) sets))
