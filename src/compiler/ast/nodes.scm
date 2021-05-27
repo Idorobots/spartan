@@ -15,17 +15,16 @@
    free-vars
    bound-vars
    data)
-  #:transparent
-  #:constructor-name make-ast-node-plain)
+  #:transparent)
 
-(define (make-ast-node type location data)
-  (make-ast-node-plain type
-                       location
-                       #f    ;; generated
-                       #f    ;; context
-                       (set) ;; free-vars
-                       (set) ;; bound-vars
-                       data))
+(define (make-ast-node* type location data)
+  (make-ast-node type
+                 location
+                 #f    ;; generated
+                 #f    ;; context
+                 (set) ;; free-vars
+                 (set) ;; bound-vars
+                 data))
 
 ;; AST metadata
 
@@ -105,7 +104,7 @@
 
 ;; Number
 (define (make-ast-number loc value)
-  (make-ast-node 'number loc value))
+  (make-ast-node* 'number loc value))
 
 (define (ast-number? node)
   (is-type? node 'number))
@@ -118,7 +117,7 @@
 
 ;; Symbol
 (define (make-ast-symbol loc value)
-  (make-ast-node 'symbol loc value))
+  (make-ast-node* 'symbol loc value))
 
 (define (make-ast-gensym loc root)
   (generated
@@ -143,7 +142,7 @@
 
 ;; String
 (define (make-ast-string loc value)
-  (make-ast-node 'string loc value))
+  (make-ast-node* 'string loc value))
 
 (define (ast-string? node)
   (is-type? node 'string))
@@ -156,7 +155,7 @@
 
 ;; List
 (define (make-ast-list loc values)
-  (make-ast-node 'list loc values))
+  (make-ast-node* 'list loc values))
 
 (define (ast-list? node)
   (is-type? node 'list))
@@ -183,7 +182,7 @@
 (define-struct ast-if-data (condition then else) #:transparent)
 
 (define (make-ast-if loc condition then else)
-  (make-ast-node 'if loc (make-ast-if-data condition then else)))
+  (make-ast-node* 'if loc (make-ast-if-data condition then else)))
 
 (define (ast-if? node)
   (is-type? node 'if))
@@ -208,7 +207,7 @@
 
 ;; Do
 (define (make-ast-do loc exprs)
-  (make-ast-node 'do loc exprs))
+  (make-ast-node* 'do loc exprs))
 
 (define (ast-do? node)
   (is-type? node 'do))
@@ -223,7 +222,7 @@
 (define (make-ast-body loc exprs ctx)
   (generated
    (set-ast-node-context
-    (make-ast-node 'body loc exprs)
+    (make-ast-node* 'body loc exprs)
     ctx)))
 
 (define (ast-body? node)
@@ -239,7 +238,7 @@
 (define-struct ast-lambda-data (formals body) #:transparent)
 
 (define (make-ast-lambda loc formals body)
-  (make-ast-node 'lambda loc (make-ast-lambda-data formals body)))
+  (make-ast-node* 'lambda loc (make-ast-lambda-data formals body)))
 
 (define (ast-lambda? node)
   (is-type? node 'lambda))
@@ -260,7 +259,7 @@
 (define-struct ast-binding-data (var val complexity self-recursive) #:transparent)
 
 (define (make-ast-binding loc var val)
-  (make-ast-node 'binding loc (make-ast-binding-data var val #f #f)))
+  (make-ast-node* 'binding loc (make-ast-binding-data var val #f #f)))
 
 (define (ast-binding? node)
   (is-type? node 'binding))
@@ -297,7 +296,7 @@
 (define-struct ast-let-data (bindings body) #:transparent)
 
 (define (make-ast-let loc bindings body)
-  (make-ast-node 'let loc (make-ast-let-data bindings body)))
+  (make-ast-node* 'let loc (make-ast-let-data bindings body)))
 
 (define (ast-let? node)
   (is-type? node 'let))
@@ -318,7 +317,7 @@
 (define-struct ast-letrec-data (bindings body) #:transparent)
 
 (define (make-ast-letrec loc bindings body)
-  (make-ast-node 'letrec loc (make-ast-letrec-data bindings body)))
+  (make-ast-node* 'letrec loc (make-ast-letrec-data bindings body)))
 
 (define (ast-letrec? node)
   (is-type? node 'letrec))
@@ -339,7 +338,7 @@
 (define-struct ast-fix-data (bindings body) #:transparent)
 
 (define (make-ast-fix loc bindings body)
-  (make-ast-node 'fix loc (make-ast-fix-data bindings body)))
+  (make-ast-node* 'fix loc (make-ast-fix-data bindings body)))
 
 (define (ast-fix? node)
   (is-type? node 'fix))
@@ -358,7 +357,7 @@
 
 ;; Quote
 (define (make-ast-quote loc expr)
-  (make-ast-node 'quote loc expr))
+  (make-ast-node* 'quote loc expr))
 
 (define (ast-quote? node)
   (is-type? node 'quote))
@@ -371,7 +370,7 @@
 
 ;; Quasiquote
 (define (make-ast-quasiquote loc expr)
-  (make-ast-node 'quasiquote loc expr))
+  (make-ast-node* 'quasiquote loc expr))
 
 (define (ast-quasiquote? node)
   (is-type? node 'quasiquote))
@@ -384,7 +383,7 @@
 
 ;; Unquote
 (define (make-ast-unquote loc expr)
-  (make-ast-node 'unquote loc expr))
+  (make-ast-node* 'unquote loc expr))
 
 (define (ast-unquote? node)
   (is-type? node 'unquote))
@@ -397,7 +396,7 @@
 
 ;; Unquote splicing
 (define (make-ast-unquote-splicing loc expr)
-  (make-ast-node 'unquote-splicing loc expr))
+  (make-ast-node* 'unquote-splicing loc expr))
 
 (define (ast-unquote-splicing? node)
   (is-type? node 'unquote-splicing))
@@ -415,7 +414,7 @@
 ;; Constant
 (define (make-ast-const loc value)
   (generated
-   (make-ast-node 'const loc value)))
+   (make-ast-node* 'const loc value)))
 
 (define (ast-const? node)
   (is-type? node 'const))
@@ -430,7 +429,7 @@
 (define-struct ast-def-data (name value) #:transparent)
 
 (define (make-ast-def loc name value)
-  (make-ast-node 'def loc (make-ast-def-data name value)))
+  (make-ast-node* 'def loc (make-ast-def-data name value)))
 
 (define (ast-def? node)
   (is-type? node 'def))
@@ -451,7 +450,7 @@
 (define-struct ast-app-data (op args) #:transparent)
 
 (define (make-ast-app loc op args)
-  (make-ast-node 'app loc (make-ast-app-data op args)))
+  (make-ast-node* 'app loc (make-ast-app-data op args)))
 
 (define (ast-app? node)
   (is-type? node 'app))
@@ -473,13 +472,16 @@
 
 (define (make-ast-primop-app loc op args)
   (generated
-   (make-ast-node 'primop-app loc (make-ast-primop-app-data op args))))
+   (make-ast-node* 'primop-app loc (make-ast-primop-app-data op args))))
 
 (define (ast-primop-app? node)
   (is-type? node 'primop-app))
 
 (define (ast-primop-app-op node)
   (ast-primop-app-data-op (ast-node-data node)))
+
+(define (set-ast-primop-app-op node op)
+  (set-ast-node-data node (struct-copy ast-primop-app-data (ast-node-data node) (op op))))
 
 (define (ast-primop-app-args node)
   (ast-primop-app-data-args (ast-node-data node)))
@@ -489,14 +491,14 @@
 
 ;; Parse location marker
 (define (make-ast-location loc)
-  (make-ast-node '<location> loc loc))
+  (make-ast-node* '<location> loc loc))
 
 (define (ast-location? node)
   (is-type? node '<location>))
 
 ;; Error within parse tree
 (define (make-ast-error loc expr)
-  (make-ast-node '<error> loc expr))
+  (make-ast-node* '<error> loc expr))
 
 (define (ast-error? node)
   (is-type? node '<error>))
@@ -505,4 +507,4 @@
   (ast-node-data node))
 
 (define (set-ast-error-expr node expr)
-  (struct-copy ast-node node (data expr)))
+  (set-ast-node-data node expr))

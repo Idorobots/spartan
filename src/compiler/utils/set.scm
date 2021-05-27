@@ -34,9 +34,6 @@
                (set-merge as
                           (cdr bs))))))
 
-;; (define (set-merge as bs)
-;;   (sort (append as bs) symbol<?))
-
 (define (set-union as bs)
   (set-merge as (set-difference bs as)))
 
