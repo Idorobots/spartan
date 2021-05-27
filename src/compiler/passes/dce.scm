@@ -27,7 +27,7 @@
                                      ;; NOTE Or else (letcc k (k k)) eta reduces to k, which is then undefined.
                                      (ast-node-bound-vars expr))
                           (ast-symbol-value op)))
-        (walk-ast (partial dce (set)) expr)
+        (traverse-ast dce (set) expr)
         (dce (set) op)))
    ((lambda formals (primop-app '&yield-cont cont args ...))
     #:when (ast-list-eqv? formals args)
@@ -47,7 +47,7 @@
    ((if condition then else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
-          (else (walk-ast (partial dce (set)) expr))))
+          (else (traverse-ast dce (set) expr))))
    ((let bindings body)
     (let* ((free (ast-node-free-vars body))
            (filtered (filter (flip used? free) bindings)))
@@ -60,8 +60,7 @@
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-letrec-node expr
                                (map (lambda (b)
-                                      (walk-ast (partial dce (ast-node-bound-vars expr))
-                                                b))
+                                      (traverse-ast dce (ast-node-bound-vars expr) b))
                                     filtered)
                                (dce (set) body))))
    ((fix bindings body)
@@ -70,12 +69,11 @@
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-fix-node expr
                             (map (lambda (b)
-                                   (walk-ast (partial dce (ast-node-bound-vars expr))
-                                             b))
+                                   (traverse-ast dce (ast-node-bound-vars expr) b))
                                  filtered)
                             (dce (set) body))))
    (else
-    (walk-ast (partial dce (set)) expr))))
+    (traverse-ast dce (set) expr))))
 
 (define (effectful? node)
   (not (or (ast-const? node)

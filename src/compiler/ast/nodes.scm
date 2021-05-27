@@ -94,6 +94,9 @@
       node
       (struct-copy ast-node node (bound-vars vars))))
 
+(define (set-ast-node-data node data)
+  (struct-copy ast-node node (data data)))
+
 (define (is-type? node type)
   (eq? (ast-node-type node)
           type))
@@ -111,7 +114,7 @@
   (ast-node-data node))
 
 (define (set-ast-number-value node val)
-  (struct-copy ast-node node (data val)))
+  (set-ast-node-data node val))
 
 ;; Symbol
 (define (make-ast-symbol loc value)
@@ -128,7 +131,7 @@
   (ast-node-data node))
 
 (define (set-ast-symbol-value node val)
-  (struct-copy ast-node node (data val)))
+  (set-ast-node-data node val))
 
 (define (safe-symbol-value node)
   (cond ((ast-symbol? node)
@@ -149,7 +152,7 @@
   (ast-node-data node))
 
 (define (set-ast-string-value node val)
-  (struct-copy ast-node node (data val)))
+  (set-ast-node-data node val))
 
 ;; List
 (define (make-ast-list loc values)
@@ -165,7 +168,7 @@
   (list-ref (ast-list-values node) nth))
 
 (define (set-ast-list-values node vals)
-  (struct-copy ast-node node (data vals)))
+  (set-ast-node-data node vals))
 
 (define (ast-list-car node)
   (car (ast-list-values node)))
@@ -189,19 +192,19 @@
   (ast-if-data-condition (ast-node-data node)))
 
 (define (set-ast-if-condition node cnd)
-  (struct-copy ast-node node (data (struct-copy ast-if-data (ast-node-data node) (condition cnd)))))
+  (set-ast-node-data node (struct-copy ast-if-data (ast-node-data node) (condition cnd))))
 
 (define (ast-if-then node)
   (ast-if-data-then (ast-node-data node)))
 
 (define (set-ast-if-then node thn)
-  (struct-copy ast-node node (data (struct-copy ast-if-data (ast-node-data node) (then thn)))))
+  (set-ast-node-data node (struct-copy ast-if-data (ast-node-data node) (then thn))))
 
 (define (ast-if-else node)
   (ast-if-data-else (ast-node-data node)))
 
 (define (set-ast-if-else node els)
-  (struct-copy ast-node node (data (struct-copy ast-if-data (ast-node-data node) (else els)))))
+  (set-ast-node-data node (struct-copy ast-if-data (ast-node-data node) (else els))))
 
 ;; Do
 (define (make-ast-do loc exprs)
@@ -214,7 +217,7 @@
   (ast-node-data node))
 
 (define (set-ast-do-exprs node exprs)
-  (struct-copy ast-node node (data exprs)))
+  (set-ast-node-data node exprs))
 
 ;; Implicit body
 (define (make-ast-body loc exprs ctx)
@@ -230,7 +233,7 @@
   (ast-node-data node))
 
 (define (set-ast-body-exprs node exprs)
-  (struct-copy ast-node node (data exprs)))
+  (set-ast-node-data node exprs))
 
 ;; Lambda
 (define-struct ast-lambda-data (formals body) #:transparent)
@@ -245,13 +248,13 @@
   (ast-lambda-data-body (ast-node-data node)))
 
 (define (set-ast-lambda-body node body)
-  (struct-copy ast-node node (data (struct-copy ast-lambda-data (ast-node-data node) (body body)))))
+  (set-ast-node-data node (struct-copy ast-lambda-data (ast-node-data node) (body body))))
 
 (define (ast-lambda-formals node)
   (ast-lambda-data-formals (ast-node-data node)))
 
 (define (set-ast-lambda-formals node formals)
-  (struct-copy ast-node node (data (struct-copy ast-lambda-data (ast-node-data node) (formals formals)))))
+  (set-ast-node-data node (struct-copy ast-lambda-data (ast-node-data node) (formals formals))))
 
 ;; Binding
 (define-struct ast-binding-data (var val complexity self-recursive) #:transparent)
@@ -266,25 +269,25 @@
   (ast-binding-data-var (ast-node-data node)))
 
 (define (set-ast-binding-var node var)
-  (struct-copy ast-node node (data (struct-copy ast-binding-data (ast-node-data node) (var var)))))
+  (set-ast-node-data node (struct-copy ast-binding-data (ast-node-data node) (var var))))
 
 (define (ast-binding-val node)
   (ast-binding-data-val (ast-node-data node)))
 
 (define (set-ast-binding-val node val)
-  (struct-copy ast-node node (data (struct-copy ast-binding-data (ast-node-data node) (val val)))))
+  (set-ast-node-data node (struct-copy ast-binding-data (ast-node-data node) (val val))))
 
 (define (ast-binding-complexity node)
   (ast-binding-data-complexity (ast-node-data node)))
 
 (define (set-ast-binding-complexity node complexity)
-  (struct-copy ast-node node (data (struct-copy ast-binding-data (ast-node-data node) (complexity complexity)))))
+  (set-ast-node-data node (struct-copy ast-binding-data (ast-node-data node) (complexity complexity))))
 
 (define (ast-binding-self-recursive node)
   (ast-binding-data-self-recursive (ast-node-data node)))
 
 (define (set-ast-binding-self-recursive node rec?)
-  (struct-copy ast-node node (data (struct-copy ast-binding-data (ast-node-data node) (self-recursive rec?)))))
+  (set-ast-node-data node (struct-copy ast-binding-data (ast-node-data node) (self-recursive rec?))))
 
 (define (recursive? bindings)
   (or (> (length bindings) 1)
@@ -303,13 +306,13 @@
   (ast-let-data-bindings (ast-node-data node)))
 
 (define (set-ast-let-bindings node bindings)
-  (struct-copy ast-node node (data (struct-copy ast-let-data (ast-node-data node) (bindings bindings)))))
+  (set-ast-node-data node (struct-copy ast-let-data (ast-node-data node) (bindings bindings))))
 
 (define (ast-let-body node)
   (ast-let-data-body (ast-node-data node)))
 
 (define (set-ast-let-body node body)
-  (struct-copy ast-node node (data (struct-copy ast-let-data (ast-node-data node) (body body)))))
+  (set-ast-node-data node (struct-copy ast-let-data (ast-node-data node) (body body))))
 
 ;; Letrec
 (define-struct ast-letrec-data (bindings body) #:transparent)
@@ -324,13 +327,13 @@
   (ast-letrec-data-bindings (ast-node-data node)))
 
 (define (set-ast-letrec-bindings node bindings)
-  (struct-copy ast-node node (data (struct-copy ast-letrec-data (ast-node-data node) (bindings bindings)))))
+  (set-ast-node-data node (struct-copy ast-letrec-data (ast-node-data node) (bindings bindings))))
 
 (define (ast-letrec-body node)
   (ast-letrec-data-body (ast-node-data node)))
 
 (define (set-ast-letrec-body node body)
-  (struct-copy ast-node node (data (struct-copy ast-letrec-data (ast-node-data node) (body body)))))
+  (set-ast-node-data node (struct-copy ast-letrec-data (ast-node-data node) (body body))))
 
 ;; Fix
 (define-struct ast-fix-data (bindings body) #:transparent)
@@ -345,13 +348,13 @@
   (ast-fix-data-bindings (ast-node-data node)))
 
 (define (set-ast-fix-bindings node bindings)
-  (struct-copy ast-node node (data (struct-copy ast-fix-data (ast-node-data node) (bindings bindings)))))
+  (set-ast-node-data node (struct-copy ast-fix-data (ast-node-data node) (bindings bindings))))
 
 (define (ast-fix-body node)
   (ast-fix-data-body (ast-node-data node)))
 
 (define (set-ast-fix-body node body)
-  (struct-copy ast-node node (data (struct-copy ast-fix-data (ast-node-data node) (body body)))))
+  (set-ast-node-data node (struct-copy ast-fix-data (ast-node-data node) (body body))))
 
 ;; Quote
 (define (make-ast-quote loc expr)
@@ -364,7 +367,7 @@
   (ast-node-data node))
 
 (define (set-ast-quote-expr node expr)
-  (struct-copy ast-node node (data expr)))
+  (set-ast-node-data node expr))
 
 ;; Quasiquote
 (define (make-ast-quasiquote loc expr)
@@ -377,7 +380,7 @@
   (ast-node-data node))
 
 (define (set-ast-quasiquote-expr node expr)
-  (struct-copy ast-node node (data expr)))
+  (set-ast-node-data node expr))
 
 ;; Unquote
 (define (make-ast-unquote loc expr)
@@ -390,7 +393,7 @@
   (ast-node-data node))
 
 (define (set-ast-unquote-expr node expr)
-  (struct-copy ast-node node (data expr)))
+  (set-ast-node-data node expr))
 
 ;; Unquote splicing
 (define (make-ast-unquote-splicing loc expr)
@@ -403,7 +406,7 @@
   (ast-node-data node))
 
 (define (set-ast-unquote-splicing-expr node expr)
-  (struct-copy ast-node node (data expr)))
+  (set-ast-node-data node expr))
 
 ;; FIXME This should be removed
 (define (ast-quoted-expr node)
@@ -421,7 +424,7 @@
   (ast-node-data node))
 
 (define (set-ast-const-value node value)
-  (struct-copy ast-node node (data value)))
+  (set-ast-node-data node value))
 
 ;; Definition
 (define-struct ast-def-data (name value) #:transparent)
@@ -436,13 +439,13 @@
   (ast-def-data-name (ast-node-data node)))
 
 (define (set-ast-def-name node name)
-  (struct-copy ast-node node (data (struct-copy ast-def-data (ast-node-data node) (name name)))))
+  (set-ast-node-data node (struct-copy ast-def-data (ast-node-data node) (name name))))
 
 (define (ast-def-value node)
   (ast-def-data-value (ast-node-data node)))
 
 (define (set-ast-def-value node value)
-  (struct-copy ast-node node (data (struct-copy ast-def-data (ast-node-data node) (value value)))))
+  (set-ast-node-data node (struct-copy ast-def-data (ast-node-data node) (value value))))
 
 ;; Application
 (define-struct ast-app-data (op args) #:transparent)
@@ -457,13 +460,13 @@
   (ast-app-data-op (ast-node-data node)))
 
 (define (set-ast-app-op node op)
-  (struct-copy ast-node node (data (struct-copy ast-app-data (ast-node-data node) (op op)))))
+  (set-ast-node-data node (struct-copy ast-app-data (ast-node-data node) (op op))))
 
 (define (ast-app-args node)
   (ast-app-data-args (ast-node-data node)))
 
 (define (set-ast-app-args node args)
-  (struct-copy ast-node node (data (struct-copy ast-app-data (ast-node-data node) (args args)))))
+  (set-ast-node-data node (struct-copy ast-app-data (ast-node-data node) (args args))))
 
 ;; Primop application
 (define-struct ast-primop-app-data (op args) #:transparent)
@@ -482,7 +485,7 @@
   (ast-primop-app-data-args (ast-node-data node)))
 
 (define (set-ast-primop-app-args node args)
-  (struct-copy ast-node node (data (struct-copy ast-primop-app-data (ast-node-data node) (args args)))))
+  (set-ast-node-data node (struct-copy ast-primop-app-data (ast-node-data node) (args args))))
 
 ;; Parse location marker
 (define (make-ast-location loc)

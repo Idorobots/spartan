@@ -24,7 +24,7 @@
       (if e
           (replace expr
                    (ast-binding-var e))
-          (walk-ast (partial cse subexprs) expr))))
+          (traverse-ast cse subexprs expr))))
    ((let bindings body)
     (let* ((updated (append (extract-subexprs bindings)
                             subexprs))
@@ -47,9 +47,9 @@
    ((fix bindings _)
     (let* ((filtered (filter-subexprs subexprs (ast-node-bound-vars expr))))
       ;; NOTE These are only lambdas, so there's nothing to eliminate.
-      (walk-ast (partial cse filtered) expr)))
+      (traverse-ast cse filtered expr)))
    (else
-    (walk-ast (partial cse subexprs) expr))))
+    (traverse-ast cse subexprs expr))))
 
 (define (extract-subexprs bindings)
   (filter (compose eliminatable-expr? ast-binding-val)

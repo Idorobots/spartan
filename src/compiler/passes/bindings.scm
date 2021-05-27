@@ -18,19 +18,19 @@
 (define (analyze-bindings within-letrec? expr)
   (match-ast expr
    ((let _ _)
-    (walk-ast (partial analyze-bindings #f) expr))
+    (traverse-ast analyze-bindings #f expr))
    ((letrec _ _)
-    (walk-ast (partial analyze-bindings #t) expr))
+    (traverse-ast analyze-bindings #t expr))
    ((binding _ val)
     (set-ast-binding-complexity
      (set-ast-binding-self-recursive
-      (walk-ast (partial analyze-bindings within-letrec?) expr)
+      (traverse-ast analyze-bindings within-letrec? expr)
       (and within-letrec?
            (not (set-empty? (set-intersection (ast-node-bound-vars expr)
                                               (ast-node-free-vars expr))))))
      (compute-complexity val)))
    (else
-    (walk-ast (partial analyze-bindings within-letrec?) expr))))
+    (traverse-ast analyze-bindings within-letrec? expr))))
 
 (define (compute-complexity expr)
   (case (ast-node-type expr)

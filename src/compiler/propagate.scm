@@ -51,7 +51,7 @@
                      ((binding _ val)
                       (set-ast-binding-val expr (loop subs val)))
                      (else
-                      (walk-ast (partial loop subs) expr))))))
+                      (traverse-ast loop subs expr))))))
   (loop subs expr))
 
 (define (partition-bindings pred bindings)

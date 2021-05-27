@@ -16,7 +16,7 @@
           (env-update env 'ast (partial lambda-inlining '())))))
 
 (define (lambda-inlining lambdas expr)
-  (let ((loop (partial walk-ast (partial lambda-inlining lambdas))))
+  (let ((loop (partial traverse-ast lambda-inlining lambdas)))
     (match-ast expr
      ;; Beta reduction
      ((app (lambda formals body) args ...)

@@ -16,7 +16,7 @@
             (match-ast-patterns #'(rest ...))))))
 
  (define (match-ast-pattern stx)
-   (syntax-case stx (ast-quote ast-quasiquote ast-unquote ast-unquote-splicing ast-body
+   (syntax-case stx (ast-quote ast-quasiquote ast-unquote ast-unquote-splicing ast-body ast-error ast-location
                      const number symbol string list do if lambda let letrec fix binding app primop-app def
                      quote)
      ((const pattern)
@@ -72,6 +72,10 @@
       #`(ast-node 'unquote _ _ _ _ _ #,(match-ast-pattern #'pattern)))
      ((ast-unquote-splicing pattern)
       #`(ast-node 'unquote-splicing _ _ _ _ _ #,(match-ast-pattern #'pattern)))
+     ((ast-location pattern)
+      #`(ast-node '<location> _ _ _ _ _ #,(match-ast-pattern #'pattern)))
+     ((ast-error pattern)
+      #`(ast-node '<error> _ _ _ _ _ #,(match-ast-pattern #'pattern)))
      ;; These are just plain pattern.s
      ((quote pattern)
       #'(quote pattern))

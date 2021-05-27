@@ -53,7 +53,7 @@
              ((binding)
               (set-ast-binding-val expr (substitute f subs (ast-binding-val expr))))
              (else
-              (walk-ast (partial substitute f subs) expr)))))))
+              (traverse-ast (partial substitute f) subs expr)))))))
 
 (define (make-subs assocs)
   (make-immutable-hasheq assocs))
