@@ -7,7 +7,7 @@
              (args (gen-arg-list (gen-integer 0 3)))
              (node (apply gen-app-node op args)))
             (assert-ast (inline-app-ops (set '*) node)
-                        (primop-app '* . ,inlined-args)
+                        (primop-app '* inlined-args ...)
                         (assert inlined-args args))))
 
  (it "should not inline other builtins"

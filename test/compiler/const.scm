@@ -14,7 +14,7 @@
                                    (gen-string-node (gen-text (gen-integer 0 50))))))
             (let ((result (wrap-constants unquoted)))
               (assert-ast result
-                          (const ,expr)
+                          (const expr)
                           (assert expr unquoted))
               (assert (generated? result))
               (assert (ast-node-location result)
@@ -24,7 +24,7 @@
              (quoted (gen-quote-node unquoted)))
             (let ((result (wrap-constants quoted)))
               (assert-ast result
-                          (const ,expr)
+                          (const expr)
                           (assert expr unquoted))
               (assert (generated? result))
               (assert (ast-node-location result)
@@ -41,14 +41,14 @@
                                  (gen-quasiquote-node non-const)
                                  (gen-unquote-node non-const)
                                  (gen-unquote-splicing-node non-const)))
-             (list (gen-specific-list-node gen-non-const-node quoted gen-non-const-node))
-             (node (gen-quote-node list)))
+             (lst (gen-specific-list-node gen-non-const-node quoted gen-non-const-node))
+             (node (gen-quote-node lst)))
             (assert-ast (wrap-constants node)
                         (const
-                         (list ,simple-node1
-                               (list ,quoted-symbol ,simple-node2)
-                               ,simple-node3))
-                        (assert simple-node1 (ast-list-nth list 0))
+                         (list simple-node1
+                               (list quoted-symbol simple-node2)
+                               simple-node3))
+                        (assert simple-node1 (ast-list-nth lst 0))
                         (assert (ast-symbol-value quoted-symbol) (ast-node-type quoted))
                         (assert simple-node2 non-const)
-                        (assert simple-node3 (ast-list-nth list 2))))))
+                        (assert simple-node3 (ast-list-nth lst 2))))))

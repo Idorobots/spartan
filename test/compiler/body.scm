@@ -20,7 +20,7 @@
              (node (apply gen-specific-body-node ctx exprs)))
             (let ((result (expand-body node)))
               (assert-ast result
-                          (do . ,expanded-exprs)
+                          (do expanded-exprs ...)
                           (assert expanded-exprs exprs))
               (assert (ast-node-location result)
                       (ast-node-location node))))
@@ -30,8 +30,8 @@
              (node (apply gen-specific-body-node ctx (append defs non-defs))))
             (let ((result (expand-body node)))
               (assert-ast result
-                          (letrec ,bindings
-                            (do . ,body))
+                          (letrec bindings
+                            (do body ...))
                           (assert (length bindings)
                                   (length defs))
                           (map (lambda (b d)

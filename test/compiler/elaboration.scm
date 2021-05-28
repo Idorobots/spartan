@@ -12,9 +12,9 @@
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
-                          (if ,condition1
-                              ,then1
-                              ,else1)
+                          (if condition1
+                              then1
+                              else1)
                           (assert condition1 condition)
                           (assert then1 then)
                           (assert else1 else)))))
@@ -38,7 +38,7 @@
               (assert (ast-node-context result)
                       "Bad `do` syntax")
               (assert-ast result
-                          (body . ,exprs1)
+                          (ast-body exprs1 ...)
                           (assert exprs1 exprs)))))
 
  (it "disallows bad do syntax"
@@ -63,8 +63,8 @@
               (assert (ast-node-context (ast-lambda-body result))
                       "Bad `lambda` body syntax")
               (assert-ast result
-                          (lambda ,formals1
-                            (body . ,body1))
+                          (lambda formals1
+                            (ast-body body1 ...))
                           (assert formals1 formals)
                           (assert body1 body)))))
 
@@ -128,8 +128,8 @@
               (assert (ast-node-context (ast-let-body result))
                       "Bad `let` body syntax")
               (assert-ast result
-                          (let ,bindings1
-                            (body . ,body1))
+                          (let bindings1
+                            (ast-body body1 ...))
                           (assert (map ast-node-location bindings1)
                                   (map ast-node-location bindings))
                           (assert (map ast-binding-var bindings1)
@@ -214,8 +214,8 @@
               (assert (ast-node-context (ast-letrec-body result))
                       "Bad `letrec` body syntax")
               (assert-ast result
-                          (letrec ,bindings1
-                            (body . ,body1))
+                          (letrec bindings1
+                            (ast-body body1 ...))
                           (assert (map ast-node-location bindings1)
                                   (map ast-node-location bindings))
                           (assert (map ast-binding-var bindings1)
@@ -312,7 +312,7 @@
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
-                          (def ,name1 ,value1)
+                          (def name1 value1)
                           (assert name1 name)
                           (assert value1 value))))
      (check ((sym (gen-symbol-node 'define))
@@ -331,9 +331,9 @@
               (assert (ast-node-context (ast-lambda-body (ast-def-value result)))
                       "Bad `define` function body syntax")
               (assert-ast result
-                          (def ,name1
-                               (lambda ,formals1
-                                 (body ,body1)))
+                          (def name1
+                               (lambda formals1
+                                 (ast-body body1)))
                           (assert name1 name)
                           (assert formals1 formals)
                           (assert body1 body)))))
@@ -382,7 +382,7 @@
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
-                          (app ,name1 . ,args1)
+                          (app name1 args1 ...)
                           (assert name1 name)
                           (assert args1 args)))))
 

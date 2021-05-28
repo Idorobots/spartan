@@ -121,10 +121,9 @@
                                  bindings)
                             subs))
              (lambda (subs expr kont)
-               (ast-case
-                expr
-                ((symbol ,value)
-                 (replace-sub subs (ast-symbol-value value) (constantly expr)))
+               (match-ast expr
+                ((symbol value)
+                 (replace-sub subs value (constantly expr)))
                 (else
                  (kont expr))))
              (make-subs subs)
@@ -141,11 +140,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var subbed))
                                         node)
-                        (do ,unchanged-node1
-                            (number ,x)
-                          ,unchanged-node2)
+                        (do unchanged-node1
+                            (number x)
+                            unchanged-node2)
                         (assert unchanged-node1 (car (ast-do-exprs node)))
-                        (assert x subbed)
+                        (assert x (ast-number-value subbed))
                         (assert unchanged-node2 (caddr (ast-do-exprs node))))))
 
  (it "should update the substitutions using bound variables"
@@ -161,10 +160,10 @@
                                               (cons var2 subbed))
                                         node)
                         (lambda (_)
-                          (do ,unchanged-sym1
-                              (number ,subbed-value)))
+                          (do unchanged-sym1
+                              (number subbed-value)))
                         (assert unchanged-sym1 sym1)
-                        (assert subbed-value subbed)))
+                        (assert subbed-value (ast-number-value subbed))))
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
              (b1 (gen-binding-node sym1 gen-valid-symbol-node))
@@ -181,10 +180,10 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (let ((binding _ (app ,unchanged-value)))
+                        (let ((binding _ (app unchanged-value)))
                           (do (number '23) ;; NOTE Not subbed.
                               (number '23)
-                            ,unchanged-node))
+                            unchanged-node))
                         (assert unchanged-value sym2)
                         (assert unchanged-node sym3)))
      (check ((var1 gen-valid-symbol)
@@ -203,11 +202,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (letrec (,unchanged-b2
+                        (letrec (unchanged-b2
                                  (binding _ (app (number '23))))
                           (do (number '23) ;; NOTE Not subbed.
-                              ,unchanged-sym2
-                            ,unchanged-node))
+                              unchanged-sym2
+                            unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3)))
@@ -228,11 +227,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (fix (,unchanged-b2
+                        (fix (unchanged-b2
                               (binding _ (app (number '23))))
                              (do (number '23) ;; NOTE Not subbed.
-                                 ,unchanged-sym2
-                               ,unchanged-node))
+                                 unchanged-sym2
+                               unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3))))
@@ -250,7 +249,8 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate '() node)
                         (do (number '23) ;; NOTE Not subbed.
-                            (number '23)))))
+                            (number '23))
+                        (assert #t))))
 
  (it "doesn't replace const values"
      (check ((var gen-valid-symbol)

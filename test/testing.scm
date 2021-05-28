@@ -33,9 +33,9 @@
 (define-syntax assert-ast
   (syntax-rules ()
     ((_ expr pattern body ...)
-     (ast-case expr
-               (pattern body ...)
-               (else (raise (make-assert-exception 'ast-case 'expr expr 'pattern)))))))
+     (match-ast expr
+                (pattern body ...)
+                (else (raise (make-assert-exception 'match-ast 'expr expr 'pattern)))))))
 
 (define-syntax test-file
   (syntax-rules ()

@@ -26,11 +26,11 @@
  (it "should fold properly constant primop-apps"
      (check ((vals (gen-list (gen-integer 2 5) (gen-number-node gen-number)))
              (value (apply gen-specific-list-node vals))
-             (const (gen-specific-const-node value))
-             (node (gen-primop-app-node 'car const)))
+             (cnst (gen-specific-const-node value))
+             (node (gen-primop-app-node 'car cnst)))
             (let ((result (constant-folding node)))
               (assert-ast result
-                          (const ,converted-value)
+                          (const converted-value)
                           (assert converted-value (car vals)))
               (assert (generated? result))
               (assert (ast-node-location result)

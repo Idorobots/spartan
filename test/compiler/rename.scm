@@ -20,8 +20,8 @@
              (body (gen-symbol-node val))
              (fun (gen-lambda-node formals body)))
             (assert-ast (mangle-names fun)
-                        (lambda ,renamed-formals
-                          ,renamed-body)
+                        (lambda renamed-formals
+                          renamed-body)
                         (assert renamed-body
                                 (set-ast-symbol-value body (symbol->safe val)))
                         (map (lambda (original renamed)
@@ -34,7 +34,7 @@
      (check ((symbol gen-valid-symbol-node)
              (node (gen-specific-const-node symbol)))
             (assert-ast (mangle-names node)
-                        (const ,renamed-symbol)
+                        (const renamed-symbol)
                         (assert renamed-symbol symbol))))
 
  (it "doesn't rename primop-app ops"
@@ -42,17 +42,17 @@
              (args (gen-arg-list (gen-integer 0 5)))
              (node (apply gen-primop-app-node op args)))
             (assert-ast (mangle-names node)
-                        (primop-app ,renamed-op . ,renamed-args)
-                        (assert (ast-symbol-value renamed-op) op)
+                        (primop-app renamed-op renamed-args ...)
+                        (assert renamed-op op)
                         (map (lambda (original renamed)
                                (set-ast-symbol-value original (symbol->safe (ast-symbol-value original))))
                              args
                              renamed-args))))
 
  (it "renames all wildcards"
-     (check ((symbol (gen-symbol-node '_))
-             (list (gen-specific-do-node symbol symbol symbol)))
+     (check ((sym (gen-symbol-node '_))
+             (list (gen-specific-do-node sym sym sym)))
             (gensym-reset!)
             (assert-ast (mangle-names list)
-                        (do '__WILD1 '__WILD2 '__WILD3)
+                        (do (symbol '__WILD1) (symbol '__WILD2) (symbol '__WILD3))
                         (assert #t)))))
