@@ -16,19 +16,21 @@
 (define (no-match)
   '())
 
-(define (matches m start end)
-  (vector m start end))
+(define-struct match-result (result start end) #:transparent)
 
-(define matches? vector?)
+(define (matches m start end)
+  (make-match-result m start end))
+
+(define matches? match-result?)
 
 (define (match-match m)
-  (vector-ref m 0))
+  (match-result-result m))
 
 (define (match-start m)
-  (vector-ref m 1))
+  (match-result-start m))
 
 (define (match-end m)
-  (vector-ref m 2))
+  (match-result-end m))
 
 ;; Parser generator
 (define (generate-parser . rules)

@@ -198,7 +198,29 @@
                 end))))
 
  '(SymbolContents
-  "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
+   "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
+
+ ;; NOTE The above is basically the same as this, except less readable:
+ ;; '(SymbolContents
+ ;;   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+
+ ;; '(SymbolInitial
+ ;;   (/ Alpha Special "#"))
+
+ ;; '(SymbolSubsequent
+ ;;   (/ SymbolInitial "@" Digit Sign))
+
+ ;; '(Alpha
+ ;;   "[a-zA-Z]")
+
+ ;; '(Special
+ ;;   "[!$%*/:<=>?~_^]")
+
+ ;; '(Digit
+ ;;   "[0-9]")
+
+ ;; '(Sign
+ ;;   "[+\\-]")
 
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))
