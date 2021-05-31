@@ -24,7 +24,7 @@
                 end))))
 
  '(Expression
-   (/ List Atom String Quote))
+   (/ Atom List String Quote))
 
  '(UnmatchedParen
    (Spacing ")")
@@ -147,7 +147,7 @@
    (* Expression))
 
  '(Atom
-   (/ Number Symbol))
+   (/ Symbol Number))
 
  '(Number
    (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
@@ -196,8 +196,9 @@
                          (cadr matching)))
                 start
                 end))))
+
  '(SymbolContents
-   "[^\\(\\)\"'`,\\.@; \t\v\r\n]+")
+  "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
 
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))
