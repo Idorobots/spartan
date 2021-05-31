@@ -11,18 +11,22 @@
 (describe
  "mangle-names"
  (it "correctly renames simple cases"
-     (check ((symbol gen-valid-symbol-node))
+     (check ((val gen-valid-symbol)
+             (symbol (gen-symbol-node val)))
             (assert (mangle-names symbol)
-                    (ast-update symbol 'value symbol->safe)))
+                    (set-ast-symbol-value symbol (symbol->safe val))))
      (check ((formals (gen-arg-list (gen-integer 0 5)))
-             (body gen-valid-symbol-node)
+             (val gen-valid-symbol)
+             (body (gen-symbol-node val))
              (fun (gen-lambda-node formals body)))
             (assert-ast (mangle-names fun)
-                        (lambda ,renamed-formals
-                          ,renamed-body)
-                        (assert renamed-body (ast-update body 'value symbol->safe))
+                        (lambda renamed-formals
+                          renamed-body)
+                        (assert renamed-body
+                                (set-ast-symbol-value body (symbol->safe val)))
                         (map (lambda (original renamed)
-                               (assert renamed (ast-update original 'value symbol->safe)))
+                               (assert renamed
+                                       (set-ast-symbol-value original (symbol->safe (ast-symbol-value original)))))
                              formals
                              renamed-formals))))
 
@@ -30,7 +34,7 @@
      (check ((symbol gen-valid-symbol-node)
              (node (gen-specific-const-node symbol)))
             (assert-ast (mangle-names node)
-                        (const ,renamed-symbol)
+                        (const renamed-symbol)
                         (assert renamed-symbol symbol))))
 
  (it "doesn't rename primop-app ops"
@@ -38,17 +42,17 @@
              (args (gen-arg-list (gen-integer 0 5)))
              (node (apply gen-primop-app-node op args)))
             (assert-ast (mangle-names node)
-                        (primop-app ,renamed-op . ,renamed-args)
-                        (assert (ast-symbol-value renamed-op) op)
+                        (primop-app renamed-op renamed-args ...)
+                        (assert renamed-op op)
                         (map (lambda (original renamed)
-                               (assert renamed (ast-update original 'value symbol->safe)))
+                               (set-ast-symbol-value original (symbol->safe (ast-symbol-value original))))
                              args
                              renamed-args))))
 
  (it "renames all wildcards"
-     (check ((symbol (gen-symbol-node '_))
-             (list (gen-specific-do-node symbol symbol symbol)))
+     (check ((sym (gen-symbol-node '_))
+             (list (gen-specific-do-node sym sym sym)))
             (gensym-reset!)
             (assert-ast (mangle-names list)
-                        (do 'WILD1 'WILD2 'WILD3)
+                        (do (symbol '__WILD1) (symbol '__WILD2) (symbol '__WILD3))
                         (assert #t)))))

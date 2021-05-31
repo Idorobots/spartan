@@ -16,19 +16,21 @@
 (define (no-match)
   '())
 
-(define (matches m start end)
-  (vector m start end))
+(define-struct match-result (result start end) #:transparent)
 
-(define matches? vector?)
+(define (matches m start end)
+  (make-match-result m start end))
+
+(define matches? match-result?)
 
 (define (match-match m)
-  (vector-ref m 0))
+  (match-result-result m))
 
 (define (match-start m)
-  (vector-ref m 1))
+  (match-result-start m))
 
 (define (match-end m)
-  (vector-ref m 2))
+  (match-result-end m))
 
 ;; Parser generator
 (define (generate-parser . rules)
@@ -41,17 +43,60 @@
      (string-length input)))
 
 (define (generate-grammar rules)
-  (let ((top-name (caar rules))
-        (hash (gensym 'hash))
-        (input (gensym 'input))
-        (caches (map (lambda (_) (gensym 'cache)) rules)))
+  (let* ((top-name (caar rules))
+         (hash (gensym 'hash))
+         (input (gensym 'input))
+         (inlined (inline-rules rules))
+         (caches (map (lambda (_) (gensym 'cache)) inlined)))
     `(define ,top-name
        (let ,(map generate-cache caches)
-         (letrec ,(map generate-rule rules caches)
+         (letrec ,(map generate-rule inlined caches)
            (lambda (,input)
              ,@(map clear-cache caches)
              (let ((,hash (hash-input ,input)))
                (,top-name ,hash ,input 0))))))))
+
+(define +peg-inline-loops+ 5)
+
+(define (inline-rules rules)
+  (define (inline-rules-once rules)
+    (let* ((inlineable (filter (lambda (rule)
+                                 (equal? 2 (length rule)))
+                               rules)))
+      (map (lambda (r)
+             (inline-rule inlineable r))
+           rules)))
+  (let loop ((i +peg-inline-loops+)
+             (rs rules)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? rs prev))
+        rs
+        (loop (- i 1)
+              (inline-rules-once rs)
+              rs))))
+
+(define (inline-rule inlineable rule)
+  (let ((name (car rule))
+        (pattern (cadr rule))
+        (transform (cddr rule)))
+    (list* name
+           (update-pattern inlineable pattern)
+           transform)))
+
+(define (update-pattern rules pattern)
+  (cond ((null? pattern)
+         pattern)
+        ((pair? pattern)
+         (cons (update-pattern rules (car pattern))
+               (update-pattern rules (cdr pattern))))
+        ((symbol? pattern)
+         (let ((r (assoc pattern rules)))
+           (if r
+               (cdr r)
+               pattern)))
+        (else
+         pattern)))
 
 (define (generate-cache cache)
   `(,cache (make-hasheq)))

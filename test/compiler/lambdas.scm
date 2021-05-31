@@ -10,8 +10,8 @@
              (app (apply gen-app-node f args)))
             (gensym-reset!)
             (assert-ast (lambda-inlining '() app)
-                        (let ,bindings
-                          ,body1)
+                        (let bindings
+                          body1)
                         (assert body1 body)
                         (gensym-reset!)
                         (assert (map ast-binding-var bindings) (map temporary-name formals))
@@ -35,8 +35,8 @@
              (app (apply gen-app-node sym args)))
             (gensym-reset!)
             (assert-ast (lambda-inlining (list (cons var f)) app)
-                        (let ,bindings
-                          ,body1)
+                        (let bindings
+                          body1)
                         (assert body1 body)
                         (gensym-reset!)
                         (assert (map ast-binding-var bindings) (map temporary-name formals))
@@ -62,9 +62,9 @@
              (node (gen-let-node (list b) app)))
             (gensym-reset!)
             (assert-ast (lambda-inlining '() node)
-                        (let ((binding ,sym1 ,f1))
-                          (let ,bindings
-                            ,body1))
+                        (let ((binding sym1 f1))
+                          (let bindings
+                            body1))
                         (assert sym1 sym)
                         (assert f1 f)
                         (assert body1 body)
@@ -98,12 +98,12 @@
              (node (gen-letrec-node (list b) app)))
             (gensym-reset!)
             (assert-ast (lambda-inlining '() node)
-                        (letrec ((binding ,sym1
-                                          (lambda ,formals1
-                                            (let ,bindings1
-                                              ,body1))))
-                          (let ,bindings2
-                            ,body2))
+                        (letrec ((binding sym1
+                                          (lambda formals1
+                                            (let bindings1
+                                              body1))))
+                          (let bindings2
+                            body2))
                         (assert sym1 sym)
                         (assert formals1 formals)
                         (gensym-reset!)

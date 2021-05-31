@@ -50,40 +50,35 @@
 
 (define (gen-number-node gen-value)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-number-node
-         (sample gen-value rand)))))
+    (make-ast-number (sample gen-location rand)
+                     (sample gen-value rand))))
 
 (define (gen-symbol-node gen-symbol)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-symbol-node
-         (sample gen-symbol rand)))))
+    (make-ast-symbol (sample gen-location rand)
+                     (sample gen-symbol rand))))
 
 (define gen-valid-symbol-node
   (gen-symbol-node gen-valid-symbol))
 
 (define (gen-string-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-string-node
-         (sample gen-contents rand)))))
+    (make-ast-string (sample gen-location rand)
+                     (sample gen-contents rand))))
 
 (define (gen-list-node gen-max-size)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-list-node
-         (sample (gen-list gen-max-size
-                           ;; NOTE To avoid generating huge objects.
-                           gen-simple-node)
-                 rand)))))
+    (make-ast-list (sample gen-location rand)
+                   (sample (gen-list gen-max-size
+                                     ;; NOTE To avoid generating huge objects.
+                                     gen-simple-node)
+                           rand))))
 
 (define (gen-specific-list-node . gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-list-node
-         (map (flip sample rand)
-              gen-contents)))))
+    (make-ast-list (sample gen-location rand)
+                   (map (flip sample rand)
+                        gen-contents))))
 
 (define (gen-one-of . alternatives)
   (lambda (rand)
@@ -92,33 +87,28 @@
 
 (define (gen-quote-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-quote-node
-         (sample gen-contents rand)))))
+    (make-ast-quote (sample gen-location rand)
+                    (sample gen-contents rand))))
 
 (define (gen-quasiquote-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-quasiquote-node
-         (sample gen-contents rand)))))
+    (make-ast-quasiquote (sample gen-location rand)
+                         (sample gen-contents rand))))
 
 (define (gen-unquote-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-unquote-node
-         (sample gen-contents rand)))))
+    (make-ast-unquote (sample gen-location rand)
+                      (sample gen-contents rand))))
 
 (define (gen-unquote-splicing-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-unquote-splicing-node
-         (sample gen-contents rand)))))
+    (make-ast-unquote-splicing (sample gen-location rand)
+                               (sample gen-contents rand))))
 
 (define (gen-specific-const-node gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-const-node
-         (sample gen-contents rand)))))
+    (make-ast-const (sample gen-location rand)
+                    (sample gen-contents rand))))
 
 (define (gen-const-node rand)
   (sample (gen-specific-const-node
@@ -135,9 +125,9 @@
 
 (define (gen-lambda-node gen-formals gen-body)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-lambda-node (sample gen-formals rand)
-                          (sample gen-body rand)))))
+    (make-ast-lambda (sample gen-location rand)
+                     (sample gen-formals rand)
+                     (sample gen-body rand))))
 
 (define (gen-valid-lambda-node rand)
   (sample (gen-lambda-node (gen-arg-list (gen-integer 0 5))
@@ -146,9 +136,9 @@
 
 (define (gen-app-node gen-op . gen-args)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-app-node (sample gen-op rand)
-                       (map (flip sample rand) gen-args)))))
+    (make-ast-app (sample gen-location rand)
+                  (sample gen-op rand)
+                  (map (flip sample rand) gen-args))))
 
 (define (gen-valid-app-node rand)
   (sample (apply gen-app-node
@@ -160,9 +150,9 @@
 
 (define (gen-primop-app-node gen-op . gen-args)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-primop-app-node (sample gen-op rand)
-                              (map (flip sample rand) gen-args)))))
+    (make-ast-primop-app (sample gen-location rand)
+                         (sample gen-op rand)
+                         (map (flip sample rand) gen-args))))
 
 (define (gen-valid-primop-app-node rand)
   (sample (apply gen-primop-app-node
@@ -175,10 +165,11 @@
 (define (gen-binding-node gen-name gen-value)
   (lambda (rand)
     (let ((val (sample gen-value rand)))
-      (at (sample gen-location rand)
-          (complexity (compute-complexity val)
-                      (make-binding-node (sample gen-name rand)
-                                         val))))))
+      (set-ast-binding-complexity
+       (make-ast-binding (sample gen-location rand)
+                         (sample gen-name rand)
+                         val)
+       (compute-complexity val)))))
 
 (define (gen-valid-binding-node rand)
   (sample (gen-binding-node gen-valid-symbol-node gen-simple-node)
@@ -189,9 +180,9 @@
 
 (define (gen-def-node gen-name gen-value)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-def-node (sample gen-name rand)
-                       (sample gen-value rand)))))
+    (make-ast-def (sample gen-location rand)
+                  (sample gen-name rand)
+                  (sample gen-value rand))))
 
 (define (gen-valid-def-node rand)
   (sample (gen-def-node gen-valid-symbol-node gen-simple-node)
@@ -199,9 +190,9 @@
 
 (define (gen-let-node gen-bindings gen-body)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-let-node (sample gen-bindings rand)
-                       (sample gen-body rand)))))
+    (make-ast-let (sample gen-location rand)
+                  (sample gen-bindings rand)
+                  (sample gen-body rand))))
 
 (define (gen-valid-let-node rand)
   (sample (gen-let-node (gen-binding-list (gen-integer 1 5))
@@ -210,9 +201,9 @@
 
 (define (gen-letrec-node gen-bindings gen-body)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-letrec-node (sample gen-bindings rand)
-                          (sample gen-body rand)))))
+    (make-ast-letrec (sample gen-location rand)
+                     (sample gen-bindings rand)
+                     (sample gen-body rand))))
 
 (define (gen-valid-letrec-node rand)
   (sample (gen-letrec-node (gen-binding-list (gen-integer 1 5))
@@ -221,9 +212,9 @@
 
 (define (gen-fix-node gen-bindings gen-body)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-fix-node (sample gen-bindings rand)
-                       (sample gen-body rand)))))
+    (make-ast-fix (sample gen-location rand)
+                  (sample gen-bindings rand)
+                  (sample gen-body rand))))
 
 (define (gen-valid-fix-node rand)
   (sample (gen-fix-node (gen-binding-list (gen-integer 1 5))
@@ -232,10 +223,10 @@
 
 (define (gen-if-node gen-cond gen-then gen-else)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-if-node (sample gen-cond rand)
-                      (sample gen-then rand)
-                      (sample gen-else rand)))))
+    (make-ast-if (sample gen-location rand)
+                 (sample gen-cond rand)
+                 (sample gen-then rand)
+                 (sample gen-else rand))))
 
 (define (gen-valid-if-node rand)
   (sample (gen-if-node gen-simple-node gen-simple-node gen-simple-node)
@@ -243,18 +234,16 @@
 
 (define (gen-do-node gen-max-length gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-do-node
-         (sample (gen-list gen-max-length
-                           gen-contents)
-                 rand)))))
+    (make-ast-do (sample gen-location rand)
+                 (sample (gen-list gen-max-length
+                                   gen-contents)
+                         rand))))
 
 (define (gen-specific-do-node . gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-do-node
-         (map (flip sample rand)
-              gen-contents)))))
+    (make-ast-do (sample gen-location rand)
+                 (map (flip sample rand)
+                      gen-contents))))
 
 (define (gen-valid-do-node rand)
   (sample (gen-do-node (gen-integer 1 5) gen-simple-node)
@@ -262,13 +251,12 @@
 
 (define (gen-body-node gen-max-length gen-contents gen-context)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-body-node
-         (sample (gen-list gen-max-length
-                           gen-contents)
-                 rand)
-         (sample gen-context
-                 rand)))))
+    (make-ast-body (sample gen-location rand)
+                   (sample (gen-list gen-max-length
+                                     gen-contents)
+                           rand)
+                   (sample gen-context
+                           rand))))
 
 (define (gen-valid-body-node rand)
   (sample (gen-body-node (gen-integer 1 5) gen-simple-node (gen-text (gen-integer 10 20)))
@@ -276,11 +264,10 @@
 
 (define (gen-specific-body-node gen-context . gen-contents)
   (lambda (rand)
-    (at (sample gen-location rand)
-        (make-body-node
-         (map (flip sample rand)
-              gen-contents)
-         (sample gen-context rand)))))
+    (make-ast-body (sample gen-location rand)
+                   (map (flip sample rand)
+                        gen-contents)
+                   (sample gen-context rand))))
 
 (define (gen-simple-node rand)
   (sample (gen-one-of (gen-number-node gen-number)
@@ -334,15 +321,14 @@
 (define (gen-error-node gen-node)
   (lambda (rand)
     (let ((n (sample gen-node rand)))
-      (at (get-location n)
-          (make-error-node n)))))
+      (make-ast-error (ast-node-location n)
+                       n))))
 
 (define gen-random-error-node
   (gen-error-node gen-ast-node))
 
 (define (gen-location-node rand)
-  (at (sample gen-location rand)
-      (make-location-node)))
+  (make-ast-location (sample gen-location rand)))
 
 (define (gen-specific-list gen parameters)
   (lambda (rand)
@@ -352,23 +338,29 @@
 
 (define (gen-with-fv gen fv)
   (lambda (rand)
-    (free-vars (apply set (sample fv rand))
-               (sample gen rand))))
+    (let ((vars (sample fv rand)))
+      (set-ast-node-free-vars
+       (if (set? vars)
+           vars
+           (apply set vars))
+       (sample gen rand)))))
 
 (define (gen-with-bv gen bv)
   (lambda (rand)
-    (bound-vars (apply set (sample bv rand))
-                (sample gen rand))))
+    (let ((vars (sample bv rand)))
+      (set-ast-node-bound-vars
+       (if (set? vars)
+           vars
+           (apply set vars))
+       (sample gen rand)))))
 
 (define (gen-with-fv-bv gen fv bv)
   (gen-with-fv (gen-with-bv gen bv) fv))
 
 (define (gen-with-ctx gen ctx)
   (lambda (rand)
-    (context ctx
-             (sample gen rand))))
+    (set-ast-node-context (sample gen rand) ctx)))
 
-(define (gen-self-recoursive gen)
+(define (gen-self-recursive gen)
   (lambda (rand)
-    (self-recoursive #t
-                     (sample gen rand))))
+    (set-ast-binding-self-recursive (sample gen rand) #t)))

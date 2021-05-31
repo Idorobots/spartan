@@ -31,9 +31,9 @@
              (parent (gen-let-node bindings gen-simple-node)))
             (let* ((result (analyze-bindings #f parent))
                    (bindings (ast-let-bindings result)))
-              (assert (map get-complexity bindings)
+              (assert (map ast-binding-complexity bindings)
                       '(complex lambda))
-              (assert (map get-self-recoursive bindings)
+              (assert (map ast-binding-self-recursive bindings)
                       '(#f #f)))))
 
  (it "should annotate letrec bindings with complexity & recursivity"
@@ -66,8 +66,8 @@
              (parent (gen-letrec-node bindings gen-simple-node)))
             (let* ((result (analyze-bindings #f parent))
                    (bindings (ast-letrec-bindings result)))
-              (assert (map get-complexity bindings)
+              (assert (map ast-binding-complexity bindings)
                       '(simple complex lambda lambda complex complex))
-              (assert (map get-self-recoursive bindings)
+              (assert (map ast-binding-self-recursive bindings)
                       ;; NOTE The last complex value is not considered self-recursive. At least not directly.
                       '(#f #t #f #t #f #f))))))

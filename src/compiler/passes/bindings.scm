@@ -16,22 +16,24 @@
           (env-update env 'ast (partial analyze-bindings #f)))))
 
 (define (analyze-bindings within-letrec? expr)
-  (ast-case expr
+  (match-ast expr
    ((let _ _)
-    (walk-ast (partial analyze-bindings #f) expr))
+    (traverse-ast analyze-bindings #f expr))
    ((letrec _ _)
-    (walk-ast (partial analyze-bindings #t) expr))
-   ((binding _ ,val)
-    (complexity (compute-complexity val)
-                (self-recoursive (and within-letrec?
-                                      (not (set-empty? (set-intersection (get-bound-vars expr)
-                                                                         (get-free-vars expr)))))
-                                 (walk-ast (partial analyze-bindings within-letrec?) expr))))
+    (traverse-ast analyze-bindings #t expr))
+   ((binding _ val)
+    (set-ast-binding-complexity
+     (set-ast-binding-self-recursive
+      (traverse-ast analyze-bindings within-letrec? expr)
+      (and within-letrec?
+           (not (set-empty? (set-intersection (ast-node-bound-vars expr)
+                                              (ast-node-free-vars expr))))))
+     (compute-complexity val)))
    (else
-    (walk-ast (partial analyze-bindings within-letrec?) expr))))
+    (traverse-ast analyze-bindings within-letrec? expr))))
 
 (define (compute-complexity expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ;; Simple values.
     ((const) 'simple)
     ;; Function values, used by letrec-conversion later on.

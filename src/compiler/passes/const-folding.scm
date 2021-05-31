@@ -13,67 +13,60 @@
           (env-update env 'ast constant-folding))))
 
 (define (constant-folding expr)
-  (map-ast id
-           (lambda (expr)
-             (ast-case expr
-              ((primop-app 'car (const (list ,first . ,rest)))
+  (map-ast (lambda (expr)
+             (match-ast expr
+              ((primop-app 'car (const (list first rest ...)))
                (replace expr
-                        (make-const-node first)))
-              ((primop-app 'cdr (const (list _ . ,rest)))
+                        (make-ast-const (ast-node-location expr)
+                                        first)))
+              ((primop-app 'cdr (const (list _ rest ...)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-list-node rest))))))
-              ((primop-app 'cadr (const (list _ ,second . ,rest)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-list (ast-node-location expr) rest)))))
+              ((primop-app 'cadr (const (list _ second rest ...)))
                (replace expr
-                        (make-const-node second)))
-              ((primop-app 'cddr (const (list _ _ . ,rest)))
+                        (make-ast-const (ast-node-location expr)
+                                        second)))
+              ((primop-app 'cddr (const (list _ _ rest ...)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-list-node rest))))))
-              ((primop-app 'list (const (list . ,values)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-list (ast-node-location expr) rest)))))
+              ((primop-app 'list (const (list values ...)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-list-node values))))))
-              ((primop-app 'cons (const ,first) (const (list . ,rest)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-list (ast-node-location expr) values)))))
+              ((primop-app 'cons (const first) (const (list rest ...)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-list-node (cons first rest)))))))
-              ((primop-app '* (const (number ,a)) (const (number ,b)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-list (ast-node-location expr) (cons first rest))))))
+              ((primop-app '* (const (number a)) (const (number b)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-number-node (* (ast-number-value a)
-                                                   (ast-number-value b))))))))
-              ((primop-app '+ (const (number ,a)) (const (number ,b)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-number (ast-node-location expr)
+                                                          (* a b))))))
+              ((primop-app '+ (const (number a)) (const (number b)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-number-node (+ (ast-number-value a)
-                                                   (ast-number-value b))))))))
-              ((primop-app '/ (const (number ,a)) (const (number ,b)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-number (ast-node-location expr)
+                                                          (+ a b))))))
+              ((primop-app '/ (const (number a)) (const (number b)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-number-node (/ (ast-number-value a)
-                                                   (ast-number-value b))))))))
-              ((primop-app '- (const (number ,a)) (const (number ,b)))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-number (ast-node-location expr)
+                                                          (/ a b))))))
+              ((primop-app '- (const (number a)) (const (number b)))
                (replace expr
-                        (make-const-node
-                         (at (get-location expr)
-                             (generated
-                              (make-number-node (- (ast-number-value a)
-                                                   (ast-number-value b))))))))
+                        (make-ast-const (ast-node-location expr)
+                                        (generated
+                                         (make-ast-number (ast-node-location expr)
+                                                          (- a b))))))
               ;; TODO
               ;; append, concat & boolean returning values.
               (else

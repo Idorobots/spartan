@@ -54,9 +54,8 @@
           (env-update env 'ast reorder-letrec))))
 
 (define (reorder-letrec expr)
-  (map-ast id
-           (lambda (expr)
-             (if (letrec-node? expr)
+  (map-ast (lambda (expr)
+             (if (ast-letrec? expr)
                  (replace expr
                           (scc-reorder (derive-graph expr) expr))
                  expr))
@@ -77,21 +76,22 @@
         deps)))
 
 (define (derive-dependencies expr)
-  (let ((vars (apply set (get-bound-vars expr))))
+  (let ((vars (ast-node-bound-vars expr)))
     (foldl append
            '()
            (map (lambda (b)
                   (map (lambda (e)
                          ;; NOTE So that we can process somewhat malformed expressions.
                          (list (safe-symbol-value (ast-binding-var b)) e))
-                       (set-intersection vars
-                                         (get-free-vars (ast-binding-val b)))))
+                       (set->list
+                        (set-intersection vars
+                                          (ast-node-free-vars (ast-binding-val b))))))
                 (ast-letrec-bindings expr)))))
 
 (define (derive-ordering expr)
   (let ((vars (map (compose safe-symbol-value ast-binding-var)
                    ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
-                   (filter (compose (partial equal? 'complex) get-complexity)
+                   (filter (compose (partial equal? 'complex) ast-binding-complexity)
                            (ast-letrec-bindings expr)))))
     (if (empty? vars)
         '()
@@ -104,7 +104,7 @@
 (define (scc-reorder dep-graph expr)
   (let ((bindings (ast-letrec-bindings expr))
         (body (ast-letrec-body expr))
-        (scc (scc (get-bound-vars expr)
+        (scc (scc (set->list (ast-node-bound-vars expr))
                   dep-graph)))
     (if (empty? scc)
         (reconstruct-let-node expr bindings body)
@@ -116,7 +116,7 @@
                              bindings)))
              ;; NOTE Nodes resulting from reordering are artificially created, hence they are marked as such.
              (generated
-              (if (recoursive? bs)
+              (if (recursive? bs)
                   (reconstruct-letrec-node parent bs acc)
                   (reconstruct-let-node parent bs acc)))))
          body

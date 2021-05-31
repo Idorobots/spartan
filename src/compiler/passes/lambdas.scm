@@ -11,16 +11,15 @@
 
 (define inline-lambdas
   (pass (schema "inline-lambdas"
-                'globals a-list?
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (partial lambda-inlining '())))))
 
 (define (lambda-inlining lambdas expr)
-  (let ((loop (partial walk-ast (partial lambda-inlining lambdas))))
-    (ast-case expr
+  (let ((loop (partial traverse-ast lambda-inlining lambdas)))
+    (match-ast expr
      ;; Beta reduction
-     ((app (lambda ,formals ,body) . ,args)
+     ((app (lambda formals body) args ...)
       (if (equal? (length formals)
                   (length args))
           (beta-reduce expr
@@ -29,8 +28,8 @@
                        (loop body))
           (loop expr)))
      ;; Actual inlining
-     ((app (symbol ,op) . ,args)
-      (let ((l (assoc (ast-symbol-value op) lambdas)))
+     ((app (symbol op) args ...)
+      (let ((l (assoc op lambdas)))
         (if l
             (let ((formals (ast-lambda-formals (cdr l))))
               (if (equal? (length formals)
@@ -43,72 +42,68 @@
                   (loop expr)))
             (loop expr))))
      ;; Collect lambdas
-     ((let ,bindings ,body)
+     ((let bindings body)
       (let ((ls (map (lambda (b)
                        (cons (ast-symbol-value (ast-binding-var b))
                              (ast-binding-val b)))
                      (filter suitable-lambda?
-                             (filter (compose lambda-node? ast-binding-val)
+                             (filter (compose ast-lambda? ast-binding-val)
                                      bindings))))
-            (lambdas (filter-lambdas lambdas (get-bound-vars expr))))
-        (ast-update (ast-update expr 'bindings (partial map loop))
-                    'body
-                    (partial lambda-inlining (append ls lambdas)))))
-     ((letrec ,bindings ,body)
+            (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr))))
+        (-> expr
+            (set-ast-let-bindings (map loop bindings))
+            (set-ast-let-body (lambda-inlining (append ls lambdas) body)))))
+     ((letrec bindings body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
                               (ast-binding-val b)))
                       (filter suitable-lambda?
-                              (filter (compose lambda-node? ast-binding-val)
+                              (filter (compose ast-lambda? ast-binding-val)
                                       bindings))))
-             (lambdas (filter-lambdas lambdas (get-bound-vars expr)))
+             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
-        (ast-update (ast-update expr 'body loop)
-                    'bindings
-                    (partial map loop))))
-     ((fix ,bindings ,body)
+        (-> expr
+            (set-ast-letrec-body (loop body))
+            (set-ast-letrec-bindings (map loop bindings)))))
+     ((fix bindings body)
       (let* ((ls (map (lambda (b)
                         (cons (ast-symbol-value (ast-binding-var b))
                               (ast-binding-val b)))
                       (filter suitable-lambda?
                               bindings)))
-             (lambdas (filter-lambdas lambdas (get-bound-vars expr)))
+             (lambdas (filter-lambdas lambdas (ast-node-bound-vars expr)))
              (loop (partial lambda-inlining (append ls lambdas))))
-        (ast-update (ast-update expr 'body loop)
-                    'bindings
-                    (partial map loop))))
+        (-> expr
+            (set-ast-fix-body (loop body))
+            (set-ast-fix-bindings (map loop bindings)))))
      (else
       (loop expr)))))
 
 (define (filter-lambdas lambdas bound-vars)
   (filter (lambda (l)
-            (set-empty? (set-intersection (get-free-vars (cdr l))
+            (set-empty? (set-intersection (ast-node-free-vars (cdr l))
                                           bound-vars)))
           lambdas))
 
 (define (beta-reduce original formals args body)
   (let* ((renamed (map temporary-name formals))
-         (subs (map (lambda (formal tmp)
-                      (cons (ast-symbol-value formal)
-                            (lambda (orig)
-                              (at (get-location orig)
-                                  tmp))))
-                    formals
-                    renamed)))
+         (subs (make-subs
+                (map (lambda (formal tmp)
+                       (cons (ast-symbol-value formal)
+                             (constantly tmp)))
+                     formals
+                     renamed))))
     (reconstruct-let-node original
                           (map (lambda (var val)
-                                 (at (get-location val)
-                                     (generated
-                                      (make-binding-node var val))))
+                                 (generated
+                                  (make-ast-binding (ast-node-location val) var val)))
                                renamed
                                args)
                           (substitute-symbols subs body))))
 
 (define (temporary-name original)
-  (at (get-location original)
-      (generated
-       (make-symbol-node
-        (gensym (ast-symbol-value original))))))
+  (make-ast-gensym (ast-node-location original)
+                   (ast-symbol-value original)))
 
 (define +max-inlineable-size+ 10)
 

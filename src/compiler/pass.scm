@@ -45,18 +45,27 @@
                (> (length val) 0))
     (schema-validation-error "Not a non-empty list" val)))
 
+(define (non-empty-hash? val)
+  (unless (and (hash? val)
+               (> (hash-count val) 0))
+    (schema-validation-error "Not a non-empty hash" val)))
+
 (define (a-list? val)
   (unless (list? val)
     (schema-validation-error "Not a list" val)))
 
+(define (a-set? val)
+  (unless (set? val)
+    (schema-validation-error "Not a set" val)))
+
 (define (ast-subset? types)
   (lambda (expr)
-    (let ((t (get-type expr)))
+    (let ((t (ast-node-type expr)))
       (unless (member t types)
         (schema-validation-error (format "Unhandled AST node type `~a`" t) expr))
       ;; NOTE Contents of these are technically not part of the subset.
-      (if (or (error-node? expr)
-              (const-node? expr))
+      (if (or (ast-error? expr)
+              (ast-const? expr))
           error
           (walk-ast (ast-subset? types)
                     expr)))))

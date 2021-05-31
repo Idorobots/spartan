@@ -17,13 +17,14 @@
             (end (match-end result)))
        (matches (if (= (length exprs) 1)
                     (car exprs)
-                    (at (location start end)
-                        (make-body-node exprs "Bad script")))
+                    (make-ast-body (location start end)
+                                   exprs
+                                   "Bad script"))
                 start
                 end))))
 
  '(Expression
-   (/ List Atom String Quote))
+   (/ Atom List String Quote))
 
  '(UnmatchedParen
    (Spacing ")")
@@ -32,8 +33,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (at (location start end)
-                     (make-location-node))
+                 (make-ast-location (location start end))
                  "Unmatched `)`, expected an opening `(` to come before:")
                 start
                 end))))
@@ -46,8 +46,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-quote-node (caddr matching)))
+       (matches (make-ast-quote (location start end)
+                                 (caddr matching))
                 start
                 end))))
  '(Quasiquote
@@ -56,8 +56,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-quasiquote-node (caddr matching)))
+       (matches (make-ast-quasiquote (location start end)
+                                      (caddr matching))
                 start
                 end))))
  '(Unquote
@@ -66,8 +66,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-unquote-node (caddr matching)))
+       (matches (make-ast-unquote (location start end)
+                                   (caddr matching))
                 start
                 end))))
  '(UnquoteSplicing
@@ -76,8 +76,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-unquote-splicing-node (caddr matching)))
+       (matches (make-ast-unquote-splicing (location start end)
+                                           (caddr matching))
                 start
                 end))))
  '(UnterminatedQuote
@@ -87,8 +87,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (at (location start end)
-                     (make-location-node))
+                 (make-ast-location (location start end))
                  (format "No expression following `~a`:"
                          (cadr matching)))
                 start
@@ -103,8 +102,7 @@
             (start (car matching))
             (end (match-end result))
             (content (caddr matching)))
-       (matches (at (location start end)
-                    (make-string-node content))
+       (matches (make-ast-string (location start end) content)
                 start
                 end))))
  '(UnterminatedString
@@ -115,8 +113,7 @@
             (end (match-end result))
             (content (caddr matching)))
        (matches (raise-compilation-error
-                 (at (location start end)
-                     (make-location-node))
+                 (make-ast-location (location start end))
                  "Unterminated string literal, expected a closing `\"` to follow:")
                 start
                 end))))
@@ -131,8 +128,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-list-node (caddr matching)))
+       (matches (make-ast-list (location start end)
+                               (caddr matching))
                 start
                 end))))
  '(UnterminatedList
@@ -142,8 +139,7 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (at (location start end)
-                     (make-location-node))
+                 (make-ast-location (location start end))
                  "Unterminated list, expected a closing `)` to follow:")
                 start
                 end))))
@@ -151,7 +147,7 @@
    (* Expression))
 
  '(Atom
-   (/ Number Symbol))
+   (/ Symbol Number))
 
  '(Number
    (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
@@ -160,8 +156,8 @@
             (spacing-start (match-start result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-number-node (string->number (cadr matching))))
+       (matches (make-ast-number (location start end)
+                                 (string->number (cadr matching)))
                 start
                 end))))
 
@@ -173,8 +169,8 @@
      (let* ((matching (match-match result))
             (start (car matching))
             (end (match-end result)))
-       (matches (at (location start end)
-                    (make-symbol-node (string->symbol (cadr matching))))
+       (matches (make-ast-symbol (location start end)
+                                 (string->symbol (cadr matching)))
                 start
                 end))))
  '(StructureRef
@@ -195,14 +191,36 @@
             (start (car matching))
             (end (match-end result)))
        (matches (raise-compilation-error
-                 (at (location start end)
-                     (make-location-node))
+                 (make-ast-location (location start end))
                  (format "Invalid symbol `~a` specified at:"
                          (cadr matching)))
                 start
                 end))))
+
  '(SymbolContents
-   "[^\\(\\)\"'`,\\.@; \t\v\r\n]+")
+   "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
+
+ ;; NOTE The above is basically the same as this, except less readable:
+ ;; '(SymbolContents
+ ;;   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+
+ ;; '(SymbolInitial
+ ;;   (/ Alpha Special "#"))
+
+ ;; '(SymbolSubsequent
+ ;;   (/ SymbolInitial "@" Digit Sign))
+
+ ;; '(Alpha
+ ;;   "[a-zA-Z]")
+
+ ;; '(Special
+ ;;   "[!$%*/:<=>?~_^]")
+
+ ;; '(Digit
+ ;;   "[0-9]")
+
+ ;; '(Sign
+ ;;   "[+\\-]")
 
  '(Spacing
    (: (* (/ "[ \t\v\r\n]+" Comment)))
@@ -218,20 +236,14 @@
 
 (define (expand-structure-refs loc head rest)
   (foldl (lambda (part acc)
-           (at loc
-               (make-primop-app-node
-                '&structure-ref
-                (list acc
-                      (at loc
-                          (generated
-                           (make-quote-node part)))))))
-         (wrap-symbol loc head)
-         (map (partial wrap-symbol loc)
+           (make-ast-primop-app loc
+                                '&structure-ref
+                                (list acc
+                                      (generated
+                                       (make-ast-quote loc part)))))
+         (make-ast-symbol loc head)
+         (map (partial make-ast-symbol loc)
               rest)))
-
-(define (wrap-symbol loc s)
-  (at loc
-      (make-symbol-node s)))
 
 (define parse
   (pass (schema "parse"
@@ -245,8 +257,7 @@
                                             (if (matches? parsed)
                                                 (match-match parsed)
                                                 (raise-compilation-error
-                                                 (at (location 0 (string-length input))
-                                                     (make-location-node))
+                                                 (make-ast-location (location 0 (string-length input)))
                                                  "Not a valid Spartan file:")))))))
             (env-set env
                      'ast (car result)

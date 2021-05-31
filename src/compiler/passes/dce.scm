@@ -15,83 +15,83 @@
           (env-update env 'ast (partial dce (set))))))
 
 (define (dce eta-disallow expr)
-  (ast-case expr
+  (match-ast expr
    ;; NOTE These are introduced by CPC.
-   ((let ((binding ,var ,val)) ,var)
+   ((let ((binding var val)) var)
     (dce (set) val))
    ;; NOTE Eta reduction.
-   ((lambda ,args (app ,op . ,args))
-    (if (and (symbol-node? op)
+   ((lambda formals (app op args ...))
+    #:when (ast-list-eqv? formals args)
+    (if (and (ast-symbol? op)
              (set-member? (set-union eta-disallow
                                      ;; NOTE Or else (letcc k (k k)) eta reduces to k, which is then undefined.
-                                     (get-bound-vars expr))
+                                     (ast-node-bound-vars expr))
                           (ast-symbol-value op)))
-        (walk-ast (partial dce (set)) expr)
+        (traverse-ast dce (set) expr)
         (dce (set) op)))
-   ((lambda ,args (primop-app '&yield-cont ,cont . ,args))
+   ((lambda formals (primop-app '&yield-cont cont args ...))
+    #:when (ast-list-eqv? formals args)
     (dce (set) cont))
    ;; Actual dead code elimination
-   ((do . ,exprs)
+   ((do exprs ...)
     (let ((final (last exprs))
           (filtered (filter effectful?
                             (take exprs (- (length exprs) 1)))))
       (if (empty? filtered)
           (dce (set) final)
           (replace expr
-                   (make-do-node
-                    (map (partial dce (set))
-                         (append filtered
-                                 (list final))))))))
-   ((if ,condition ,then ,else)
+                   (make-ast-do (ast-node-location expr)
+                                (map (partial dce (set))
+                                     (append filtered
+                                             (list final))))))))
+   ((if condition then else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
-          (else (walk-ast (partial dce (set)) expr))))
-   ((let ,bindings ,body)
-    (let* ((free (get-free-vars body))
+          (else (traverse-ast dce (set) expr))))
+   ((let bindings body)
+    (let* ((free (ast-node-free-vars body))
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-let-node expr
                             (map (partial dce (set)) filtered)
                             (dce (set) body))))
-   ((letrec ,bindings ,body)
-    (let* ((free (set-union (get-free-vars body)
-                            (set-sum (map get-free-vars bindings))))
+   ((letrec bindings body)
+    (let* ((free (set-union (ast-node-free-vars body)
+                            (set-sum (map ast-node-free-vars bindings))))
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-letrec-node expr
                                (map (lambda (b)
-                                      (walk-ast (partial dce (get-bound-vars expr))
-                                                b))
+                                      (traverse-ast dce (ast-node-bound-vars expr) b))
                                     filtered)
                                (dce (set) body))))
-   ((fix ,bindings ,body)
-    (let* ((free (set-union (get-free-vars body)
-                            (set-sum (map get-free-vars bindings))))
+   ((fix bindings body)
+    (let* ((free (set-union (ast-node-free-vars body)
+                            (set-sum (map ast-node-free-vars bindings))))
            (filtered (filter (flip used? free) bindings)))
       (reconstruct-fix-node expr
                             (map (lambda (b)
-                                   (walk-ast (partial dce (get-bound-vars expr))
-                                             b))
+                                   (traverse-ast dce (ast-node-bound-vars expr) b))
                                  filtered)
                             (dce (set) body))))
    (else
-    (walk-ast (partial dce (set)) expr))))
+    (traverse-ast dce (set) expr))))
 
 (define (effectful? node)
-  (not (or (const-node? node)
-           (symbol-node? node)
-           (lambda-node? node))))
+  (not (or (ast-const? node)
+           (ast-symbol? node)
+           (ast-lambda? node))))
 
 (define (falsy? node)
   ;; FIXME Implement proper booleans.
-  (and (const-node? node)
-       (list-node? (ast-const-value node))
+  (and (ast-const? node)
+       (ast-list? (ast-const-value node))
        (equal? 0 (ast-list-length (ast-const-value node)))))
 
 (define (truthy? node)
   (and (not (falsy? node))
-       (or (const-node? node)
-           (lambda-node? node))))
+       (or (ast-const? node)
+           (ast-lambda? node))))
 
 (define (used? b free)
   (or (effectful? (ast-binding-val b))
-      (not (set-empty? (set-intersection (get-bound-vars b)
+      (not (set-empty? (set-intersection (ast-node-bound-vars b)
                                          free)))))

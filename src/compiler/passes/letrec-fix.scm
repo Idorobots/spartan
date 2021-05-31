@@ -11,15 +11,14 @@
 (define fix-letrec
   (pass (schema "fix-letrec"
                 'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app primop-app)))
+                                          if do let letrec binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast fixing-letrec))))
 
 (define (fixing-letrec expr)
-  (map-ast id
-           (lambda (expr)
-             (ast-case expr
-              ((letrec ,bindings ,body)
+  (map-ast (lambda (expr)
+             (match-ast expr
+              ((letrec bindings body)
                (replace expr
                         (waddell reconstruct-fix-node let-ref-assign expr bindings body)))
               (else
@@ -58,24 +57,24 @@
 ;; The fix expression can be handled directly during the closure conversion phase by allocating a fat closure for all of these functions.
 
 (define (waddell fix let-void-set parent bindings body)
-  (let* ((simple (filter (compose (partial equal? 'simple) get-complexity)
+  (let* ((simple (filter (compose (partial equal? 'simple) ast-binding-complexity)
                          bindings))
-         (lambdas (filter (compose (partial equal? 'lambda) get-complexity)
+         (lambdas (filter (compose (partial equal? 'lambda) ast-binding-complexity)
                           bindings))
-         (complex (filter (compose (partial equal? 'complex) get-complexity)
+         (complex (filter (compose (partial equal? 'complex) ast-binding-complexity)
                           bindings))
          (lambdas-builder (if (empty? lambdas)
                               id
                               (compose generated
-                                       (if (recoursive? lambdas)
+                                       (if (recursive? lambdas)
                                            (partial fix parent lambdas)
                                            (partial reconstruct-let-node parent lambdas)))))
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)
-                                (ast-update (let-void-set parent complex body)
-                                            'body
-                                            lambdas-builder)))))
+                                (let ((inner (let-void-set parent complex body)))
+                                  (set-ast-let-body inner
+                                                    (lambdas-builder (ast-let-body inner))))))))
     (generated
      (reconstruct-let-node parent
                            simple
@@ -86,30 +85,28 @@
 (define (let-ref-assign parent bindings body)
   (if (empty? bindings)
       body
-      (let* ((vars (apply set (map (compose safe-symbol-value ast-binding-var) bindings)))
+      (let* ((vars (map (compose safe-symbol-value ast-binding-var) bindings))
              (refs (map (lambda (b)
-                          (at (get-location b)
-                              (complexity
-                               'simple
-                               (make-binding-node
-                                (ast-binding-var b)
-                                (let* ((val (ast-binding-val b))
-                                       (val-loc (get-location val)))
-                                  (at val-loc
-                                      (make-primop-app-node 'ref
-                                                            (list (at val-loc
-                                                                      (generated
-                                                                       (make-const-node
-                                                                        (at val-loc
-                                                                            (generated
-                                                                             (make-list-node '()))))))))))))))
+                          (set-ast-binding-complexity
+                           (make-ast-binding (ast-node-location b)
+                                             (ast-binding-var b)
+                                             (let* ((val (ast-binding-val b))
+                                                    (val-loc (ast-node-location val)))
+                                               (make-ast-primop-app val-loc
+                                                                    'ref
+                                                                    (list (generated
+                                                                           (make-ast-const val-loc
+                                                                                           (generated
+                                                                                            (make-ast-list val-loc '()))))))))
+                           'simple))
                         bindings))
              (setters (map (lambda (b)
                              (let ((val (derefy vars (ast-binding-val b)))
                                    (var (ast-binding-var b)))
-                               (free-vars (set-insert (get-free-vars val) (safe-symbol-value var))
-                                          (at (get-location val)
-                                              (make-primop-app-node 'assign! (list var val))))))
+                               (set-ast-node-free-vars (set-insert (ast-node-free-vars val) (safe-symbol-value var))
+                                                       (make-ast-primop-app (ast-node-location val)
+                                                                            'assign!
+                                                                            (list var val)))))
                            bindings))
              (body (derefy vars body)))
         (generated
@@ -117,19 +114,21 @@
                                refs
                                (if (empty? setters)
                                    body
-                                   (free-vars (set-union (get-free-vars body)
-                                                         (set-sum (map get-free-vars setters)))
-                                              (at (get-location body)
-                                                  (generated
-                                                   (make-do-node (append setters (list body))))))))))))
+                                   (set-ast-node-free-vars (set-union (ast-node-free-vars body)
+                                                                      (set-sum (map ast-node-free-vars setters)))
+                                                           (generated
+                                                                (make-ast-do (ast-node-location body)
+                                                                             (append setters (list body)))))))))))
 
 (define (derefy refs expr)
   (substitute-symbols
-   (map (lambda (ref)
-          (cons ref
-                (lambda (expr)
-                  (free-vars (set ref)
-                             (at (get-location expr)
-                                 (make-primop-app-node 'deref (list expr)))))))
-        refs)
+   (make-subs
+    (map (lambda (ref)
+           (cons ref
+                 (lambda (expr)
+                   (set-ast-node-free-vars (set ref)
+                                           (make-ast-primop-app (ast-node-location expr)
+                                                                'deref
+                                                                (list expr))))))
+         refs))
    expr))

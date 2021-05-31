@@ -17,12 +17,12 @@
             (let ((result (expand-quasiquote node)))
               (assert-ast result
                           (primop-app 'cons
-                                      (a-quote ,first)
+                                      (ast-quote first)
                                       (primop-app 'cons
-                                                  (a-quote ,second)
+                                                  (ast-quote second)
                                                   (primop-app 'cons
-                                                              (a-quote ,third)
-                                                              (a-quote (list)))))
+                                                              (ast-quote third)
+                                                              (ast-quote (list)))))
                           (assert first (ast-list-nth contents 0))
                           (assert second (ast-list-nth contents 1))
                           (assert third (ast-list-nth contents 2)))
@@ -37,17 +37,17 @@
      (check ((contents (gen-one-of gen-simple-node
                                    gen-complex-node))
              (unquoted (gen-unquote-node contents))
-             (list (gen-specific-list-node gen-simple-node unquoted gen-simple-node))
-             (node (gen-quasiquote-node list)))
+             (lst (gen-specific-list-node gen-simple-node unquoted gen-simple-node))
+             (node (gen-quasiquote-node lst)))
             (let ((result (expand-quasiquote node)))
               (assert-ast result
                           (primop-app 'cons
                                       _
                                       (primop-app 'cons
-                                                  ,converted-contents
+                                                  converted-contents
                                                   (primop-app 'cons
                                                               _
-                                                              (a-quote (list)))))
+                                                              (ast-quote (list)))))
                           (assert converted-contents contents))
               (assert (generated? result)))))
 
@@ -55,17 +55,17 @@
      (check ((contents (gen-one-of gen-simple-node
                                    gen-complex-node))
              (unquoted (gen-unquote-splicing-node contents))
-             (list (gen-specific-list-node gen-simple-node unquoted gen-simple-node))
-             (node (gen-quasiquote-node list)))
+             (lst (gen-specific-list-node gen-simple-node unquoted gen-simple-node))
+             (node (gen-quasiquote-node lst)))
             (let ((result (expand-quasiquote node)))
               (assert-ast result
                           (primop-app 'cons
                                       _
                                       (primop-app 'concat
-                                                  ,converted-contents
+                                                  converted-contents
                                                   (primop-app 'cons
                                                               _
-                                                              (a-quote (list)))))
+                                                              (ast-quote (list)))))
                           (assert converted-contents contents))
               (assert (generated? result)))))
 

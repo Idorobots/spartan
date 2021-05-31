@@ -4,7 +4,7 @@
  "reconstruct-letrec-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -12,10 +12,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -26,10 +27,10 @@
             (assert (reconstruct-letrec-node parent '() body)
                     body)
             (let ((result (reconstruct-letrec-node parent bindings body)))
-              (assert (letrec-node? result))
-              (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-letrec? result))
+              (assert (ast-node-location result) (ast-node-location parent))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-letrec-body result) body)
               (assert (ast-letrec-bindings result) bindings)))))
 
@@ -37,7 +38,7 @@
  "reconstruct-let-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-complex-node (apply set body-fv)))
+             (body (gen-with-fv gen-complex-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -45,10 +46,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -59,10 +61,10 @@
             (assert (reconstruct-let-node parent '() body)
                     body)
             (let ((result (reconstruct-let-node parent bindings body)))
-              (assert (let-node? result))
-              (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-let? result))
+              (assert (ast-node-location result) (ast-node-location parent))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-let-body result) body)
               (assert (ast-let-bindings result) bindings)))))
 
@@ -70,7 +72,7 @@
  "reconstruct-fix-node"
  (it "should correctly recompute free & bound vars"
      (check ((body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (let-bv (take body-fv 2))
              (vars (gen-specific-list gen-symbol-node let-bv))
              (vals (gen-specific-list (lambda (_)
@@ -78,10 +80,11 @@
                                       let-bv))
              (vals-fv (gen-list (length let-bv) gen-valid-symbol))
              (bindings (map (lambda (sym var val fv)
-                              (at (get-location var)
-                                  (free-vars (set fv)
-                                             (bound-vars (set sym)
-                                                         (make-binding-node var val)))))
+                              (set-ast-node-free-vars (set fv)
+                                                      (set-ast-node-bound-vars (set sym)
+                                                                               (make-ast-binding (ast-node-location var)
+                                                                                                 var
+                                                                                                 val))))
                             let-bv
                             vars
                             vals
@@ -92,10 +95,10 @@
             (assert (reconstruct-fix-node parent '() body)
                     body)
             (let ((result (reconstruct-fix-node parent bindings body)))
-              (assert (fix-node? result))
-              (assert (get-location result) (get-location parent))
-              (assert (get-bound-vars result) (apply set let-bv))
-              (assert (get-free-vars result) (apply set expected-fv))
+              (assert (ast-fix? result))
+              (assert (ast-node-location result) (ast-node-location parent))
+              (assert (ast-node-bound-vars result) (apply set let-bv))
+              (assert (ast-node-free-vars result) (apply set expected-fv))
               (assert (ast-fix-body result) body)
               (assert (ast-fix-bindings result) bindings)))))
 
@@ -110,21 +113,20 @@
                    '(1 3 5 7 9)))))
 
 (define (test-propagate subs expr)
-  (propagate (compose symbol-node? ast-binding-val)
-             (lambda (binding)
-               (cons (ast-symbol-value (ast-binding-var binding))
-                     (make-number-node 23)))
+  (propagate (compose ast-symbol? ast-binding-val)
+             (lambda (bindings subs)
+               (extend-subs (map (lambda (binding)
+                                   (cons (ast-symbol-value (ast-binding-var binding))
+                                         (make-ast-number (location 5 23) 23)))
+                                 bindings)
+                            subs))
              (lambda (subs expr kont)
-               (ast-case
-                expr
-                ((symbol ,value)
-                 (let ((s (assoc (ast-symbol-value value) subs)))
-                   (if s
-                       (cdr s)
-                       expr)))
+               (match-ast expr
+                ((symbol value)
+                 (replace-sub subs value (constantly expr)))
                 (else
                  (kont expr))))
-             subs
+             (make-subs subs)
              expr))
 
 (describe
@@ -138,11 +140,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var subbed))
                                         node)
-                        (do ,unchanged-node1
-                            (number ,x)
-                            ,unchanged-node2)
+                        (do unchanged-node1
+                            (number x)
+                            unchanged-node2)
                         (assert unchanged-node1 (car (ast-do-exprs node)))
-                        (assert x subbed)
+                        (assert x (ast-number-value subbed))
                         (assert unchanged-node2 (caddr (ast-do-exprs node))))))
 
  (it "should update the substitutions using bound variables"
@@ -158,10 +160,10 @@
                                               (cons var2 subbed))
                                         node)
                         (lambda (_)
-                          (do ,unchanged-sym1
-                              (number ,subbed-value)))
+                          (do unchanged-sym1
+                              (number subbed-value)))
                         (assert unchanged-sym1 sym1)
-                        (assert subbed-value subbed)))
+                        (assert subbed-value (ast-number-value subbed))))
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))
              (b1 (gen-binding-node sym1 gen-valid-symbol-node))
@@ -178,10 +180,10 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (let ((binding _ (app ,unchanged-value)))
+                        (let ((binding _ (app unchanged-value)))
                           (do (number '23) ;; NOTE Not subbed.
                               (number '23)
-                              ,unchanged-node))
+                            unchanged-node))
                         (assert unchanged-value sym2)
                         (assert unchanged-node sym3)))
      (check ((var1 gen-valid-symbol)
@@ -200,11 +202,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (letrec (,unchanged-b2
+                        (letrec (unchanged-b2
                                  (binding _ (app (number '23))))
                           (do (number '23) ;; NOTE Not subbed.
-                              ,unchanged-sym2
-                              ,unchanged-node))
+                              unchanged-sym2
+                            unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3)))
@@ -225,11 +227,11 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate (list (cons var1 subbed))
                                         node)
-                        (fix (,unchanged-b2
+                        (fix (unchanged-b2
                               (binding _ (app (number '23))))
-                          (do (number '23) ;; NOTE Not subbed.
-                              ,unchanged-sym2
-                              ,unchanged-node))
+                             (do (number '23) ;; NOTE Not subbed.
+                                 unchanged-sym2
+                               unchanged-node))
                         (assert unchanged-b2 b2)
                         (assert unchanged-sym2 sym2)
                         (assert unchanged-node sym3))))
@@ -247,7 +249,8 @@
              (subbed (gen-number-node gen-number)))
             (assert-ast (test-propagate '() node)
                         (do (number '23) ;; NOTE Not subbed.
-                            (number '23)))))
+                            (number '23))
+                        (assert #t))))
 
  (it "doesn't replace const values"
      (check ((var gen-valid-symbol)

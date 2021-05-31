@@ -23,30 +23,31 @@
                      'errors (cadr result))))))
 
 (define (expand-quasiquote expr)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote) expr)
     ((quasiquote)
-     (expand-no-splicing (ast-quoted-expr expr)
+     (expand-no-splicing (ast-quasiquote-expr expr)
                          expr))
     ((unquote unquote-splicing)
      (raise-compilation-error
       expr
-      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (get-type expr))))
+      (format "Misplaced `~a`, expected to be enclosed within a `quasiquote`:" (ast-node-type expr))))
     (else
      (walk-ast expand-quasiquote expr))))
 
 (define (expand-no-splicing expr context)
-  (if (unquote-splicing-node? expr)
+  (if (ast-unquote-splicing? expr)
       (raise-compilation-error
        expr
        "Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:")
       (expand-splicing expr context)))
 
 (define (expand-splicing expr context)
-  (case (get-type expr)
+  (case (ast-node-type expr)
     ((quote number string) expr)
     ((quasiquote) (expand-quasiquote expr))
-    ((unquote unquote-splicing) (ast-quoted-expr expr))
+    ((unquote) (ast-unquote-expr expr))
+    ((unquote-splicing) (ast-unquote-splicing-expr expr))
     ((symbol) (reconstruct-quoted-value
                expr
                context))
@@ -56,19 +57,18 @@
     (else (compiler-bug "Unexpected quasiquote expansion expression:" expr))))
 
 (define (reconstruct-quoted-value expr context)
-  (at (get-location context)
-      (generated
-       (make-quote-node
-        expr))))
+  (generated
+   (make-ast-quote (ast-node-location context)
+                   expr)))
 
 (define (reconstruct-quoted-list exprs context)
   (if (empty? exprs)
       (reconstruct-quoted-value
-       (at (get-location context)
-           (generated
-            (make-list-node '())))
+       (generated
+        (make-ast-list (ast-node-location context)
+                       '()))
        context)
-      ((if (unquote-splicing-node? (car exprs))
+      ((if (ast-unquote-splicing? (car exprs))
            make-concat
            make-cons)
        (expand-splicing (car exprs) (car exprs))
@@ -76,9 +76,11 @@
        context)))
 
 (define (make-concat a b context)
-  (at (get-location context)
-      (make-primop-app-node 'concat (list a b))))
+  (make-ast-primop-app (ast-node-location context)
+                       'concat
+                       (list a b)))
 
 (define (make-cons a b context)
-  (at (get-location context)
-      (make-primop-app-node 'cons (list a b))))
+  (make-ast-primop-app (ast-node-location context)
+                       'cons
+                       (list a b)))

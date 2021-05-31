@@ -25,47 +25,46 @@
                      'errors (cadr result))))))
 
 (define (expand-body expr)
-  (ast-case expr
-   ((body . ,exprs)
+  (match-ast expr
+   ((ast-body exprs ...)
     (let* ((defs (extract-defs exprs))
            (non-defs (extract-non-defs exprs)))
       (if (> (length defs) 0)
-          (replace expr
-                   (generated
-                    (make-letrec-node (unique-bindings (map expand-body defs)
-                                                       (get-context expr))
-                                      (reconstruct-simple-body
-                                       (map expand-body non-defs)
-                                       expr))))
+          (generated
+           (make-ast-letrec (ast-node-location expr)
+                            (unique-bindings (map expand-body defs)
+                                             (ast-node-context expr))
+                            (reconstruct-simple-body
+                             (map expand-body non-defs)
+                             expr)))
           (reconstruct-simple-body
            (map expand-body exprs)
            expr))))
-   ((def ,name ,value)
+   ((def name value)
     (raise-compilation-error
      ;; NOTE So that we might find more meaningful errors in the future passes.
      (walk-ast expand-body expr)
-     (format "~a, not allowed in this context:" (get-context* expr "Bad `define` syntax"))))
+     (format "~a, not allowed in this context:" (ast-node-context* expr "Bad `define` syntax"))))
    (else
     (walk-ast expand-body expr))))
 
 (define (extract-defs exprs)
   (foldr (lambda (e acc)
-           (ast-case e
-            ((def ,name ,value)
-             (cons (replace e
-                            (generated
-                             (make-binding-node name value)))
+           (match-ast e
+            ((def name value)
+             (cons (generated
+                    (make-ast-binding (ast-node-location e) name value))
                    acc))
             (else acc)))
          '()
          exprs))
 
 (define (extract-non-defs exprs)
-  (filter (compose not def-node?)
+  (filter (compose not ast-def?)
           exprs))
 
 (define (reconstruct-simple-body exprs parent)
-  (let ((ctx (get-context* parent "Bad `do` syntax")))
+  (let ((ctx (ast-node-context* parent "Bad `do` syntax")))
     (cond ((= (length exprs) 0)
            (raise-compilation-error
             parent
@@ -73,8 +72,9 @@
           ((= (length exprs) 1)
            (car exprs))
           (else
-           (at (get-location parent)
-               (generated
-                ;; NOTE The context should be preserved.
-                (context ctx
-                         (make-do-node exprs))))))))
+           (generated
+            ;; NOTE The context should be preserved.
+            (set-ast-node-context
+             (make-ast-do (ast-node-location parent)
+                          exprs)
+             ctx))))))

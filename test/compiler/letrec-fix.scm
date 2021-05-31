@@ -1,12 +1,11 @@
 ;; Assignment conversion tests.
 
-
 (define (check-deref arg node result)
-  (assert-ast result (primop-app 'deref ,inserted-node)
+  (assert-ast result (primop-app 'deref inserted-node)
               (assert inserted-node node))
   (assert (generated? result))
-  (assert (get-free-vars result) (set arg))
-  (assert (get-location result) (get-location node)))
+  (assert (ast-node-free-vars result) (set arg))
+  (assert (ast-node-location result) (ast-node-location node)))
 
 (describe
  "derefy"
@@ -47,77 +46,85 @@
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (op gen-valid-symbol-node)
-             (app (gen-app-node op node)))
-            (let ((result (derefy (list arg) app)))
-              (assert-ast result (app ,operator ,deref)
+             (appl (gen-app-node op node)))
+            (let ((result (derefy (list arg) appl)))
+              (assert-ast result
+                          (app operator deref)
                           (assert operator op)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location app)))))
+              (assert (ast-node-location result)
+                      (ast-node-location appl)))))
 
  (it "replaces assigned free variables with derefs in lambda"
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (fun (gen-lambda-node (gen-arg-list 2) node)))
             (let ((result (derefy (list arg) fun)))
-              (assert-ast result (lambda _ ,body)
+              (assert-ast result
+                          (lambda _ body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location fun)))))
+              (assert (ast-node-location result) (ast-node-location fun)))))
 
  (it "replaces assigned free variables with derefs in let"
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (l (gen-let-node (gen-binding-list 2) node)))
             (let ((result (derefy (list arg) l)))
-              (assert-ast result (let _ ,body)
+              (assert-ast result
+                          (let _ body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result) (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
-             (binding (gen-binding-node gen-valid-symbol-node node))
-             (l (gen-let-node (list binding) gen-simple-node)))
+             (b (gen-binding-node gen-valid-symbol-node node))
+             (l (gen-let-node (list b) gen-simple-node)))
             (let ((result (derefy (list arg) l)))
-              (assert-ast result (let ((binding _ ,deref)) _)
+              (assert-ast result
+                          (let ((binding _ deref)) _)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result)
+                      (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
-             (binding (gen-binding-node node node))
-             (let-node (gen-with-bv (gen-let-node (list binding) gen-simple-node) (set arg))))
+             (b (gen-binding-node node node))
+             (let-node (gen-with-bv (gen-let-node (list b) gen-simple-node) (set arg))))
             (let ((result (derefy (list arg) let-node)))
-              (assert-ast result (let ((binding ,var ,deref)) _)
+              (assert-ast result
+                          (let ((binding var deref)) _)
                           (assert var node)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location let-node)))))
+              (assert (ast-node-location result)
+                      (ast-node-location let-node)))))
 
  (it "replaces assigned free variables with derefs in letrec"
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
              (l (gen-letrec-node (gen-binding-list 2) node)))
             (let ((result (derefy (list arg) l)))
-              (assert-ast result (letrec _ ,body)
+              (assert-ast result
+                          (letrec _ body)
                           (check-deref arg node body))
-              (assert (get-location result) (get-location l))))
+              (assert (ast-node-location result) (ast-node-location l))))
      (check ((arg gen-valid-symbol)
              (node (gen-symbol-node arg))
-             (binding (gen-binding-node gen-valid-symbol-node node))
-             (l (gen-letrec-node (list binding) gen-simple-node)))
+             (b (gen-binding-node gen-valid-symbol-node node))
+             (l (gen-letrec-node (list b) gen-simple-node)))
             (let ((result (derefy (list arg) l)))
-              (assert-ast result (letrec ((binding _ ,deref)) _)
+              (assert-ast result
+                          (letrec ((binding _ deref)) _)
                           (check-deref arg node deref))
-              (assert (get-location result) (get-location l))))))
+              (assert (ast-node-location result)
+                      (ast-node-location l))))))
 
 (define (gen-ref value)
-  (let ((l (get-location value)))
-    (at l
-        (generated
-         (make-primop-app-node
-          'ref
-          (list (at l
-                    (generated
-                     (make-const-node
-                      (at l
-                          (generated
-                           (make-list-node '()))))))))))))
+  (let ((l (ast-node-location value)))
+    (generated
+     (make-ast-primop-app l
+                          'ref
+                          (list (generated
+                                 (make-ast-const l
+                                                 (generated
+                                                  (make-ast-list l '())))))))))
 
 (describe
  "let-ref-assign"
@@ -125,69 +132,65 @@
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
+             (val (gen-with-fv gen-non-value-node val-fv))
              (b (gen-binding-node var val))
              (bindings (list b))
              (body-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (body (gen-with-fv gen-non-value-node (apply set body-fv)))
+             (body (gen-with-fv gen-non-value-node body-fv))
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v))))
             (assert (let-ref-assign parent bindings body)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (get-location b)
-                                                     (complexity 'simple
-                                                                 (make-binding-node var (gen-ref val)))))
-                                           (free-vars
+                                           (list (set-ast-binding-complexity
+                                                  (make-ast-binding (ast-node-location b)
+                                                                    var
+                                                                    (gen-ref val))
+                                                  'simple))
+                                           (set-ast-node-free-vars
                                             (set-sum (list (apply set val-fv)
                                                            (apply set body-fv)
                                                            (set v)))
-                                            (at (get-location body)
-                                                (generated
-                                                 (make-do-node
-                                                  (list (free-vars
-                                                         (set-union (apply set val-fv)
-                                                                    (set v))
-                                                         (let ((l (get-location val)))
-                                                           (at l
-                                                               (generated
-                                                                (make-primop-app-node
-                                                                 'assign!
-                                                                 (list var
-                                                                       val))))))
-                                                        body))))))))))
+                                            (generated
+                                             (make-ast-do (ast-node-location body)
+                                                          (list (set-ast-node-free-vars
+                                                                 (set-union (apply set val-fv)
+                                                                            (set v))
+                                                                 (generated
+                                                                  (make-ast-primop-app (ast-node-location val)
+                                                                                       'assign!
+                                                                                       (list var val))))
+                                                                body)))))))))
 
  (it "should correctly introduce derefs"
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
              (val-fv (gen-list (gen-integer 3 5) gen-valid-symbol))
-             (val (gen-with-fv gen-non-value-node (apply set val-fv)))
+             (val (gen-with-fv gen-non-value-node val-fv))
              (b (gen-binding-node var val))
              (bindings (list b))
              (parent (gen-with-bv (gen-letrec-node bindings var) (set v))))
             (assert (let-ref-assign parent bindings var)
                     (generated
                      (reconstruct-let-node parent
-                                           (list (at (get-location b)
-                                                     (complexity 'simple
-                                                                 (make-binding-node var (gen-ref val)))))
-                                           (free-vars
+                                           (list (set-ast-binding-complexity
+                                                  (make-ast-binding (ast-node-location b)
+                                                                    var
+                                                                    (gen-ref val))
+                                                  'simple))
+                                           (set-ast-node-free-vars
                                             (set-union (apply set val-fv)
                                                        (set v))
-                                            (at (get-location var)
-                                                (generated
-                                                 (make-do-node
-                                                  (list (free-vars
-                                                         (set-union (apply set val-fv)
-                                                                    (set v))
-                                                         (let ((l (get-location val)))
-                                                           (at l
-                                                               (generated
-                                                                (make-primop-app-node
-                                                                 'assign!
-                                                                 (list var
-                                                                       val))))))
-                                                        (derefy (set v)
-                                                                var))))))))))))
+                                            (generated
+                                             (make-ast-do (ast-node-location var)
+                                                          (list (set-ast-node-free-vars
+                                                                 (set-union (apply set val-fv)
+                                                                            (set v))
+                                                                 (generated
+                                                                  (make-ast-primop-app (ast-node-location val)
+                                                                                       'assign!
+                                                                                       (list var val))))
+                                                                (derefy (list v)
+                                                                        var)))))))))))
 
 (describe
  "waddell"
@@ -216,16 +219,16 @@
                                                                                         (list b3)
                                                                                         body))))))))
 
- (it "should fix recoursive lambdas"
+ (it "should fix recursive lambdas"
      (check ((v1 gen-valid-symbol)
              (n1 (gen-symbol-node v1))
-             (b1 (gen-self-recoursive (gen-binding-node n1 gen-valid-lambda-node)))
+             (b1 (gen-self-recursive (gen-binding-node n1 gen-valid-lambda-node)))
              (bindings (list b1))
              (body gen-simple-node)
              (parent (gen-with-bv (gen-letrec-node bindings body) (set v1))))
             (assert (waddell reconstruct-fix-node reconstruct-let-node parent bindings body)
                     (generated
-                     ;; NOTE Recoursive lambda is fixed.
+                     ;; NOTE Recursive lambda is fixed.
                      (reconstruct-fix-node parent
                                            (list b1)
                                            body)))))

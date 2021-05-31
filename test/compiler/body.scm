@@ -20,18 +20,18 @@
              (node (apply gen-specific-body-node ctx exprs)))
             (let ((result (expand-body node)))
               (assert-ast result
-                          (do . ,expanded-exprs)
+                          (do expanded-exprs ...)
                           (assert expanded-exprs exprs))
-              (assert (get-location result)
-                      (get-location node))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))))
      (check ((ctx (gen-text (gen-integer 10 20)))
              (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
              (non-defs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx (append defs non-defs))))
             (let ((result (expand-body node)))
               (assert-ast result
-                          (letrec ,bindings
-                            (do . ,body))
+                          (letrec bindings
+                            (do body ...))
                           (assert (length bindings)
                                   (length defs))
                           (map (lambda (b d)
@@ -42,10 +42,10 @@
                                bindings
                                defs)
                           (assert body non-defs))
-              (assert (get-location result)
-                      (get-location node))
-              (assert (get-location (ast-letrec-body result))
-                      (get-location node)))))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert (ast-node-location (ast-letrec-body result))
+                      (ast-node-location node)))))
 
  (it "should disallow not well-formed bodies"
      (check ((exprs (gen-list (gen-integer 0 5) gen-valid-def-node))
@@ -68,4 +68,4 @@
      (check ((ctx (gen-text (gen-integer 10 20)))
              (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx exprs)))
-            (assert (get-context (expand-body node)) ctx))))
+            (assert (ast-node-context (expand-body node)) ctx))))
