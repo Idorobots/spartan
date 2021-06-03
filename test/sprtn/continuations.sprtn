@@ -1,0 +1,20 @@
+(do
+  (define (yield x)
+    (shift k (cons x (k '()))))
+
+  (define (iota from to)
+    (unless (>= from to)
+      (yield from)
+      (sleep 10)
+      (iota (+ from 1) to)))
+
+  (define (run from to)
+    (lambda ()
+      (display (reset (iota from to)))
+      (newline)))
+
+  (spawn (run 0 100))
+  (spawn (run 100 200))
+  (spawn (run 200 300))
+  (spawn (run 300 400))
+  (spawn (run 500 600)))
