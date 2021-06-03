@@ -105,7 +105,7 @@
   (make-ast-gensym (ast-node-location original)
                    (ast-symbol-value original)))
 
-(define +max-inlineable-size+ 10)
+(define +max-inlineable-size+ 15)
 
 (define (suitable-lambda? b)
   (< (ast-size b) +max-inlineable-size+))

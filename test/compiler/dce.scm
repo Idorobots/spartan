@@ -55,16 +55,17 @@
      (check ((then gen-valid-symbol-node)
              (els gen-valid-symbol-node)
              (cnd (gen-one-of (gen-specific-const-node gen-valid-symbol-node)
-                              (gen-specific-const-node (gen-list-node (gen-integer 1 5))) ;; NOTE Needs at least 1 element.
+                              (gen-specific-const-node (gen-list-node (gen-integer 0 5)))
                               (gen-specific-const-node (gen-number-node gen-number))
                               (gen-specific-const-node (gen-string-node (gen-integer 0 20)))
-                              gen-valid-lambda-node))
+                              gen-valid-lambda-node
+                              (gen-symbol-node 'true)))
              (node (gen-if-node cnd then els)))
             (assert (dce (set) node)
                     then))
      (check ((then gen-valid-symbol-node)
              (els gen-valid-symbol-node)
-             (cnd (gen-specific-const-node (gen-list-node 0)))
+             (cnd (gen-symbol-node 'false))
              (node (gen-if-node cnd then els)))
             (assert (dce (set) node)
                     els)))
@@ -198,10 +199,11 @@
 
 (describe
  "truthy? and falsy?"
- (it "falsy? should only recognize constant empty list as falsy"
-     (assert (falsy? (sample (gen-specific-const-node
-                              (gen-list-node 0))
+ (it "falsy? should only recognize boolean false"
+     (assert (falsy? (sample (gen-symbol-node 'false)
                              random)))
+     (assert (not (falsy? (sample (gen-symbol-node 'true)
+                                  random))))
      (check ((value (gen-one-of gen-valid-symbol-node
                                 (gen-list-node (gen-integer 1 5))
                                 (gen-number-node gen-number)
@@ -217,11 +219,12 @@
             (assert (not (falsy? node)))))
 
  (it "truthy? should treat other static values as truthy"
-     (assert (not (truthy? (sample (gen-specific-const-node
-                                    (gen-list-node 0))
+     (assert (not (truthy? (sample (gen-symbol-node 'false)
                                    random))))
+     (assert (truthy? (sample (gen-symbol-node 'true)
+                              random)))
      (check ((value (gen-one-of gen-valid-symbol-node
-                                (gen-list-node (gen-integer 1 5))
+                                (gen-list-node (gen-integer 0 5))
                                 (gen-number-node gen-number)
                                 (gen-string-node (gen-integer 0 20))))
              (node (gen-one-of (gen-specific-const-node value)
