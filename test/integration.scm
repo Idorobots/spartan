@@ -17,7 +17,8 @@
        (__task_info (bootstrap (lambda () '())))
        ;; Ensure that timeouts take very short time.
        (__sleep (bootstrap (lambda (time)
-                             (wait 25)))))
+                             (wait (min time 25))))))
+      (test-file "../test/sprtn/continuations.sprtn" sort-lines)
       (test-file "../test/sprtn/errors.sprtn")
       (test-file "../test/sprtn/errors3.sprtn")
       (test-file "../test/sprtn/coroutines.sprtn")
