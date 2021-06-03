@@ -1,10 +1,10 @@
 ;; Actor model:
 
 (load-once "compiler/utils/utils.scm")
-(load-once "runtime/continuations.scm")
 
 (struct uproc
   ((continuation #:mutable)
+   (delimited-continuations #:mutable)
    (error-handler #:mutable)
    (state #:mutable)
    (rtime #:mutable)
@@ -15,7 +15,7 @@
   #:constructor-name make-uproc)
 
 (define (uproc priority cont handler rtime state)
-  (make-uproc cont handler state rtime priority (gensym 'pid) '()))
+  (make-uproc cont '() handler state rtime priority (gensym 'pid) '()))
 
 (define (inc-uproc-rtime! uproc by)
   (set-uproc-rtime! uproc (+ by (uproc-rtime uproc))))
