@@ -224,7 +224,7 @@
     id))
 
 (define (select pattern)
-  (let* ((store (ref nil))
+  (let* ((store (ref '()))
          (rule (compile-rule pattern
                              (lambda (bindings)
                                (assign! store

@@ -155,7 +155,7 @@
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
 
 (define +reserved-keywords+
-  '(lambda let letrec if do))
+  '(lambda let letrec if do true false))
 
 (define (valid-formals args prefix)
   (if (is-type? args 'list)

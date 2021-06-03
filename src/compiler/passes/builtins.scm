@@ -41,7 +41,7 @@
                       builtins
                       (apply set
                              '(car cadr cdr cddr list cons append concat
-                                   equal? nil? not
+                                   equal? nil? empty? not
                                    * + - / = < <= > >=
                                    remainder quotient modulo zero?
                                    ref deref assign!

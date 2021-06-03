@@ -12,7 +12,7 @@
                                    (lambda (v)
                                      (&apply __sleep v (closurize id))))
                                   23)
-                     nil
+                     '()
                      0
                      'waiting)))
        (reset-tasks! (list p))
@@ -41,7 +41,7 @@
                                                                 (lambda (__value3)
                                                                   __value3))))))))
                                   'msg)
-                     nil
+                     '()
                      0
                      'waiting)))
        (reset-tasks! (list p))
@@ -66,7 +66,7 @@
                                                                     (lambda (__value5)
                                                                       __value5)))))))))))
                                   'msg)
-                     nil
+                     '()
                      0
                      'waiting)))
        (reset-tasks! (list p))
@@ -79,8 +79,8 @@
                      (&yield-cont (closurize
                                    (lambda (_)
                                      (&apply __recv (closurize id))))
-                                  nil)
-                     nil
+                                  '())
+                     '()
                      0
                      'waiting)))
        (reset-tasks! (list p))

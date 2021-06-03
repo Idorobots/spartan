@@ -55,18 +55,23 @@
                             (map (partial dce (set)) filtered)
                             (dce (set) body))))
    ((letrec bindings body)
-    (let* ((free (set-union (ast-node-free-vars body)
-                            (set-sum (map ast-node-free-vars bindings))))
-           (filtered (filter (flip used? free) bindings)))
+    (let ((filtered (filter (lambda (b)
+                              (used? b (set-union (ast-node-free-vars body)
+                                                  (set-sum (map ast-node-free-vars
+                                                                (filter (compose not (partial equal? b))
+                                                                        bindings))))))
+                            bindings)))
       (reconstruct-letrec-node expr
                                (map (lambda (b)
                                       (traverse-ast dce (ast-node-bound-vars expr) b))
                                     filtered)
                                (dce (set) body))))
    ((fix bindings body)
-    (let* ((free (set-union (ast-node-free-vars body)
-                            (set-sum (map ast-node-free-vars bindings))))
-           (filtered (filter (flip used? free) bindings)))
+    (let ((filtered (filter (lambda (b)
+                              (used? b (set-union (ast-node-free-vars body)
+                                                  (set-sum (map ast-node-free-vars
+                                                                (filter (compose not (partial equal? b))
+                                                                        bindings)))))) bindings)))
       (reconstruct-fix-node expr
                             (map (lambda (b)
                                    (traverse-ast dce (ast-node-bound-vars expr) b))
@@ -81,15 +86,14 @@
            (ast-lambda? node))))
 
 (define (falsy? node)
-  ;; FIXME Implement proper booleans.
-  (and (ast-const? node)
-       (ast-list? (ast-const-value node))
-       (equal? 0 (ast-list-length (ast-const-value node)))))
+  (and (ast-symbol? node)
+       (equal? 'false (ast-symbol-value node))))
 
 (define (truthy? node)
-  (and (not (falsy? node))
-       (or (ast-const? node)
-           (ast-lambda? node))))
+  (or (ast-const? node)
+      (ast-lambda? node)
+      (and (ast-symbol? node)
+           (equal? 'true (ast-symbol-value node)))))
 
 (define (used? b free)
   (or (effectful? (ast-binding-val b))

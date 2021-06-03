@@ -19,11 +19,15 @@
 
 (define bootstrap (compose closurize cpsfy))
 
+;; Built-in primops
+
+(define nil? null?)
+
 ;; Basic
 
 (define __nil '())
-(define __true true)
-(define __false false)
+(define __true #t)
+(define __false #f)
 (define __not (bootstrap not))
 
 (define __car (bootstrap car))
@@ -37,7 +41,8 @@
 (define __concat (bootstrap append))
 
 (define __equalQUEST (bootstrap equal?))
-(define __nilQUEST (bootstrap null?))
+(define __nilQUEST (bootstrap nil?))
+(define __emptyQUEST (bootstrap empty?))
 
 (define __MULT (bootstrap *))
 (define __PLUS (bootstrap +))
@@ -129,7 +134,7 @@
                         (&yield-cont (closurize
                                       (lambda (_)
                                         (&apply __recv cont)))
-                                     nil))))))
+                                     '()))))))
 
 (define __task_info (bootstrap task-info))
 (define __monitor (bootstrap (lambda (timeout)

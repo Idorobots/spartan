@@ -1,17 +1,8 @@
 ;; Various utilities
 
 ;; Basic definitions making Scheme less-of-a-Scheme:
-(define true #t)
-
-(define false #f)
-
-(define nil '())
-
-(define (nil? x)
-  (null? x))
-
 (define (empty? lst)
-  (nil? lst))
+  (null? lst))
 
 (define (every? p lst)
   (foldl (lambda (el acc)
@@ -67,9 +58,6 @@
 
 (define (tagged-list? tag lst)
   (and (pair? lst) (eq? (car lst) tag)))
-
-(define (not-nil? x)
-  (not (nil? x)))
 
 (define (id x) x)
 

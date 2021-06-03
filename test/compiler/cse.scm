@@ -1,13 +1,11 @@
 ;; Common subexpression elimination tests.
 
-(define cse-able-primops '(* + - / < = car cdr cadr nil? zero?))
-
 (describe
  "common-subexpression-elimination"
  (it "should eliminate redundant expressions"
      (check ((var1 gen-valid-symbol-node)
              (var2 gen-valid-symbol-node)
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (sym1 gen-valid-symbol-node)
              (app1 (gen-primop-app-node op var1 var2))
              (b1 (gen-binding-node sym1 app1))
@@ -27,7 +25,7 @@
  (it "should be procedure-local"
      (check ((var1 gen-valid-symbol-node)
              (var2 gen-valid-symbol-node)
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (sym1 gen-valid-symbol-node)
              (app1 (gen-primop-app-node op var1 var2))
              (b1 (gen-binding-node sym1 app1))
@@ -48,7 +46,7 @@
              (v2 gen-valid-symbol)
              (var1 (gen-symbol-node v1))
              (var2 (gen-symbol-node v2))
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (s1 gen-valid-symbol)
              (sym1 (gen-symbol-node s1))
              (app1 (gen-primop-app-node op var1 var2))
@@ -72,7 +70,7 @@
              (v2 gen-valid-symbol)
              (var1 (gen-symbol-node v1))
              (var2 (gen-symbol-node v2))
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (s1 gen-valid-symbol)
              (sym1 (gen-symbol-node s1))
              (app1 (gen-primop-app-node op var1 var2))
@@ -94,7 +92,7 @@
                         (assert cse-app2 app2)))
      (check ((v gen-valid-symbol)
              (var (gen-symbol-node v))
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (app (gen-primop-app-node op var var))
              (b (gen-with-fv (gen-binding-node var app)
                              (set v)))
@@ -107,7 +105,7 @@
              (v2 gen-valid-symbol)
              (var1 (gen-symbol-node v1))
              (var2 (gen-symbol-node v2))
-             (op (apply gen-one-of cse-able-primops))
+             (op (apply gen-one-of +eliminatable-primops+))
              (s1 gen-valid-symbol)
              (sym1 (gen-symbol-node s1))
              (app1 (gen-primop-app-node op var1 var2))
