@@ -28,4 +28,4 @@
                        (uproc-vtime task)
                        (uproc-rtime task)))
        (running-tasks))
-  nil)
+  '())

@@ -118,7 +118,7 @@
              (make-ast-if loc
                           first
                           (make-ast-list loc (cons and rest))
-                           (make-ast-symbol loc 'false)))))
+                          (make-ast-symbol loc 'false)))))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error

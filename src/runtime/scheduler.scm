@@ -10,8 +10,8 @@
 (define +initial-state+ 'waiting) ;; Initial state of uProcs.
 
 ;; Task management:
-(define *current-task* (ref nil))
-(define *task-list* (ref nil))
+(define *current-task* (ref '()))
+(define *task-list* (ref '()))
 
 (define (current-task)
   (deref *current-task*))
@@ -80,7 +80,7 @@
          (can-resume? c))))
 
 (define (execute!)
-  (execute-loop! nil))
+  (execute-loop! '()))
 
 (define (execute-loop! acc)
   (if (task-queue-empty?)

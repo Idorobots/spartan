@@ -24,7 +24,7 @@
   (let ((p (current-task)))
     (if (uproc-msg-queue-empty? p)
         (do (set-uproc-state! p 'waiting-4-msg)
-            (cons #f nil))
+            (cons #f '()))
         (cons #t (uproc-dequeue-msg! p)))))
 
 (define (spawn fun)
@@ -36,7 +36,7 @@
     (spawn-task! (&yield-cont (closurize
                                (lambda (_)
                                  (&apply fun kont)))
-                              nil)
+                              '())
                  (closurize
                   (lambda (e _)
                     (display ";; Task finished due to unhandled error: ")

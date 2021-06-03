@@ -68,10 +68,13 @@
         (else
          (common-subexpr (cdr subexprs) expr))))
 
+(define +eliminatable-primops+
+  '(car cadr cdr cddr list cons append concat
+    equal? nil? empty? not
+    * + - / >= > = < <= remainder quotient modulo zero?
+    self))
+
 (define (eliminatable-expr? node)
   (and (ast-primop-app? node)
        (member (ast-primop-app-op node)
-               '(car cadr cdr cddr list cons append concat
-                 equal? nil? not
-                 * + - / = < zero?
-                 self))))
+               +eliminatable-primops+)))

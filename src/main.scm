@@ -16,7 +16,7 @@
 
 (define (run-code expr)
   (reset-rete!)
-  (reset-tasks! nil)
+  (reset-tasks! '())
   (spawn-task! (&yield-cont (closurize eval) expr)
                (closurize
                 (lambda (e _)

@@ -73,7 +73,7 @@
           (var-apply fun vars fact))))
 
 (define (node-t var buffer-size fun vars next-node)
-  (let ((buffer (ref (array buffer-size nil)))
+  (let ((buffer (ref (array buffer-size '())))
         (curr-index (ref -1))
         (beginning (ref 0))
         (end (ref 0))
@@ -98,7 +98,7 @@
                     (assign! trigger 0)
                     (assign! beginning 0)
                     (assign! curr-index -1)
-                    (assign! buffer (array buffer-size nil))
+                    (assign! buffer (array buffer-size '()))
                     (cont (list (cons var values)))))
                 (when (var-apply fun vars fact)
                   (assign! triggered? #t)

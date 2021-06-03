@@ -7,12 +7,12 @@
   (list &uproc fields))
 
 (define (uproc priority cont handler rtime state)
-  (let ((f (array 7 nil)))
+  (let ((f (array 7 '())))
     (array-assign! f 0 cont)
     (array-assign! f 1 rtime)
     (array-assign! f 2 priority)
     (array-assign! f 3 (gensym 'pid))
-    (array-assign! f 4 nil) ;; NOTE message queue
+    (array-assign! f 4 '()) ;; NOTE message queue
     (array-assign! f 5 state)
     (array-assign! f 6 handler)
     (&uproc f)))
