@@ -1,8 +1,17 @@
+#lang racket
+
 ;; PEG parser source generator
 
 (require "utils/gensym.rkt")
 (require "utils/io.rkt")
 (require "utils/utils.rkt")
+
+(provide match-result no-match matches matches? match-match match-start match-end
+         memoize-input eq-len-hash-input
+         generate-parser
+         ;; FIXME These are exported for test access only.
+         generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
+         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat)
 
 ;; Some optimization
 (define (memoize-input previous-runs f)
@@ -38,10 +47,6 @@
     (spit temp-file (generate-grammar rules))
     (load temp-file)))
 
-(define (hash-input input)
-  (* (eq-hash-code input)
-     (string-length input)))
-
 (define (generate-grammar rules)
   (let* ((top-name (caar rules))
          (hash (gensym 'hash))
@@ -51,10 +56,15 @@
     `(define ,top-name
        (let ,(map generate-cache caches)
          (letrec ,(map generate-rule inlined caches)
-           (lambda (,input)
+           (lambda (,input hash-input)
              ,@(map clear-cache caches)
+             ;; FIXME No need to hash the input and pass it on to the rules.
              (let ((,hash (hash-input ,input)))
                (,top-name ,hash ,input 0))))))))
+
+(define (eq-len-hash-input input)
+  (* (eq-hash-code input)
+     (string-length input)))
 
 (define +peg-inline-loops+ 5)
 

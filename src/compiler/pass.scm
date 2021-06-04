@@ -2,7 +2,7 @@
 
 (load-once "compiler/errors.scm")
 (load-once "compiler/ast.scm")
-(load-once "compiler/env.scm")
+(require "env.rkt")
 
 (define (pass schema transform)
   (cons schema transform))

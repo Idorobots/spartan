@@ -1,7 +1,7 @@
 ;; A very simple parser.
 
-(load-once "compiler/peggen.scm")
-(load-once "compiler/env.scm")
+(require "../peggen.rkt")
+(require "../env.rkt")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
 (load-once "compiler/errors.scm")
@@ -253,7 +253,7 @@
           (let ((result (collect-errors (env-get env 'errors)
                                         (lambda ()
                                           (let* ((input (env-get env 'input))
-                                                 (parsed (Program input)))
+                                                 (parsed (Program input eq-len-hash-input)))
                                             (if (matches? parsed)
                                                 (match-match parsed)
                                                 (raise-compilation-error

@@ -3,7 +3,7 @@
 (require "../utils/utils.rkt")
 (require "../utils/gensym.rkt")
 
-(load-once "compiler/env.scm")
+(require "../env.rkt")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
 

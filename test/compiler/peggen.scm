@@ -1,5 +1,7 @@
 ;; PEG parser source generator tests
 
+(require "../../src/compiler/peggen.rkt")
+
 (define stripper
   (lambda (r)
     `(strip ,r)))
@@ -395,7 +397,8 @@
      (assert (SimpleLisp
               (with-output-to-string
                 (lambda ()
-                  (pretty-print '(+ 1 2 3)))))
+                  (pretty-print '(+ 1 2 3))))
+              eq-len-hash-input)
              (matches '(:type quote
                               :value (:type list
                                             :value ((:type symbol :value + :original "+" :start 2 :end 3)
@@ -417,7 +420,8 @@
                                    ;; Display hello world!
                                    (display "hello ")
                                    (display wordl)
-                                   (newline))))))
+                                   (newline)))))
+              eq-len-hash-input)
              (matches '(:type quote
                               :value (:type list
                                             :value
@@ -449,7 +453,7 @@
                       68)))
 
  (it "handles spacing correctly"
-     (assert (SimpleLisp "(foo   )")
+     (assert (SimpleLisp "(foo   )" eq-len-hash-input)
              (matches '(:type list
                               :value ((:type symbol :value foo :original "foo" :start 1 :end 4))
                               :start 0
@@ -458,14 +462,14 @@
                       8)))
 
  (it "handles EOF correctly"
-     (assert (Weird "(foo")
+     (assert (Weird "(foo" eq-len-hash-input)
              (matches '(:type invalid-list
                               :value ((:type symbol :value "foo" :start 1 :end 4))
                               :start 0
                               :end 4)
                       0
                       4))
-     (assert (Weird "(foo (foo foo)")
+     (assert (Weird "(foo (foo foo)" eq-len-hash-input)
              (matches '(:type invalid-list
                               :value ((:type symbol :value "foo" :start 1 :end 4)
                                       (:type list
@@ -480,28 +484,23 @@
      (assert (with-handlers ((string?
                               (lambda (e)
                                 e)))
-               (SimpleLisp "\"This string will fail to parse, but in a controlled way"))
+               (SimpleLisp "\"This string will fail to parse, but in a controlled way" eq-len-hash-input))
              "Unterminated string at location: 0")
      (assert (with-handlers ((string?
                               (lambda (e)
                                 e)))
-               (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))"))
+               (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))" eq-len-hash-input))
              "Unterminated string at location: 13"))
 
  (it "handles concatenation correctly"
-     (assert (Concat "foobarbaz")
+     (assert (Concat "foobarbaz" eq-len-hash-input)
              (matches "foobarbaz"
                       0
                       9)))
 
  (it "doesn't have cache collisions between calls"
-     (assert (let ((original-code "foo")
-                   (original-hash-input hash-input))
-               (set! hash-input (lambda (txt)
-                                  ;; NOTE Simulate hash collision that could happen when the cache is reused between calls to parse.
-                                  (original-hash-input original-code)))
-               (let ((result (SimpleLisp "oof")))
-                 (set! hash-input original-hash-input)
-                 (list (SimpleLisp original-code) result)))
+     ;; NOTE Simulate hash collision that could happen when the cache is reused between calls to parse.
+     (assert (list (SimpleLisp "foo" (constantly 23))
+                   (SimpleLisp "oof" (constantly 23)))
              (list (matches '(:type symbol :value foo :original "foo" :start 0 :end 3) 0 3)
                    (matches '(:type symbol :value oof :original "oof" :start 0 :end 3) 0 3)))))

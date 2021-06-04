@@ -1,4 +1,8 @@
+#lang racket
+
 ;; Static compilation env.
+
+(provide env env-get env-contains? env-set env-update)
 
 (define (env . properties)
   (apply hasheq properties))

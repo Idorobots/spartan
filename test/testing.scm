@@ -1,5 +1,8 @@
 ;; Testing shenanigans.
 
+(require "../src/compiler/utils/io.rkt")
+(require "../src/compiler/utils/refs.rkt")
+
 (define-struct assert-exception (predicate expression value expected))
 
 (define-syntax describe

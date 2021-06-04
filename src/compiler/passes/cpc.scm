@@ -5,7 +5,7 @@
 (require "../utils/gensym.rkt")
 (require "../utils/utils.rkt")
 
-(load-once "compiler/env.scm")
+(require "../env.rkt")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
 (load-once "compiler/errors.scm")

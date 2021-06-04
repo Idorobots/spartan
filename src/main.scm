@@ -9,7 +9,8 @@
        (set! *imported-modules* (cons file *imported-modules*))
        (load file)))))
 
-(load-once "compiler/env.scm")
+(require "compiler/utils/io.rkt")
+(require "compiler/env.rkt")
 (load-once "compiler/compiler.scm")
 (load-once "runtime/rt.scm")
 (load-once "rete/rete.scm")

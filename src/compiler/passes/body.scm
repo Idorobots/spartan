@@ -4,7 +4,7 @@
 
 (load-once "compiler/passes/elaboration.scm") ;; FIXME For unique-bindings
 
-(load-once "compiler/env.scm")
+(require "../env.rkt")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")
 (load-once "compiler/errors.scm")

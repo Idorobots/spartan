@@ -2,6 +2,7 @@
 
 (require "utils/utils.rkt")
 (require "utils/set.rkt")
+(load-once "compiler/ast.rkt")
 
 (define (substitute-symbols subs expr)
   (substitute (lambda (subs expr kont)
