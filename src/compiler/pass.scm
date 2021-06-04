@@ -1,8 +1,11 @@
 ;; Compiler pass definition
 
-(load-once "compiler/errors.scm")
-(load-once "compiler/ast.scm")
+(require "utils/set.rkt")
+(require "utils/refs.rkt")
+(require "utils/utils.rkt")
 (require "env.rkt")
+(require "errors.rkt")
+(require "ast.rkt")
 
 (define (pass schema transform)
   (cons schema transform))

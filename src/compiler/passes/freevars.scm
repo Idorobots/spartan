@@ -5,7 +5,7 @@
 
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 
 (define annotate-free-vars
   (pass (schema "annotate-free-vars"

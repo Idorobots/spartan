@@ -1,8 +1,12 @@
+#lang racket
+
 ;; AST equivalence checking.
 
-(load-once "compiler/ast/nodes.scm")
+(require "nodes.rkt")
+(require "../errors.rkt")
+(require "../utils/utils.rkt")
 
-(load-once "compiler/errors.scm")
+(provide ast-eqv? ast-list-eqv?)
 
 (define (ast-eqv? a b)
   (cond ((and (list? a)
@@ -72,13 +76,13 @@
            ((<error>) (ast-eqv? (ast-error-expr a)
                                 (ast-error-expr b)))
            (else
-            (compiler-bug "Unexpected expression: " expr))))
+            (compiler-bug "Unexpected expression: " a))))
         (else
          #f)))
 
 (define (ast-list-eqv? a b)
   (and (equal? (length a)
                (length b))
-       (every? true?
+       (every? (partial equal? #t)
                (map ast-eqv? a b))))
 

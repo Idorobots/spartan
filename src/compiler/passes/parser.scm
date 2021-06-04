@@ -1,10 +1,11 @@
 ;; A very simple parser.
 
+(require "../utils/utils.rkt")
 (require "../peggen.rkt")
 (require "../env.rkt")
+(require "../errors.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
-(load-once "compiler/errors.scm")
+(require "../ast.rkt")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser

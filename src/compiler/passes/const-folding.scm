@@ -4,7 +4,7 @@
 
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 
 (define fold-constants
   (pass (schema "fold-constants"

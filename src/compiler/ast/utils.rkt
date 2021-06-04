@@ -1,9 +1,12 @@
+#lang racket
+
 ;; AST utils
 
-(load-once "compiler/ast/nodes.scm")
-(load-once "compiler/ast/match.scm")
+(require "nodes.rkt")
+(require "match.rkt")
+(require "../errors.rkt")
 
-(load-once "compiler/errors.scm")
+(provide walk-ast traverse-ast map-ast ast-size ast->plain)
 
 ;; Walk
 
@@ -118,8 +121,8 @@
                            (ast-if-condition expr)
                            (ast-if-then expr)
                            (ast-if-else expr)))
-               ((do) (cons 'do (ast-do-exprs expr)))
-               ((body) (cons 'do (ast-body-exprs expr)))
+               ((do) (cons 'begin (ast-do-exprs expr)))
+               ((body) (cons 'begin (ast-body-exprs expr)))
                ((lambda) (list 'lambda (ast-lambda-formals expr) (ast-lambda-body expr)))
                ((let) (list 'let (ast-let-bindings expr)
                             (ast-let-body expr)))

@@ -1,26 +1,24 @@
+#lang racket
+
 (require "utils/utils.rkt")
 (require "utils/refs.rkt")
-(load-once "compiler/ast/nodes.scm")
+(require "ast/nodes.rkt")
+
+(provide (struct-out compilation-error) compilation-error-location
+         raise-compilation-error collect-errors
+         compiler-bug)
 
 ;; Syntax error
 
-(define (make-compilation-error where what restart)
-  (list 'compilation-error where what restart))
-
-(define (compilation-error? e)
-  (tagged-list? 'compilation-error e))
+(struct compilation-error
+  (where
+   what
+   restart)
+  #:transparent
+  #:constructor-name make-compilation-error)
 
 (define (compilation-error-location e)
   (ast-node-location (compilation-error-where e)))
-
-(define (compilation-error-where e)
-  (cadr e))
-
-(define (compilation-error-what e)
-  (caddr e))
-
-(define (compilation-error-restart e)
-  (cadddr e))
 
 (define (raise-compilation-error where what)
   (call/cc
@@ -54,4 +52,3 @@
 (define (compiler-bug what context)
   (show-stacktrace)
   (error (format "Likely a compiler bug! ~a ~a" what context)))
-

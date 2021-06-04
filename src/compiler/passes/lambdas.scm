@@ -7,7 +7,7 @@
 (load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 
 (define inline-lambdas
   (pass (schema "inline-lambdas"

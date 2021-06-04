@@ -6,7 +6,7 @@
          last concat offset iota
          id partial flip constantly
          array array-ref array-assign!
-         -> do)
+         ->)
 
 ;; Basic definitions making Scheme less-of-a-Scheme:
 (define (empty? lst)
@@ -58,11 +58,6 @@
      (-> (op expr args ...) rest ...))
     ((-> expr op rest ...)
      (-> (op expr) rest ...))))
-
-(define-syntax do
-  (syntax-rules ()
-    ((do expression ...)
-     (begin expression ...))))
 
 (define (tagged-list? tag lst)
   (and (pair? lst) (eq? (car lst) tag)))

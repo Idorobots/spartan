@@ -1,21 +1,24 @@
+#lang racket
+
 ;; AST
 
 (require "../utils/utils.rkt")
 (require "../utils/set.rkt")
 (require "../utils/gensym.rkt")
 
-(load-once "compiler/errors.scm")
+(provide (all-defined-out))
 
 ;; AST Node
-(define-struct ast-node
+(struct ast-node
   (type
    location
    generated
    context
-   free-vars
-   bound-vars
+   _free-vars ;; FIXME Setter & getter shenanigans.
+   bound-vars ;; FIXME Setter shenanigans.
    data)
-  #:transparent)
+  #:transparent
+  #:constructor-name make-ast-node)
 
 (define (make-ast-node* type location data)
   (make-ast-node type
@@ -79,13 +82,12 @@
          ;; NOTE Symbols always are their own free var, no need to store that in the AST.
          node)
         (else
-         (struct-copy ast-node node (free-vars vars)))))
+         (struct-copy ast-node node (_free-vars vars)))))
 
-(define old-ast-node-free-vars ast-node-free-vars)
 (define (ast-node-free-vars node)
   (if (ast-symbol? node)
       (set (ast-symbol-value node))
-      (old-ast-node-free-vars node)))
+      (ast-node-_free-vars node)))
 
 (define (set-ast-node-bound-vars vars node) ;; FIXME Parameter order.
   (if (and (set-empty? vars)
@@ -179,7 +181,7 @@
   (length (ast-list-values node)))
 
 ;; If
-(define-struct ast-if-data (condition then else) #:transparent)
+(struct ast-if-data (condition then else) #:transparent #:constructor-name make-ast-if-data)
 
 (define (make-ast-if loc condition then else)
   (make-ast-node* 'if loc (make-ast-if-data condition then else)))
@@ -235,7 +237,7 @@
   (set-ast-node-data node exprs))
 
 ;; Lambda
-(define-struct ast-lambda-data (formals body) #:transparent)
+(struct ast-lambda-data (formals body) #:transparent #:constructor-name make-ast-lambda-data)
 
 (define (make-ast-lambda loc formals body)
   (make-ast-node* 'lambda loc (make-ast-lambda-data formals body)))
@@ -256,7 +258,7 @@
   (set-ast-node-data node (struct-copy ast-lambda-data (ast-node-data node) (formals formals))))
 
 ;; Binding
-(define-struct ast-binding-data (var val complexity self-recursive) #:transparent)
+(struct ast-binding-data (var val complexity self-recursive) #:transparent #:constructor-name make-ast-binding-data)
 
 (define (make-ast-binding loc var val)
   (make-ast-node* 'binding loc (make-ast-binding-data var val #f #f)))
@@ -293,7 +295,7 @@
       (some? ast-binding-self-recursive bindings)))
 
 ;; Let
-(define-struct ast-let-data (bindings body) #:transparent)
+(struct ast-let-data (bindings body) #:transparent #:constructor-name make-ast-let-data)
 
 (define (make-ast-let loc bindings body)
   (make-ast-node* 'let loc (make-ast-let-data bindings body)))
@@ -314,7 +316,7 @@
   (set-ast-node-data node (struct-copy ast-let-data (ast-node-data node) (body body))))
 
 ;; Letrec
-(define-struct ast-letrec-data (bindings body) #:transparent)
+(struct ast-letrec-data (bindings body) #:transparent #:constructor-name make-ast-letrec-data)
 
 (define (make-ast-letrec loc bindings body)
   (make-ast-node* 'letrec loc (make-ast-letrec-data bindings body)))
@@ -335,7 +337,7 @@
   (set-ast-node-data node (struct-copy ast-letrec-data (ast-node-data node) (body body))))
 
 ;; Fix
-(define-struct ast-fix-data (bindings body) #:transparent)
+(struct ast-fix-data (bindings body) #:transparent #:constructor-name make-ast-fix-data)
 
 (define (make-ast-fix loc bindings body)
   (make-ast-node* 'fix loc (make-ast-fix-data bindings body)))
@@ -426,7 +428,7 @@
   (set-ast-node-data node value))
 
 ;; Definition
-(define-struct ast-def-data (name value) #:transparent)
+(struct ast-def-data (name value) #:transparent #:constructor-name make-ast-def-data)
 
 (define (make-ast-def loc name value)
   (make-ast-node* 'def loc (make-ast-def-data name value)))
@@ -447,7 +449,7 @@
   (set-ast-node-data node (struct-copy ast-def-data (ast-node-data node) (value value))))
 
 ;; Application
-(define-struct ast-app-data (op args) #:transparent)
+(struct ast-app-data (op args) #:transparent #:constructor-name make-ast-app-data)
 
 (define (make-ast-app loc op args)
   (make-ast-node* 'app loc (make-ast-app-data op args)))
@@ -468,7 +470,7 @@
   (set-ast-node-data node (struct-copy ast-app-data (ast-node-data node) (args args))))
 
 ;; Primop application
-(define-struct ast-primop-app-data (op args) #:transparent)
+(struct ast-primop-app-data (op args) #:transparent #:constructor-name make-ast-primop-app-data)
 
 (define (make-ast-primop-app loc op args)
   (generated

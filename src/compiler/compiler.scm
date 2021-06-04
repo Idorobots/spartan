@@ -2,7 +2,7 @@
 
 (require "env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "ast.rkt")
 
 ;; The frontend
 (load-once "compiler/passes/parser.scm")

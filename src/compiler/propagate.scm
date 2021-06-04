@@ -2,7 +2,7 @@
 
 (require "utils/utils.rkt")
 
-(load-once "compiler/ast.scm")
+(require "ast.rkt")
 (load-once "compiler/substitute.scm") ;; FIXME For subs-related functions.
 
 (load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv

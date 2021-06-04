@@ -6,7 +6,7 @@
 (load-once "compiler/propagate.scm")
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 
 (define propagate-constants
   (pass (schema "propagate-constants"

@@ -7,7 +7,7 @@
 
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 (load-once "compiler/substitute.scm")
 
 (define closure-convert

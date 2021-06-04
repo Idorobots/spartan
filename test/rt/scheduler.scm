@@ -9,17 +9,17 @@
 
  (it "Can modify task list:"
      (let ((t (uproc 100 '() '() 0 'waiting)))
-       (assert (do (reset-tasks! (list t))
-                   (next-task))
+       (assert (begin (reset-tasks! (list t))
+                      (next-task))
                t))
      (let* ((t1 (uproc 100 '() '() 1 'waiting))
             (t2 (uproc 100 '() '() 2 'waiting)))
-       (assert (do (reset-tasks! (list t1 t2))
-                   (next-task))
+       (assert (begin (reset-tasks! (list t1 t2))
+                      (next-task))
                t1)
-       (assert (do (reset-tasks! (list t1 t2))
-                   (dequeue-next-task!)
-                 (next-task))
+       (assert (begin (reset-tasks! (list t1 t2))
+                      (dequeue-next-task!)
+                      (next-task))
                t2)))
 
  (it "Can as easily resume stuff."

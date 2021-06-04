@@ -5,7 +5,7 @@
 (load-once "compiler/substitute.scm")
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 
 (define inline-builtins
   (pass (schema "inline-builtins"

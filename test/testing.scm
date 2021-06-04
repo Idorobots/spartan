@@ -2,6 +2,8 @@
 
 (require "../src/compiler/utils/io.rkt")
 (require "../src/compiler/utils/refs.rkt")
+(require "../src/compiler/errors.rkt")
+(require "../src/compiler/ast/match.rkt")
 
 (define-struct assert-exception (predicate expression value expected))
 

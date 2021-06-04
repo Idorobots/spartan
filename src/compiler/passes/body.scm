@@ -6,8 +6,8 @@
 
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
-(load-once "compiler/errors.scm")
+(require "../ast.rkt")
+(require "../errors.rkt")
 
 (define body-expand
   (pass (schema "body-expand"

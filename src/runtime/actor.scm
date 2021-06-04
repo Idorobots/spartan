@@ -23,8 +23,8 @@
 (define (recv)
   (let ((p (current-task)))
     (if (uproc-msg-queue-empty? p)
-        (do (set-uproc-state! p 'waiting-4-msg)
-            (cons #f '()))
+        (begin (set-uproc-state! p 'waiting-4-msg)
+               (cons #f '()))
         (cons #t (uproc-dequeue-msg! p)))))
 
 (define (spawn fun)

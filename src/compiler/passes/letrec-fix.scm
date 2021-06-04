@@ -5,7 +5,7 @@
 (load-once "compiler/substitute.scm")
 (require "../env.rkt")
 (load-once "compiler/pass.scm")
-(load-once "compiler/ast.scm")
+(require "../ast.rkt")
 (load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
 
 (define fix-letrec
