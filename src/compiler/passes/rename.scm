@@ -1,7 +1,7 @@
 ;; Target-safe variable renaming.
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/gensym.scm")
+(require "../utils/utils.rkt")
+(require "../utils/gensym.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

@@ -1,6 +1,6 @@
 ;; Fixing-letrec-like letrec conversion.
 
-(load-once "compiler/utils/utils.scm")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/substitute.scm")
 (load-once "compiler/env.scm")

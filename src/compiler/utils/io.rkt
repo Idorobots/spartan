@@ -1,4 +1,8 @@
+#lang racket
+
 ;; File IO
+
+(provide println red green yellow spit slurp)
 
 (define (println . args)
   (if (> (length args) 1)

@@ -4,7 +4,7 @@
 (load-once "../test/gen.scm")
 
 ;; Compiler unit tests:
-(load-once "../test/compiler/utils.scm")
+(load-once "../test/compiler/utils.rkt")
 (load-once "../test/compiler/freevars.scm")
 (load-once "../test/compiler/substitute.scm")
 (load-once "../test/compiler/propagate.scm")

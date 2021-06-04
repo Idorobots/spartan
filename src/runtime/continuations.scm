@@ -1,6 +1,6 @@
 ;; Continuations:
 
-(load-once "compiler/utils/utils.scm")
+(require "../compiler/utils/utils.rkt")
 (load-once "runtime/closures.scm")
 (load-once "runtime/processes.scm")
 

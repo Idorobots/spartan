@@ -1,6 +1,6 @@
 ;; Implicit body handling.
 
-(load-once "compiler/utils/utils.scm")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/passes/elaboration.scm") ;; FIXME For unique-bindings
 

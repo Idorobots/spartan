@@ -1,6 +1,6 @@
 ;; Actor model:
 
-(load-once "compiler/utils/utils.scm")
+(require "../compiler/utils/utils.rkt")
 
 (struct uproc
   ((continuation #:mutable)

@@ -1,7 +1,7 @@
 ;; Error handling within the compiler.
 
-(load-once "compiler/utils/refs.scm")
-(load-once "compiler/utils/utils.scm")
+(require "../utils/refs.rkt")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

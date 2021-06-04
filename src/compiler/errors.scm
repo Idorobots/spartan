@@ -1,5 +1,5 @@
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/refs.scm")
+(require "utils/utils.rkt")
+(require "utils/refs.rkt")
 (load-once "compiler/ast/nodes.scm")
 
 ;; Syntax error

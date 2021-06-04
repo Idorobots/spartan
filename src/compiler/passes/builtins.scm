@@ -1,8 +1,8 @@
 ;; Builtins inliner
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/substitute.scm")
+(require "../utils/utils.rkt")
 
+(load-once "compiler/substitute.scm")
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")
 (load-once "compiler/ast.scm")

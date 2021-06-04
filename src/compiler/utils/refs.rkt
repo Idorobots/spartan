@@ -1,3 +1,7 @@
+#lang racket
+
+(provide ref deref assign! push! pop!)
+
 ;; Mutable references
 
 (define (ref x)

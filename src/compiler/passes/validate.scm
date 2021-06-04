@@ -1,7 +1,7 @@
 ;; Final frontend code validation.
 
-(load-once "compiler/utils/set.scm")
-(load-once "compiler/utils/utils.scm")
+(require "../utils/set.rkt")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

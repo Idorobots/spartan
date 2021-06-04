@@ -1,7 +1,11 @@
+#lang racket
+
 ;; Strongly-connected components
 
-(load-once "compiler/utils/set.scm")
-(load-once "compiler/utils/utils.scm")
+(require "set.rkt")
+(require "utils.rkt")
+
+(provide scc)
 
 ;; Kosaraju's algorithm:
 

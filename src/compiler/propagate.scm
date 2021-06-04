@@ -1,6 +1,6 @@
 ;; Generic binding propagation
 
-(load-once "compiler/utils/utils.scm")
+(require "utils/utils.rkt")
 
 (load-once "compiler/ast.scm")
 (load-once "compiler/substitute.scm") ;; FIXME For subs-related functions.

@@ -1,6 +1,10 @@
+#lang racket
+
 ;; Gensym impl
 
-(load-once "compiler/utils/refs.scm")
+(require "refs.rkt")
+
+(provide gensym gensym-reset!)
 
 (define *gensym-counter* (ref 0))
 (define (gensym root)

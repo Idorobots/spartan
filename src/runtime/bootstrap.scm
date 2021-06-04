@@ -1,7 +1,7 @@
 ;; The bootstrap code.
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/refs.scm")
+(require "../compiler/utils/utils.rkt")
+(require "../compiler/utils/refs.rkt")
 (load-once "rete/rete.scm")
 
 ;; Built-in functions:

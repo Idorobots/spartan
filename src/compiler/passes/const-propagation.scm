@@ -1,6 +1,6 @@
 ;; Constant propagation.
 
-(load-once "compiler/utils/utils.scm")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/substitute.scm")
 (load-once "compiler/propagate.scm")

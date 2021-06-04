@@ -1,6 +1,6 @@
 ;; A crude quasiquote expander.
 
-(load-once "compiler/utils/utils.scm")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

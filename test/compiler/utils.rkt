@@ -1,5 +1,12 @@
 ;; Utilities tests.
 
+(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/compiler/utils/io.rkt")
+(require "../../src/compiler/utils/refs.rkt")
+(require "../../src/compiler/utils/set.rkt")
+(require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/scc.rkt")
+
 (describe
  "Mutable refs"
  (it "should dereference a value without modification"

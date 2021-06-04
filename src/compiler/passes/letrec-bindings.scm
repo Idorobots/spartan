@@ -1,7 +1,7 @@
 ;; Letrec expansion phase.
 
-(load-once "compiler/utils/scc.scm")
-(load-once "compiler/utils/utils.scm")
+(require "../utils/scc.rkt")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

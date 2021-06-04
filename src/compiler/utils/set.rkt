@@ -1,6 +1,13 @@
+#lang racket
+
 ;; Set of symbols
 
-(load-once "compiler/utils/utils.scm")
+(require "utils.rkt")
+
+(provide set
+         set? set-empty? set-member?
+         set-difference set-merge set-union set-sum set-intersection set-insert
+         set->list)
 
 ;; NOTE This is actually performing better than the built-in set implementation.
 

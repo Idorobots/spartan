@@ -1,7 +1,7 @@
 ;; Dead code elimination.
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/set.scm")
+(require "../utils/utils.rkt")
+(require "../utils/set.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

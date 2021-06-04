@@ -2,8 +2,8 @@
 ;; Assumes macro- & letrec-expanded as well as alpha-converted code.
 ;; This phase contorts the code so much that it invalidates free-vars & bindings annotations.
 
-(load-once "compiler/utils/gensym.scm")
-(load-once "compiler/utils/utils.scm")
+(require "../utils/gensym.rkt")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")

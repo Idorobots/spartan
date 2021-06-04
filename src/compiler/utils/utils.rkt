@@ -1,4 +1,12 @@
+#lang racket
+
 ;; Various utilities
+
+(provide empty? every? some? sorted? tagged-list? symbol<?
+         last concat offset iota
+         id partial flip constantly
+         array array-ref array-assign!
+         -> do)
 
 ;; Basic definitions making Scheme less-of-a-Scheme:
 (define (empty? lst)
@@ -60,6 +68,10 @@
   (and (pair? lst) (eq? (car lst) tag)))
 
 (define (id x) x)
+
+(define (partial f . args)
+  (lambda rest
+    (apply f (append args rest))))
 
 (define (flip f x)
   (lambda (y)

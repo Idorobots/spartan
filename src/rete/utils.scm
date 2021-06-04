@@ -1,6 +1,6 @@
 ;; Various utils for Rete.
 
-(load-once "compiler/utils/utils.scm")
+(require "../compiler/utils/utils.rkt")
 
 (define (slice array start end)
   (reverse (let loop ((index start)
@@ -33,10 +33,6 @@
 (define not-equal? (complimentary equal?))
 (define not-false? (complimentary false?))
 (define not-void? (complimentary void?))
-
-(define (partial f . args)
-  (lambda rest
-    (apply f (append args rest))))
 
 (define true? (partial equal? #t))
 

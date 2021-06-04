@@ -1,7 +1,7 @@
 ;; Lambda inlining.
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/gensym.scm")
+(require "../utils/utils.rkt")
+(require "../utils/gensym.rkt")
 
 (load-once "compiler/substitute.scm")
 (load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node

@@ -1,8 +1,8 @@
 ;; AST
 
-(load-once "compiler/utils/utils.scm")
-(load-once "compiler/utils/set.scm")
-(load-once "compiler/utils/gensym.scm")
+(require "../utils/utils.rkt")
+(require "../utils/set.rkt")
+(require "../utils/gensym.rkt")
 
 (load-once "compiler/errors.scm")
 

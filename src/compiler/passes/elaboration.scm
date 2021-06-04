@@ -1,7 +1,7 @@
 ;; Semantic elaboration.
 ;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
 
-(load-once "compiler/utils/utils.scm")
+(require "../utils/utils.rkt")
 
 (load-once "compiler/env.scm")
 (load-once "compiler/pass.scm")
