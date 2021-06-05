@@ -6,9 +6,9 @@
 (require "../utils/gensym.rkt")
 
 (require "../env.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
-(load-once "compiler/substitute.scm")
+(require "../substitute.rkt")
 
 (define closure-convert
   (pass (schema "closure-convert"

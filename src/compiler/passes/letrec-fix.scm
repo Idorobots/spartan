@@ -2,10 +2,10 @@
 
 (require "../utils/utils.rkt")
 
-(load-once "compiler/substitute.scm")
 (require "../env.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
+(require "../substitute.rkt")
 (load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
 
 (define fix-letrec

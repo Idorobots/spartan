@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Compiler pass definition
 
 (require "utils/set.rkt")
@@ -7,14 +9,11 @@
 (require "errors.rkt")
 (require "ast.rkt")
 
-(define (pass schema transform)
-  (cons schema transform))
+(provide (struct-out pass) run-pass
+         schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? ast-subset?
+         schema-validation-error?)
 
-(define (pass-schema pass)
-  (car pass))
-
-(define (pass-transform pass)
-  (cdr pass))
+(struct pass (schema transform) #:transparent)
 
 (define (run-pass pass env)
   (unless (env-contains? env 'no-validation)

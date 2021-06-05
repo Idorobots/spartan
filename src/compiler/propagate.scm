@@ -3,7 +3,8 @@
 (require "utils/utils.rkt")
 
 (require "ast.rkt")
-(load-once "compiler/substitute.scm") ;; FIXME For subs-related functions.
+(require (only-in "substitute.rkt"
+                  filter-subs))
 
 (load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
 

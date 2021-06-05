@@ -1,8 +1,13 @@
+#lang racket
+
 ;; Binding aware variable substitution.
 
 (require "utils/utils.rkt")
 (require "utils/set.rkt")
 (require "ast.rkt")
+
+(provide substitute-symbols substitute
+         make-subs extend-subs empty-subs? filter-subs apply-sub replace-sub)
 
 (define (substitute-symbols subs expr)
   (substitute (lambda (subs expr kont)

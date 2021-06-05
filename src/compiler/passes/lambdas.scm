@@ -3,10 +3,10 @@
 (require "../utils/utils.rkt")
 (require "../utils/gensym.rkt")
 
-(load-once "compiler/substitute.scm")
+(require "../substitute.rkt")
 (load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
 (require "../env.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
 
 (define inline-lambdas

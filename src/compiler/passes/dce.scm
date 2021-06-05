@@ -4,7 +4,7 @@
 (require "../utils/set.rkt")
 
 (require "../env.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
 (load-once "compiler/propagate.scm") ;; NOTE For reconstruct-*-node
 

@@ -4,7 +4,7 @@
 (require "../peggen.rkt")
 (require "../env.rkt")
 (require "../errors.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.

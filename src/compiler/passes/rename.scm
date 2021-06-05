@@ -4,7 +4,7 @@
 (require "../utils/gensym.rkt")
 
 (require "../env.rkt")
-(load-once "compiler/pass.scm")
+(require "../pass.rkt")
 (require "../ast.rkt")
 
 (define symbol-rename
