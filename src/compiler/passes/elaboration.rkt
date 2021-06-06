@@ -1,12 +1,19 @@
+#lang racket
+
 ;; Semantic elaboration.
 ;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
 
 (require "../utils/utils.rkt")
-
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide elaborate
+         ;; FIXME Used by some other passes.
+         unique-bindings valid-bindings valid-symbol
+         ;; FIXME For test access.
+         elaborate-unquoted +reserved-keywords+)
 
 (define elaborate
   (pass (schema "elaborate"

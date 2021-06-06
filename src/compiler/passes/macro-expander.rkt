@@ -1,11 +1,20 @@
+#lang racket
+
 ;; Pseudo macro-expander for convenience
 
 (require "../utils/utils.rkt")
+
+(require (only-in "elaboration.rkt"
+                  valid-bindings valid-symbol))
 
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide macro-expand make-builtin-macros
+         ;; FIXME For test access.
+         expand-macros)
 
 (define macro-expand
   (pass (schema "macro-expand"

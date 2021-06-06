@@ -1,13 +1,20 @@
+#lang racket
+
 ;; Implicit body handling.
 
 (require "../utils/utils.rkt")
 
-(load-once "compiler/passes/elaboration.scm") ;; FIXME For unique-bindings
+(require (only-in "elaboration.rkt"
+                  unique-bindings))
 
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide body-expand
+         ;; FIXME For test access.
+         expand-body)
 
 (define body-expand
   (pass (schema "body-expand"

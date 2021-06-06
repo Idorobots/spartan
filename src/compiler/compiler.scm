@@ -6,13 +6,13 @@
 
 ;; The frontend
 (load-once "compiler/passes/parser.scm")
-(load-once "compiler/passes/macro-expander.scm")
-(load-once "compiler/passes/elaboration.scm")
-(load-once "compiler/passes/body.scm")
-(load-once "compiler/passes/qq.scm")
-(load-once "compiler/passes/const.scm")
-(load-once "compiler/passes/validate.scm")
-(load-once "compiler/passes/errors.scm")
+(require "passes/macro-expander.rkt")
+(require "passes/elaboration.rkt")
+(require "passes/body.rkt")
+(require "passes/qq.rkt")
+(require "passes/const.rkt")
+(require "passes/validate.rkt")
+(require "passes/errors.rkt")
 
 ;; Optimizations
 (load-once "compiler/passes/bindings.scm")

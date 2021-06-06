@@ -1,6 +1,7 @@
 ;; Various utils for Rete.
 
 (require "../compiler/utils/utils.rkt")
+(require "../compiler/utils/refs.rkt")
 
 (define (slice array start end)
   (reverse (let loop ((index start)

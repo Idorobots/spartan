@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Final frontend code validation.
 
 (require "../utils/set.rkt")
@@ -7,6 +9,10 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide validate
+         ;; FIXME For test access.
+         validate-ast)
 
 (define validate
   (pass (schema "validate"

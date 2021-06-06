@@ -1,12 +1,19 @@
+#lang racket
+
 ;; Error handling within the compiler.
 
 (require "../utils/refs.rkt")
+(require "../utils/io.rkt")
 (require "../utils/utils.rkt")
 
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide report-errors
+         ;; FIXME For test access.
+         offset->line-and-col normalize-for-display get-line)
 
 (define report-errors
   (pass (schema "report-errors"

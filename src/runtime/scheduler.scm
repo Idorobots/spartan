@@ -1,5 +1,6 @@
 ;; The scheduler:
 
+(require "../compiler/utils/refs.rkt")
 (load-once "runtime/priority-queue.scm")
 (load-once "runtime/processes.scm")
 

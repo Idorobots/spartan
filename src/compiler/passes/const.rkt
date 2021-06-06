@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Constants annotation & quote ellimination.
 
 (require "../utils/utils.rkt")
@@ -5,6 +7,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide annotate-constants
+         ;; FIXME For test access.
+         wrap-constants)
 
 (define annotate-constants
   (pass (schema "annotate-constants"

@@ -1,3 +1,5 @@
+#lang racket
+
 ;; A crude quasiquote expander.
 
 (require "../utils/utils.rkt")
@@ -6,6 +8,10 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide quasiquote-expand
+         ;; FIXME For test access.
+         expand-quasiquote)
 
 (define quasiquote-expand
   (pass (schema "quasiquote-expand"
