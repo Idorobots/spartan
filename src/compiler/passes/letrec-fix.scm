@@ -6,7 +6,8 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../substitute.rkt")
-(load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
+(require (only-in "../propagate.rkt"
+                  reconstruct-let-node reconstruct-fix-node))
 
 (define fix-letrec
   (pass (schema "fix-letrec"

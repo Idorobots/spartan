@@ -3,7 +3,7 @@
 (require "../utils/utils.rkt")
 
 (require "../substitute.rkt")
-(load-once "compiler/propagate.scm")
+(require "../propagate.rkt")
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")

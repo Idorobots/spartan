@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Free vars computation
 
 (require "../utils/set.rkt")
@@ -6,6 +8,9 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide annotate-free-vars
+         compute-free-vars compute-let-fv compute-letrec-fv compute-fix-fv)
 
 (define annotate-free-vars
   (pass (schema "annotate-free-vars"

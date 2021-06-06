@@ -6,7 +6,8 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
-(load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node.
+(require (only-in "../propagate.rkt"
+                  reconstruct-let-node reconstruct-letrec-node))
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 

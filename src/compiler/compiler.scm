@@ -14,10 +14,9 @@
 (load-once "compiler/passes/validate.scm")
 (load-once "compiler/passes/errors.scm")
 
+;; Optimizations
 (load-once "compiler/passes/bindings.scm")
-(load-once "compiler/passes/freevars.scm")
-
-;; The backend
+(require "passes/freevars.rkt")
 (load-once "compiler/passes/builtins.scm")
 (load-once "compiler/passes/lambdas.scm")
 (load-once "compiler/passes/copy-propagation.scm")
@@ -28,6 +27,8 @@
 (load-once "compiler/passes/letrec-bindings.scm")
 (load-once "compiler/passes/letrec-fix.scm")
 (load-once "compiler/passes/cpc.scm")
+
+;; The backend
 (load-once "compiler/passes/closures.scm")
 (load-once "compiler/passes/rename.scm")
 

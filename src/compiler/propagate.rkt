@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Generic binding propagation
 
 (require "utils/utils.rkt")
@@ -5,8 +7,13 @@
 (require "ast.rkt")
 (require (only-in "substitute.rkt"
                   filter-subs))
+(require (only-in "passes/freevars.rkt"
+                  compute-let-fv compute-letrec-fv compute-fix-fv))
 
-(load-once "compiler/passes/freevars.scm") ;; FIXME Just for compute-*-fv
+(provide propagate
+         reconstruct-let-node reconstruct-letrec-node reconstruct-fix-node
+         ;; FIXME These are exported just for test access.
+         partition-bindings)
 
 (define (propagate partition-by make-subs replace-with subs expr)
   (define (loop subs expr)

@@ -4,7 +4,8 @@
 (require "../utils/gensym.rkt")
 
 (require "../substitute.rkt")
-(load-once "compiler/propagate.scm") ;; FIXME For reconstruct-*-node
+(require (only-in "../propagate.rkt"
+                  reconstruct-let-node))
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")

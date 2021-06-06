@@ -6,7 +6,8 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
-(load-once "compiler/propagate.scm") ;; NOTE For reconstruct-*-node
+(require (only-in "../propagate.rkt"
+                  reconstruct-let-node reconstruct-letrec-node reconstruct-fix-node))
 
 (define eliminate-dead-code
   (pass (schema "eliminate-dead-code"
