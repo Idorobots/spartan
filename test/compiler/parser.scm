@@ -1,5 +1,7 @@
 ;; Parser tests.
 
+(require "../../src/compiler/modules.rkt")
+
 (define (p string)
   (env-get ((pass-transform parse)
             (env 'input string

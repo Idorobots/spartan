@@ -256,7 +256,10 @@
          (match-end m))
       m))
 
-(generate-parser
+(define simple-lisp-file (tmp-file))
+
+(generate-scm-parser
+ simple-lisp-file
  '(SimpleLisp
    (/ List Atom String Quote))
  '(Quote
@@ -342,7 +345,12 @@
  '(Comment
    (: ";[^\n]*\n")))
 
-(generate-parser
+(load simple-lisp-file)
+
+(define weird-file (tmp-file))
+
+(generate-scm-parser
+ weird-file
  '(Weird
    (/ List Foo))
  '(Foo
@@ -387,9 +395,16 @@
  '(EOF
    ()))
 
-(generate-parser
+(load weird-file)
+
+(define concat-file (tmp-file))
+
+(generate-scm-parser
+ concat-file
  `(Concat
    (~ "foo" "bar" "baz")))
+
+(load concat-file)
 
 (describe
  "Generated grammar"

@@ -1,3 +1,5 @@
+#lang racket
+
 ;; A very simple parser.
 
 (require "../utils/utils.rkt")
@@ -6,9 +8,19 @@
 (require "../errors.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+(require "../modules.rkt")
+
+(require "../../../generated/parser.rkt")
+
+(provide parse)
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
-(generate-parser
+(generate-rkt-parser
+ "../generated/parser.rkt"
+ (list "../src/compiler/ast.rkt"
+       "../src/compiler/peggen.rkt"
+       "../src/compiler/errors.rkt"
+       "../src/compiler/modules.rkt")
  '(Program
    ((+ (/ Expression UnmatchedParen)) Spacing EOF)
    (lambda (input result)
@@ -234,17 +246,6 @@
    (: ";[^\n]*" (/ "\n" EOF)))
  '(EOF
    ()))
-
-(define (expand-structure-refs loc head rest)
-  (foldl (lambda (part acc)
-           (make-ast-primop-app loc
-                                '&structure-ref
-                                (list acc
-                                      (generated
-                                       (make-ast-quote loc part)))))
-         (make-ast-symbol loc head)
-         (map (partial make-ast-symbol loc)
-              rest)))
 
 (define parse
   (pass (schema "parse"

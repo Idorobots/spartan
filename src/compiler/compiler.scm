@@ -5,7 +5,7 @@
 (require "ast.rkt")
 
 ;; The frontend
-(load-once "compiler/passes/parser.scm")
+(require "passes/parser.rkt")
 (require "passes/macro-expander.rkt")
 (require "passes/elaboration.rkt")
 (require "passes/body.rkt")

@@ -2,7 +2,7 @@
 
 ;; File IO
 
-(provide println red green yellow spit slurp)
+(provide println red green yellow spit slurp tmp-file)
 
 (define (println . args)
   (if (> (length args) 1)
@@ -37,3 +37,6 @@
                   (if (eof-object? char)
                       result
                       (loop (read-char) (cons char result)))))))))
+
+(define (tmp-file)
+  (make-temporary-file "~a.rkt"))

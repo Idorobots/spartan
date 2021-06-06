@@ -1,4 +1,26 @@
 #!/bin/bash
 
+mkdir -p generated
+
 cd src/
+
+parser="../generated/parser.rkt"
+
+# Create parser bootstrap if it doesn't yet exist.
+if [ ! -e "$parser" ] ; then
+
+cat <<EOF > $parser
+#lang racket
+(provide Program)
+(define Program
+  (lambda args
+    '()))
+EOF
+
+# Ensure to generate actual parser.
+racket -f main.scm
+
+fi
+
+# Run the test suite.
 racket -f main.scm -f ../test/main.scm
