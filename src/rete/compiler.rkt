@@ -1,6 +1,11 @@
+#lang racket
+
 ;; Rule compiler.
 
-(load-once "rete/nodes.scm")
+(require "utils.rkt")
+(require "nodes.rkt")
+
+(provide compile-rule)
 
 (define (compile-rule pattern action)
   (root-node (compile-pattern pattern (node-a action))))

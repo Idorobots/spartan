@@ -2,7 +2,7 @@
 
 (require "../compiler/utils/utils.rkt")
 (require "../compiler/utils/refs.rkt")
-(load-once "rete/rete.scm")
+(require "../rete/rete.rkt")
 
 ;; Built-in functions:
 (define (cpsfy f)

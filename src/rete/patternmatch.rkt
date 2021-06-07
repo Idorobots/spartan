@@ -1,6 +1,10 @@
+#lang racket
+
 ;; Pattern matching related stuff.
 
-(load-once "rete/utils.scm")
+(require "utils.rkt")
+
+(provide unify merge)
 
 ;; FIXME Needs better unification.
 (define (unify pattern value)

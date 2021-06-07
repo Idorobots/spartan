@@ -1,5 +1,11 @@
+#lang racket
+
 ;; Rete nodes live here.
-(load-once "rete/utils.scm")
+
+(require "utils.rkt")
+
+(provide node type next-nodes data
+         root-node node-a node-g node-1 node-2 node-2l node-r node-p node-t)
 
 (define (node type next . data)
   (list* type next data))

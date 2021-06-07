@@ -1,7 +1,13 @@
+#lang racket
+
 ;; Various utils for Rete.
 
 (require "../compiler/utils/utils.rkt")
 (require "../compiler/utils/refs.rkt")
+
+(provide (all-defined-out)
+         (all-from-out "../compiler/utils/utils.rkt")
+         (all-from-out "../compiler/utils/refs.rkt"))
 
 (define (slice array start end)
   (reverse (let loop ((index start)

@@ -1,6 +1,10 @@
+#lang racket
+
 ;; Fact store for storing facts.
 
-(load-once "rete/utils.scm")
+(require "utils.rkt")
+
+(provide reset-facts! add-fact! remove-fact! map-facts)
 
 ;; State:
 

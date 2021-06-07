@@ -1,10 +1,14 @@
+#lang racket
+
 ;; Rete implementation.
 
-(load-once "rete/utils.scm")
-(load-once "rete/nodes.scm")
-(load-once "rete/patternmatch.scm")
-(load-once "rete/compiler.scm")
-(load-once "rete/factstore.scm")
+(require "utils.rkt")
+(require "nodes.rkt")
+(require "patternmatch.rkt")
+(require "compiler.rkt")
+(require "factstore.rkt")
+
+(provide reset-rete! assert! signal! retract! whenever select)
 
 ;; State:
 

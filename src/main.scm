@@ -13,7 +13,7 @@
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
 (load-once "runtime/rt.scm")
-(load-once "rete/rete.scm")
+(require "rete/rete.rkt")
 
 (define (run-code expr)
   (reset-rete!)
