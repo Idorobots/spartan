@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Target-safe variable renaming.
 
 (require "../utils/utils.rkt")
@@ -6,6 +8,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide symbol-rename
+         ;; FIXME For test access.
+         mangle-names symbol->safe)
 
 (define symbol-rename
   (pass (schema "symbol-rename"

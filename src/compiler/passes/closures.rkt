@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Closure conversion.
 ;; Assumes macro-expanded code.
 
@@ -9,6 +11,11 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../substitute.rkt")
+
+(provide closure-convert
+         make-global-definitions-list
+         ;; FIXME For test access.
+         convert-closures make-env make-env-subs make-env-setters)
 
 (define closure-convert
   (pass (schema "closure-convert"

@@ -1,6 +1,7 @@
 ;; Actor model:
 
 (require "../compiler/utils/utils.rkt")
+(require "../compiler/utils/gensym.rkt")
 
 (struct uproc
   ((continuation #:mutable)

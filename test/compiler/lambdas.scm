@@ -1,5 +1,7 @@
 ;; Lambda inlining tests.
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (describe
  "lambda-inlining"
  (it "beta reduces lambda applications"

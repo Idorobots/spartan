@@ -1,5 +1,7 @@
 ;; Closure conversion
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (describe
  "make-env"
  (it "should create environment correctly"

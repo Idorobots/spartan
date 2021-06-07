@@ -1,5 +1,8 @@
 ;; Substitution works.
 
+(require "../../src/compiler/utils/set.rkt")
+(require "../../src/compiler/substitute.rkt")
+
 (describe
  "substitute"
  (it "substitutes simple cases"

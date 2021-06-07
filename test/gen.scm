@@ -1,5 +1,8 @@
 ;; Generators
 
+(require "../src/compiler/utils/set.rkt")
+(require "../src/compiler/ast.rkt")
+
 (define (sample gen rand)
   (if (procedure? gen)
       (gen rand)

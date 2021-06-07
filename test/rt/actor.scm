@@ -1,5 +1,7 @@
 ;; Actor model tests.
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (define (near-enough? value expected delta)
   (and (>= value (- expected delta))
        (<= value (+ expected delta))))

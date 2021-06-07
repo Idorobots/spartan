@@ -1,5 +1,7 @@
 ;; Continuation Passing Style Conversion
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (define gen-simple-cpc-node
   (gen-one-of gen-valid-symbol-node gen-const-node))
 

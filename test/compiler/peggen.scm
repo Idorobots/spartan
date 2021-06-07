@@ -1,6 +1,7 @@
 ;; PEG parser source generator tests
 
 (require "../../src/compiler/peggen.rkt")
+(require "../../src/compiler/utils/gensym.rkt")
 
 (define stripper
   (lambda (r)

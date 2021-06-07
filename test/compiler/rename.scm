@@ -1,5 +1,7 @@
 ;; Renaming things for safety.
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (describe
  "symbol->safe"
  (it "correctly escapes symbols"

@@ -1,5 +1,7 @@
 ;; Parse tree validation tests.
 
+(require "../../src/compiler/utils/gensym.rkt")
+
 (describe
  "compiler"
  (it "finds the expected errors"
