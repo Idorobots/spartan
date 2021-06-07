@@ -1,5 +1,7 @@
 ;; Exception handler tests:
 
+(require "../../src/runtime/rt.rkt")
+
 (describe
  "exceptions"
  (it "Can raise an error."

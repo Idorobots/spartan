@@ -1,5 +1,7 @@
 ;; Actual code exmaples
 
+(require "../src/runtime/rt.rkt")
+
 (define *random* 0.05)
 
 (describe

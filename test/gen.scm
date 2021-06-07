@@ -1,5 +1,6 @@
 ;; Generators
 
+(require "../src/compiler/utils/utils.rkt")
 (require "../src/compiler/utils/set.rkt")
 (require "../src/compiler/ast.rkt")
 (require (only-in "../src/compiler/passes/bindings.rkt"

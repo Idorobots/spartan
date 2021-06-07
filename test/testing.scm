@@ -1,5 +1,6 @@
 ;; Testing shenanigans.
 
+(require "../src/compiler/utils/utils.rkt")
 (require "../src/compiler/utils/io.rkt")
 (require "../src/compiler/utils/refs.rkt")
 (require "../src/compiler/errors.rkt")
@@ -94,10 +95,8 @@
     ((_ () body ...)
      (begin body ...))
     ((_ ((var val) bindings ...) body ...)
-     (let ((tmp var))
-       (set! var val)
-       (with-test-bindings (bindings ...) body ...)
-       (set! var tmp)))))
+     (let ((var var))
+       (with-test-bindings (bindings ...) body ...)))))
 
 (define-syntax check
   (syntax-rules (sample random)

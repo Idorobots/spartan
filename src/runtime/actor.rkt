@@ -1,7 +1,14 @@
+#lang racket
+
 ;; Actor model runtime stuff:
 
-(load-once "runtime/processes.scm")
-(load-once "runtime/scheduler.scm")
+(require "continuations.rkt")
+(require "closures.rkt")
+(require "processes.rkt")
+(require "scheduler.rkt")
+(require "closures.rkt")
+
+(provide wait self send recv spawn)
 
 (define (wait time) ;; NOTE Can't be called the same as Scheme sleep. :(
   (inc-uproc-rtime! (current-task)

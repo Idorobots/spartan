@@ -1,5 +1,7 @@
 ;; Priority queue implementation.
 
+(require "../../src/runtime/priority-queue.rkt")
+
 (describe
  "priority queue"
  (it "Can enqueue/dequeue items."

@@ -1,6 +1,7 @@
 ;; Actor model tests.
 
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/runtime/rt.rkt")
 
 (define (near-enough? value expected delta)
   (and (>= value (- expected delta))
@@ -9,14 +10,14 @@
 (describe
  "Actor Model"
  (it "Can sleep for a time."
-     (let ((p (uproc 100
-                     (&yield-cont (closurize
-                                   (lambda (v)
-                                     (&apply __sleep v (closurize id))))
-                                  23)
-                     '()
-                     0
-                     'waiting)))
+     (let ((p (make-uproc 100
+                          (&yield-cont (closurize
+                                        (lambda (v)
+                                          (&apply __sleep v (closurize id))))
+                                       23)
+                          '()
+                          0
+                          'waiting)))
        (reset-tasks! (list p))
        (execute!)
        (assert (near-enough? (uproc-rtime p) 23 1))
@@ -27,72 +28,72 @@
      (assert (run '(self)) 'pid2))
 
  (ignore "Can retrieve current node."
-          ;; There is no notion of a node yet.
-          (error "Actually get this test to work!"))
+         ;; There is no notion of a node yet.
+         (error "Actually get this test to work!"))
 
  (it "Can send a message."
-     (let ((p (uproc 100
-                     (&yield-cont (closurize
-                                   (lambda (v)
-                                     (&apply __self (closurize
-                                                     (lambda (__value4)
-                                                       (&apply __send
-                                                               __value4
-                                                               v
-                                                               (closurize
-                                                                (lambda (__value3)
-                                                                  __value3))))))))
-                                  'msg)
-                     '()
-                     0
-                     'waiting)))
+     (let ((p (make-uproc 100
+                          (&yield-cont (closurize
+                                        (lambda (v)
+                                          (&apply __self (closurize
+                                                          (lambda (__value4)
+                                                            (&apply __send
+                                                                    __value4
+                                                                    v
+                                                                    (closurize
+                                                                     (lambda (__value3)
+                                                                       __value3))))))))
+                                       'msg)
+                          '()
+                          0
+                          'waiting)))
        (reset-tasks! (list p))
        (execute!)
        (assert (not (empty? (uproc-msg-queue p))))
        (assert (equal? (first (uproc-msg-queue p)) 'msg)))
-     (let ((p (uproc 100
-                     (&yield-cont (closurize
-                                   (lambda (v)
-                                     (&apply __self
-                                             (closurize
-                                              (lambda (__value7)
-                                                (&apply __send
-                                                        __value7
-                                                        v
-                                                        (closurize
-                                                         (lambda (__value6)
-                                                           (&apply __send
-                                                                   __value6
-                                                                   v
-                                                                   (closurize
-                                                                    (lambda (__value5)
-                                                                      __value5)))))))))))
-                                  'msg)
-                     '()
-                     0
-                     'waiting)))
+     (let ((p (make-uproc 100
+                          (&yield-cont (closurize
+                                        (lambda (v)
+                                          (&apply __self
+                                                  (closurize
+                                                   (lambda (__value7)
+                                                     (&apply __send
+                                                             __value7
+                                                             v
+                                                             (closurize
+                                                              (lambda (__value6)
+                                                                (&apply __send
+                                                                        __value6
+                                                                        v
+                                                                        (closurize
+                                                                         (lambda (__value5)
+                                                                           __value5)))))))))))
+                                       'msg)
+                          '()
+                          0
+                          'waiting)))
        (reset-tasks! (list p))
        (execute!)
        (assert (equal? (length (uproc-msg-queue p)) 2))
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
  (it "Can't receive when there are no messages."
-     (let ((p (uproc 100
-                     (&yield-cont (closurize
-                                   (lambda (_)
-                                     (&apply __recv (closurize id))))
-                                  '())
-                     '()
-                     0
-                     'waiting)))
+     (let ((p (make-uproc 100
+                          (&yield-cont (closurize
+                                        (lambda (_)
+                                          (&apply __recv (closurize id))))
+                                       '())
+                          '()
+                          0
+                          'waiting)))
        (reset-tasks! (list p))
        (execute!)
        (assert (uproc-state p) 'waiting-4-msg)))
 
  (it "Can receive a message."
-      (assert (run '(do (send (self) 'msg)
-                        (recv)))
-              'msg))
+     (assert (run '(do (send (self) 'msg)
+                       (recv)))
+             'msg))
 
  (it "Messages are received in the correct order."
      (assert (run '(do (send (self) 1)

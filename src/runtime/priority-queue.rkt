@@ -1,6 +1,11 @@
+#lang racket
+
 ;; An implementation of a priority queue.
 
 (require data/heap) ;; NOTE The only external library in this codebase.
+
+(provide (all-from-out data/heap)
+         priority-queue queue-enqueue queue-dequeue queue-min queue-empty?)
 
 (define (priority-queue comparator)
   (make-heap comparator))

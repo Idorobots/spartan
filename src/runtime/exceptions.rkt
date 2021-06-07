@@ -1,6 +1,11 @@
+#lang racket
+
 ;; Exception handling stuff.
 
-(load-once "runtime/processes.scm")
+(require "processes.rkt")
+(require "scheduler.rkt")
+
+(provide &error-handler &set-error-handler!)
 
 (define (&error-handler)
   (uproc-error-handler (current-task)))

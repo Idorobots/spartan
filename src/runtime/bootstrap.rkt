@@ -1,21 +1,26 @@
+#lang racket
+
 ;; The bootstrap code.
 
 (require "../compiler/utils/utils.rkt")
 (require "../compiler/utils/refs.rkt")
 (require "../rete/rete.rkt")
+(require "continuations.rkt")
+(require "delimited.rkt")
+(require "closures.rkt")
+(require "exceptions.rkt")
+(require "actor.rkt")
+(require "monitor.rkt")
 
-;; Built-in functions:
-(define (cpsfy f)
-  (lambda args
-    (&yield-cont (last args)
-                 (apply f
-                        (take args
-                              (- (length args) 1))))))
-
-(define (closurize f)
-  (&make-closure '()
-                 (lambda (env . args)
-                   (apply f args))))
+(provide nil? notify-whenever
+         __nil __true __false __not __car __cadr __cddr __list __cons __append __concat __equalQUEST __nilQUEST
+         __MULT __PLUS ___ __DIV __zeroQUEST __modulo __quotient __remainder __EQUAL __LESS __LESSEQUAL __GREATER __GREATEREQUAL
+         __ref __deref __assignBANG __callDIVcurrent_continuation __callDIVreset __callDIVshift __callDIVhandler __raise
+         __sleep __self __send __spawn __recv __task_info __monitor
+         __assertBANG __signalBANG __retractBANG __select __notify_whenever
+         __display __newline __random __debug
+         ;; FIXME For test access.
+         bootstrap)
 
 (define bootstrap (compose closurize cpsfy))
 
@@ -23,7 +28,7 @@
 
 (define nil? null?)
 
-;; Basic
+;; Built-in functions
 
 (define __nil '())
 (define __true #t)

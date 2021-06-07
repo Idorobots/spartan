@@ -1,7 +1,12 @@
+#lang racket
+
 ;; Actor model:
 
 (require "../compiler/utils/utils.rkt")
 (require "../compiler/utils/gensym.rkt")
+
+(provide (struct-out uproc) make-uproc uproc-vtime
+         inc-uproc-rtime! uproc-enqueue-msg! uproc-dequeue-msg! uproc-msg-queue-empty?)
 
 (struct uproc
   ((continuation #:mutable)
@@ -13,10 +18,10 @@
    pid
    (msg-queue #:mutable))
   #:transparent
-  #:constructor-name make-uproc)
+  #:constructor-name uproc-ctor)
 
-(define (uproc priority cont handler rtime state)
-  (make-uproc cont '() handler state rtime priority (gensym 'pid) '()))
+(define (make-uproc priority cont handler rtime state)
+  (uproc-ctor cont '() handler state rtime priority (gensym 'pid) '()))
 
 (define (inc-uproc-rtime! uproc by)
   (set-uproc-rtime! uproc (+ by (uproc-rtime uproc))))

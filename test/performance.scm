@@ -1,5 +1,9 @@
 ;; Perf tests
 
+(require "../src/runtime/rt.rkt")
+(require "../src/compiler/compiler.rkt")
+(require "../src/compiler/passes/parser.rkt")
+
 (define (build-input-program reps)
   (let* ((expr (slurp "../test/sprtn/coroutines2.sprtn")))
     (format "(do 23 ~a)"

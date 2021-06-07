@@ -1,4 +1,10 @@
+#lang racket
+
 ;; Runtime closure creation.
+
+(provide &make-env &env-ref &set-env!
+         &make-closure &set-closure-env! &apply closure?
+         closurize)
 
 (define &make-env vector)
 
@@ -17,3 +23,8 @@
 
 (define (closure? thing)
   (equal? (vector-ref thing 0) &make-closure))
+
+(define (closurize f)
+  (&make-closure '()
+                 (lambda (env . args)
+                   (apply f args))))

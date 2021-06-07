@@ -1,8 +1,15 @@
+#lang racket
+
 ;; The scheduler:
 
 (require "../compiler/utils/refs.rkt")
-(load-once "runtime/priority-queue.scm")
-(load-once "runtime/processes.scm")
+(require "priority-queue.rkt")
+(require "processes.rkt")
+(require "continuations.rkt")
+
+(provide current-task running-tasks find-task reset-tasks! spawn-task! enqueue-task!
+         ;; FIXME For test access.
+         next-task dequeue-next-task! executable? execute! execute-step!)
 
 ;; Some configuration constants:
 (define +priority+ 100)           ;; Default priority.
@@ -36,11 +43,11 @@
                   tasks)))
 
 (define (spawn-task! cont handler)
-  (let ((t (uproc +priority+
-                  cont
-                  handler
-                  (current-milliseconds)
-                  +initial-state+)))
+  (let ((t (make-uproc +priority+
+                       cont
+                       handler
+                       (current-milliseconds)
+                       +initial-state+)))
     (add-task! t)
     (enqueue-task! t)
     (uproc-pid t)))

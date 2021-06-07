@@ -1,5 +1,7 @@
 ;; Delimited continuation tests...
 
+(require "../../src/runtime/rt.rkt")
+
 (describe
  "delimited continuations"
  (it "Letcc works."

@@ -1,7 +1,11 @@
+#lang racket
+
 ;; A task debug monitor.
 
-(load-once "runtime/processes.scm")
-(load-once "runtime/scheduler.scm")
+(require "processes.rkt")
+(require "scheduler.rkt")
+
+(provide task-info)
 
 (define (paddify thing padding)
   (let ((s (format "~a" thing)))

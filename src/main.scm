@@ -12,7 +12,7 @@
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
-(load-once "runtime/rt.scm")
+(require "runtime/rt.rkt")
 (require "rete/rete.rkt")
 
 (define (run-code expr)

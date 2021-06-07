@@ -1,5 +1,7 @@
 ;; Module system tests.
 
+(require "../src/runtime/rt.rkt")
+
 (describe
  "module system"
  (it "Can create a structure."
