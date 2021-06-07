@@ -7,20 +7,11 @@
 (require "utils/utils.rkt")
 
 (provide match-result no-match matches matches? match-match match-start match-end
-         memoize-input eq-len-hash-input
          generate-rkt-parser
          ;; FIXME These are exported for test access only.
          generate-scm-parser
          generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
          generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat)
-
-;; Some optimization
-(define (memoize-input previous-runs f)
-  (lambda (hash input offset)
-    (hash-ref! previous-runs
-               (+ hash offset)
-               (lambda ()
-                 (f hash input offset)))))
 
 ;; Matches
 (define (no-match)
@@ -70,15 +61,9 @@
     `(define ,top-name
        (let ,(map generate-cache caches)
          (letrec ,(map generate-rule inlined caches)
-           (lambda (,input hash-input)
+           (lambda (,input)
              ,@(map clear-cache caches)
-             ;; FIXME No need to hash the input and pass it on to the rules.
-             (let ((,hash (hash-input ,input)))
-               (,top-name ,hash ,input 0))))))))
-
-(define (eq-len-hash-input input)
-  (* (eq-hash-code input)
-     (string-length input)))
+             (,top-name ,input 0)))))))
 
 (define +peg-inline-loops+ 5)
 
@@ -128,59 +113,66 @@
 (define (clear-cache cache)
   `(hash-clear! ,cache))
 
+(define (generate-cache-access cache key value)
+  (let ((result (gensym 'result)))
+    `(if (hash-has-key? ,cache ,key)
+         (hash-ref! ,cache ,key '())
+         (let ((,result ,value))
+           (hash-set! ,cache ,key ,result)
+           ,result))))
+
 (define (generate-rule rule cache)
   (let ((name (car rule))
         (pattern (cadr rule))
         (transform (cddr rule))
-        (hash (gensym 'hash))
         (input (gensym 'input))
         (offset (gensym 'offset)))
     `(,name
-      (memoize-input ,cache
-       (lambda (,hash ,input ,offset)
-         ,(generate-rule-pattern pattern
-                                 hash
-                                 input
-                                 offset
-                                 (lambda (r)
-                                   (if (empty? transform)
-                                       r
-                                       (let ((result (gensym 'result)))
-                                         `(let ((,result ,r))
-                                            (if (matches? ,result)
-                                                (,(car transform) ,input ,result)
-                                                ,result)))))))))))
+      (lambda (,input ,offset)
+        ,(generate-cache-access cache
+                                offset
+                                (generate-rule-pattern pattern
+                                                       input
+                                                       offset
+                                                       (lambda (r)
+                                                         (if (empty? transform)
+                                                             r
+                                                             (let ((result (gensym 'result)))
+                                                               `(let ((,result ,r))
+                                                                  (if (matches? ,result)
+                                                                      (,(car transform) ,input ,result)
+                                                                      ,result)))))))))))
 
 (define terminal? string?)
 (define nonterminal? symbol?)
 
-(define (generate-rule-pattern rule hash input offset cont)
-  (cond ((empty? rule)            (generate-eof rule hash input offset cont))
-        ((nonterminal? rule)      (generate-nonterminal rule hash input offset cont))
-        ((terminal? rule)         (generate-matcher rule hash input offset cont))
-        ((equal? (length rule) 1) (generate-rule-pattern (car rule) hash input offset cont))
-        ((tagged-list? '/ rule)   (generate-or rule hash input offset cont))
-        ((tagged-list? '* rule)   (generate-zero-or-more rule hash input offset cont))
-        ((tagged-list? '+ rule)   (generate-one-or-more rule hash input offset cont))
-        ((tagged-list? ': rule)   (generate-drop rule hash input offset cont))
-        ((tagged-list? '? rule)   (generate-optional rule hash input offset cont))
-        ((tagged-list? '! rule)   (generate-not rule hash input offset cont))
-        ((tagged-list? '& rule)   (generate-and rule hash input offset cont))
-        ((tagged-list? '~ rule)   (generate-concat rule hash input offset cont))
-        (else                     (generate-sequence rule hash input offset cont))))
+(define (generate-rule-pattern rule input offset cont)
+  (cond ((empty? rule)            (generate-eof rule input offset cont))
+        ((nonterminal? rule)      (generate-nonterminal rule input offset cont))
+        ((terminal? rule)         (generate-matcher rule input offset cont))
+        ((equal? (length rule) 1) (generate-rule-pattern (car rule) input offset cont))
+        ((tagged-list? '/ rule)   (generate-or rule input offset cont))
+        ((tagged-list? '* rule)   (generate-zero-or-more rule input offset cont))
+        ((tagged-list? '+ rule)   (generate-one-or-more rule input offset cont))
+        ((tagged-list? ': rule)   (generate-drop rule input offset cont))
+        ((tagged-list? '? rule)   (generate-optional rule input offset cont))
+        ((tagged-list? '! rule)   (generate-not rule input offset cont))
+        ((tagged-list? '& rule)   (generate-and rule input offset cont))
+        ((tagged-list? '~ rule)   (generate-concat rule input offset cont))
+        (else                     (generate-sequence rule input offset cont))))
 
 ;; EOF
-(define (generate-eof rule hash input offset cont)
+(define (generate-eof rule input offset cont)
   (cont `(if (equal? ,offset (string-length ,input))
              (matches '() ,offset ,offset)
              (no-match))))
 
 ;; Nonterminal
-(define (generate-nonterminal rule-name hash input offset cont)
-  (cont `(,rule-name ,hash ,input ,offset)))
+(define (generate-nonterminal rule-name input offset cont)
+  (cont `(,rule-name ,input ,offset)))
 
 ;; "terminal"
-(define (generate-matcher regex hash input offset cont)
+(define (generate-matcher regex input offset cont)
   (cont (if (equal? 1 (string-length regex)) ;; FIXME Won't work for "." and other single char regexps.
             (let ((char (string-ref regex 0)))
               `(if (and (< ,offset (string-length ,input))
@@ -197,7 +189,7 @@
                      (no-match)))))))
 
 ;; (...)
-(define (generate-sequence subrules hash input offset cont)
+(define (generate-sequence subrules input offset cont)
   (cont (let loop ((subrules subrules)
                    (matches '())
                    (last-end offset))
@@ -210,7 +202,6 @@
                     (mat (gensym 'match))
                     (end (gensym 'end)))
                 (generate-rule-pattern subrule
-                                       hash
                                        input
                                        last-end
                                        (lambda (r)
@@ -224,11 +215,10 @@
                                                 (no-match))))))))))
 
 ;; (/ ...)
-(define (generate-or subrules hash input offset cont)
+(define (generate-or subrules input offset cont)
   (cont (foldr (lambda (subrule acc)
                  (let ((result (gensym 'result)))
                    (generate-rule-pattern subrule
-                                          hash
                                           input
                                           offset
                                           (lambda (r)
@@ -240,7 +230,7 @@
                (cdr subrules))))
 
 ;; (* ...)
-(define (generate-zero-or-more subrules hash input offset cont)
+(define (generate-zero-or-more subrules input offset cont)
   (let ((subrule (cdr subrules))
         (result (gensym 'result))
         (end (gensym 'end))
@@ -249,7 +239,6 @@
     (cont `(let ,loop ((,matches '())
                        (,end ,offset))
                 ,(generate-rule-pattern subrule
-                                        hash
                                         input
                                         end
                                         (lambda (r)
@@ -261,15 +250,13 @@
                                                  (matches (reverse ,matches) ,offset ,end)))))))))
 
 ;; (+ ...)
-(define (generate-one-or-more subrules hash input offset cont)
+(define (generate-one-or-more subrules input offset cont)
   (let ((subrule (cdr subrules)))
     (generate-zero-or-more subrules
-                           hash
                            input
                            offset
                            (lambda (rest)
                              (generate-rule-pattern subrule
-                                                    hash
                                                     input
                                                     offset
                                                     (lambda (first)
@@ -280,9 +267,8 @@
                                                                  (no-match)))))))))
 
 ;; (? ...)
-(define (generate-optional subrules hash input offset cont)
+(define (generate-optional subrules input offset cont)
   (generate-rule-pattern (cdr subrules)
-                         hash
                          input
                          offset
                          (lambda (r)
@@ -293,9 +279,8 @@
                                           (matches '() ,offset ,offset))))))))
 
 ;; (! ...)
-(define (generate-not subrules hash input offset cont)
+(define (generate-not subrules input offset cont)
   (generate-rule-pattern (cdr subrules)
-                         hash
                          input
                          offset
                          (lambda (result)
@@ -304,9 +289,8 @@
                                       (matches '() ,offset ,offset))))))
 
 ;; (& ...)
-(define (generate-and subrules hash input offset cont)
+(define (generate-and subrules input offset cont)
   (generate-rule-pattern (cdr subrules)
-                         hash
                          input
                          offset
                          (lambda (r)
@@ -318,9 +302,8 @@
                                           (no-match))))))))
 
 ;; (: ...)
-(define (generate-drop subrules hash input offset cont)
+(define (generate-drop subrules input offset cont)
   (generate-rule-pattern (cdr subrules)
-                         hash
                          input
                          offset
                          (lambda (r)
@@ -334,9 +317,8 @@
                                           (no-match))))))))
 
 ;; (~ ...)
-(define (generate-concat subrules hash input offset cont)
+(define (generate-concat subrules input offset cont)
   (generate-rule-pattern (cdr subrules)
-                         hash
                          input
                          offset
                          (lambda (r)

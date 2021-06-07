@@ -9,31 +9,31 @@
 (describe
  "PEG generator"
  (it "EOF matches just the end of file"
-     (assert (generate-eof '() 'h 'in 'off id)
+     (assert (generate-eof '() 'in 'off id)
              '(if (equal? off (string-length in))
                   (matches '() off off)
                   (no-match)))
-     (assert (generate-eof '() 'h 'in 'off stripper)
+     (assert (generate-eof '() 'in 'off stripper)
              '(strip
                (if (equal? off (string-length in))
                    (matches '() off off)
                    (no-match)))))
 
  (it "Nonterminal forwards to the correct rule"
-     (assert (generate-nonterminal 'Foo 'h 'in 'off id)
-             '(Foo h in off))
-     (assert (generate-nonterminal 'Foo 'h 'in 'off stripper)
-             '(strip (Foo h in off))))
+     (assert (generate-nonterminal 'Foo 'in 'off id)
+             '(Foo in off))
+     (assert (generate-nonterminal 'Foo 'in 'off stripper)
+             '(strip (Foo in off))))
 
  (it "\"terminal\" handles single character patterns efficiently"
      (gensym-reset!)
-     (assert (generate-matcher "f" 'h 'in 'off id)
+     (assert (generate-matcher "f" 'in 'off id)
              '(if (and (< off (string-length in))
                        (equal? (string-ref in off) #\f))
                   (matches "f" off (+ 1 off))
                   (no-match)))
      (gensym-reset!)
-     (assert (generate-matcher "f" 'h 'in 'off stripper)
+     (assert (generate-matcher "f" 'in 'off stripper)
              '(strip
                (if (and (< off (string-length in))
                        (equal? (string-ref in off) #\f))
@@ -41,13 +41,13 @@
                    (no-match)))))
  (it "\"terminal\" uses compiled regexps for multi-char patterns"
      (gensym-reset!)
-     (assert (generate-matcher "foo" 'h 'in 'off id)
+     (assert (generate-matcher "foo" 'in 'off id)
              '(let ((result1 (regexp-match #rx"^foo" in off)))
                 (if result1
                     (matches (car result1) off (+ off (string-length (car result1))))
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-matcher "foo" 'h 'in 'off stripper)
+     (assert (generate-matcher "foo" 'in 'off stripper)
              '(strip
                (let ((result1 (regexp-match #rx"^foo" in off)))
                  (if result1
@@ -55,7 +55,7 @@
                      (no-match))))))
  (it "\"terminal\" handles synatx characters fine"
      (gensym-reset!)
-     (assert (generate-matcher "'" 'h 'in 'off id)
+     (assert (generate-matcher "'" 'in 'off id)
              '(if (and (< off (string-length in))
                        (equal? (string-ref in off) #\'))
                   (matches "'" off (+ 1 off))
@@ -63,16 +63,16 @@
 
  (it "(...) sequences matchers"
      (gensym-reset!)
-     (assert (generate-sequence '(Foo Bar Baz) 'h 'in 'off id)
-             '(let ((result1 (Foo h in off)))
+     (assert (generate-sequence '(Foo Bar Baz) 'in 'off id)
+             '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (let ((match2 (match-match result1))
                           (end3 (match-end result1)))
-                      (let ((result4 (Bar h in end3)))
+                      (let ((result4 (Bar in end3)))
                         (if (matches? result4)
                             (let ((match5 (match-match result4))
                                   (end6 (match-end result4)))
-                              (let ((result7 (Baz h in end6)))
+                              (let ((result7 (Baz in end6)))
                                 (if (matches? result7)
                                     (let ((match8 (match-match result7))
                                           (end9 (match-end result7)))
@@ -81,13 +81,13 @@
                             (no-match))))
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-sequence '(Foo Bar) 'h 'in 'off stripper)
+     (assert (generate-sequence '(Foo Bar) 'in 'off stripper)
              '(strip
-               (let ((result1 (Foo h in off)))
+               (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (let ((match2 (match-match result1))
                            (end3 (match-end result1)))
-                       (let ((result4 (Bar h in end3)))
+                       (let ((result4 (Bar in end3)))
                          (if (matches? result4)
                              (let ((match5 (match-match result4))
                                    (end6 (match-end result4)))
@@ -97,41 +97,41 @@
 
  (it "(/ ...) returns the first match"
      (gensym-reset!)
-     (assert (generate-or '(/ Foo Bar Baz) 'h 'in 'off id)
-             '(let ((result3 (Foo h in off)))
+     (assert (generate-or '(/ Foo Bar Baz) 'in 'off id)
+             '(let ((result3 (Foo in off)))
                 (if (matches? result3)
                     result3
-                    (let ((result2 (Bar h in off)))
+                    (let ((result2 (Bar in off)))
                       (if (matches? result2)
                           result2
-                          (let ((result1 (Baz h in off)))
+                          (let ((result1 (Baz in off)))
                             (if (matches? result1) result1 (no-match))))))))
      (gensym-reset!)
-     (assert (generate-or '(/ Foo Bar) 'h 'in 'off stripper)
+     (assert (generate-or '(/ Foo Bar) 'in 'off stripper)
              '(strip
-               (let ((result2 (Foo h in off)))
+               (let ((result2 (Foo in off)))
                  (if (matches? result2)
                      result2
-                     (let ((result1 (Bar h in off)))
+                     (let ((result1 (Bar in off)))
                        (if (matches? result1) result1 (no-match))))))))
 
  (it "(* ...) matches multiple values"
      (gensym-reset!)
-     (assert (generate-zero-or-more '(* Foo) 'h 'in 'off id)
+     (assert (generate-zero-or-more '(* Foo) 'in 'off id)
              '(let loop4 ((matches3 '())
                           (end2 off))
-                (let ((result1 (Foo h in end2)))
+                (let ((result1 (Foo in end2)))
                   (if (matches? result1)
                       (loop4 (cons (match-match result1)
                                    matches3)
                              (match-end result1))
                       (matches (reverse matches3) off end2)))))
      (gensym-reset!)
-     (assert (generate-zero-or-more '(* Foo) 'h 'in 'off stripper)
+     (assert (generate-zero-or-more '(* Foo) 'in 'off stripper)
              '(strip
                (let loop4 ((matches3 '())
                            (end2 off))
-                 (let ((result1 (Foo h in end2)))
+                 (let ((result1 (Foo in end2)))
                    (if (matches? result1)
                        (loop4 (cons (match-match result1)
                                     matches3)
@@ -140,11 +140,11 @@
 
  (it "(+ ...) matches at least one value"
      (gensym-reset!)
-     (assert (generate-one-or-more '(+ Foo) 'h 'in 'off id)
-             '(if (matches? (Foo h in off))
+     (assert (generate-one-or-more '(+ Foo) 'in 'off id)
+             '(if (matches? (Foo in off))
                   (let loop4 ((matches3 '())
                               (end2 off))
-                    (let ((result1 (Foo h in end2)))
+                    (let ((result1 (Foo in end2)))
                       (if (matches? result1)
                           (loop4 (cons (match-match result1)
                                        matches3)
@@ -152,12 +152,12 @@
                           (matches (reverse matches3) off end2))))
                   (no-match)))
      (gensym-reset!)
-     (assert (generate-one-or-more '(+ Foo) 'h 'in 'off stripper)
+     (assert (generate-one-or-more '(+ Foo) 'in 'off stripper)
              '(strip
-               (if (matches? (Foo h in off))
+               (if (matches? (Foo in off))
                    (let loop4 ((matches3 '())
                                (end2 off))
-                     (let ((result1 (Foo h in end2)))
+                     (let ((result1 (Foo in end2)))
                        (if (matches? result1)
                            (loop4 (cons (match-match result1)
                                         matches3)
@@ -167,59 +167,59 @@
 
  (it "(? ...) always matches"
      (gensym-reset!)
-     (assert (generate-optional '(? Foo) 'h 'in 'off id)
-             '(let ((result1 (Foo h in off)))
+     (assert (generate-optional '(? Foo) 'in 'off id)
+             '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     result1
                     (matches '() off off))))
      (gensym-reset!)
-     (assert (generate-optional '(? Foo) 'h 'in 'off stripper)
+     (assert (generate-optional '(? Foo) 'in 'off stripper)
              '(strip
-               (let ((result1 (Foo h in off)))
+               (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      result1
                      (matches '() off off))))))
 
  (it "(! ...) fails if a match is found"
      (gensym-reset!)
-     (assert (generate-not '(! Foo) 'h 'in 'off id)
-             '(if (matches? (Foo h in off))
+     (assert (generate-not '(! Foo) 'in 'off id)
+             '(if (matches? (Foo in off))
                   (no-match)
                   (matches '() off off)))
      (gensym-reset!)
-     (assert (generate-not '(! Foo) 'h 'in 'off stripper)
+     (assert (generate-not '(! Foo) 'in 'off stripper)
              '(strip
-               (if (matches? (Foo h in off))
+               (if (matches? (Foo in off))
                    (no-match)
                    (matches '() off off)))))
 
  (it "(& ...) doesn't advance the scan"
      (gensym-reset!)
-     (assert (generate-and '(& Foo) 'h 'in 'off id)
-             '(let ((result1 (Foo h in off)))
+     (assert (generate-and '(& Foo) 'in 'off id)
+             '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (matches (match-match result1) off off)
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-and '(& Foo) 'h 'in 'off stripper)
+     (assert (generate-and '(& Foo) 'in 'off stripper)
              '(strip
-               (let ((result1 (Foo h in off)))
+               (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (matches (match-match result1) off off)
                      (no-match))))))
 
  (it "(: ...) drops match from the input, but advances the scan"
      (gensym-reset!)
-     (assert (generate-drop '(: Foo) 'h 'in 'off id)
-             '(let ((result1 (Foo h in off)))
+     (assert (generate-drop '(: Foo) 'in 'off id)
+             '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (let ((end2 (match-end result1)))
                       (matches '() end2 end2))
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-drop '(: Foo) 'h 'in 'off stripper)
+     (assert (generate-drop '(: Foo) 'in 'off stripper)
              '(strip
-               (let ((result1 (Foo h in off)))
+               (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (let ((end2 (match-end result1)))
                        (matches '() end2 end2))
@@ -227,8 +227,8 @@
 
  (it "(~ ...) concatenates all submatches"
      (gensym-reset!)
-     (assert (generate-concat '(~ Foo) 'h 'in 'off id)
-             '(let ((result1 (Foo h in off)))
+     (assert (generate-concat '(~ Foo) 'in 'off id)
+             '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (matches
                      (foldr string-append-immutable "" (match-match result1))
@@ -236,9 +236,9 @@
                      (match-end result1))
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-concat '(~ Foo) 'h 'in 'off stripper)
+     (assert (generate-concat '(~ Foo) 'in 'off stripper)
              '(strip
-               (let ((result1 (Foo h in off)))
+               (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (matches
                       (foldr string-append-immutable "" (match-match result1))
@@ -412,8 +412,7 @@
      (assert (SimpleLisp
               (with-output-to-string
                 (lambda ()
-                  (pretty-print '(+ 1 2 3))))
-              eq-len-hash-input)
+                  (pretty-print '(+ 1 2 3)))))
              (matches '(:type quote
                               :value (:type list
                                             :value ((:type symbol :value + :original "+" :start 2 :end 3)
@@ -435,8 +434,7 @@
                                    ;; Display hello world!
                                    (display "hello ")
                                    (display wordl)
-                                   (newline)))))
-              eq-len-hash-input)
+                                   (newline))))))
              (matches '(:type quote
                               :value (:type list
                                             :value
@@ -468,7 +466,7 @@
                       68)))
 
  (it "handles spacing correctly"
-     (assert (SimpleLisp "(foo   )" eq-len-hash-input)
+     (assert (SimpleLisp "(foo   )")
              (matches '(:type list
                               :value ((:type symbol :value foo :original "foo" :start 1 :end 4))
                               :start 0
@@ -477,14 +475,14 @@
                       8)))
 
  (it "handles EOF correctly"
-     (assert (Weird "(foo" eq-len-hash-input)
+     (assert (Weird "(foo")
              (matches '(:type invalid-list
                               :value ((:type symbol :value "foo" :start 1 :end 4))
                               :start 0
                               :end 4)
                       0
                       4))
-     (assert (Weird "(foo (foo foo)" eq-len-hash-input)
+     (assert (Weird "(foo (foo foo)")
              (matches '(:type invalid-list
                               :value ((:type symbol :value "foo" :start 1 :end 4)
                                       (:type list
@@ -499,23 +497,23 @@
      (assert (with-handlers ((string?
                               (lambda (e)
                                 e)))
-               (SimpleLisp "\"This string will fail to parse, but in a controlled way" eq-len-hash-input))
+               (SimpleLisp "\"This string will fail to parse, but in a controlled way"))
              "Unterminated string at location: 0")
      (assert (with-handlers ((string?
                               (lambda (e)
                                 e)))
-               (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))" eq-len-hash-input))
+               (SimpleLisp "(do (display \"This string will fail to parse, but in a controlled way) (newline))"))
              "Unterminated string at location: 13"))
 
  (it "handles concatenation correctly"
-     (assert (Concat "foobarbaz" eq-len-hash-input)
+     (assert (Concat "foobarbaz")
              (matches "foobarbaz"
                       0
                       9)))
 
  (it "doesn't have cache collisions between calls"
      ;; NOTE Simulate hash collision that could happen when the cache is reused between calls to parse.
-     (assert (list (SimpleLisp "foo" (constantly 23))
-                   (SimpleLisp "oof" (constantly 23)))
+     (assert (list (SimpleLisp "foo")
+                   (SimpleLisp "oof"))
              (list (matches '(:type symbol :value foo :original "foo" :start 0 :end 3) 0 3)
                    (matches '(:type symbol :value oof :original "oof" :start 0 :end 3) 0 3)))))

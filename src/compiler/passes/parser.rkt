@@ -255,7 +255,7 @@
           (let ((result (collect-errors (env-get env 'errors)
                                         (lambda ()
                                           (let* ((input (env-get env 'input))
-                                                 (parsed (Program input eq-len-hash-input)))
+                                                 (parsed (Program input)))
                                             (if (matches? parsed)
                                                 (match-match parsed)
                                                 (raise-compilation-error
