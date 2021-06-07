@@ -1,6 +1,9 @@
+#lang racket
+
 ;; Fixing-letrec-like letrec conversion.
 
 (require "../utils/utils.rkt")
+(require "../utils/set.rkt")
 
 (require "../env.rkt")
 (require "../pass.rkt")
@@ -8,6 +11,10 @@
 (require "../substitute.rkt")
 (require (only-in "../propagate.rkt"
                   reconstruct-let-node reconstruct-fix-node))
+
+(provide fix-letrec
+         ;; FIXME For test access.
+         waddell let-ref-assign derefy)
 
 (define fix-letrec
   (pass (schema "fix-letrec"

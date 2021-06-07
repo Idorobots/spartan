@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Copy propagation.
 
 (require "../utils/utils.rkt")
@@ -7,6 +9,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide propagate-copies
+         ;; FIXME For test access.
+         copy-propagation)
 
 (define propagate-copies
   (pass (schema "propagate-copies"

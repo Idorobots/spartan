@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Constant propagation.
 
 (require "../utils/utils.rkt")
@@ -7,6 +9,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide propagate-constants
+         ;; FIXME For test access.
+         constant-propagation)
 
 (define propagate-constants
   (pass (schema "propagate-constants"

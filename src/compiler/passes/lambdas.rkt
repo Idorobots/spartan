@@ -1,7 +1,10 @@
+#lang racket
+
 ;; Lambda inlining.
 
 (require "../utils/utils.rkt")
 (require "../utils/gensym.rkt")
+(require "../utils/set.rkt")
 
 (require "../substitute.rkt")
 (require (only-in "../propagate.rkt"
@@ -9,6 +12,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide inline-lambdas
+         ;; FIXME For test access.
+         lambda-inlining +max-inlineable-size+ temporary-name)
 
 (define inline-lambdas
   (pass (schema "inline-lambdas"

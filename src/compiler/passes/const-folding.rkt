@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Constant propagation.
 
 (require "../utils/utils.rkt")
@@ -5,6 +7,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide fold-constants
+         ;; FIXME For test access.
+         constant-folding)
 
 (define fold-constants
   (pass (schema "fold-constants"

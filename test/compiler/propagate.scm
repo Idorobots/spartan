@@ -1,5 +1,7 @@
 ;; Binding propagation tests.
 
+(require "../../src/compiler/propagate.rkt")
+
 (describe
  "reconstruct-letrec-node"
  (it "should correctly recompute free & bound vars"

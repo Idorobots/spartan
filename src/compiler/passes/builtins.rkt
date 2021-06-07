@@ -1,11 +1,18 @@
+#lang racket
+
 ;; Builtins inliner
 
 (require "../utils/utils.rkt")
+(require "../utils/set.rkt")
 
 (require "../substitute.rkt")
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide inline-builtins
+         ;; FIXME For test access.
+         inline-app-ops)
 
 (define inline-builtins
   (pass (schema "inline-builtins"

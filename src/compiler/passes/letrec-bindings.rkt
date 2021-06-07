@@ -1,6 +1,9 @@
+#lang racket
+
 ;; Letrec expansion phase.
 
 (require "../utils/scc.rkt")
+(require "../utils/set.rkt")
 (require "../utils/utils.rkt")
 
 (require "../env.rkt")
@@ -8,6 +11,10 @@
 (require "../ast.rkt")
 (require (only-in "../propagate.rkt"
                   reconstruct-let-node reconstruct-letrec-node))
+
+(provide reorder-letrec-bindings
+         ;; FIXME For test access.
+         reorder-letrec derive-dependencies derive-ordering reorder-bindings)
 
 ;; This expansion phase is facilitated by first running SCC algorithm that splits the letrec bindings into smaller, managable chunks and then performs a fixpoint conversion on the resulting lambdas and assignment conversion on the complex values esentially elliminating recursion and letrec.
 

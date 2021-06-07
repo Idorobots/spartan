@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Continuation Passing Converter
 ;; Assumes macro- & letrec-expanded as well as alpha-converted code.
 ;; This phase contorts the code so much that it invalidates free-vars & bindings annotations.
@@ -9,6 +11,11 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(provide continuation-passing-convert
+         make-identity-continuation
+         ;; FIXME For test access.
+         cpc)
 
 (define continuation-passing-convert
   (pass (schema "continuation-passing-convert"

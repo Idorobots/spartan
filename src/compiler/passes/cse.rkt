@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Common subexpression elimination.
 
 (require "../utils/utils.rkt")
@@ -6,6 +8,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide eliminate-common-subexpressions
+         ;; FIXME For test access.
+         cse +eliminatable-primops+)
 
 (define eliminate-common-subexpressions
   (pass (schema "eliminate-common-subexpressions"

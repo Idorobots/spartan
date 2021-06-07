@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Bindings analysis
 
 (require "../utils/set.rkt")
@@ -6,6 +8,10 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
+
+(provide annotate-bindings
+         ;; FIXME For test access.
+         analyze-bindings compute-complexity)
 
 (define annotate-bindings
   (pass (schema "annotate-bindings"

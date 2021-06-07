@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Dead code elimination.
 
 (require "../utils/utils.rkt")
@@ -8,6 +10,10 @@
 (require "../ast.rkt")
 (require (only-in "../propagate.rkt"
                   reconstruct-let-node reconstruct-letrec-node reconstruct-fix-node))
+
+(provide eliminate-dead-code
+         ;; FIXME For test access.
+         dce effectful? truthy? falsy?)
 
 (define eliminate-dead-code
   (pass (schema "eliminate-dead-code"
