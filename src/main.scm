@@ -11,7 +11,7 @@
 
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
-(load-once "compiler/compiler.scm")
+(require "compiler/compiler.rkt")
 (load-once "runtime/rt.scm")
 (load-once "rete/rete.scm")
 

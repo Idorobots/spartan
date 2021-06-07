@@ -1,5 +1,8 @@
 ;; DCE tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/dce.rkt")
+
 (describe
  "dead-code-elimination"
  (it "should eliminated redundant lets"

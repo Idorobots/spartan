@@ -1,5 +1,7 @@
 ;; Error handling tests
 
+(require "../../src/compiler/passes/errors.rkt")
+
 (describe
  "errors"
  (it "offset->line-and-col translates locations correctly"

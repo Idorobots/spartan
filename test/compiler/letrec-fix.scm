@@ -1,5 +1,8 @@
 ;; Assignment conversion tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/letrec-fix.rkt")
+
 (define (check-deref arg node result)
   (assert-ast result (primop-app 'deref inserted-node)
               (assert inserted-node node))

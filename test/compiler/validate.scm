@@ -1,5 +1,8 @@
 ;; Validation tests
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/validate.rkt")
+
 (describe
  "validation"
  (it "should disallow undefined variables"

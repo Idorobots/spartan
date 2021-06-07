@@ -1,5 +1,8 @@
 ;; Constant propagation tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/const-propagation.rkt")
+
 (describe
  "constant-propagation"
  (it "should subtitute usages of bound consts"

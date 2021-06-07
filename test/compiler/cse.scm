@@ -1,5 +1,8 @@
 ;; Common subexpression elimination tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/cse.rkt")
+
 (describe
  "common-subexpression-elimination"
  (it "should eliminate redundant expressions"

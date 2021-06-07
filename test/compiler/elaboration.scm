@@ -1,5 +1,8 @@
 ;; Semantic elaboration.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/elaboration.rkt")
+
 (describe
  "elaboration"
  (it "elaborates valid ifs"

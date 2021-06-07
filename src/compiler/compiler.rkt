@@ -1,8 +1,9 @@
+#lang racket
+
 ;; The compiler
 
 (require "env.rkt")
 (require "pass.rkt")
-(require "ast.rkt")
 
 ;; The frontend
 (require "passes/parser.rkt")
@@ -33,6 +34,8 @@
 (require "passes/generator.rkt")
 (require "passes/closures.rkt")
 (require "passes/rename.rkt")
+
+(provide compile)
 
 (define (compile env)
   (foldl run-pass

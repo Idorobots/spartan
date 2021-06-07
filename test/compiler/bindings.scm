@@ -1,5 +1,8 @@
 ;; Binding annotation tests
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/bindings.rkt")
+
 (describe
  "compute-complexity"
  (it "should recognize simple values"

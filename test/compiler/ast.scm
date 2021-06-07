@@ -1,5 +1,7 @@
 ;; AST tests.
 
+(require "../../src/compiler/ast.rkt")
+
 (describe
  "AST node"
  (it "`generate` can mark node artificial"

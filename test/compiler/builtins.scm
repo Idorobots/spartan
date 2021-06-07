@@ -1,5 +1,8 @@
 ;; Builtin inliner tests
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/builtins.rkt")
+
 (describe
  "builtin inliner"
  (it "should inline specific builtins"

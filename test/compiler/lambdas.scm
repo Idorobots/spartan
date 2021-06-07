@@ -1,6 +1,8 @@
 ;; Lambda inlining tests.
 
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/lambdas.rkt")
 
 (describe
  "lambda-inlining"

@@ -2,6 +2,8 @@
 
 (require "../src/compiler/utils/set.rkt")
 (require "../src/compiler/ast.rkt")
+(require (only-in "../src/compiler/passes/bindings.rkt"
+                  compute-complexity))
 
 (define (sample gen rand)
   (if (procedure? gen)

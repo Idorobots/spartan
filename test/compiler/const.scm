@@ -1,5 +1,8 @@
 ;; Constant annotation tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/const.rkt")
+
 (define (gen-non-const-node rand)
   (sample (gen-one-of gen-valid-symbol-node
                       (gen-app-node gen-valid-symbol-node gen-valid-symbol-node gen-valid-symbol-node)

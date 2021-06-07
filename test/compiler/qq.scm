@@ -1,5 +1,8 @@
 ;; Quasiquote expander tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/qq.rkt")
+
 (describe
  "expand-quasiquote"
  (it "should handle easy cases"

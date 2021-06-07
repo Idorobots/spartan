@@ -1,5 +1,8 @@
 ;; Implicit body expansion tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/body.rkt")
+
 (define gen-body-neutral-node (gen-one-of gen-value-node gen-non-value-node))
 
 (describe

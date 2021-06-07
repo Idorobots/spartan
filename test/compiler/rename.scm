@@ -1,6 +1,8 @@
 ;; Renaming things for safety.
 
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/rename.rkt")
 
 (describe
  "symbol->safe"

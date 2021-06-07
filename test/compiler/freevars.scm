@@ -1,5 +1,8 @@
 ;; Free vars computation.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/freevars.rkt")
+
 (describe
  "free-vars"
  (it "handles values correctly"

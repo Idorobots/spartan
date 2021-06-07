@@ -1,5 +1,8 @@
 ;; Copy propagation tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/copy-propagation.rkt")
+
 (describe
  "copy-propagation"
  (it "should substitute copies"
@@ -12,8 +15,8 @@
             (assert (copy-propagation (make-subs (list (cons var copy)))
                                       sym)
                     copy)
-            (assert-ast (constant-propagation (make-subs (list (cons var copy)))
-                                              node)
+            (assert-ast (copy-propagation (make-subs (list (cons var copy)))
+                                          node)
                         (if converted-cond
                             converted-then
                             converted-else)

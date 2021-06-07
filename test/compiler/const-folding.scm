@@ -1,5 +1,8 @@
 ;; Constant folding tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/const-folding.rkt")
+
 (describe
  "constant-folding"
  (it "should not fold non-const primop-apps"

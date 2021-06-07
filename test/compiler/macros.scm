@@ -1,5 +1,8 @@
 ;; Macro-expander tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/macro-expander.rkt")
+
 (define bm (make-builtin-macros))
 
 (define (l n) (location n n))

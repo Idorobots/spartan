@@ -1,5 +1,8 @@
 ;; Letrec conversion tests.
 
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/passes/letrec-bindings.rkt")
+
 (describe
  "derive-graph"
  (it "should correctly derive variable dependencies"

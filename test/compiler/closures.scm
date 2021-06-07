@@ -1,6 +1,7 @@
 ;; Closure conversion
 
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/passes/closures.rkt")
 
 (describe
  "make-env"
