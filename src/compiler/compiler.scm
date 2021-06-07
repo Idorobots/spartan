@@ -15,6 +15,7 @@
 (require "passes/errors.rkt")
 
 ;; Optimizations
+(require "passes/optimize.rkt")
 (require "passes/bindings.rkt")
 (require "passes/freevars.rkt")
 (require "passes/builtins.rkt")
@@ -31,8 +32,6 @@
 ;; The backend
 (load-once "compiler/passes/closures.scm")
 (load-once "compiler/passes/rename.scm")
-
-(define +optimization-loops+ 23)
 
 (define (compile env)
   (foldl run-pass
@@ -78,27 +77,6 @@
                closure-convert
                symbol-rename
                generate-target-code)))
-
-(define (optimize passes)
-  (pass (schema "optimize") ;; NOTE Schema depends on the passes.
-        (lambda (env)
-          (let loop ((i +optimization-loops+)
-                     (acc env)
-                     (prev '()))
-            (if (or (= i 0)
-                    (equal? prev acc)) ;; FIXME This is needlessly slow.
-                acc
-                (loop (- i 1)
-                      (foldl run-pass
-                             acc
-                             passes)
-                      acc))))))
-
-(define debug-ast
-  (pass (schema "debug")
-        (lambda (env)
-          (pretty-print (ast->plain (env-get env 'ast)))
-          env)))
 
 (define generate-target-code
   (pass (schema "generate-target-code"
