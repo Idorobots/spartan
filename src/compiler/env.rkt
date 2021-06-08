@@ -12,7 +12,7 @@
 
 (define (env-get* env property default)
   (if (env-contains? env property)
-      (hash-ref env property)
+      (env-get env property)
       default))
 
 (define (env-contains? env property)

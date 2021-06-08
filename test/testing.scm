@@ -48,14 +48,16 @@
     ((_ filename)
      (test-file filename id))
     ((_ filename preprocess)
+     (test-file filename preprocess id))
+    ((_ filename preprocess instrument)
      (let ((expected-file (string-append filename ".output")))
        (if (file-exists? expected-file)
            (let ((expected (slurp expected-file)))
-             (assert (preprocess (run-test-file filename))
+             (assert (preprocess (run-instrumented-test-file filename instrument))
                      (preprocess expected)))
            (with-output-to-file expected-file
              (lambda ()
-               (display (run-test-file filename)))))))))
+               (display (run-instrumented-test-file filename instrument)))))))))
 
 (define-syntax time-execution
   (syntax-rules ()
@@ -193,7 +195,7 @@
                (deref failed-tests))
           (error (red (format "~a tests failed." (length (deref failed-tests)))))))))
 
-(define (run-test-file filename)
+(define (run-instrumented-test-file filename instrument)
   (with-output-to-string
     (lambda ()
       ;; NOTE Ignores the compilation abort.
@@ -201,7 +203,10 @@
                        (lambda (e)
                          (display (compilation-error-what e))
                          (newline))))
-        (run-file filename)))))
+        (run-instrumented-file filename instrument)))))
+
+(define (run-test-file filename)
+  (run-instrumented-test-file filename id))
 
 (define (sort-lines contents)
   (string-join

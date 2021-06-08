@@ -1,8 +1,35 @@
 ;; Actual code exmaples
 
 (require "../src/runtime/rt.rkt")
+(require "../src/compiler/substitute.rkt")
+(require "../src/compiler/ast.rkt")
 
+;; Silence task info logs since these might vary in the specific timings.
+(define __test_task_info (bootstrap (lambda () '())))
+
+;; Ensure that monitor task doesn't ever hang the execution.
+(define __test_monitor (bootstrap (lambda (time) '())))
+
+;; Ensure that timeouts take very short time.
+(define __test_sleep (bootstrap (lambda (time)
+                                (wait (min time 25)))))
+
+;; Determined by a fairly random dice roll.
 (define *random* 0.05)
+(define __test_random (bootstrap (lambda ()
+                                 (let ((r *random*))
+                                   (set! *random* (+ r 0.05))
+                                   (when (> *random* 1.0)
+                                     (set! *random* 0.05))
+                                   r))))
+
+(define (instrument-for-test ast)
+  (substitute-symbols (make-subs
+                       (list (cons 'task-info (flip set-ast-symbol-value 'test-task-info))
+                             (cons 'monitor (flip set-ast-symbol-value 'test-monitor))
+                             (cons 'sleep (flip set-ast-symbol-value 'test-sleep))
+                             (cons 'random (flip set-ast-symbol-value 'test-random))))
+                      ast))
 
 (describe
  "Spartan"
@@ -14,56 +41,25 @@
      (test-file "../test/sprtn/logger.sprtn"))
 
  (it "should support continuations"
-     (with-test-bindings
-      (;; Silence task info logs since these might vary in the specific timings.
-       (__task_info (bootstrap (lambda () '())))
-       ;; Ensure that timeouts take very short time.
-       (__sleep (bootstrap (lambda (time)
-                             (wait (min time 25))))))
-      (test-file "../test/sprtn/continuations.sprtn" sort-lines)
-      (test-file "../test/sprtn/errors.sprtn")
-      (test-file "../test/sprtn/errors3.sprtn")
-      (test-file "../test/sprtn/coroutines.sprtn")
-      (test-file "../test/sprtn/coroutines2.sprtn")
-      (test-file "../test/sprtn/coroutines3.sprtn")
-      (test-file "../test/sprtn/amb.sprtn")))
+     (test-file "../test/sprtn/continuations.sprtn" sort-lines)
+     (test-file "../test/sprtn/errors.sprtn" id instrument-for-test)
+     (test-file "../test/sprtn/errors3.sprtn" id instrument-for-test)
+     (test-file "../test/sprtn/coroutines.sprtn")
+     (test-file "../test/sprtn/coroutines2.sprtn")
+     (test-file "../test/sprtn/coroutines3.sprtn")
+     (test-file "../test/sprtn/amb.sprtn"))
 
  (it "should support Actor Model"
-     (with-test-bindings
-      (;; Silence task info logs since these might vary in the specific timings.
-       (__task_info (bootstrap (lambda () '())))
-       ;; Ensure that timeouts take very short time.
-       (__sleep (bootstrap (lambda (time)
-                             (wait 25))))
-       ;; Ensure that monitor task doesn't ever hang the execution.
-       (__monitor (bootstrap (lambda (time)
-                               '()))))
-      (test-file "../test/sprtn/uprocs.sprtn")
-      (test-file "../test/sprtn/uprocs2.sprtn" sort-lines)
-      (test-file "../test/sprtn/msgwait.sprtn")
-      (test-file "../test/sprtn/fibonacci2.sprtn")
-      (test-file "../test/sprtn/errors2.sprtn")))
+     (test-file "../test/sprtn/uprocs.sprtn" id instrument-for-test)
+     (test-file "../test/sprtn/uprocs2.sprtn" sort-lines instrument-for-test)
+     (test-file "../test/sprtn/msgwait.sprtn")
+     (test-file "../test/sprtn/fibonacci2.sprtn" id instrument-for-test)
+     (test-file "../test/sprtn/errors2.sprtn" id instrument-for-test))
 
  (it "should support the RBS"
-     (with-test-bindings
-      (;; Silence task info logs since these might vary in the specific timings.
-       (__task_info (bootstrap (lambda () '())))
-       ;; Ensure that timeouts take very short time.
-       (__sleep (bootstrap (lambda (time)
-                             (wait 25))))
-       ;; Ensure that monitor task doesn't ever hang the execution.
-       (__monitor (bootstrap (lambda (time)
-                               '())))
-       ;; Determined by a fairly random dice roll.
-       (__random (bootstrap (lambda ()
-                              (let ((r *random*))
-                                (set! *random* (+ r 0.05))
-                                (when (> *random* 1.0)
-                                  (set! *random* 0.05))
-                                r)))))
-      (test-file "../test/sprtn/rbs2.sprtn")
-      (test-file "../test/sprtn/rbs.sprtn")
-      (test-file "../test/sprtn/cep.sprtn")))
+     (test-file "../test/sprtn/rbs2.sprtn")
+     (test-file "../test/sprtn/rbs.sprtn" id instrument-for-test)
+     (test-file "../test/sprtn/cep.sprtn" id instrument-for-test))
 
  (ignore "handles reused variables correctly"
          (assert (run '(letrec ((fact (lambda (n)
