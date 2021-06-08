@@ -50,14 +50,12 @@
                              '(car cadr cdr cddr list cons append concat
                                    equal? nil? empty? not
                                    * + - / = < <= > >=
-                                   remainder quotient modulo zero?
+                                   remainder quotient modulo zero? random
                                    ref deref assign!
-                                   self send spawn
+                                   self send spawn sleep
                                    assert! signal! retract! select notify-whenever
                                    display newline debug
                                    ;; NOTE These ones use the continuations, so they cannot be inlined.
                                    ;; call/current-continuation call/reset call/shift call/handler raise recv
-                                   ;; FIXME These ones are overriden by the tests, so for the time being they can't be inlined.
-                                   ;; sleep random
                                    ))))))
               expr))

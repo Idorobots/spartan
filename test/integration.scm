@@ -1,7 +1,6 @@
 ;; Actual code exmaples
 
 (require "../src/runtime/rt.rkt")
-(require "../src/compiler/substitute.rkt")
 (require "../src/compiler/ast.rkt")
 
 ;; Silence task info logs since these might vary in the specific timings.
@@ -11,25 +10,36 @@
 (define __test_monitor (bootstrap (lambda (time) '())))
 
 ;; Ensure that timeouts take very short time.
-(define __test_sleep (bootstrap (lambda (time)
-                                (wait (min time 25)))))
+(define (test-sleep time)
+  (sleep (min time 25)))
 
 ;; Determined by a fairly random dice roll.
 (define *random* 0.05)
-(define __test_random (bootstrap (lambda ()
-                                 (let ((r *random*))
-                                   (set! *random* (+ r 0.05))
-                                   (when (> *random* 1.0)
-                                     (set! *random* 0.05))
-                                   r))))
+(define (test-random)
+  (let ((r *random*))
+    (set! *random* (+ r 0.05))
+    (when (> *random* 1.0)
+      (set! *random* 0.05))
+    r))
 
 (define (instrument-for-test ast)
-  (substitute-symbols (make-subs
-                       (list (cons 'task-info (flip set-ast-symbol-value 'test-task-info))
-                             (cons 'monitor (flip set-ast-symbol-value 'test-monitor))
-                             (cons 'sleep (flip set-ast-symbol-value 'test-sleep))
-                             (cons 'random (flip set-ast-symbol-value 'test-random))))
-                      ast))
+  (map-ast (lambda (expr)
+             (match-ast expr
+              ((app (symbol 'task-info) args ...)
+               (set-ast-app-op expr
+                               (set-ast-symbol-value (ast-app-op expr)
+                                                     'test-task-info)))
+              ((app (symbol 'monitor) args ...)
+               (set-ast-app-op expr
+                               (set-ast-symbol-value (ast-app-op expr)
+                                                     'test-monitor)))
+              ((primop-app 'random args ...)
+               (set-ast-primop-app-op expr 'test-random))
+              ((primop-app 'sleep args ...)
+               (set-ast-primop-app-op expr 'test-sleep))
+              (else
+               expr)))
+           ast))
 
 (describe
  "Spartan"
@@ -41,6 +51,7 @@
      (test-file "../test/sprtn/logger.sprtn"))
 
  (it "should support continuations"
+     ;; NOTE Should not be instrumented to maximize the chance of colliding continuations when using a single delimited stack.
      (test-file "../test/sprtn/continuations.sprtn" sort-lines)
      (test-file "../test/sprtn/errors.sprtn" id instrument-for-test)
      (test-file "../test/sprtn/errors3.sprtn" id instrument-for-test)

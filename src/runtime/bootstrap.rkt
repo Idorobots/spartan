@@ -124,7 +124,7 @@
                                 (&apply cont v))))))))
 
 ;; Actor model:
-(define __sleep (bootstrap wait))
+(define __sleep (bootstrap sleep))
 (define __self (bootstrap self))
 (define __send (bootstrap send))
 (define __spawn (bootstrap spawn))

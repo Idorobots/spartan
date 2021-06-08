@@ -8,9 +8,9 @@
 (require "scheduler.rkt")
 (require "closures.rkt")
 
-(provide wait self send recv spawn)
+(provide sleep self send recv spawn)
 
-(define (wait time) ;; NOTE Can't be called the same as Scheme sleep. :(
+(define (sleep time)
   (inc-uproc-rtime! (current-task)
                     time)
   time)
