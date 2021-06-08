@@ -5,7 +5,7 @@
 (require "../src/compiler/passes/parser.rkt")
 
 (define (build-input-program reps)
-  (let* ((expr (slurp "../test/sprtn/coroutines2.sprtn")))
+  (let* ((expr (slurp "../test/sprtn/rsa.sprtn")))
     (format "(do 23 ~a)"
             (foldl string-append
                    ""
@@ -29,7 +29,7 @@
  (it "parser"
      (test-perf
       "../test/compiler/parser.scm.perf" 2.5
-      (let ((inputs (map build-input-program (iota 0 50 5))))
+      (let ((inputs (map build-input-program (iota 1 51 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
                (collect-garbage 'major)
@@ -48,7 +48,7 @@
  (it "compiler"
      (test-perf
       "../test/compiler/compiler.scm.perf" 2.5
-      (let ((inputs (map build-input-program (iota 1 10 2))))
+      (let ((inputs (map build-input-program (iota 1 21 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
                (collect-garbage 'major)
