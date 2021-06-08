@@ -9,6 +9,7 @@
        (set! *imported-modules* (cons file *imported-modules*))
        (load file)))))
 
+(require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
@@ -28,22 +29,34 @@
   ;; NOTE Returns only the last result.
   (last (execute!)))
 
-(define (run-string input)
-  (run-code
-   (compile
-    (env 'input input
-         'module "string"))))
-
-(define (run expr)
+(define (run-instrumented expr instrument)
   (run-code
    (compile
     (env 'input (with-output-to-string
                   (lambda ()
                     (pretty-write expr)))
-         'module "expr"))))
+         'module "expr"
+         'instrument instrument))))
 
-(define (run-file filename)
+(define (run expr)
+  (run-instrumented expr id))
+
+(define (run-instrumented-string input instrument)
+  (run-code
+   (compile
+    (env 'input input
+         'module "string"
+         'instrument instrument))))
+
+(define (run-string input)
+  (run-instrumented-string input id))
+
+(define (run-instrumented-file filename instrument)
   (run-code
    (compile
     (env 'input (slurp filename)
-         'module filename))))
+         'module filename
+         'instrument instrument))))
+
+(define (run-file filename)
+  (run-instrumented-file filename id))

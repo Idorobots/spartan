@@ -2,13 +2,18 @@
 
 ;; Static compilation env.
 
-(provide env env-get env-contains? env-set env-update)
+(provide env env-get env-get* env-contains? env-set env-update)
 
 (define (env . properties)
   (apply hasheq properties))
 
 (define (env-get env property)
   (hash-ref env property))
+
+(define (env-get* env property default)
+  (if (env-contains? env property)
+      (hash-ref env property)
+      default))
 
 (define (env-contains? env property)
   (hash-has-key? env property))

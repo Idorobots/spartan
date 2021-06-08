@@ -4,6 +4,7 @@
 
 (require "env.rkt")
 (require "pass.rkt")
+(require "utils/utils.rkt")
 
 ;; The frontend
 (require "passes/parser.rkt")
@@ -31,6 +32,7 @@
 (require "passes/cpc.rkt")
 
 ;; The backend
+(require "passes/instrument.rkt")
 (require "passes/generator.rkt")
 (require "passes/closures.rkt")
 (require "passes/rename.rkt")
@@ -42,7 +44,8 @@
          (env-set env
                   'errors '()
                   'macros (make-builtin-macros)
-                  'globals (make-global-definitions-list))
+                  'globals (make-global-definitions-list)
+                  'instrument (env-get* env 'instrument id))
          (list parse
                macro-expand
                elaborate
@@ -78,6 +81,7 @@
                       propagate-copies
                       eliminate-dead-code))
                annotate-free-vars
+               instrument
                closure-convert
                symbol-rename
                generate-target-code)))

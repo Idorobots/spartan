@@ -10,7 +10,7 @@
 (require "ast.rkt")
 
 (provide (struct-out pass) run-pass
-         schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? ast-subset?
+         schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? a-function? ast-subset?
          schema-validation-error?)
 
 (struct pass (schema transform) #:transparent)
@@ -59,6 +59,10 @@
 (define (a-set? val)
   (unless (set? val)
     (schema-validation-error "Not a set" val)))
+
+(define (a-function? val)
+  (unless (procedure? val)
+    (schema-validation-error "Not a procedure" val)))
 
 (define (ast-subset? types)
   (lambda (expr)
