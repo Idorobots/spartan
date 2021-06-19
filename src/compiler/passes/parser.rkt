@@ -16,7 +16,7 @@
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-rkt-parser
- "../generated/parser.rkt"
+ "generated/parser.rkt"
  (list "../src/compiler/ast.rkt"
        "../src/compiler/peggen.rkt"
        "../src/compiler/errors.rkt"

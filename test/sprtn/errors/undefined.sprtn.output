@@ -1,17 +1,17 @@
-../test/sprtn/errors/undefined.sprtn(1,0): Undefined variable `a`:
+test/sprtn/errors/undefined.sprtn(1,0): Undefined variable `a`:
   1 [33m|[39ma
     [33m|[39m[31m^[39m
   2 [33m|[39m(define (f a b) (* a b c))
   3 [33m|[39m(f d)
 
-../test/sprtn/errors/undefined.sprtn(2,23): Undefined variable `c`:
+test/sprtn/errors/undefined.sprtn(2,23): Undefined variable `c`:
   1 [33m|[39ma
   2 [33m|[39m(define (f a b) (* a b c))
     [33m|[39m                       [31m^[39m
   3 [33m|[39m(f d)
   4 [33m|[39m(e f)
 
-../test/sprtn/errors/undefined.sprtn(3,3): Undefined variable `d`:
+test/sprtn/errors/undefined.sprtn(3,3): Undefined variable `d`:
   1 [33m|[39ma
   2 [33m|[39m(define (f a b) (* a b c))
   3 [33m|[39m(f d)
@@ -19,7 +19,7 @@
   4 [33m|[39m(e f)
   5 [33m|[39m(if (g h)
 
-../test/sprtn/errors/undefined.sprtn(4,1): Undefined variable `e`:
+test/sprtn/errors/undefined.sprtn(4,1): Undefined variable `e`:
   2 [33m|[39m(define (f a b) (* a b c))
   3 [33m|[39m(f d)
   4 [33m|[39m(e f)
@@ -27,7 +27,7 @@
   5 [33m|[39m(if (g h)
   6 [33m|[39m    j
 
-../test/sprtn/errors/undefined.sprtn(5,5): Undefined variable `g`:
+test/sprtn/errors/undefined.sprtn(5,5): Undefined variable `g`:
   3 [33m|[39m(f d)
   4 [33m|[39m(e f)
   5 [33m|[39m(if (g h)
@@ -35,7 +35,7 @@
   6 [33m|[39m    j
   7 [33m|[39m    k)
 
-../test/sprtn/errors/undefined.sprtn(5,7): Undefined variable `h`:
+test/sprtn/errors/undefined.sprtn(5,7): Undefined variable `h`:
   3 [33m|[39m(f d)
   4 [33m|[39m(e f)
   5 [33m|[39m(if (g h)
@@ -43,7 +43,7 @@
   6 [33m|[39m    j
   7 [33m|[39m    k)
 
-../test/sprtn/errors/undefined.sprtn(6,4): Undefined variable `j`:
+test/sprtn/errors/undefined.sprtn(6,4): Undefined variable `j`:
   4 [33m|[39m(e f)
   5 [33m|[39m(if (g h)
   6 [33m|[39m    j
@@ -51,7 +51,7 @@
   7 [33m|[39m    k)
   8 [33m|[39m'l
 
-../test/sprtn/errors/undefined.sprtn(7,4): Undefined variable `k`:
+test/sprtn/errors/undefined.sprtn(7,4): Undefined variable `k`:
   5 [33m|[39m(if (g h)
   6 [33m|[39m    j
   7 [33m|[39m    k)
@@ -59,7 +59,7 @@
   8 [33m|[39m'l
   9 [33m|[39m`m
 
-../test/sprtn/errors/undefined.sprtn(10,2): Undefined variable `n`:
+test/sprtn/errors/undefined.sprtn(10,2): Undefined variable `n`:
   8 [33m|[39m'l
   9 [33m|[39m`m
  10 [33m|[39m`,n
@@ -67,7 +67,7 @@
  11 [33m|[39m`(o p ,@q r)
  12 [33m|[39m(let ((s t)
 
-../test/sprtn/errors/undefined.sprtn(11,8): Undefined variable `q`:
+test/sprtn/errors/undefined.sprtn(11,8): Undefined variable `q`:
   9 [33m|[39m`m
  10 [33m|[39m`,n
  11 [33m|[39m`(o p ,@q r)
@@ -75,7 +75,7 @@
  12 [33m|[39m(let ((s t)
  13 [33m|[39m      (t u))
 
-../test/sprtn/errors/undefined.sprtn(12,9): Undefined variable `t`:
+test/sprtn/errors/undefined.sprtn(12,9): Undefined variable `t`:
  10 [33m|[39m`,n
  11 [33m|[39m`(o p ,@q r)
  12 [33m|[39m(let ((s t)
@@ -83,7 +83,7 @@
  13 [33m|[39m      (t u))
  14 [33m|[39m  (* s t u))
 
-../test/sprtn/errors/undefined.sprtn(13,9): Undefined variable `u`:
+test/sprtn/errors/undefined.sprtn(13,9): Undefined variable `u`:
  11 [33m|[39m`(o p ,@q r)
  12 [33m|[39m(let ((s t)
  13 [33m|[39m      (t u))
@@ -91,7 +91,7 @@
  14 [33m|[39m  (* s t u))
  15 [33m|[39m(letrec ((u v)
 
-../test/sprtn/errors/undefined.sprtn(14,9): Undefined variable `u`:
+test/sprtn/errors/undefined.sprtn(14,9): Undefined variable `u`:
  12 [33m|[39m(let ((s t)
  13 [33m|[39m      (t u))
  14 [33m|[39m  (* s t u))
@@ -99,7 +99,7 @@
  15 [33m|[39m(letrec ((u v)
  16 [33m|[39m         (v w))
 
-../test/sprtn/errors/undefined.sprtn(15,12): Variable `v` used before its definition:
+test/sprtn/errors/undefined.sprtn(15,12): Variable `v` used before its definition:
  13 [33m|[39m      (t u))
  14 [33m|[39m  (* s t u))
  15 [33m|[39m(letrec ((u v)
@@ -107,7 +107,7 @@
  16 [33m|[39m         (v w))
  17 [33m|[39m  (* u v w))
 
-../test/sprtn/errors/undefined.sprtn(16,12): Undefined variable `w`:
+test/sprtn/errors/undefined.sprtn(16,12): Undefined variable `w`:
  14 [33m|[39m  (* s t u))
  15 [33m|[39m(letrec ((u v)
  16 [33m|[39m         (v w))
@@ -115,7 +115,7 @@
  17 [33m|[39m  (* u v w))
  18 [33m|[39m(letrec ((v (cons 23 u))
 
-../test/sprtn/errors/undefined.sprtn(17,9): Undefined variable `w`:
+test/sprtn/errors/undefined.sprtn(17,9): Undefined variable `w`:
  15 [33m|[39m(letrec ((u v)
  16 [33m|[39m         (v w))
  17 [33m|[39m  (* u v w))
@@ -123,7 +123,7 @@
  18 [33m|[39m(letrec ((v (cons 23 u))
  19 [33m|[39m         (u (cons 5 (lambda () v))))
 
-../test/sprtn/errors/undefined.sprtn(18,21): Variable `u` used before its definition:
+test/sprtn/errors/undefined.sprtn(18,21): Variable `u` used before its definition:
  16 [33m|[39m         (v w))
  17 [33m|[39m  (* u v w))
  18 [33m|[39m(letrec ((v (cons 23 u))

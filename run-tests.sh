@@ -2,12 +2,12 @@
 
 mkdir -p generated
 
-cd src/
-
-parser="../generated/parser.rkt"
+parser="generated/parser.rkt"
 
 # Create parser bootstrap if it doesn't yet exist.
 if [ ! -e "$parser" ] ; then
+
+echo "Generating the parser first..."
 
 cat <<EOF > $parser
 #lang racket
@@ -18,9 +18,12 @@ cat <<EOF > $parser
 EOF
 
 # Ensure to generate actual parser.
-racket -t main.rkt
+racket -t src/main.rkt
+
+echo "Generated!"
 
 fi
 
+echo "Running the test suite..."
 # Run the test suite.
-racket -e '(require "../test/main.rkt")' -e '(run-all-tests)'
+racket -e '(require "test/main.rkt") (run-all-tests)'

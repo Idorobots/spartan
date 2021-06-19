@@ -16,14 +16,14 @@
           (filter (lambda (filename)
                     (string-suffix? filename ".sprtn"))
                   (map (lambda (path)
-                         (string-append "../test/sprtn/errors/"
+                         (string-append "test/sprtn/errors/"
                                         (path->string path)))
-                       (directory-list "../test/sprtn/errors/")))))
+                       (directory-list "test/sprtn/errors/")))))
 
  (it "optimizes the output"
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
-                           'input (slurp "../test/sprtn/math.sprtn")))
+                           'input (slurp "test/sprtn/math.sprtn")))
              '(display '(5 1462731 23)))
      (assert (compile (env 'module "optimize"
                            'input "(letrec ((fact (lambda (x)

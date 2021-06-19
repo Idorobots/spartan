@@ -12,7 +12,7 @@
 (require "../src/compiler/utils/utils.rkt")
 
 (define (build-input-program reps)
-  (let* ((expr (slurp "../test/sprtn/rsa.sprtn")))
+  (let* ((expr (slurp "test/sprtn/rsa.sprtn")))
     (format "(do 23 ~a)"
             (foldl string-append
                    ""
@@ -35,7 +35,7 @@
  "performance"
  (it "parser"
      (test-perf
-      "../test/compiler/parser.rkt.perf" 2.5
+      "test/compiler/parser.rkt.perf" 2.5
       (let ((inputs (map build-input-program (iota 1 51 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
@@ -54,7 +54,7 @@
 
  (it "compiler"
      (test-perf
-      "../test/compiler/compiler.rkt.perf" 2.5
+      "test/compiler/compiler.rkt.perf" 2.5
       (let ((inputs (map build-input-program (iota 1 21 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
@@ -70,10 +70,10 @@
              inputs))))
 
  (it "fibonacci"
-     (run-perf-test "../test/sprtn/fibonacci.sprtn"))
+     (run-perf-test "test/sprtn/fibonacci.sprtn"))
 
  (it "rsa"
-     (run-perf-test "../test/sprtn/rsa.sprtn"))
+     (run-perf-test "test/sprtn/rsa.sprtn"))
 
  (it "amb"
-     (run-perf-test "../test/sprtn/amb.sprtn")))
+     (run-perf-test "test/sprtn/amb.sprtn")))

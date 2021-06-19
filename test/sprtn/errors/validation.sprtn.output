@@ -1,22 +1,22 @@
-../test/sprtn/errors/validation.sprtn(1,4): Bad `define` syntax, not allowed in this context:
+test/sprtn/errors/validation.sprtn(1,4): Bad `define` syntax, not allowed in this context:
   1 [33m|[39m(if (define (foo x) y)
     [33m|[39m    [31m^^^^^^^^^^^^^^^^^^[39m
   2 [33m|[39m    'yup
   3 [33m|[39m    'nope)
 
-../test/sprtn/errors/validation.sprtn(1,13): Unused variable `foo`, rename to `_` to avoid this error:
+test/sprtn/errors/validation.sprtn(1,13): Unused variable `foo`, rename to `_` to avoid this error:
   1 [33m|[39m(if (define (foo x) y)
     [33m|[39m             [31m^^^[39m
   2 [33m|[39m    'yup
   3 [33m|[39m    'nope)
 
-../test/sprtn/errors/validation.sprtn(1,17): Unused variable `x`, rename to `_` to avoid this error:
+test/sprtn/errors/validation.sprtn(1,17): Unused variable `x`, rename to `_` to avoid this error:
   1 [33m|[39m(if (define (foo x) y)
     [33m|[39m                 [31m^[39m
   2 [33m|[39m    'yup
   3 [33m|[39m    'nope)
 
-../test/sprtn/errors/validation.sprtn(4,5): Bad `module` syntax, not allowed in this context:
+test/sprtn/errors/validation.sprtn(4,5): Bad `module` syntax, not allowed in this context:
   2 [33m|[39m    'yup
   3 [33m|[39m    'nope)
   4 [33m|[39m(car (module (x)
@@ -26,7 +26,7 @@
   6 [33m|[39mbar
   7 [33m|[39m(define (baz bar)
 
-../test/sprtn/errors/validation.sprtn(4,14): Unused variable `x`, rename to `_` to avoid this error:
+test/sprtn/errors/validation.sprtn(4,14): Unused variable `x`, rename to `_` to avoid this error:
   2 [33m|[39m    'yup
   3 [33m|[39m    'nope)
   4 [33m|[39m(car (module (x)
@@ -34,7 +34,7 @@
   5 [33m|[39m       (define (foo x) y)))
   6 [33m|[39mbar
 
-../test/sprtn/errors/validation.sprtn(5,20): Unused variable `x`, rename to `_` to avoid this error:
+test/sprtn/errors/validation.sprtn(5,20): Unused variable `x`, rename to `_` to avoid this error:
   3 [33m|[39m    'nope)
   4 [33m|[39m(car (module (x)
   5 [33m|[39m       (define (foo x) y)))
@@ -42,7 +42,7 @@
   6 [33m|[39mbar
   7 [33m|[39m(define (baz bar)
 
-../test/sprtn/errors/validation.sprtn(6,0): Undefined variable `bar`:
+test/sprtn/errors/validation.sprtn(6,0): Undefined variable `bar`:
   4 [33m|[39m(car (module (x)
   5 [33m|[39m       (define (foo x) y)))
   6 [33m|[39mbar
@@ -50,7 +50,7 @@
   7 [33m|[39m(define (baz bar)
   8 [33m|[39m  (* 2 bar z))
 
-../test/sprtn/errors/validation.sprtn(7,9): Unused variable `baz`, rename to `_` to avoid this error:
+test/sprtn/errors/validation.sprtn(7,9): Unused variable `baz`, rename to `_` to avoid this error:
   5 [33m|[39m       (define (foo x) y)))
   6 [33m|[39mbar
   7 [33m|[39m(define (baz bar)
@@ -58,7 +58,7 @@
   8 [33m|[39m  (* 2 bar z))
   9 [33m|[39m
 
-../test/sprtn/errors/validation.sprtn(8,11): Undefined variable `z`:
+test/sprtn/errors/validation.sprtn(8,11): Undefined variable `z`:
   6 [33m|[39mbar
   7 [33m|[39m(define (baz bar)
   8 [33m|[39m  (* 2 bar z))

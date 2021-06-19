@@ -53,33 +53,33 @@
 (describe
  "Spartan"
  (it "should support basic language features"
-     (test-file "../test/sprtn/math.sprtn")
-     (test-file "../test/sprtn/rsa.sprtn")
-     (test-file "../test/sprtn/hello.sprtn")
-     (test-file "../test/sprtn/fibonacci.sprtn")
-     (test-file "../test/sprtn/logger.sprtn"))
+     (test-file "test/sprtn/math.sprtn")
+     (test-file "test/sprtn/rsa.sprtn")
+     (test-file "test/sprtn/hello.sprtn")
+     (test-file "test/sprtn/fibonacci.sprtn")
+     (test-file "test/sprtn/logger.sprtn"))
 
  (it "should support continuations"
      ;; NOTE Should not be instrumented to maximize the chance of colliding continuations when using a single delimited stack.
-     (test-file "../test/sprtn/continuations.sprtn" sort-lines)
-     (test-file "../test/sprtn/errors.sprtn" id instrument-for-test)
-     (test-file "../test/sprtn/errors3.sprtn" id instrument-for-test)
-     (test-file "../test/sprtn/coroutines.sprtn")
-     (test-file "../test/sprtn/coroutines2.sprtn")
-     (test-file "../test/sprtn/coroutines3.sprtn")
-     (test-file "../test/sprtn/amb.sprtn"))
+     (test-file "test/sprtn/continuations.sprtn" sort-lines)
+     (test-file "test/sprtn/errors.sprtn" id instrument-for-test)
+     (test-file "test/sprtn/errors3.sprtn" id instrument-for-test)
+     (test-file "test/sprtn/coroutines.sprtn")
+     (test-file "test/sprtn/coroutines2.sprtn")
+     (test-file "test/sprtn/coroutines3.sprtn")
+     (test-file "test/sprtn/amb.sprtn"))
 
  (it "should support Actor Model"
-     (test-file "../test/sprtn/uprocs.sprtn" id instrument-for-test)
-     (test-file "../test/sprtn/uprocs2.sprtn" sort-lines instrument-for-test)
-     (test-file "../test/sprtn/msgwait.sprtn")
-     (test-file "../test/sprtn/fibonacci2.sprtn" id instrument-for-test)
-     (test-file "../test/sprtn/errors2.sprtn" id instrument-for-test))
+     (test-file "test/sprtn/uprocs.sprtn" id instrument-for-test)
+     (test-file "test/sprtn/uprocs2.sprtn" sort-lines instrument-for-test)
+     (test-file "test/sprtn/msgwait.sprtn")
+     (test-file "test/sprtn/fibonacci2.sprtn" id instrument-for-test)
+     (test-file "test/sprtn/errors2.sprtn" id instrument-for-test))
 
  (it "should support the RBS"
-     (test-file "../test/sprtn/rbs2.sprtn")
-     (test-file "../test/sprtn/rbs.sprtn" id instrument-for-test)
-     (test-file "../test/sprtn/cep.sprtn" id instrument-for-test))
+     (test-file "test/sprtn/rbs2.sprtn")
+     (test-file "test/sprtn/rbs.sprtn" id instrument-for-test)
+     (test-file "test/sprtn/cep.sprtn" id instrument-for-test))
 
  (ignore "handles reused variables correctly"
          (assert (run '(letrec ((fact (lambda (n)
