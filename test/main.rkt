@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Top level for tests.
 
 (require "testing.rkt")
@@ -48,6 +50,15 @@
 ;; Performance tests:
 (require "performance.rkt")
 
-(require "../src/runtime/rt.rkt")      ;; NOTE This is required for the code fragment evaluation.
-(require "../src/compiler/peggen.rkt") ;; NOTE This one for the parser generator tests.
-(run-all-tests)
+;; Actual test running.
+;; NOTE This is required for the code fragment evaluation.
+(require "../src/runtime/rt.rkt")
+(provide (all-from-out "../src/runtime/rt.rkt"))
+(provide (all-from-out "integration.rkt"))
+
+;; NOTE These ones for the parser generator tests.
+(require "../src/compiler/peggen.rkt")
+(provide (all-from-out "../src/compiler/peggen.rkt"))
+(provide (all-from-out "compiler/peggen.rkt"))
+
+(provide run-all-tests)

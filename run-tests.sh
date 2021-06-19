@@ -23,4 +23,4 @@ racket -t main.rkt
 fi
 
 # Run the test suite.
-racket -f ../test/main.scm
+racket -e '(require "../test/main.rkt")' -e '(run-all-tests)'
