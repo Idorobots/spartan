@@ -1,9 +1,12 @@
+#lang racket
+
 ;; Continuation Passing Style Conversion
 
 (require "../testing.rkt")
-(require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/cpc.rkt")
+(require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 
 (define gen-simple-cpc-node
   (gen-one-of gen-valid-symbol-node gen-const-node))

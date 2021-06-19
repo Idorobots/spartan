@@ -1,7 +1,13 @@
+#lang racket
+
 ;; Binding propagation tests.
 
 (require "../testing.rkt")
+(require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/propagate.rkt")
+(require "../../src/compiler/substitute.rkt")
+(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "reconstruct-letrec-node"

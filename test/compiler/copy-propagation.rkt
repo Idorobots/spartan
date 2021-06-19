@@ -1,8 +1,12 @@
+#lang racket
+
 ;; Copy propagation tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/substitute.rkt")
 (require "../../src/compiler/passes/copy-propagation.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "copy-propagation"

@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Constant annotation tests.
 
 (require "../testing.rkt")

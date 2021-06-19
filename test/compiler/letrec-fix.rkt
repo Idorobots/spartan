@@ -1,8 +1,12 @@
+#lang racket
+
 ;; Assignment conversion tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/propagate.rkt")
 (require "../../src/compiler/passes/letrec-fix.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (define (check-deref arg node result)
   (assert-ast result (primop-app 'deref inserted-node)

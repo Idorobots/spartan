@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Semantic elaboration.
 
 (require "../testing.rkt")

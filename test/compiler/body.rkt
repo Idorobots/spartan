@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Implicit body expansion tests.
 
 (require "../testing.rkt")

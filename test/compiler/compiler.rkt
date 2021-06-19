@@ -1,9 +1,12 @@
+#lang racket
+
 ;; Parse tree validation tests.
 
 (require "../testing.rkt")
-(require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/env.rkt")
 (require "../../src/compiler/compiler.rkt")
+(require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/io.rkt")
 
 (describe
  "compiler"

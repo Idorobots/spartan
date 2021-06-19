@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Constant folding tests.
 
 (require "../testing.rkt")

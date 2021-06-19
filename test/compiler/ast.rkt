@@ -1,7 +1,11 @@
+#lang racket
+
 ;; AST tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "AST node"

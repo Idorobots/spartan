@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Utilities tests.
 
 (require "../testing.rkt")

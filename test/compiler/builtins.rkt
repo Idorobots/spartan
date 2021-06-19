@@ -1,8 +1,11 @@
+#lang racket
+
 ;; Builtin inliner tests
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/builtins.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "builtin inliner"

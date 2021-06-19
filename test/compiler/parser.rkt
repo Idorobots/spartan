@@ -1,11 +1,15 @@
+#lang racket
+
 ;; Parser tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/env.rkt")
+(require "../../src/compiler/pass.rkt")
 (require "../../src/compiler/errors.rkt")
 (require "../../src/compiler/modules.rkt")
 (require "../../src/compiler/passes/parser.rkt")
+(require "../../src/compiler/utils/io.rkt")
 
 (define (p string)
   (env-get ((pass-transform parse)

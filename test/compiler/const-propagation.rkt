@@ -1,8 +1,12 @@
+#lang racket
+
 ;; Constant propagation tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/substitute.rkt")
 (require "../../src/compiler/passes/const-propagation.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "constant-propagation"

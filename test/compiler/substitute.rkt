@@ -1,8 +1,11 @@
+#lang racket
+
 ;; Substitution works.
 
 (require "../testing.rkt")
-(require "../../src/compiler/utils/set.rkt")
 (require "../../src/compiler/substitute.rkt")
+(require "../../src/compiler/utils/set.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 
 (describe
  "substitute"

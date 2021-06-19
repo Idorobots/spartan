@@ -1,8 +1,11 @@
+#lang racket
+
 ;; Common subexpression elimination tests.
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/cse.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "common-subexpression-elimination"

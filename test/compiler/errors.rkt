@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Error handling tests
 
 (require "../testing.rkt")

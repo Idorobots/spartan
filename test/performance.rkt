@@ -35,7 +35,7 @@
  "performance"
  (it "parser"
      (test-perf
-      "../test/compiler/parser.scm.perf" 2.5
+      "../test/compiler/parser.rkt.perf" 2.5
       (let ((inputs (map build-input-program (iota 1 51 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)
@@ -54,7 +54,7 @@
 
  (it "compiler"
      (test-perf
-      "../test/compiler/compiler.scm.perf" 2.5
+      "../test/compiler/compiler.rkt.perf" 2.5
       (let ((inputs (map build-input-program (iota 1 21 5))))
         (printf "~a, ~a, ~a, ~a~n" 'file-size 'cpu 'real 'gc)
         (map (lambda (input)

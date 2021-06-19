@@ -23,3 +23,10 @@
 (provide (all-from-out "exceptions.rkt"))
 (provide (all-from-out "modules.rkt"))
 (provide (all-from-out "bootstrap.rkt"))
+
+;; Also part of the runtime primops:
+(require "../rete/rete.rkt")
+(provide (all-from-out "../rete/rete.rkt"))
+
+(require "../compiler/utils/refs.rkt")
+(provide ref deref assign!)

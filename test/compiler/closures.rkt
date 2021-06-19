@@ -1,7 +1,13 @@
+#lang racket
+
 ;; Closure conversion
 
 (require "../testing.rkt")
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/substitute.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/compiler/utils/set.rkt")
 (require "../../src/compiler/passes/closures.rkt")
 
 (describe

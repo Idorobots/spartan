@@ -1,8 +1,11 @@
+#lang racket
+
 ;; Binding annotation tests
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/bindings.rkt")
+(require "../../src/compiler/utils/set.rkt")
 
 (describe
  "compute-complexity"

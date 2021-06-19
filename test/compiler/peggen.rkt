@@ -1,8 +1,15 @@
+#lang racket
+
 ;; PEG parser source generator tests
 
 (require "../testing.rkt")
 (require "../../src/compiler/peggen.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/compiler/utils/io.rkt")
+
+;; NOTE These are needed for parser generator tests.
+(provide map-match ast)
 
 (define stripper
   (lambda (r)
@@ -258,155 +265,160 @@
          (match-end m))
       m))
 
-(define simple-lisp-file (tmp-file))
+(define (gen-parser . rules)
+  (let ((file (tmp-file)))
+    (apply generate-scm-parser
+           file
+           rules)
+    (let* ((contents (slurp file))
+           (wrapped (format "(begin ~a ~a)" contents (caar rules)))
+           (code (with-input-from-string wrapped
+                   read))
+           (evaled #f))
+      (lambda (input)
+        ((or evaled
+            (let ((result (eval code)))
+              (set! evaled result)
+              result))
+         input)))))
 
-(generate-scm-parser
- simple-lisp-file
- '(SimpleLisp
-   (/ List Atom String Quote))
- '(Quote
-   (Spacing (: "'") SimpleLisp)
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (let ((start (car matching)))
-                    (matches (ast ':type 'quote
-                                  ':value (caddr matching)
+(define SimpleLisp
+  (gen-parser
+   '(SimpleLisp
+     (/ List Atom String Quote))
+   '(Quote
+     (Spacing (: "'") SimpleLisp)
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (let ((start (car matching)))
+                      (matches (ast ':type 'quote
+                                    ':value (caddr matching)
+                                    ':start start
+                                    ':end end)
+                               start
+                               end)))
+                  result)))
+   '(String
+     (/ UnterminatedString ProperString))
+   '(UnterminatedString
+     (Spacing (: "\"") "[^\"]*" ())
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (raise (format "Unterminated string at location: ~a" (car matching))))
+                  result)))
+   '(ProperString
+     (Spacing (: "\"") "[^\"]*" (: "\""))
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (let ((start (car matching)))
+                      (matches (ast ':type 'string
+                                    ':value (caddr matching)
+                                    ':original (substring input start end)
+                                    ':start start
+                                    ':end end)
+                               start
+                               end)))
+                  result)))
+   '(List
+     (Spacing (: "\\(") (* SimpleLisp) Spacing (: "\\)"))
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (let ((start (car matching)))
+                      (matches (ast ':type 'list
+                                    ':value (caddr matching)
+                                    ':start start
+                                    ':end end)
+                               start
+                               end)))
+                  result)))
+   '(Atom
+     (/ Symbol Number))
+   '(Number
+     (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (let ((start (car matching)))
+                      (matches (ast ':type 'number
+                                    ':value (string->number (cadr matching))
+                                    ':original (substring input start end)
+                                    ':start start
+                                    ':end end)
+                               start
+                               end)))
+                  result)))
+   '(Symbol
+     (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
+     (lambda (input result)
+       (map-match (lambda (matching spacing-start end)
+                    (let ((start (car matching)))
+                      (matches (ast ':type 'symbol
+                                    ':value (string->symbol (caddr matching))
+                                    ':original (substring input start end)
+                                    ':start start
+                                    ':end end)
+                               start
+                               end)))
+                  result)))
+   '(Spacing
+     (: (* (/ "[ \t\v\r\n]+" Comment)))
+     (lambda (input result)
+       (map-match (lambda (matching start end)
+                    ;; NOTE So that we can skip the spacing later.
+                    (matches end start end))
+                  result)))
+   '(Comment
+     (: ";[^\n]*\n"))))
+
+(define Weird
+  (gen-parser
+   '(Weird
+     (/ List Foo))
+   '(Foo
+     (Spacing "foo")
+     (lambda (input result)
+       (map-match (lambda (matching start end)
+                    (matches (ast ':type 'symbol
+                                  ':value (cadr matching)
                                   ':start start
                                   ':end end)
                              start
-                             end)))
-                result)))
- '(String
-   (/ UnterminatedString ProperString))
- '(UnterminatedString
-   (Spacing (: "\"") "[^\"]*" ())
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (raise (format "Unterminated string at location: ~a" (car matching))))
-                result)))
- '(ProperString
-   (Spacing (: "\"") "[^\"]*" (: "\""))
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (let ((start (car matching)))
-                    (matches (ast ':type 'string
-                                  ':value (caddr matching)
-                                  ':original (substring input start end)
-                                  ':start start
-                                  ':end end)
-                             start
-                             end)))
-                result)))
- '(List
-   (Spacing (: "\\(") (* SimpleLisp) Spacing (: "\\)"))
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (let ((start (car matching)))
+                             end))
+                  result)))
+   '(List
+     (/ ProperList UnterminatedList))
+   '(ProperList
+     (Spacing "(" ListContents Spacing ")")
+     (lambda (input result)
+       (map-match (lambda (matching start end)
                     (matches (ast ':type 'list
                                   ':value (caddr matching)
                                   ':start start
                                   ':end end)
                              start
-                             end)))
-                result)))
- '(Atom
-   (/ Symbol Number))
- '(Number
-   (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (let ((start (car matching)))
-                    (matches (ast ':type 'number
-                                  ':value (string->number (cadr matching))
-                                  ':original (substring input start end)
+                             end))
+                  result)))
+   '(UnterminatedList
+     (Spacing "(" ListContents Spacing EOF)
+     (lambda (input result)
+       (map-match (lambda (matching start end)
+                    (matches (ast ':type 'invalid-list
+                                  ':value (caddr matching)
                                   ':start start
                                   ':end end)
                              start
-                             end)))
-                result)))
- '(Symbol
-   (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
-   (lambda (input result)
-     (map-match (lambda (matching spacing-start end)
-                  (let ((start (car matching)))
-                    (matches (ast ':type 'symbol
-                                  ':value (string->symbol (caddr matching))
-                                  ':original (substring input start end)
-                                  ':start start
-                                  ':end end)
-                             start
-                             end)))
-                result)))
- '(Spacing
-   (: (* (/ "[ \t\v\r\n]+" Comment)))
-   (lambda (input result)
-     (map-match (lambda (matching start end)
-                  ;; NOTE So that we can skip the spacing later.
-                  (matches end start end))
-                result)))
- '(Comment
-   (: ";[^\n]*\n")))
+                             end))
+                  result)))
+   '(ListContents
+     (* Weird))
+   '(Spacing
+     (* " "))
+   '(EOF
+     ())))
 
-(load simple-lisp-file)
-
-(define weird-file (tmp-file))
-
-(generate-scm-parser
- weird-file
- '(Weird
-   (/ List Foo))
- '(Foo
-   (Spacing "foo")
-   (lambda (input result)
-     (map-match (lambda (matching start end)
-                  (matches (ast ':type 'symbol
-                                ':value (cadr matching)
-                                ':start start
-                                ':end end)
-                           start
-                           end))
-                result)))
- '(List
-   (/ ProperList UnterminatedList))
- '(ProperList
-   (Spacing "(" ListContents Spacing ")")
-   (lambda (input result)
-     (map-match (lambda (matching start end)
-                  (matches (ast ':type 'list
-                                ':value (caddr matching)
-                                ':start start
-                                ':end end)
-                           start
-                           end))
-                result)))
- '(UnterminatedList
-   (Spacing "(" ListContents Spacing EOF)
-   (lambda (input result)
-     (map-match (lambda (matching start end)
-                  (matches (ast ':type 'invalid-list
-                                ':value (caddr matching)
-                                ':start start
-                                ':end end)
-                           start
-                           end))
-                result)))
- '(ListContents
-   (* Weird))
- '(Spacing
-   (* " "))
- '(EOF
-   ()))
-
-(load weird-file)
-
-(define concat-file (tmp-file))
-
-(generate-scm-parser
- concat-file
- `(Concat
-   (~ "foo" "bar" "baz")))
-
-(load concat-file)
+(define Concat
+  (gen-parser
+   `(Concat
+     (~ "foo" "bar" "baz"))))
 
 (describe
  "Generated grammar"

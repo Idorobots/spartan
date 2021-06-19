@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Quasiquote expander tests.
 
 (require "../testing.rkt")
