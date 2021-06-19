@@ -1,7 +1,15 @@
 ;; Top level for tests.
 
-(load-once "../test/testing.scm")
-(load-once "../test/gen.scm")
+(require "testing.rkt")
+
+(define *imported-modules* '())
+
+(define-syntax load-once
+  (syntax-rules (*imported-modules*)
+    ((load-once file)
+     (unless (member file *imported-modules*)
+       (set! *imported-modules* (cons file *imported-modules*))
+       (load file)))))
 
 ;; Compiler unit tests:
 (load-once "../test/compiler/utils.scm")

@@ -1,6 +1,8 @@
 ;; Pass definition & schema tests
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/env.rkt")
 (require "../../src/compiler/pass.rkt")
 
 (describe

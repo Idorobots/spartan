@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Generators
 
 (require "../src/compiler/utils/utils.rkt")
@@ -5,6 +7,8 @@
 (require "../src/compiler/ast.rkt")
 (require (only-in "../src/compiler/passes/bindings.rkt"
                   compute-complexity))
+
+(provide (all-defined-out))
 
 (define (sample gen rand)
   (if (procedure? gen)

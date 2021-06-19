@@ -1,10 +1,18 @@
+#lang racket
+
 ;; Testing shenanigans.
 
+(require "gen.rkt")
+
+(require "../src/main.rkt")
 (require "../src/compiler/utils/utils.rkt")
 (require "../src/compiler/utils/io.rkt")
 (require "../src/compiler/utils/refs.rkt")
 (require "../src/compiler/errors.rkt")
 (require "../src/compiler/ast/match.rkt")
+
+(provide (all-defined-out))
+(provide (all-from-out "gen.rkt"))
 
 (define-struct assert-exception (predicate expression value expected))
 

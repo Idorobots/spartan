@@ -1,5 +1,6 @@
 ;; Binding propagation tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/propagate.rkt")
 
 (describe

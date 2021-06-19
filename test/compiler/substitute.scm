@@ -1,5 +1,6 @@
 ;; Substitution works.
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/set.rkt")
 (require "../../src/compiler/substitute.rkt")
 

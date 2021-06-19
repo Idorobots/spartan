@@ -1,5 +1,6 @@
 ;; Assignment conversion tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/letrec-fix.rkt")
 

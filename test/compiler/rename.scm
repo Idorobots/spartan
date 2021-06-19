@@ -1,5 +1,6 @@
 ;; Renaming things for safety.
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/rename.rkt")

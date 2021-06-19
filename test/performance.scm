@@ -1,6 +1,7 @@
 ;; Perf tests
 
-(require "../src/runtime/rt.rkt")
+(require "testing.rkt")
+(require "../src/main.rkt")
 (require "../src/compiler/compiler.rkt")
 (require "../src/compiler/passes/parser.rkt")
 

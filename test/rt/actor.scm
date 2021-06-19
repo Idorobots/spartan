@@ -1,5 +1,6 @@
 ;; Actor model tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/runtime/rt.rkt")
 

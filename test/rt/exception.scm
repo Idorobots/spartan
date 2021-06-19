@@ -1,6 +1,8 @@
 ;; Exception handler tests:
 
+(require "../testing.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/main.rkt")
 
 (describe
  "exceptions"

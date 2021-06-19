@@ -1,5 +1,6 @@
 ;; Free vars computation.
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/freevars.rkt")
 

@@ -1,5 +1,6 @@
 ;; Utilities tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 (require "../../src/compiler/utils/io.rkt")
 (require "../../src/compiler/utils/refs.rkt")

@@ -1,5 +1,6 @@
 ;; Closure conversion
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/passes/closures.rkt")
 

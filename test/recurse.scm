@@ -1,6 +1,7 @@
 ;; Recursion tests
 
-(require "../src/runtime/rt.rkt")
+(require "testing.rkt")
+(require "../src/main.rkt")
 
 (describe
  "Recursion"

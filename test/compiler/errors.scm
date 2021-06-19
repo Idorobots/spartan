@@ -1,5 +1,6 @@
 ;; Error handling tests
 
+(require "../testing.rkt")
 (require "../../src/compiler/passes/errors.rkt")
 
 (describe

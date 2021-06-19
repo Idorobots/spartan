@@ -1,5 +1,6 @@
 ;; Continuation Passing Style Conversion
 
+(require "../testing.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/cpc.rkt")

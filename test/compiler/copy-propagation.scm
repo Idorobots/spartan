@@ -1,5 +1,6 @@
 ;; Copy propagation tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/copy-propagation.rkt")
 

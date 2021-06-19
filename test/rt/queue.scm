@@ -1,5 +1,6 @@
 ;; Priority queue implementation.
 
+(require "../testing.rkt")
 (require "../../src/runtime/priority-queue.rkt")
 
 (describe

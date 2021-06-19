@@ -1,5 +1,6 @@
 ;; Macro-expander tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/macro-expander.rkt")
 

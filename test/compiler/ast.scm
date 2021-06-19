@@ -1,5 +1,6 @@
 ;; AST tests.
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 
 (describe

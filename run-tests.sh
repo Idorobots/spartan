@@ -18,9 +18,9 @@ cat <<EOF > $parser
 EOF
 
 # Ensure to generate actual parser.
-racket -f main.scm
+racket -t main.rkt
 
 fi
 
 # Run the test suite.
-racket -f main.scm -f ../test/main.scm
+racket -f ../test/main.scm

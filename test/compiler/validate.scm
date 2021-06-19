@@ -1,6 +1,8 @@
 ;; Validation tests
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/errors.rkt")
 (require "../../src/compiler/passes/validate.rkt")
 
 (describe

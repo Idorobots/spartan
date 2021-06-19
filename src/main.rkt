@@ -1,13 +1,6 @@
+#lang racket
+
 ;; The main entry point.
-
-(define *imported-modules* '())
-
-(define-syntax load-once
-  (syntax-rules (*imported-modules*)
-    ((load-once file)
-     (unless (member file *imported-modules*)
-       (set! *imported-modules* (cons file *imported-modules*))
-       (load file)))))
 
 (require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
@@ -15,6 +8,14 @@
 (require "compiler/compiler.rkt")
 (require "runtime/rt.rkt")
 (require "rete/rete.rkt")
+
+(provide run-code
+         run
+         run-instrumented
+         run-string
+         run-instrumented-string
+         run-file
+         run-instrumented-file)
 
 (define (run-code expr)
   (reset-rete!)

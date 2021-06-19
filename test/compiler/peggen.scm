@@ -1,5 +1,6 @@
 ;; PEG parser source generator tests
 
+(require "../testing.rkt")
 (require "../../src/compiler/peggen.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 

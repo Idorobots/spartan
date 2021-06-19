@@ -1,5 +1,6 @@
 ;; Binding annotation tests
 
+(require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/passes/bindings.rkt")
 
