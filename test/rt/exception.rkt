@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Exception handler tests:
 
 (require "../testing.rkt")

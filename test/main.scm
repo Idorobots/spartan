@@ -43,11 +43,11 @@
 (load-once "../test/compiler/compiler.scm")
 
 ;; Runtime unit tests:
-(load-once "../test/rt/queue.scm")
-(load-once "../test/rt/scheduler.scm")
-(load-once "../test/rt/continuations.scm")
-(load-once "../test/rt/exception.scm")
-(load-once "../test/rt/actor.scm")
+(require "rt/queue.rkt")
+(require "rt/scheduler.rkt")
+(require "rt/continuations.rkt")
+(require "rt/exception.rkt")
+(require "rt/actor.rkt")
 
 ;; Some integration tests:
 (load-once "../test/recurse.scm")

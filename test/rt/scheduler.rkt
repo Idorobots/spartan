@@ -1,8 +1,11 @@
+#lang racket
+
 ;; Process scheduling tests.
 
 (require "../testing.rkt")
-(require "../../src/runtime/rt.rkt")
 (require "../../src/main.rkt")
+(require "../../src/runtime/rt.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 
 (describe
  "scheduler"

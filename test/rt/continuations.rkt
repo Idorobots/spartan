@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Delimited continuation tests...
 
 (require "../testing.rkt")

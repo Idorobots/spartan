@@ -1,8 +1,12 @@
+#lang racket
+
 ;; Actor model tests.
 
 (require "../testing.rkt")
-(require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/compiler/utils/gensym.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 
 (define (near-enough? value expected delta)
   (and (>= value (- expected delta))

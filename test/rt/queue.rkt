@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Priority queue implementation.
 
 (require "../testing.rkt")
