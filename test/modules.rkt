@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Module system tests.
 
 (require "testing.rkt")

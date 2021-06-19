@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Actual code exmaples
 
 (require "testing.rkt")
@@ -5,6 +7,10 @@
 (require "../src/runtime/rt.rkt")
 (require "../src/rete/rete.rkt")
 (require "../src/compiler/ast.rkt")
+(require "../src/compiler/utils/utils.rkt")
+
+;; NOTE The test framework evaluates these code fragments in an environment that needs to have access to these values.
+(provide __test_task_info __test_monitor test-sleep test-random)
 
 ;; Silence task info logs since these might vary in the specific timings.
 (define __test_task_info (bootstrap (lambda () '())))

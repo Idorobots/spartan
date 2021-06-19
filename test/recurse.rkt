@@ -1,3 +1,5 @@
+#lang racket
+
 ;; Recursion tests
 
 (require "testing.rkt")

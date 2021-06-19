@@ -50,11 +50,14 @@
 (require "rt/actor.rkt")
 
 ;; Some integration tests:
-(load-once "../test/recurse.scm")
-(load-once "../test/modules.scm")
-(load-once "../test/integration.scm")
+(require "recurse.rkt")
+(require "modules.rkt")
+(require "integration.rkt")
 
 ;; Performance tests:
-(load-once "../test/performance.scm")
+(require "performance.rkt")
 
+;; NOTE This is required for the code fragment evaluation.
+(require "../src/runtime/rt.rkt")
+(require "../src/rete/rete.rkt")
 (run-all-tests)

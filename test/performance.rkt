@@ -1,9 +1,15 @@
+#lang racket
+
 ;; Perf tests
 
 (require "testing.rkt")
 (require "../src/main.rkt")
 (require "../src/compiler/compiler.rkt")
+(require "../src/compiler/env.rkt")
+(require "../src/compiler/pass.rkt")
 (require "../src/compiler/passes/parser.rkt")
+(require "../src/compiler/utils/io.rkt")
+(require "../src/compiler/utils/utils.rkt")
 
 (define (build-input-program reps)
   (let* ((expr (slurp "../test/sprtn/rsa.sprtn")))
