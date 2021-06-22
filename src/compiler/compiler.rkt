@@ -57,9 +57,8 @@
                validate
                report-errors
                (optimize
-                (list annotate-free-vars
-                      inline-lambdas
-                      annotate-free-vars
+                annotate-free-vars
+                (list inline-lambdas
                       inline-builtins
                       propagate-constants
                       fold-constants
@@ -72,9 +71,8 @@
                fix-letrec
                continuation-passing-convert
                (optimize
-                (list annotate-free-vars
-                      inline-lambdas
-                      annotate-free-vars
+                annotate-free-vars
+                (list inline-lambdas
                       propagate-constants
                       fold-constants
                       eliminate-common-subexpressions
