@@ -57,29 +57,33 @@
                validate
                report-errors
                (optimize
-                annotate-free-vars
-                (list inline-lambdas
+                (list (sequence annotate-free-vars
+                               inline-lambdas)
                       inline-builtins
                       propagate-constants
                       fold-constants
-                      eliminate-common-subexpressions
+                      (sequence annotate-free-vars
+                                eliminate-common-subexpressions)
                       propagate-copies
-                      eliminate-dead-code))
+                      (sequence annotate-free-vars
+                                eliminate-dead-code)))
                annotate-free-vars
                annotate-bindings
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
                (optimize
-                annotate-free-vars
-                (list inline-lambdas
+                (list (sequence annotate-free-vars
+                               inline-lambdas)
                       propagate-constants
                       fold-constants
-                      eliminate-common-subexpressions
+                      (sequence annotate-free-vars
+                                eliminate-common-subexpressions)
                       propagate-copies
-                      eliminate-dead-code))
-               annotate-free-vars
+                      (sequence annotate-free-vars
+                                eliminate-dead-code)))
                instrument
+               annotate-free-vars
                closure-convert
                symbol-rename
                generate-target-code)))

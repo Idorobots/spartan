@@ -9,7 +9,7 @@
 (require "errors.rkt")
 (require "ast.rkt")
 
-(provide (struct-out pass) run-pass
+(provide (struct-out pass) run-pass sequence
          schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? a-function? ast-subset?
          schema-validation-error?)
 
@@ -19,6 +19,13 @@
   (unless (env-contains? env 'no-validation)
     ((pass-schema pass) env))
   ((pass-transform pass) env))
+
+(define (sequence . passes)
+  (pass (schema "sequence")
+        (lambda (env)
+          (foldl run-pass
+                 env
+                 passes))))
 
 (define (schema hint . properties)
   (lambda (env)

@@ -27,10 +27,10 @@
 
 (struct scored (score env))
 
-(define (optimize pre passes)
+(define (optimize passes)
   (pass (schema "optimize") ;; NOTE Schema depends on the passes.
         (lambda (env)
-          (let ((initial (score (run-pass pre env))))
+          (let ((initial (score env)))
             (let loop ((i +optimization-loops+)
                        (runs (list initial))
                        (prev (scored +inf.0 '())))
@@ -38,10 +38,9 @@
                 (if (or (= i 0)
                         (not (score-better? best-run prev)))
                     (scored-env best-run)
-                    (let* ((pred (run-pass pre (scored-env best-run)))
-                           (results (map (lambda (pass)
+                    (let* ((results (map (lambda (pass)
                                            (score
-                                            (run-pass pass pred)))
+                                            (run-pass pass (scored-env best-run))))
                                          passes))
                            (sorted (sort (append results
                                                  runs)
