@@ -9,7 +9,7 @@
 (require "errors.rkt")
 (require "ast.rkt")
 
-(provide (struct-out pass) run-pass sequence
+(provide (struct-out pass) run-pass sequence debug
          schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? a-function? ast-subset?
          schema-validation-error?)
 
@@ -43,6 +43,12 @@
       (unless (empty? (deref errors))
         (compiler-bug (format "Schema `~a` validation failed" hint)
                       (deref errors))))))
+
+(define debug
+  (pass (schema "debug")
+        (lambda (env)
+          (pretty-print (ast->plain (env-get env 'ast)))
+          env)))
 
 (define (non-empty-string? val)
   (unless (and (string? val)
