@@ -8,7 +8,7 @@
 
 (provide optimize optimize-plain
          ;; FIXME For test access.
-         estimate-perf)
+         estimate-performance)
 
 (define (optimize-plain passes)
   (pass (schema "optimize") ;; NOTE Schema depends on the passes.
@@ -50,28 +50,30 @@
                             best-run)))))))))
 
 (define (score env)
-  (scored (+ (* +score-size+ (ast-size (env-get env 'ast)))
-             (* +score-perf+ (estimate-perf (env-get env 'ast))))
+  (scored (/ (+ (* +score-perf+ (estimate-performance (env-get env 'ast)))
+                (* +score-size+ (ast-size (env-get env 'ast))))
+             (+ +score-perf+ +score-size+))
           env))
 
 (define (score-better? a b)
   (< (scored-score a)
      (scored-score b)))
 
-(define +score-size+ 20.0)
+(define +score-size+ 10.0)
 (define +score-perf+ (- 100.0 +score-size+))
 (define +optimization-loops+ 23)
 
-(define (estimate-perf ast)
+(define (estimate-performance ast)
   (define cost-table
-    (hasheq 'allocating-closure 10 ;; Allocating an env & closure, but not copying all the values there.
-            'call 20               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
-            'unknown-fun 100       ;; Probably on the low side for recursive functions...
-            'primop-call 5         ;; Seems like a fair value...
-            'unknown-primop 10     ;; Again, probably on the low side...
-            'memory-ref 1          ;; Should be pretty fast.
-            'memory-set 2          ;; Probably a tad slower than a plain mem ref.
-            'branch 1              ;; Should be fairly quick.
+    (hasheq 'allocating-closure 100 ;; Allocating an env & closure, but not copying all the values there.
+            'call 200               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
+            'unknown-fun 1000       ;; Probably on the low side for recursive functions...
+            'primop-call 50         ;; Seems like a fair value...
+            'unknown-primop 100     ;; Again, probably on the low side...
+            'memory-ref 10          ;; Should be pretty fast.
+            'memory-set 20          ;; Probably a tad slower than a plain mem ref.
+            'branch 10              ;; Should be fairly quick.
+            'const-ref 1
             'noop 0))
 
   (define (cost-of* table key default-key)
@@ -132,7 +134,7 @@
   (define (loop cost expr)
     (case (ast-node-type expr)
       ((const symbol)
-       (cost-of cost 'memory-ref))
+       (cost-of cost 'const-ref))
       ((if)
        (+ (cost-of cost 'branch)
           (loop cost (ast-if-condition expr))
