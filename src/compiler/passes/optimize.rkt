@@ -50,7 +50,7 @@
                             best-run)))))))))
 
 (define (score env)
-  (scored (/ (+ (* +score-perf+ (estimate-performance (env-get env 'ast)))
+  (scored (/ (+ (* +score-perf+ (estimate-performance (env-get env 'ast) +perf-cost+))
                 (* +score-size+ (ast-size (env-get env 'ast))))
              (+ +score-perf+ +score-size+))
           env))
@@ -63,27 +63,33 @@
 (define +score-perf+ (- 100.0 +score-size+))
 (define +optimization-loops+ 23)
 
-(define (estimate-performance ast)
-  (define cost-table
-    (hasheq 'allocating-closure 100 ;; Allocating an env & closure, but not copying all the values there.
-            'call 200               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
-            'unknown-fun 1000       ;; Probably on the low side for recursive functions...
-            'primop-call 50         ;; Seems like a fair value...
-            'unknown-primop 100     ;; Again, probably on the low side...
-            'memory-ref 10          ;; Should be pretty fast.
-            'memory-set 20          ;; Probably a tad slower than a plain mem ref.
-            'branch 10              ;; Should be fairly quick.
-            'const-ref 1
-            'noop 0))
+(define (score-table . args)
+  (apply hasheq args))
 
-  (define (cost-of* table key default-key)
-    (if (hash-has-key? table key)
-        (hash-ref table key)
-        (hash-ref table default-key)))
+(define (score-of* table key default-key)
+  (if (hash-has-key? table key)
+      (hash-ref table key)
+      (hash-ref table default-key)))
 
-  (define (cost-of table key)
-    (cost-of* table key 'noop))
+(define (score-of table key)
+  (score-of* table key 'noop))
 
+(define (set-score table key value)
+  (hash-set table key value))
+
+(define +perf-cost+
+  (score-table 'allocating-closure 100 ;; Allocating an env & closure, but not copying all the values there.
+               'call 200               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
+               'unknown-fun 1000       ;; Probably on the low side for recursive functions...
+               'primop-call 50         ;; Seems like a fair value...
+               'unknown-primop 100     ;; Again, probably on the low side...
+               'memory-ref 10          ;; Should be pretty fast.
+               'memory-set 20          ;; Probably a tad slower than a plain mem ref.
+               'branch 10              ;; Should be fairly quick.
+               'const-ref 1
+               'noop 0))
+
+(define (estimate-performance ast cost-table)
   (define (loop-let cost bindings body)
     (let* ((call-costs (map (lambda (binding)
                               (cons (ast-symbol-value (ast-binding-var binding))
@@ -92,9 +98,9 @@
                                       (ast-lambda? (ast-binding-val b)))
                                     bindings)))
            (updated-cost (foldl (lambda (b acc)
-                                  (hash-set acc
-                                            (car b)
-                                            (cdr b)))
+                                  (set-score acc
+                                             (car b)
+                                             (cdr b)))
                                 cost
                                 call-costs)))
       (apply +
@@ -103,19 +109,19 @@
                     (loop cost binding))
                   bindings))))
 
-  (define (loop-letrec cost bindings body)
+  (define (loop-rec cost bindings body)
     (let* ((funs (filter (lambda (b)
                            (ast-lambda? (ast-binding-val b)))
                          bindings))
            (updated-cost (foldl (lambda (b acc)
                                   (let ((var (ast-symbol-value (ast-binding-var b))))
-                                    (hash-set acc
-                                              var
-                                              (loop (hash-set acc
-                                                              var
-                                                              ;; NOTE This is a lie, that produces better code.
-                                                              (cost-of acc 'noop))
-                                                    (ast-lambda-body (ast-binding-val b))))))
+                                    (set-score acc
+                                               var
+                                               (loop (set-score acc
+                                                                var
+                                                                ;; NOTE This is a lie, that produces better code.
+                                                                (score-of acc 'noop))
+                                                     (ast-lambda-body (ast-binding-val b))))))
                                 cost
                                 funs)))
       (apply +
@@ -124,19 +130,12 @@
                     (loop cost binding))
                   bindings))))
 
-  (define (loop-fun cost fun)
-    (cost-of* cost
-              (if (ast-symbol? fun)
-                  (ast-symbol-value fun)
-                  'unknown-fun)
-              'unknown-fun))
-
   (define (loop cost expr)
     (case (ast-node-type expr)
       ((const symbol)
-       (cost-of cost 'const-ref))
+       (score-of cost 'const-ref))
       ((if)
-       (+ (cost-of cost 'branch)
+       (+ (score-of cost 'branch)
           (loop cost (ast-if-condition expr))
           ;; NOTE Assumes worst case scenario.
           (max (loop cost (ast-if-then expr))
@@ -148,42 +147,47 @@
                    (ast-do-exprs expr))))
       ((lambda)
        ;; NOTE This is just the closure creation. The body complexity is taken into account when processing binders.
-       (+ (cost-of cost 'allocating-closure)
+       (+ (score-of cost 'allocating-closure)
           (* (length (ast-node-free-vars expr))
-             (+ (cost-of cost 'memory-ref)
-                (cost-of cost 'memory-set)))))
+             (+ (score-of cost 'memory-ref)
+                (score-of cost 'memory-set)))))
       ((binding)
-       (+ (cost-of cost 'memory-set)
+       (+ (score-of cost 'memory-set)
           (loop cost (ast-binding-val expr))))
       ((let)
        (loop-let cost
                  (ast-let-bindings expr)
                  (ast-let-body expr)))
       ((letrec)
-       (loop-letrec cost
-                    (ast-letrec-bindings expr)
-                    (ast-letrec-body expr)))
+       (loop-rec cost
+                 (ast-letrec-bindings expr)
+                 (ast-letrec-body expr)))
       ((fix)
-       (loop-letrec cost
-                    (ast-fix-bindings expr)
-                    (ast-fix-body expr)))
+       (loop-rec cost
+                 (ast-fix-bindings expr)
+                 (ast-fix-body expr)))
       ((app)
-       (apply +
-              (cost-of cost 'call)
-              (loop-fun cost (ast-app-op expr))
-              (loop cost (ast-app-op expr))
-              (map (lambda (expr)
-                     (loop cost expr))
-                   (ast-app-args expr))))
+       (let ((op (ast-app-op expr)))
+         (apply +
+                (score-of cost 'call)
+                (score-of* cost
+                           (if (ast-symbol? op)
+                               (ast-symbol-value op)
+                               'unknown-fun)
+                           'unknown-fun)
+                (loop cost op)
+                (map (lambda (expr)
+                       (loop cost expr))
+                     (ast-app-args expr)))))
       ((primop-app)
        (apply +
-              (cost-of cost 'primop-call)
-              (cost-of* cost (ast-primop-app-op expr) 'unknown-primop)
+              (score-of cost 'primop-call)
+              (score-of* cost (ast-primop-app-op expr) 'unknown-primop)
               (map (lambda (expr)
                      (loop cost expr))
                    (ast-primop-app-args expr))))
       ;; The rest are compiled away, so they are essentially zero cost abstractions.
       (else
-       (cost-of cost 'noop))))
+       (score-of cost 'noop))))
 
   (loop cost-table ast))
