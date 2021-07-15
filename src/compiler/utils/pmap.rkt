@@ -7,7 +7,7 @@
          thread-pool-map
          spawn-thread-pool)
 
-(define +parallelism+ 8)
+(define +parallelism+ 0)
 
 (define *thread-pool* #f)
 
@@ -32,6 +32,7 @@
                  (fun pass))))
             lst)))
 
+;; FIXME This is actually greenthreading... *facepalm*
 (define (thread-pool-map thread-pool fun lst)
   ;; NOTE Assigns work in round-robin fashion.
   (let loop ((values lst)
