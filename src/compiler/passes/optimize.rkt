@@ -3,8 +3,7 @@
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
-
-(require racket/future)
+(require "../utils/pmap.rkt")
 
 (provide optimize optimize-plain
          ;; FIXME For test access.
@@ -25,7 +24,7 @@
                              passes)
                       acc))))))
 
-(struct scored (score env))
+(define +optimization-loops+ 23)
 
 (define (optimize passes)
   (pass (schema "optimize") ;; NOTE Schema depends on the passes.
@@ -38,7 +37,7 @@
                 (if (or (= i 0)
                         (not (score-better? best-run prev)))
                     (scored-env best-run)
-                    (let* ((results (map (lambda (pass)
+                    (let* ((results (pmap (lambda (pass)
                                            (score
                                             (run-pass pass (scored-env best-run))))
                                          passes))
@@ -48,6 +47,26 @@
                       (loop (- i 1)
                             sorted
                             best-run)))))))))
+
+(define +score-size+ 10.0)
+(define +score-perf+ (- 100.0 +score-size+))
+
+(define (score-table . args)
+  (apply hasheq args))
+
+(define +perf-cost+
+  (score-table 'allocating-closure 500 ;; Allocating an env & closure, but not copying all the values there.
+               'call 500               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
+               'unknown-fun 5000       ;; Probably on the low side for recursive functions...
+               'primop-call 100        ;; Seems like a fair value...
+               'unknown-primop 500     ;; Again, probably on the low side...
+               'memory-ref 10          ;; Should be pretty fast.
+               'memory-set 20          ;; Probably a tad slower than a plain mem ref.
+               'branch 10              ;; Should be fairly quick.
+               'const-ref 1
+               'noop 0))
+
+(struct scored (score env))
 
 (define (score env)
   (scored (/ (+ (* +score-perf+ (estimate-performance (env-get env 'ast) +perf-cost+))
@@ -59,13 +78,6 @@
   (< (scored-score a)
      (scored-score b)))
 
-(define +score-size+ 10.0)
-(define +score-perf+ (- 100.0 +score-size+))
-(define +optimization-loops+ 23)
-
-(define (score-table . args)
-  (apply hasheq args))
-
 (define (score-of* table key default-key)
   (if (hash-has-key? table key)
       (hash-ref table key)
@@ -76,18 +88,6 @@
 
 (define (set-score table key value)
   (hash-set table key value))
-
-(define +perf-cost+
-  (score-table 'allocating-closure 100 ;; Allocating an env & closure, but not copying all the values there.
-               'call 200               ;; Destructuring a closure, setting up the args, jumping to the code, does not include the body.
-               'unknown-fun 1000       ;; Probably on the low side for recursive functions...
-               'primop-call 50         ;; Seems like a fair value...
-               'unknown-primop 100     ;; Again, probably on the low side...
-               'memory-ref 10          ;; Should be pretty fast.
-               'memory-set 20          ;; Probably a tad slower than a plain mem ref.
-               'branch 10              ;; Should be fairly quick.
-               'const-ref 1
-               'noop 0))
 
 (define (estimate-performance ast cost-table)
   (define (loop-let cost bindings body)
