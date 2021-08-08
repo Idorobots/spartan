@@ -1,6 +1,6 @@
 #lang racket
 
-;; A very simple parser.
+;; Language grammar specification and parser.
 
 (require "../utils/utils.rkt")
 (require "../peggen.rkt")
@@ -10,16 +10,7 @@
 (require "../ast.rkt")
 (require "../modules.rkt")
 
-(require (for-syntax "../peggen.rkt"))
-
 (provide parse)
-
-(define-syntax (generate-parser stx)
-  (syntax-case stx ()
-    ((generate-parser rules ...)
-     (datum->syntax stx
-                    (generate-grammar
-                     (syntax->datum #'(rules ...)))))))
 
 ;; FIXME Re-generates the parser on each boot of the compiler. Probably super slow.
 (generate-parser

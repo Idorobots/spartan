@@ -4,11 +4,10 @@
 
 (require "../testing.rkt")
 (require "../../src/compiler/peggen.rkt")
+(require "../../src/compiler/utils/peg.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 (require "../../src/compiler/utils/io.rkt")
-
-(require (for-syntax "../../src/compiler/peggen.rkt"))
 
 ;; NOTE These are needed for parser generator tests.
 (provide map-match ast)
@@ -267,14 +266,7 @@
          (match-end m))
       m))
 
-(define-syntax (gen-parser stx)
-  (syntax-case stx ()
-    ((gen-parser rules ...)
-     (datum->syntax stx
-                    (generate-grammar
-                     (syntax->datum #'(rules ...)))))))
-
-(gen-parser
+(generate-parser
  (SimpleLisp
   (/ List Atom String Quote))
  (Quote
@@ -360,7 +352,7 @@
  (Comment
   (: ";[^\n]*\n")))
 
-(gen-parser
+(generate-parser
  (Weird
   (/ List Foo))
  (Foo
@@ -405,7 +397,7 @@
  (EOF
   ()))
 
-(gen-parser
+(generate-parser
  (Concat
   (~ "foo" "bar" "baz")))
 
