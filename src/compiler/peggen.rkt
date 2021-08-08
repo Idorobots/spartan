@@ -7,9 +7,8 @@
 (require "utils/utils.rkt")
 
 (provide match-result no-match matches matches? match-match match-start match-end
-         generate-rkt-parser
+         generate-grammar
          ;; FIXME These are exported for test access only.
-         generate-scm-parser
          generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
          generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat)
 
@@ -34,24 +33,6 @@
   (match-result-end m))
 
 ;; Parser generator
-(define (generate-rkt-parser filename imports . rules)
-  (let ((top-name (caar rules)))
-    (with-output-to-file filename
-      (lambda ()
-        (display "#lang racket")
-        (newline)
-        (display ";; THIS CODE IS GENERATED, MODIFYING IT IS FUTILE.")
-        (newline)
-        (for-each (lambda (i)
-                    (pretty-write `(require ,i)))
-                  imports)
-        (pretty-write `(provide ,top-name))
-        (pretty-write (generate-grammar rules)))
-      #:exists 'replace)))
-
-(define (generate-scm-parser filename . rules)
-  (spit filename (generate-grammar rules)))
-
 (define (generate-grammar rules)
   (let* ((top-name (caar rules))
          (hash (gensym 'hash))
