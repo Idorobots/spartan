@@ -45,7 +45,8 @@
                   'errors '()
                   'macros (make-builtin-macros)
                   'globals (make-global-definitions-list)
-                  'instrument (env-get* env 'instrument id))
+                  'instrument (env-get* env 'instrument id)
+                  'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
                elaborate

@@ -5,48 +5,51 @@
 (require "../ast.rkt")
 (require "../utils/pmap.rkt")
 
-(provide optimize optimize-plain
+(provide optimize optimize-naive optimize-super
          ;; FIXME For test access.
          estimate-performance)
-
-(define (optimize-plain passes)
-  (pass (schema "optimize") ;; NOTE Schema depends on the passes.
-        (lambda (env)
-          (let loop ((i +optimization-loops+)
-                     (acc env)
-                     (prev '()))
-            (if (or (= i 0)
-                    (equal? prev acc)) ;; FIXME This is needlessly slow.
-                acc
-                (loop (- i 1)
-                      (foldl run-pass
-                             acc
-                             passes)
-                      acc))))))
-
-(define +optimization-loops+ 23)
 
 (define (optimize passes)
   (pass (schema "optimize") ;; NOTE Schema depends on the passes.
         (lambda (env)
-          (let ((initial (score env)))
-            (let loop ((i +optimization-loops+)
-                       (runs (list initial))
-                       (prev (scored +inf.0 '())))
-              (let ((best-run (car runs)))
-                (if (or (= i 0)
-                        (not (score-better? best-run prev)))
-                    (scored-env best-run)
-                    (let* ((results (pmap (lambda (pass)
-                                           (score
-                                            (run-pass pass (scored-env best-run))))
-                                         passes))
-                           (sorted (sort (append results
-                                                 runs)
-                                         score-better?)))
-                      (loop (- i 1)
-                            sorted
-                            best-run)))))))))
+          ((env-get env 'optimize)
+           passes
+           env))))
+
+(define +optimization-loops+ 23)
+
+(define (optimize-naive passes env)
+  (let loop ((i +optimization-loops+)
+             (acc env)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? prev acc)) ;; FIXME This is needlessly slow.
+        acc
+        (loop (- i 1)
+              (foldl run-pass
+                     acc
+                     passes)
+              acc))))
+
+(define (optimize-super passes env)
+  (let ((initial (score env)))
+    (let loop ((i +optimization-loops+)
+               (runs (list initial))
+               (prev (scored +inf.0 '())))
+      (let ((best-run (car runs)))
+        (if (or (= i 0)
+                (not (score-better? best-run prev)))
+            (scored-env best-run)
+            (let* ((results (pmap (lambda (pass)
+                                    (score
+                                     (run-pass pass (scored-env best-run))))
+                                  passes))
+                   (sorted (sort (append results
+                                         runs)
+                                 score-better?)))
+              (loop (- i 1)
+                    sorted
+                    best-run)))))))
 
 (define +score-size+ 10.0)
 (define +score-perf+ (- 100.0 +score-size+))
