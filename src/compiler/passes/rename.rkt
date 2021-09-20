@@ -15,10 +15,16 @@
 
 (define symbol-rename
   (pass (schema "symbol-rename"
-                'ast (ast-subset? '(const symbol
-                                    if do let binding lambda primop-app)))
+                'data (list-of? (a-pair? a-symbol?
+                                         (ast-subset? '(const symbol if do let binding lambda primop-app))))
+                'init (ast-subset? '(const symbol if do let binding primop-app)))
         (lambda (env)
-          (env-update env 'ast mangle-names))))
+          (env-update (env-update env 'init mangle-names)
+                      'data (lambda (values)
+                              (map (lambda (v)
+                                     (cons (symbol->safe (car v))
+                                           (mangle-names (cdr v))))
+                                   values))))))
 
 (define (mangle-names expr)
   (match-ast expr

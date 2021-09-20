@@ -110,4 +110,4 @@
      (gensym-reset!)
      (assert (run '(spawn (lambda ()
                             (* 1 (+ 2 3)))))
-             'pid5)))
+             'pid7)))

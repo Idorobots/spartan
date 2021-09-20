@@ -33,6 +33,7 @@
 (require "compiler/optimize.rkt")
 (require "compiler/cpc.rkt")
 (require "compiler/closures.rkt")
+(require "compiler/globalization.rkt")
 (require "compiler/rename.rkt")
 (require "compiler/compiler.rkt")
 
