@@ -34,4 +34,5 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - `letrec` conversion,
 - continuation passing style transformation,
 - flat closure conversion,
+- global value hoisting,
 - target-safe name mangling.
