@@ -45,7 +45,8 @@
                   'errors '()
                   'macros (make-builtin-macros)
                   'globals (make-global-definitions-list)
-                  'instrument (env-get* env 'instrument id))
+                  'instrument (env-get* env 'instrument id)
+                  'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
                elaborate
@@ -57,31 +58,33 @@
                validate
                report-errors
                (optimize
-                (list annotate-free-vars
-                      inline-lambdas
-                      annotate-free-vars
+                (list (sequence annotate-free-vars
+                               inline-lambdas)
                       inline-builtins
                       propagate-constants
                       fold-constants
-                      eliminate-common-subexpressions
+                      (sequence annotate-free-vars
+                                eliminate-common-subexpressions)
                       propagate-copies
-                      eliminate-dead-code))
+                      (sequence annotate-free-vars
+                                eliminate-dead-code)))
                annotate-free-vars
                annotate-bindings
                reorder-letrec-bindings
                fix-letrec
                continuation-passing-convert
                (optimize
-                (list annotate-free-vars
-                      inline-lambdas
-                      annotate-free-vars
+                (list (sequence annotate-free-vars
+                               inline-lambdas)
                       propagate-constants
                       fold-constants
-                      eliminate-common-subexpressions
+                      (sequence annotate-free-vars
+                                eliminate-common-subexpressions)
                       propagate-copies
-                      eliminate-dead-code))
-               annotate-free-vars
+                      (sequence annotate-free-vars
+                                eliminate-dead-code)))
                instrument
+               annotate-free-vars
                closure-convert
                symbol-rename
                generate-target-code)))

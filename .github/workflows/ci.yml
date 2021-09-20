@@ -20,8 +20,8 @@ jobs:
         with:
           architecture: x64
           distribution: full
-          variant: BC
-          version: 7.9
+          variant: CS
+          version: 8.1
 
       - name: Run the test suite.
         run: ./run-tests.sh
