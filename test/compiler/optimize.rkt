@@ -13,9 +13,11 @@
 (describe
  "optimize-naive"
  (it "optimizes the code"
+     (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'input (slurp "test/sprtn/math.sprtn")))
-             '(display '(5 1462731 23)))
+             '(begin (define __global2 '(5 1462731 23))
+                     (display __global2)))
      (assert (compile (env 'module "optimize"
                            'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
@@ -36,10 +38,12 @@
 (describe
  "optimize-super"
  (it "superoptimizes the code"
+     (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
                            'input (slurp "test/sprtn/math.sprtn")))
-             '(display '(5 1462731 23)))
+             '(begin (define __global2 '(5 1462731 23))
+                     (display __global2)))
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
                            'input "(letrec ((q (lambda () 8))

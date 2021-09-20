@@ -87,5 +87,6 @@
                instrument
                annotate-free-vars
                closure-convert
+               globalize
                symbol-rename
                generate-target-code)))

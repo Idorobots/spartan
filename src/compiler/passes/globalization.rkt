@@ -51,5 +51,5 @@
                    (else
                     expr)))
                 expr)))
-    (list hoisted
+    (list (reverse hoisted)
           init)))

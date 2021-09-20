@@ -10,7 +10,7 @@
 (require "ast.rkt")
 
 (provide (struct-out pass) run-pass sequence debug
-         schema non-empty-string? non-empty-list? non-empty-hash? a-list? a-set? a-function? ast-subset?
+         schema non-empty-string? non-empty-list? non-empty-hash? a-symbol? a-pair? a-list? a-set? a-function? ast-subset? list-of?
          schema-validation-error?)
 
 (struct pass (schema transform) #:transparent)
@@ -65,6 +65,17 @@
                (> (hash-count val) 0))
     (schema-validation-error "Not a non-empty hash" val)))
 
+(define (a-symbol? val)
+  (unless (symbol? val)
+    (schema-validation-error "Not a symbol" val)))
+
+(define (a-pair? sub1 sub2)
+  (lambda (val)
+    (if (pair? val)
+        (begin (sub1 (car val))
+               (sub2 (cdr val)))
+        (schema-validation-error "Not a pair" val))))
+
 (define (a-list? val)
   (unless (list? val)
     (schema-validation-error "Not a list" val)))
@@ -76,6 +87,12 @@
 (define (a-function? val)
   (unless (procedure? val)
     (schema-validation-error "Not a procedure" val)))
+
+(define (list-of? subschema)
+  (lambda (vals)
+    (if (list? vals)
+        (map subschema vals)
+        (schema-validation-error "Not a list" vals))))
 
 (define (ast-subset? types)
   (lambda (expr)
