@@ -30,6 +30,7 @@
 (require "compiler/letrec-fix.rkt")
 (require "compiler/builtins.rkt")
 (require "compiler/lambdas.rkt")
+(require "compiler/optimize.rkt")
 (require "compiler/cpc.rkt")
 (require "compiler/closures.rkt")
 (require "compiler/rename.rkt")

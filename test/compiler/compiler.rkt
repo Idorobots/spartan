@@ -3,10 +3,10 @@
 ;; Parse tree validation tests.
 
 (require "../testing.rkt")
+(require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/env.rkt")
 (require "../../src/compiler/compiler.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
-(require "../../src/compiler/utils/io.rkt")
 (require "../../src/compiler/passes/optimize.rkt")
 
 (describe
@@ -21,49 +21,34 @@
                                         (path->string path)))
                        (directory-list "test/sprtn/errors/")))))
 
- (it "optimizes the output naively"
-     (assert (compile (env 'module "optimize"
-                           'input (slurp "test/sprtn/math.sprtn")))
-             '(display '(5 1462731 23)))
-     (assert (compile (env 'module "optimize"
-                           'input "(letrec ((q (lambda () 8))
+ (it "runs configured optimization"
+     (let* ((optimized? #f)
+            (result (compile (env 'module "optimize"
+                                  'optimize (lambda (env passes)
+                                              (set! optimized? #t)
+                                              (optimize-naive env passes))
+                                  'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
                                             (r (lambda () (f (q))))
                                             (s (lambda () (+ (r) (f 2))))
                                             (g (lambda () (+ (r) (s))))
                                             (t (lambda () (g))))
-                                     (t))"))
-             ''42)
-     (assert (compile (env 'module "optimize"
-                           'input "(letrec ((fact (lambda (x)
-                                                   (if (= 0 x)
-                                                       1
-                                                       (* x (fact (- x 1)))))))
-                                    (fact 2))"))
-             ''2))
+                                     (t))"))))
+       (assert optimized?)
+       (assert result ''42)))
 
- (it "superoptimizes the output"
-     (assert (compile (env 'module "optimize"
-                           'optimize optimize-super
-                           'input (slurp "test/sprtn/math.sprtn")))
-             '(display '(5 1462731 23)))
-     (assert (compile (env 'module "optimize"
-                           'optimize optimize-super
-                           'input "(letrec ((q (lambda () 8))
-                                            (f (lambda (x) (+  x (q))))
-                                            (r (lambda () (f (q))))
-                                            (s (lambda () (+ (r) (f 2))))
-                                            (g (lambda () (+ (r) (s))))
-                                            (t (lambda () (g))))
-                                     (t))"))
-             ''42))
-
- (ignore "superoptimizez recursive functions"
-         (assert (compile (env 'module "optimize"
-                               'optimize optimize-super
-                               'input "(letrec ((fact (lambda (x)
-                                                   (if (= 0 x)
-                                                       1
-                                                       (* x (fact (- x 1)))))))
-                                    (fact 2))"))
-                 ''2)))
+ (it "runs configured instrumentation"
+     (let* ((instrumented? #f)
+            (result (compile (env 'module "instrument"
+                                  'instrument (lambda (ast)
+                                                (set! instrumented? #t)
+                                                (make-ast-const (location 5 23)
+                                                                (make-ast-number (location 5 23)
+                                                                                 23.5)))
+                                  'input "(letrec ((fact (lambda (n)
+                                                           (if (= n 0)
+                                                               1
+                                                               (* n (fact (- n 1)))))))
+                                            (fact 120))"))))
+       (assert instrumented?)
+       (assert result ''23.5))))

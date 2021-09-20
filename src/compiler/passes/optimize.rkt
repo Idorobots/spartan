@@ -7,7 +7,7 @@
 
 (provide optimize optimize-naive optimize-super
          ;; FIXME For test access.
-         estimate-performance)
+         estimate-performance +perf-cost+ score-table score-of score-of*)
 
 (define (optimize passes)
   (pass (schema "optimize") ;; NOTE Schema depends on the passes.
@@ -135,8 +135,10 @@
 
   (define (loop cost expr)
     (case (ast-node-type expr)
-      ((const symbol)
+      ((const)
        (score-of cost 'const-ref))
+      ((symbol)
+       (score-of cost 'memory-ref))
       ((if)
        (+ (score-of cost 'branch)
           (loop cost (ast-if-condition expr))
