@@ -33,9 +33,10 @@
 
 ;; The backend
 (require "passes/instrument.rkt")
-(require "passes/generator.rkt")
 (require "passes/closures.rkt")
+(require "passes/globalization.rkt")
 (require "passes/rename.rkt")
+(require "passes/generator.rkt")
 
 (provide compile)
 
