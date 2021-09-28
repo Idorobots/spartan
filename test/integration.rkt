@@ -81,7 +81,7 @@
      (test-file "test/sprtn/rbs.sprtn" id instrument-for-test)
      (test-file "test/sprtn/cep.sprtn" id instrument-for-test))
 
- (ignore "handles reused variables correctly"
+ (it "handles reused variables correctly"
          (assert (run '(letrec ((fact (lambda (n)
                                         (if (< n 2)
                                             n
@@ -95,7 +95,7 @@
                              (* 10 (fact 9)))))
                  3628800))
 
- (ignore "handles free variables in inlined procedures correctly"
+ (it "handles free variables in inlined procedures correctly"
          (assert (run '(let ((x 23))
                          (let ((foo (lambda ()
                                       ;; NOTE The `x` here would point to the inner `x = 5` binding after `foo` got inlined.
