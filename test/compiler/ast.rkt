@@ -186,6 +186,18 @@
                        (assert #t))
                       (else (assert #f)))))
 
+ (it "can match specific symbols"
+     (check ((sym (gen-symbol-node 'foo)))
+            (match-ast sym
+                       ((symbol 'bar)
+                        (assert #f))
+                       ((symbol 'foo)
+                        (assert #t))
+                       ((symbol _)
+                        (assert #f))
+                       (else
+                        (assert #f)))))
+
  (it "can match specific primops"
      (check ((cont (gen-symbol-node 'cont1))
              (node gen-ast-node)
