@@ -90,24 +90,25 @@
                                             used-before-def
                                             val))))
     ((symbol '_)
+    ;; NOTE Wildcards are always fine.
      expr)
-    ((symbol _)
-     (let ((value (ast-symbol-value expr)))
-       (cond ((generated? expr) expr)
-             ((set-member? undefined value)
-              (raise-compilation-error
-               expr
-               (format "Undefined variable `~a`:" value)))
-             ((set-member? used-before-def value)
-              (raise-compilation-error
-               expr
-               (format "Variable `~a` used before its definition:" value)))
-             ((set-member? unused value)
-              (raise-compilation-error
-               expr
-               (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
-             (else
-              expr))))
+    ((symbol value)
+     (cond ((generated? expr)
+            expr)
+           ((set-member? undefined value)
+            (raise-compilation-error
+             expr
+             (format "Undefined variable `~a`:" value)))
+           ((set-member? used-before-def value)
+            (raise-compilation-error
+             expr
+             (format "Variable `~a` used before its definition:" value)))
+           ((set-member? unused value)
+            (raise-compilation-error
+             expr
+             (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
+           (else
+            expr)))
     ((def name value)
      ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
