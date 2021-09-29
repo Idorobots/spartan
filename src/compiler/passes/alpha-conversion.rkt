@@ -33,10 +33,7 @@
 
      ((lambda formals body)
       (let* ((filtered-subs (filter-subs subs (ast-node-bound-vars expr)))
-             (updated-subs (make-alpha-subs (filter (lambda (f)
-                                                      ;; FIXME Wildcards are handled in a later phase.
-                                                      (not (equal? '_ (ast-symbol-value f))))
-                                                    formals)
+             (updated-subs (make-alpha-subs formals
                                             filtered-subs)))
         (make-ast-lambda (ast-node-location expr)
                          (map (partial rename-symbol updated-subs) formals)
@@ -84,7 +81,10 @@
   (extend-subs (map (lambda (var)
                       (let ((s (ast-symbol-value var)))
                         (cons s (gensym s))))
-                    vars)
+                    (filter (lambda (f)
+                              ;; FIXME Wildcards are handled in a later phase.
+                              (not (equal? '_ (ast-symbol-value f))))
+                            vars))
                subs))
 
 (define (rename-symbol subs expr)
