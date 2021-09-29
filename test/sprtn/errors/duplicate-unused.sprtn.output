@@ -1,0 +1,71 @@
+test/sprtn/errors/duplicate-unused.sprtn(1,7): Unused variable `x`, rename to `_` to avoid this error:
+  1 [33m|[39m(let ((x 23)
+    [33m|[39m       [31m^[39m
+  2 [33m|[39m      (y 'nope)
+  3 [33m|[39m      (x 5))
+
+test/sprtn/errors/duplicate-unused.sprtn(3,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+  1 [33m|[39m(let ((x 23)
+  2 [33m|[39m      (y 'nope)
+  3 [33m|[39m      (x 5))
+    [33m|[39m      [31m^^^^^[39m
+  4 [33m|[39m  y)
+  5 [33m|[39m(letrec ((x 23)
+
+test/sprtn/errors/duplicate-unused.sprtn(3,7): Unused variable `x`, rename to `_` to avoid this error:
+  1 [33m|[39m(let ((x 23)
+  2 [33m|[39m      (y 'nope)
+  3 [33m|[39m      (x 5))
+    [33m|[39m       [31m^[39m
+  4 [33m|[39m  y)
+  5 [33m|[39m(letrec ((x 23)
+
+test/sprtn/errors/duplicate-unused.sprtn(5,10): Unused variable `x`, rename to `_` to avoid this error:
+  3 [33m|[39m      (x 5))
+  4 [33m|[39m  y)
+  5 [33m|[39m(letrec ((x 23)
+    [33m|[39m          [31m^[39m
+  6 [33m|[39m         (y 'nope)
+  7 [33m|[39m         (x 5))
+
+test/sprtn/errors/duplicate-unused.sprtn(7,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+  5 [33m|[39m(letrec ((x 23)
+  6 [33m|[39m         (y 'nope)
+  7 [33m|[39m         (x 5))
+    [33m|[39m         [31m^^^^^[39m
+  8 [33m|[39m  y)
+  9 [33m|[39m(lambda (x y x)
+
+test/sprtn/errors/duplicate-unused.sprtn(7,10): Unused variable `x`, rename to `_` to avoid this error:
+  5 [33m|[39m(letrec ((x 23)
+  6 [33m|[39m         (y 'nope)
+  7 [33m|[39m         (x 5))
+    [33m|[39m          [31m^[39m
+  8 [33m|[39m  y)
+  9 [33m|[39m(lambda (x y x)
+
+test/sprtn/errors/duplicate-unused.sprtn(9,9): Unused variable `x`, rename to `_` to avoid this error:
+  7 [33m|[39m         (x 5))
+  8 [33m|[39m  y)
+  9 [33m|[39m(lambda (x y x)
+    [33m|[39m         [31m^[39m
+ 10 [33m|[39m  y)
+ 11 [33m|[39m
+
+test/sprtn/errors/duplicate-unused.sprtn(9,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+  7 [33m|[39m         (x 5))
+  8 [33m|[39m  y)
+  9 [33m|[39m(lambda (x y x)
+    [33m|[39m             [31m^[39m
+ 10 [33m|[39m  y)
+ 11 [33m|[39m
+
+test/sprtn/errors/duplicate-unused.sprtn(9,13): Unused variable `x`, rename to `_` to avoid this error:
+  7 [33m|[39m         (x 5))
+  8 [33m|[39m  y)
+  9 [33m|[39m(lambda (x y x)
+    [33m|[39m             [31m^[39m
+ 10 [33m|[39m  y)
+ 11 [33m|[39m
+
+Compilation aborted due to 9 errors.

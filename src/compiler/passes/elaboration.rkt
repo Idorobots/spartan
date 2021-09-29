@@ -200,14 +200,16 @@
                 (equal? (ast-symbol-value name)
                         (ast-symbol-value (car rest))))
            (raise-compilation-error
-            (car rest)
+            name
             (format "~a, duplicate formal argument `~a`:" prefix (ast-symbol-value (car rest)))))
           (else
            (check-uniqueness name (cdr rest)))))
   (if (empty? args)
       '()
-      (cons (check-uniqueness (car args) (cdr args))
-            (unique-formals (cdr args) prefix))))
+      (let ((reversed (reverse args)))
+        (reverse
+         (cons (check-uniqueness (car reversed) (cdr reversed))
+               (unique-formals (cdr reversed) prefix))))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
@@ -277,15 +279,17 @@
                   (equal? (ast-symbol-value var)
                           (ast-symbol-value (ast-binding-var (car rest)))))
              (let ((e (raise-compilation-error
-                       (car rest)
+                       b
                        (format "~a, duplicate binding identifier `~a`:" prefix (ast-symbol-value var)))))
                (make-ast-binding (ast-node-location b) e e)))
             (else
              (check-uniqueness b (cdr rest))))))
   (if (empty? bindings)
       '()
-      (cons (check-uniqueness (car bindings) (cdr bindings))
-            (unique-bindings (cdr bindings) prefix))))
+      (let ((reversed (reverse bindings)))
+        (reverse
+         (cons (check-uniqueness (car reversed) (cdr reversed))
+               (unique-bindings (cdr reversed) prefix))))))
 
 (define (valid-binding binding prefix)
   (replace binding
