@@ -16,8 +16,8 @@
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'input (slurp "test/sprtn/math.sprtn")))
-             '(begin (define __global2 '(5 1462731 23))
-                     (display __global2)))
+             '(begin (define __global10 '(5 1462731 23))
+                     (display __global10)))
      (assert (compile (env 'module "optimize"
                            'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
@@ -42,8 +42,8 @@
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
                            'input (slurp "test/sprtn/math.sprtn")))
-             '(begin (define __global2 '(5 1462731 23))
-                     (display __global2)))
+             '(begin (define __global10 '(5 1462731 23))
+                     (display __global10)))
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
                            'input "(letrec ((q (lambda () 8))

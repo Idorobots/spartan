@@ -20,6 +20,7 @@
 (require "compiler/qq.rkt")
 (require "compiler/const.rkt")
 (require "compiler/validate.rkt")
+(require "compiler/alpha-conversion.rkt")
 (require "compiler/bindings.rkt")
 (require "compiler/dce.rkt")
 (require "compiler/cse.rkt")

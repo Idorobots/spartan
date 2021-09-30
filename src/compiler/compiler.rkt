@@ -17,6 +17,7 @@
 (require "passes/errors.rkt")
 
 ;; Optimizations
+(require "passes/alpha-conversion.rkt")
 (require "passes/optimize.rkt")
 (require "passes/bindings.rkt")
 (require "passes/freevars.rkt")
@@ -58,6 +59,7 @@
                annotate-bindings
                validate
                report-errors
+               alpha-convert
                (optimize
                 (list (sequence annotate-free-vars
                                inline-lambdas)
