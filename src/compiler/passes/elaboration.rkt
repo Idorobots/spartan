@@ -189,27 +189,30 @@
        args))
 
 (define (unique-formals args prefix)
-  (define (check-uniqueness name rest)
-    (cond ((empty? rest)
-           name)
-          ((and (ast-symbol? name)
-                (equal? (ast-symbol-value name) '_))
-           name)
-          ((and (ast-symbol? name)
-                (ast-symbol? (car rest))
-                (equal? (ast-symbol-value name)
-                        (ast-symbol-value (car rest))))
-           (raise-compilation-error
-            name
-            (format "~a, duplicate formal argument `~a`:" prefix (ast-symbol-value (car rest)))))
-          (else
-           (check-uniqueness name (cdr rest)))))
-  (if (empty? args)
-      '()
-      (let ((reversed (reverse args)))
-        (reverse
-         (cons (check-uniqueness (car reversed) (cdr reversed))
-               (unique-formals (cdr reversed) prefix))))))
+  (let loop ((acc '())
+             (seen '())
+             (args args))
+    (if (empty? args)
+        (reverse acc)
+        (let ((first (car args))
+              (rest (cdr args)))
+          (match-ast first
+
+           ((symbol '_)
+            (loop (cons first acc) seen rest))
+
+           ((symbol value)
+            (loop (cons (if (member value seen)
+                            (raise-compilation-error
+                             first
+                             (format "~a, duplicate formal argument `~a`:" prefix value))
+                            first)
+                        acc)
+                  (cons value seen)
+                  rest))
+
+           (else
+            (loop (cons first acc) seen rest)))))))
 
 (define (valid-symbol symbol prefix)
   (if (is-type? symbol 'symbol)
@@ -267,29 +270,31 @@
        bindings))
 
 (define (unique-bindings bindings prefix)
-  (define (check-uniqueness b rest)
-    (let ((var (ast-binding-var b)))
-      (cond ((empty? rest)
-             b)
-            ((and (ast-symbol? var)
-                  (equal? (ast-symbol-value var) '_))
-             b)
-            ((and (ast-symbol? var)
-                  (ast-symbol? (ast-binding-var (car rest)))
-                  (equal? (ast-symbol-value var)
-                          (ast-symbol-value (ast-binding-var (car rest)))))
-             (let ((e (raise-compilation-error
-                       b
-                       (format "~a, duplicate binding identifier `~a`:" prefix (ast-symbol-value var)))))
-               (make-ast-binding (ast-node-location b) e e)))
-            (else
-             (check-uniqueness b (cdr rest))))))
-  (if (empty? bindings)
-      '()
-      (let ((reversed (reverse bindings)))
-        (reverse
-         (cons (check-uniqueness (car reversed) (cdr reversed))
-               (unique-bindings (cdr reversed) prefix))))))
+  (let loop ((acc '())
+             (seen '())
+             (bindings bindings))
+    (if (empty? bindings)
+        (reverse acc)
+        (let ((first (car bindings))
+              (rest (cdr bindings)))
+          (match-ast first
+
+           ((binding (symbol '_) _)
+            (loop (cons first acc) seen rest))
+
+           ((binding (symbol value) _)
+            (loop (cons (if (member value seen)
+                            (let ((e (raise-compilation-error
+                                      first
+                                      (format "~a, duplicate binding identifier `~a`:" prefix value))))
+                              (make-ast-binding (ast-node-location first) e e))
+                            first)
+                        acc)
+                  (cons value seen)
+                  rest))
+
+           (else
+            (loop (cons first acc) seen rest)))))))
 
 (define (valid-binding binding prefix)
   (replace binding
