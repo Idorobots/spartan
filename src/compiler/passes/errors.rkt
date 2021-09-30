@@ -153,11 +153,14 @@
            (loop (+ 1 offset) i)))))
 
 (define (normalize-for-display line)
-  (cond ((equal? (string-length line) 0)
-         "\n")
-        ((equal? (string-ref line
-                             (- (string-length line) 1))
-                 #\newline)
-         line)
-        (else
-         (string-append line "\n"))))
+  (let* ((terminated (cond ((equal? (string-length line) 0)
+                            "\n")
+                           ((equal? (string-ref line
+                                                (- (string-length line) 1))
+                                    #\newline)
+                            line)
+                           (else
+                            (string-append line "\n"))))
+         ;; FIXME Effectively tab == 1 space. She'll be right...
+         (no-tabs (regexp-replace #rx"\t" terminated " ")))
+    no-tabs))

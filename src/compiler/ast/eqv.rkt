@@ -85,4 +85,3 @@
                (length b))
        (every? (partial equal? #t)
                (map ast-eqv? a b))))
-
