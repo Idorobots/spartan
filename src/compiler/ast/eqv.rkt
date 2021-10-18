@@ -75,6 +75,12 @@
                                  (ast-node-location b)))
            ((<error>) (ast-eqv? (ast-error-expr a)
                                 (ast-error-expr b)))
+           ((syntactic-closure) (and (equal? (ast-syntactic-closure-env a)
+                                             (ast-syntactic-closure-env b))
+                                     (equal? (ast-syntactic-closure-free-vars a)
+                                             (ast-syntactic-closure-free-vars b))
+                                     (ast-eqv? (ast-syntactic-closure-expr a)
+                                               (ast-syntactic-closure-expr b))))
            (else
             (compiler-bug "Unexpected expression: " a))))
         (else

@@ -128,7 +128,6 @@
  "match-ast"
  (it "can match any expression"
      (check ((node gen-ast-node))
-            (println node)
             (match-ast node
                       ((symbol value)
                        (assert value (ast-symbol-value node)))
@@ -184,6 +183,10 @@
                        (assert error (ast-error-expr node)))
                       ((ast-location _)
                        (assert #t))
+                      ((ast-syntactic-closure env free-vars expr)
+                       (assert env (ast-syntactic-closure-env node))
+                       (assert free-vars (ast-syntactic-closure-free-vars node))
+                       (assert expr (ast-syntactic-closure-expr node)))
                       (else (assert #f)))))
 
  (it "can match specific symbols"
