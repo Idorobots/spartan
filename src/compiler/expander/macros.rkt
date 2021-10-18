@@ -1,14 +1,13 @@
 #lang racket
 
-;; Built-in syntax expander implementations
+;; Built-in macros expander implementations
 
 (require "../utils/utils.rkt")
-
-(require (only-in "../passes/elaboration.rkt"
-                  valid-bindings valid-symbol))
-
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(require (only-in "elaborators.rkt"
+                  valid-bindings valid-symbol))
 
 (provide (all-defined-out))
 

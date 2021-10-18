@@ -51,7 +51,6 @@
                   'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
-               elaborate
                body-expand
                quasiquote-expand
                annotate-constants

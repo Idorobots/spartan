@@ -109,6 +109,10 @@
              (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
            (else
             expr)))
+    ((app op args ...)
+     (-> expr
+         (set-ast-app-op (validate-app-procedure (validate-ast undefined unused used-before-def op)))
+         (set-ast-app-args (map (partial validate-ast undefined unused used-before-def) args))))
     ((def name value)
      ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
@@ -145,3 +149,19 @@
                               b)
                 (loop (set-union seen (ast-node-bound-vars b))
                       (cdr bs)))))))
+
+(define (extract-node-type node)
+  (cond ((ast-const? node)
+         (extract-node-type (ast-const-value node)))
+        ((ast-error? node)
+         (extract-node-type (ast-error-expr node)))
+        (else
+         (ast-node-type node))))
+
+(define (validate-app-procedure op)
+  (let ((type (extract-node-type op)))
+    (if (member type '(symbol if do body lambda let letrec app primop-app))
+        op
+        (raise-compilation-error
+         op
+         (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:" type)))))
