@@ -12,13 +12,13 @@
 (require "../ast.rkt")
 (require "../errors.rkt")
 
-(provide macro-expand make-builtin-macros
+(provide macro-expand make-static-environment
          ;; FIXME For test access.
-         expand-macros)
+         expand)
 
 (define macro-expand
   (pass (schema "macro-expand"
-                'macros non-empty-hash?
+                'static-env non-empty-hash?
                 'errors a-list?
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list
@@ -26,47 +26,102 @@
         (lambda (env)
           (let ((result (collect-errors (env-get env 'errors)
                                         (lambda ()
-                                          (expand-macros (env-get env 'ast)
-                                                         (env-get env 'macros))))))
+                                          (expand (env-get env 'static-env)
+                                                  (env-get env 'ast))))))
             (env-set env
                      'ast (car result)
                      'errors (cadr result))))))
 
-(define (expand-macros expr macros)
+(define (expand env expr)
   (match-ast expr
+
+   ((string _)
+    expr)
+
+   ((number _)
+    expr)
+
    ((ast-quote _)
     expr)
-   ((ast-quasiquote _)
-    expr)
+
    ((list (symbol 'quote) rest ...)
     expr)
+
+   ;; FIXME This should be an expander producing plain lists.
+   ((ast-quasiquote _)
+    expr)
+
+   ;; FIXME This should be an expander producing plain lists.
    ((list (symbol 'quasiquote) rest ...)
     expr)
-   ((list (symbol sym) rest ...)
-    (if (hash-has-key? macros sym)
-        (expand-macros ((hash-ref macros sym) expr)
-                       macros)
-        (walk-ast (flip expand-macros macros)
-                  expr)))
+
+   ;; Keyword macro expansion
+   ((symbol key)
+    #:when (and (environment-contains? env key)
+                (expander? (environment-ref env key)))
+    ;; FIXME This should expand the keyword macro instead.
+    expr)
+
+   ;; Renamed symbol
+   ((symbol key)
+    #:when (environment-contains? env key)
+    (environment-ref env key))
+
+    ;; Just a free var in the current static env. FIXME This likely should be a compilation error.
+   ((symbol _)
+    expr)
+
+   ;; Regular macro expansion
+   ((list (symbol op) rest ...)
+    #:when (and (environment-contains? env op)
+                (expander? (environment-ref env op)))
+    (expand env
+            (expand-expander op env expr)))
+
    (else
-    (walk-ast (flip expand-macros macros)
-              expr))))
+    (traverse-ast expand env expr))))
 
-(define (make-builtin-macros)
-  (hasheqv 'when when-macro
-           'unless unless-macro
-           'cond cond-macro
-           'and and-macro
-           'or or-macro
-           'let* let*-macro
-           'letcc letcc-macro
-           'handle handle-macro
-           'shift shift-macro
-           'reset reset-macro
-           'structure structure-macro
-           'module module-macro))
+(define (expand-expander key env expr)
+  (let ((expander (environment-ref env key)))
+    ((expander-transformer expander)
+     expr
+     env
+     (expander-environment expander))))
 
-(define (when-macro expr)
+;; Static environment
+
+(struct expander
+  (environment
+   transformer) ;; NOTE Should take 3 parameters - expr, use-env and a def-env.
+  #:transparent
+  #:constructor-name make-expander)
+
+(define (make-builtin-expander transformer)
+  (make-expander #f transformer))
+
+(define (make-static-environment)
+  (hasheq 'when (make-builtin-expander when-macro)
+          'unless (make-builtin-expander unless-macro)
+          'cond (make-builtin-expander cond-macro)
+          'and (make-builtin-expander and-macro)
+          'or (make-builtin-expander or-macro)
+          'let* (make-builtin-expander let*-macro)
+          'letcc (make-builtin-expander letcc-macro)
+          'handle (make-builtin-expander handle-macro)
+          'shift (make-builtin-expander shift-macro)
+          'reset (make-builtin-expander reset-macro)
+          'structure (make-builtin-expander structure-macro)
+          'module (make-builtin-expander module-macro)))
+
+(define (environment-contains? env key)
+  (hash-has-key? env key))
+
+(define (environment-ref env key)
+  (hash-ref env key))
+
+;; Built in expander implementations
+
+(define (when-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'when) cond first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -81,7 +136,7 @@
        node
        "Bad `when` syntax, expected a condition and a body to follow:")))))
 
-(define (unless-macro expr)
+(define (unless-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'unless) cond first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -96,7 +151,7 @@
        node
        "Bad `unless` syntax, expected a condition and a body to follow:")))))
 
-(define (cond-macro expr)
+(define (cond-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'cond) (list (symbol 'else) else-first else-rest ...))
     (make-ast-body (ast-node-location expr)
@@ -117,7 +172,7 @@
        node
        "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
 
-(define (and-macro expr)
+(define (and-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'and) last)
     last)
@@ -134,7 +189,7 @@
        node
        "Bad `and` syntax, expected a list of expressions to follow:")))))
 
-(define (or-macro expr)
+(define (or-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'or) last)
     last)
@@ -151,7 +206,7 @@
        node
        "Bad `or` syntax, expected a list of expressions to follow:")))))
 
-(define (let*-macro expr)
+(define (let*-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'let*) (list) first rest ...)
     (make-ast-body (ast-node-location expr)
@@ -172,7 +227,7 @@
        node
        "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
 
-(define (letcc-macro expr)
+(define (letcc-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'letcc) name first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -188,7 +243,7 @@
        node
        "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
 
-(define (shift-macro expr)
+(define (shift-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'shift) name first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -204,7 +259,7 @@
        node
        "Bad `shift` syntax, expected an identifier and a body to follow:")))))
 
-(define (reset-macro expr)
+(define (reset-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'reset) first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -220,7 +275,7 @@
        node
        "Bad `reset` syntax, expected exactly one expression to follow:")))))
 
-(define (handle-macro expr)
+(define (handle-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'handle) subexpr handler)
     (let ((loc (ast-node-location expr)))
@@ -235,7 +290,7 @@
        node
        "Bad `handle` syntax, expected exactly two expressions to follow:")))))
 
-(define (structure-macro expr)
+(define (structure-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'structure) defs ...)
     (let ((names (map extract-definition-name defs)))
@@ -268,7 +323,7 @@
      expr
      "Bad `structure` syntax, expected a definition:"))))
 
-(define (module-macro expr)
+(define (module-macro expr use-env def-env)
   (match-ast expr
    ((list (symbol 'module) (list name deps ...) body ...)
     (let ((loc (ast-node-location expr)))

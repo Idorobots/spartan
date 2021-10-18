@@ -45,7 +45,7 @@
   (foldl run-pass
          (env-set env
                   'errors '()
-                  'macros (make-builtin-macros)
+                  'static-env (make-static-environment)
                   'globals (make-global-definitions-list)
                   'instrument (env-get* env 'instrument id)
                   'optimize (env-get* env 'optimize optimize-naive))
