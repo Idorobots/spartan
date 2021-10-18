@@ -4,7 +4,7 @@
 
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
-(require "../../src/compiler/passes/macro-expander.rkt")
+(require "../../src/compiler/expander/expander.rkt")
 
 (define se (make-static-environment))
 
