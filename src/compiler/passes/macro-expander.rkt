@@ -78,6 +78,13 @@
     (expand env
             (expand-expander op env expr)))
 
+   ;; Syntactic closures
+   ((ast-syntactic-closure closure-env free expr)
+    (expand (filter-environment free
+                                env
+                                closure-env)
+            expr))
+
    (else
     (traverse-ast expand env expr))))
 
@@ -118,6 +125,19 @@
 
 (define (environment-ref env key)
   (hash-ref env key))
+
+(define (extend-environment env key value)
+  (hash-set env key value))
+
+(define (filter-environment free dynamic-env static-env)
+  (foldl (lambda (env free)
+           (if (environment-contains? dynamic-env free)
+               (extend-environment env
+                                   free
+                                   (environment-ref dynamic-env free))
+               env))
+         static-env
+         free))
 
 ;; Built in expander implementations
 
