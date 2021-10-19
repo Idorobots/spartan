@@ -9,7 +9,6 @@
 ;; The frontend
 (require "passes/parser.rkt")
 (require "passes/macro-expander.rkt")
-(require "passes/elaboration.rkt")
 (require "passes/body.rkt")
 (require "passes/qq.rkt")
 (require "passes/const.rkt")

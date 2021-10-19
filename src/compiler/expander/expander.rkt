@@ -31,8 +31,8 @@
    ((symbol key)
     #:when (and (environment-contains? env key)
                 (expander? (environment-ref env key)))
-    ;; FIXME This should expand the identifier macro instead.
-    expr)
+    (expand env
+            (apply-expander key env expr)))
 
    ;; Renamed symbol
    ((symbol key)

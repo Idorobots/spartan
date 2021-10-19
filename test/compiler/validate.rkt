@@ -73,4 +73,18 @@
                                 used-before-def))
              (node (gen-lambda-node args body)))
             (assert (validate-ast (set) (set) used-before-def node)
-                    node))))
+                    node)))
+
+ (it "should report invalid application operations"
+     (check ((op (gen-one-of (gen-number-node gen-number)
+                             (gen-string-node (gen-text (gen-integer 10 20)))
+                             (gen-specific-const-node gen-valid-symbol-node)))
+             (args (gen-list (gen-integer 1 3)
+                                 (gen-one-of (gen-number-node gen-number)
+                                             (gen-quote-node gen-simple-node))))
+             (node (apply gen-app-node op args)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (validate-ast (set) (set) (set) node))
+                    (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
+                            (extract-node-type op))))))

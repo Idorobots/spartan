@@ -12,7 +12,7 @@
 
 (provide validate
          ;; FIXME For test access.
-         validate-ast)
+         validate-ast extract-node-type)
 
 (define validate
   (pass (schema "validate"
@@ -151,12 +151,16 @@
                       (cdr bs)))))))
 
 (define (extract-node-type node)
-  (cond ((ast-const? node)
-         (extract-node-type (ast-const-value node)))
-        ((ast-error? node)
-         (extract-node-type (ast-error-expr node)))
-        (else
-         (ast-node-type node))))
+  (match-ast node
+   ((const (symbol _))
+    ;; FIXME This would ideally report a "constant symbol"
+    'quote)
+   ((const expr)
+    (ast-node-type expr))
+   ((ast-error expr)
+    (extract-node-type expr))
+   (else
+    (ast-node-type node))))
 
 (define (validate-app-procedure op)
   (let ((type (extract-node-type op)))

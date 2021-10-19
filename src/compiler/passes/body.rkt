@@ -3,14 +3,13 @@
 ;; Implicit body handling.
 
 (require "../utils/utils.rkt")
-
-(require (only-in "elaboration.rkt"
-                  unique-bindings))
-
 (require "../env.rkt")
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+
+(require (only-in "../expander/elaborators.rkt"
+                  unique-bindings))
 
 (provide body-expand
          ;; FIXME For test access.

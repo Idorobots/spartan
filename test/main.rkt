@@ -15,7 +15,7 @@
 (require "compiler/parser.rkt")
 (require "compiler/errors.rkt")
 (require "compiler/macros.rkt")
-(require "compiler/elaboration.rkt")
+(require "compiler/elaborators.rkt")
 (require "compiler/body.rkt")
 (require "compiler/qq.rkt")
 (require "compiler/const.rkt")

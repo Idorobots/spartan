@@ -5,17 +5,20 @@
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/errors.rkt")
-(require "../../src/compiler/passes/elaboration.rkt")
+(require "../../src/compiler/expander/expander.rkt")
+(require "../../src/compiler/expander/elaborators.rkt")
+
+(define se (make-static-environment))
 
 (describe
- "elaboration"
+ "built-in syntax forms"
  (it "elaborates valid ifs"
      (check ((sym (gen-symbol-node 'if))
              (condition gen-valid-symbol-node)
              (then gen-valid-symbol-node)
              (else gen-valid-symbol-node)
              (node (gen-specific-list-node sym condition then else)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
@@ -32,14 +35,14 @@
              (node (apply gen-specific-list-node sym exprs)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))
 
  (it "elaborates valid dos"
      (check ((sym (gen-symbol-node 'do))
              (exprs (gen-list (gen-integer 1 5) gen-valid-symbol-node))
              (node (apply gen-specific-list-node sym exprs)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (ast-node-context result)
@@ -53,7 +56,7 @@
              (node (gen-specific-list-node sym)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `do` syntax, expected at least one expression to follow:")))
 
  (it "elaborates valid lambdas"
@@ -62,7 +65,7 @@
              (fs (apply gen-specific-list-node formals))
              (body (gen-arg-list (gen-integer 1 3)))
              (node (apply gen-specific-list-node sym fs body)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (ast-node-location (ast-lambda-body result))
@@ -79,7 +82,7 @@
      (check ((node (gen-specific-list-node (gen-symbol-node 'lambda))))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `lambda` syntax, expected a formal arguments specification followed by a body:"))
      (check ((formals (gen-arg-list (gen-integer 0 5)))
              (args (gen-one-of gen-valid-symbol-node
@@ -87,7 +90,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'lambda) args)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `lambda` syntax, expected a formal arguments specification followed by a body:"))
      (check ((contents (gen-list (gen-integer 1 5) (gen-number-node gen-number)))
              (args (apply gen-specific-list-node contents))
@@ -95,7 +98,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'lambda) args body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:"))
      (check ((var gen-valid-symbol)
              (arg (gen-symbol-node var))
@@ -103,7 +106,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'lambda) args arg)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `lambda` formal arguments syntax, duplicate formal argument `~a`:" var)))
      (check ((var (apply gen-one-of +reserved-keywords+))
              (arg (gen-symbol-node var))
@@ -111,7 +114,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'lambda) args arg)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `lambda` formal arguments syntax, reserved keyword `~a` used as a formal argument:" var))))
 
  (it "elaborates valid let"
@@ -127,7 +130,7 @@
              (bs (apply gen-specific-list-node bindings))
              (body (gen-arg-list (gen-integer 1 3)))
              (node (apply gen-specific-list-node sym bs body)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (ast-node-location (ast-let-body result))
@@ -149,7 +152,7 @@
      (check ((node (gen-specific-list-node (gen-symbol-node 'let))))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `let` syntax, expected a list of bindings followed by a body:"))
      (check ((identifier gen-valid-symbol-node)
              (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -159,7 +162,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'let) bindings)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `let` syntax, expected a list of bindings followed by a body:"))
      (check ((identifier gen-valid-symbol-node)
              (bindings (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -167,7 +170,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `let` bindings syntax, expected a pair of an identifier and a value:"))
      (check ((identifier (gen-number-node gen-number))
              (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -176,7 +179,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `let` bindings syntax, expected a symbol but got a number instead:"))
      (check ((var gen-valid-symbol)
              (identifier (gen-symbol-node var))
@@ -187,7 +190,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `let` bindings syntax, duplicate binding identifier `~a`:" var)))
      (check ((var (apply gen-one-of +reserved-keywords+))
              (identifier (gen-symbol-node var))
@@ -197,7 +200,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'let) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `let` bindings syntax, reserved keyword `~a` used as a binding identifier:" var))))
 
  (it "elaborates valid letrec"
@@ -213,7 +216,7 @@
              (bs (apply gen-specific-list-node bindings))
              (body (gen-arg-list (gen-integer 1 3)))
              (node (apply gen-specific-list-node sym bs body)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (ast-node-location (ast-letrec-body result))
@@ -235,7 +238,7 @@
      (check ((node (gen-specific-list-node (gen-symbol-node 'letrec))))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `letrec` syntax, expected a list of bindings followed by a body:"))
      (check ((identifier gen-valid-symbol-node)
              (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -245,7 +248,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'letrec) bindings)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `letrec` syntax, expected a list of bindings followed by a body:"))
      (check ((identifier gen-valid-symbol-node)
              (bindings (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -253,7 +256,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'letrec) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `letrec` bindings syntax, expected a pair of an identifier and a value:"))
      (check ((identifier (gen-number-node gen-number))
              (b1 (gen-specific-list-node identifier gen-valid-symbol-node))
@@ -262,7 +265,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'letrec) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `letrec` bindings syntax, expected a symbol but got a number instead:"))
      (check ((var gen-valid-symbol)
              (identifier (gen-symbol-node var))
@@ -273,7 +276,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'letrec) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `letrec` bindings syntax, duplicate binding identifier `~a`:" var)))
      (check ((var (apply gen-one-of +reserved-keywords+))
              (identifier (gen-symbol-node var))
@@ -283,7 +286,7 @@
              (node (gen-specific-list-node (gen-symbol-node 'letrec) bindings body)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `letrec` bindings syntax, reserved keyword `~a` used as a binding identifier:" var))))
 
  (it "elaborates valid quotes"
@@ -291,7 +294,7 @@
              (op (gen-symbol-node sym))
              (val (gen-number-node gen-number))
              (node (gen-specific-list-node op val)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (ast-node-type result)
@@ -306,7 +309,7 @@
              (node (apply gen-specific-list-node op args)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     (format "Bad `~a` syntax, expected exactly one expression to follow:" sym))))
 
  (it "handles valid defines"
@@ -315,7 +318,7 @@
              (value (gen-one-of (gen-number-node gen-number)
                                 gen-valid-symbol-node))
              (node (gen-specific-list-node sym name value)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
@@ -329,7 +332,7 @@
              (body (gen-one-of (gen-number-node gen-number)
                                gen-valid-symbol-node))
              (node (gen-specific-list-node sym signature body)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (generated? (ast-def-value result)))
@@ -358,7 +361,7 @@
                                (gen-specific-list-node sym signature))))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:"))
      (check ((sym (gen-symbol-node 'define))
              (name gen-valid-symbol-node)
@@ -366,7 +369,7 @@
              (node (gen-specific-list-node sym value name)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `define` syntax, expected a symbol but got a number instead:"))
      (check ((sym (gen-symbol-node 'define))
              (name gen-valid-symbol-node)
@@ -376,7 +379,7 @@
              (node (gen-specific-list-node sym signature value)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (elaborate-unquoted node))
+                      (expand se node))
                     "Bad `define` function signature syntax, expected a symbol but got a number instead:")))
 
  (it "elaborates valid applications"
@@ -385,7 +388,7 @@
                              (gen-one-of gen-valid-symbol-node
                                          (gen-number-node gen-number))))
              (node (apply gen-specific-list-node name args)))
-            (let ((result (elaborate-unquoted node)))
+            (let ((result (expand se node)))
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert-ast result
@@ -396,14 +399,5 @@
  (it "doesn't allow bad applications"
      (assert (with-handlers ((compilation-error?
                               compilation-error-what))
-               (elaborate-unquoted (make-ast-list (location 5 23) '())))
-             "Bad call syntax, expected at least one expression within the call:")
-     (check ((contents (gen-list (gen-integer 1 3)
-                                 (gen-one-of (gen-number-node gen-number)
-                                             (gen-quote-node gen-simple-node))))
-             (node (apply gen-specific-list-node contents)))
-            (assert (with-handlers ((compilation-error?
-                                     compilation-error-what))
-                      (elaborate-unquoted node))
-                    (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
-                            (ast-node-type (car contents)))))))
+               (expand se (make-ast-list (location 5 23) '())))
+             "Bad call syntax, expected at least one expression within the call:")))
