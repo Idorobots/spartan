@@ -6,12 +6,12 @@
 (require "../ast.rkt")
 (require "../errors.rkt")
 
-(require (only-in "elaborators.rkt"
+(require (only-in "syntax-forms.rkt"
                   valid-bindings valid-symbol))
 
 (provide (all-defined-out))
 
-(define (when-macro expr use-env def-env)
+(define (when-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'when) cond first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -26,7 +26,7 @@
        node
        "Bad `when` syntax, expected a condition and a body to follow:")))))
 
-(define (unless-macro expr use-env def-env)
+(define (unless-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'unless) cond first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -41,7 +41,7 @@
        node
        "Bad `unless` syntax, expected a condition and a body to follow:")))))
 
-(define (cond-macro expr use-env def-env)
+(define (cond-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'cond) (list (symbol 'else) else-first else-rest ...))
     (make-ast-body (ast-node-location expr)
@@ -62,7 +62,7 @@
        node
        "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
 
-(define (and-macro expr use-env def-env)
+(define (and-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'and) last)
     last)
@@ -79,7 +79,7 @@
        node
        "Bad `and` syntax, expected a list of expressions to follow:")))))
 
-(define (or-macro expr use-env def-env)
+(define (or-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'or) last)
     last)
@@ -96,7 +96,7 @@
        node
        "Bad `or` syntax, expected a list of expressions to follow:")))))
 
-(define (let*-macro expr use-env def-env)
+(define (let*-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'let*) (list) first rest ...)
     (make-ast-body (ast-node-location expr)
@@ -117,7 +117,7 @@
        node
        "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
 
-(define (letcc-macro expr use-env def-env)
+(define (letcc-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'letcc) name first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -133,7 +133,7 @@
        node
        "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
 
-(define (shift-macro expr use-env def-env)
+(define (shift-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'shift) name first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -149,7 +149,7 @@
        node
        "Bad `shift` syntax, expected an identifier and a body to follow:")))))
 
-(define (reset-macro expr use-env def-env)
+(define (reset-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'reset) first rest ...)
     (let ((loc (ast-node-location expr)))
@@ -165,7 +165,7 @@
        node
        "Bad `reset` syntax, expected exactly one expression to follow:")))))
 
-(define (handle-macro expr use-env def-env)
+(define (handle-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'handle) subexpr handler)
     (let ((loc (ast-node-location expr)))
@@ -180,7 +180,7 @@
        node
        "Bad `handle` syntax, expected exactly two expressions to follow:")))))
 
-(define (structure-macro expr use-env def-env)
+(define (structure-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'structure) defs ...)
     (let ((names (map extract-definition-name defs)))
@@ -213,7 +213,7 @@
      expr
      "Bad `structure` syntax, expected a definition:"))))
 
-(define (module-macro expr use-env def-env)
+(define (module-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'module) (list name deps ...) body ...)
     (let ((loc (ast-node-location expr)))

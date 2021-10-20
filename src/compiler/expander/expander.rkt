@@ -7,8 +7,8 @@
 (require "../utils/utils.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+(require "syntax-forms.rkt")
 (require "macros.rkt")
-(require "elaborators.rkt")
 
 (provide expand make-static-environment)
 
@@ -120,33 +120,33 @@
 (define (make-static-environment)
   (hasheq
    ;; Special expanders
-   '&application (make-builtin-expander reconstruct-app) ;; FIXME Kinda hacky...
+   '&application (make-builtin-expander app-expander) ;; FIXME Kinda hacky...
 
    ;; Syntax forms
-   'if (make-builtin-expander reconstruct-if)
-   'do (make-builtin-expander reconstruct-do)
-   'lambda (make-builtin-expander reconstruct-lambda)
-   'let (make-builtin-expander reconstruct-let)
-   'letrec (make-builtin-expander reconstruct-letrec)
-   'define (make-builtin-expander reconstruct-def)
-   'quote (make-builtin-expander reconstruct-quote)
-   'quasiquote (make-builtin-expander reconstruct-quasiquote)
-   'unquote (make-builtin-expander reconstruct-unquote)
-   'unquote-splicing (make-builtin-expander reconstruct-unquote-splicing)
+   'if (make-builtin-expander if-expander)
+   'do (make-builtin-expander do-expander)
+   'lambda (make-builtin-expander lambda-expander)
+   'let (make-builtin-expander let-expander)
+   'letrec (make-builtin-expander letrec-expander)
+   'define (make-builtin-expander def-expander)
+   'quote (make-builtin-expander quote-expander)
+   'quasiquote (make-builtin-expander quasiquote-expander)
+   'unquote (make-builtin-expander unquote-expander)
+   'unquote-splicing (make-builtin-expander unquote-splicing-expander)
 
    ;; Built-in macros
-   'when (make-builtin-expander when-macro)
-   'unless (make-builtin-expander unless-macro)
-   'cond (make-builtin-expander cond-macro)
-   'and (make-builtin-expander and-macro)
-   'or (make-builtin-expander or-macro)
-   'let* (make-builtin-expander let*-macro)
-   'letcc (make-builtin-expander letcc-macro)
-   'handle (make-builtin-expander handle-macro)
-   'shift (make-builtin-expander shift-macro)
-   'reset (make-builtin-expander reset-macro)
-   'structure (make-builtin-expander structure-macro)
-   'module (make-builtin-expander module-macro)))
+   'when (make-builtin-expander when-expander)
+   'unless (make-builtin-expander unless-expander)
+   'cond (make-builtin-expander cond-expander)
+   'and (make-builtin-expander and-expander)
+   'or (make-builtin-expander or-expander)
+   'let* (make-builtin-expander let*-expander)
+   'letcc (make-builtin-expander letcc-expander)
+   'handle (make-builtin-expander handle-expander)
+   'shift (make-builtin-expander shift-expander)
+   'reset (make-builtin-expander reset-expander)
+   'structure (make-builtin-expander structure-expander)
+   'module (make-builtin-expander module-expander)))
 
 (define (environment-contains? env key)
   (hash-has-key? env key))

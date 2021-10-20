@@ -8,7 +8,7 @@
 (require "../ast.rkt")
 (require "../errors.rkt")
 
-(require (only-in "../expander/elaborators.rkt"
+(require (only-in "../expander/syntax-forms.rkt"
                   unique-bindings))
 
 (provide body-expand

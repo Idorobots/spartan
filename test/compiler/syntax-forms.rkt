@@ -6,7 +6,7 @@
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/errors.rkt")
 (require "../../src/compiler/expander/expander.rkt")
-(require "../../src/compiler/expander/elaborators.rkt")
+(require "../../src/compiler/expander/syntax-forms.rkt")
 
 (define se (make-static-environment))
 

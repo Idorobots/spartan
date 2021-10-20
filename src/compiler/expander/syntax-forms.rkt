@@ -8,7 +8,7 @@
 
 (provide (all-defined-out))
 
-(define (reconstruct-if expr use-env def-env)
+(define (if-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'if) condition then else)
     (replace expr
@@ -22,7 +22,7 @@
        node
        "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
 
-(define (reconstruct-do expr use-env def-env)
+(define (do-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'do) first rest ...)
     ;; NOTE User-supplied do needs to be body-expanded as well.
@@ -35,7 +35,7 @@
        node
        "Bad `do` syntax, expected at least one expression to follow:")))))
 
-(define (reconstruct-lambda expr use-env def-env)
+(define (lambda-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'lambda) formals first rest ...)
     (replace expr
@@ -110,7 +110,7 @@
        symbol
        (format "~a, expected a symbol but got a ~a instead:" prefix (ast-node-type symbol)))))
 
-(define (reconstruct-let expr use-env def-env)
+(define (let-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'let) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
@@ -129,7 +129,7 @@
        node
        "Bad `let` syntax, expected a list of bindings followed by a body:")))))
 
-(define (reconstruct-letrec expr use-env def-env)
+(define (letrec-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'letrec) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
@@ -208,7 +208,7 @@
                          (format "~a, expected a pair of an identifier and a value:" prefix))))
                  (make-ast-binding (ast-node-location binding) e e)))))
 
-(define (reconstruct-quote expr use-env def-env)
+(define (quote-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'quote) value)
     (replace expr
@@ -220,7 +220,7 @@
        node
        "Bad `quote` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-quasiquote expr use-env def-env)
+(define (quasiquote-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'quasiquote) value)
     (replace expr
@@ -232,7 +232,7 @@
        node
        "Bad `quasiquote` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-unquote expr use-env def-env)
+(define (unquote-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'unquote) value)
     (replace expr
@@ -244,7 +244,7 @@
        node
        "Bad `unquote` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-unquote-splicing expr use-env def-env)
+(define (unquote-splicing-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'unquote-splicing) value)
     (replace expr
@@ -256,7 +256,7 @@
        node
        "Bad `unquote-splicing` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-def expr use-env def-env)
+(define (def-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'define) (list name formals ...) first rest ...)
     (let ((func-def (ast-list-nth expr 1))
@@ -284,7 +284,7 @@
        node
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
-(define (reconstruct-app expr use-env def-env)
+(define (app-expander expr use-env def-env)
   (match-ast expr
    ((list op args ...)
     (replace expr
