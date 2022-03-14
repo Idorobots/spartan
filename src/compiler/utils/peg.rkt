@@ -288,15 +288,17 @@
 ;; (...)
 (define (generate-sequence subrules input offset cont)
   (cont (let loop ((subrules subrules)
-                   (matches '())
+                   (results '())
                    (last-end offset))
           (if (empty? subrules)
-              `(matches ,(cons 'list (reverse matches))
-                        ,offset
+              `(matches ,(cons 'list
+                               (map (lambda (r)
+                                      `(match-match ,r))
+                                    (reverse results)))
+                        (match-start ,(last results))
                         ,last-end)
               (let ((subrule (car subrules))
                     (result (gensym 'result))
-                    (mat (gensym 'match))
                     (end (gensym 'end)))
                 (generate-rule-pattern subrule
                                        input
@@ -304,10 +306,9 @@
                                        (lambda (r)
                                          `(let ((,result ,r))
                                             (if (matches? ,result)
-                                                (let ((,mat (match-match ,result))
-                                                      (,end (match-end ,result)))
+                                                (let ((,end (match-end ,result)))
                                                   ,(loop (cdr subrules)
-                                                         (cons mat matches)
+                                                         (cons result results)
                                                          end))
                                                 (no-match))))))))))
 
@@ -331,9 +332,10 @@
   (let ((subrule (cdr subrules))
         (result (gensym 'result))
         (end (gensym 'end))
-        (matches (gensym 'matches))
-        (loop (gensym 'loop)))
-    (cont `(let ,loop ((,matches '())
+        (results (gensym 'results))
+        (loop (gensym 'loop))
+        (final (gensym 'final-result)))
+    (cont `(let ,loop ((,results '())
                        (,end ,offset))
                 ,(generate-rule-pattern subrule
                                         input
@@ -341,10 +343,14 @@
                                         (lambda (r)
                                           `(let ((,result ,r))
                                              (if (matches? ,result)
-                                                 (,loop (cons (match-match ,result)
-                                                              ,matches)
+                                                 (,loop (cons ,result ,results)
                                                         (match-end ,result))
-                                                 (matches (reverse ,matches) ,offset ,end)))))))))
+                                                 (let ((,final (reverse ,results)))
+                                                   (matches (map match-match ,final)
+                                                            (if (empty? ,final)
+                                                                ,offset
+                                                                (match-start (car ,final)))
+                                                            ,end))))))))))
 
 ;; (+ ...)
 (define (generate-one-or-more subrules input offset cont)
@@ -353,15 +359,12 @@
                            input
                            offset
                            (lambda (rest)
-                             (generate-rule-pattern subrule
-                                                    input
-                                                    offset
-                                                    (lambda (first)
-                                                      ;; NOTE Ignores the result and relies on (* ...) to match it again.
-                                                      ;; FIXME Might be a bit slow at times.
-                                                      (cont `(if (matches? ,first)
-                                                                 ,rest
-                                                                 (no-match)))))))))
+                             (let ((result (gensym 'result)))
+                               (cont `(let ((,result ,rest))
+                                        (if (and (matches? ,result)
+                                                 (= 0 (length (match-match ,result))))
+                                            (no-match)
+                                            ,result))))))))
 
 ;; (? ...)
 (define (generate-optional subrules input offset cont)
