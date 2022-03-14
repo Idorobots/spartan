@@ -17,6 +17,10 @@
          run-file
          run-instrumented-file)
 
+(provide (all-from-out "runtime/rt.rkt"))
+
+(provide (all-from-out "rete/rete.rkt"))
+
 (define (run-code expr)
   (reset-rete!)
   (reset-tasks! '())
