@@ -156,7 +156,7 @@
   (/ Symbol Number))
 
  (Number
-  (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
+  (Spacing (~ (~ (? Sign)) (~ (+ Digit)) (~ (? "." (~ (+ Digit))))))
   (lambda (input result)
     (let* ((matching (match-match result))
            (spacing-start (match-start result))
@@ -203,30 +203,27 @@
                start
                end))))
 
- (SymbolContents
-  "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
-
  ;; NOTE The above is basically the same as this, except less readable:
- ;; (SymbolContents
- ;;   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+ (SymbolContents
+   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
 
- ;; (SymbolInitial
- ;;   (/ Alpha Special "#"))
+ (SymbolInitial
+   (/ Alpha Special "#"))
 
- ;; (SymbolSubsequent
- ;;   (/ SymbolInitial "@" Digit Sign))
+ (SymbolSubsequent
+   (/ SymbolInitial "@" Digit Sign))
 
- ;; (Alpha
- ;;   "[a-zA-Z]")
+ (Alpha
+   "[a-zA-Z]")
 
- ;; (Special
- ;;   "[!$%*/:<=>?~_^]")
+ (Special
+   "[!$%*/:<=>?~_^]")
 
- ;; (Digit
- ;;   "[0-9]")
+ (Digit
+   "[0-9]")
 
- ;; (Sign
- ;;   "[+\\-]")
+ (Sign
+   "[+\\-]")
 
  (Spacing
   (: (* (/ "[ \t\v\r\n]+" Comment)))
