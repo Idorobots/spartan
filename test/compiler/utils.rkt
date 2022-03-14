@@ -11,6 +11,22 @@
 (require "../../src/compiler/utils/scc.rkt")
 
 (describe
+ "utils"
+ (it "uniq filters out duplicates while preserving ordering"
+     (assert (uniq '(1 2 3))
+             '(1 2 3))
+     (assert (uniq '(1 1 2 3))
+             '(1 2 3))
+     (assert (uniq '(1 2 1 3))
+             '(1 2 3))
+     (assert (uniq '(1 2 3 1))
+             '(1 2 3))
+     (assert (uniq '(1 2 3 1 2 3))
+             '(1 2 3))
+     (assert (uniq '(1 2 3 3 2 1))
+             '(1 2 3))))
+
+(describe
  "Mutable refs"
  (it "should dereference a value without modification"
      (define x (ref 0))

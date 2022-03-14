@@ -254,7 +254,45 @@
                       (foldr string-append-immutable "" (match-match result1))
                       (match-start result1)
                       (match-end result1))
-                     (no-match)))))))
+                     (no-match))))))
+
+ (it "inlines non-transforming rules"
+     (assert (inline-rules
+              '((Foo (/ Bar Baz))
+                (Bar Baz)
+                (Baz (Foo Bar)
+                     (lambda (input result)
+                       result))))
+             '((Foo (/ Baz Baz))
+               (Bar Baz)
+               (Baz ((/ Baz Baz) Baz)
+                    (lambda (input result)
+                      result)))))
+
+ (it "optimizes rules"
+     (let ((rules
+            '((R1 (/ A A))
+              (R2 (/ B B) (lambda (i r) r))
+              (R3 (/ A B A))
+              (R4 (A))
+              (R5 (/ A (/ B C) (/ D E)))
+              (R6 (+ (/ A (/ B C))))
+              (R7 (/ A (/ B (/ C D))))
+              (R8 (~ "foo" "bar" "baz"))))
+           (expected
+            '((R1 A)
+              (R2 B (lambda (i r) r))
+              (R3 (/ A B))
+              (R4 A)
+              (R5 (/ A B C D E))
+              (R6 (+ (/ A B C)))
+              (R7 (/ A B C D))
+              (R8 "foobarbaz"))))
+       (map (lambda (rule expected)
+              (assert (optimize-rules (list rule))
+                      (list expected)))
+            rules
+            expected))))
 
 (define (ast . properties)
   properties)

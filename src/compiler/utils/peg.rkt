@@ -7,7 +7,9 @@
 
 (provide generate-grammar
          generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
-         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat)
+         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat
+         ;; FIXME For test access
+         inline-rules optimize-rules)
 
 ;; Parser generator
 (define (generate-grammar rules)
@@ -15,21 +17,23 @@
          (hash (gensym 'hash))
          (input (gensym 'input))
          (inlined (inline-rules rules))
-         (caches (map (lambda (_) (gensym 'cache)) inlined)))
+         (optimized (optimize-rules inlined))
+         (caches (map (lambda (_) (gensym 'cache)) optimized)))
     `(define ,top-name
        (let ,(map generate-cache caches)
-         (letrec ,(map generate-rule inlined caches)
+         (letrec ,(map generate-rule optimized caches)
            (lambda (,input)
              ,@(map clear-cache caches)
              (,top-name ,input 0)))))))
 
 (define +peg-inline-loops+ 5)
 
+(define (non-transforming? rule)
+  (equal? 2 (length rule)))
+
 (define (inline-rules rules)
   (define (inline-rules-once rules)
-    (let* ((inlineable (filter (lambda (rule)
-                                 (equal? 2 (length rule)))
-                               rules)))
+    (let* ((inlineable (filter non-transforming? rules)))
       (map (lambda (r)
              (inline-rule inlineable r))
            rules)))
@@ -60,10 +64,92 @@
         ((symbol? pattern)
          (let ((r (assoc pattern rules)))
            (if r
-               (cdr r)
+               (cadr r)
                pattern)))
         (else
          pattern)))
+
+(define +peg-optimize-loops+ 5)
+
+(define (optimize-rules rules)
+  (define (optimize-rules-once rules)
+    (map optimize-rule rules))
+  (let loop ((i +peg-optimize-loops+)
+             (rs rules)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? rs prev))
+        rs
+        (loop (- i 1)
+              (optimize-rules-once rs)
+              rs))))
+
+(define (optimize-rule rule)
+  (let ((name (car rule))
+        (pattern (cadr rule))
+        (transform (cddr rule)))
+    (list* name
+           (optimize-pattern pattern)
+           transform)))
+
+(define (optimize-pattern pattern)
+  (match pattern
+    ;; No low-hanging optimization fruit.
+    ((list '* subpatterns ...)
+     (cons '* (map optimize-pattern subpatterns)))
+    ((list '+ subpatterns ...)
+     (cons '+ (map optimize-pattern subpatterns)))
+    ((list '? subpatterns ...)
+     (cons '? (map optimize-pattern subpatterns)))
+    ((list '! subpatterns ...)
+     (cons '! (map optimize-pattern subpatterns)))
+    ((list '& subpatterns ...)
+     (cons '& (map optimize-pattern subpatterns)))
+    ((list ': subpatterns ...)
+     (cons ': (map optimize-pattern subpatterns)))
+
+    ;; Concat
+    ((list '~ subpatterns ...)
+     #:when (every? string? subpatterns)
+     (foldr string-append-immutable "" subpatterns))
+    ((list '~ subpatterns ...)
+     (cons '~ (map optimize-pattern subpatterns)))
+
+    ;; Selection
+    ((list '/ subpattern)
+     (optimize-pattern subpattern))
+    ((list '/ subpatterns ...)
+     (list* '/ (splice-by (lambda (p)
+                            (if (tagged-list? '/ p)
+                                (cdr p)
+                                (list p)))
+                          (map optimize-pattern
+                               (uniq subpatterns)))))
+
+    ;; Sequences
+    ((list subpattern)
+     (optimize-pattern subpattern))
+    ((list subpatterns ...)
+     (splice-by (lambda (p)
+                  (if (and (list? p)
+                           (not (null? p))
+                           (not (member (car p) '(/ * + ? ! & : ~))))
+                      p
+                      (list p)))
+                (map optimize-pattern
+                     subpatterns)))
+
+    ;; Terminals, etc
+    (else
+     pattern)))
+
+(define (splice-by transform patterns)
+  (let loop ((acc '())
+             (ps patterns))
+    (if (empty? ps)
+        acc
+        (loop (append acc (transform (car ps)))
+              (cdr ps)))))
 
 (define (generate-cache cache)
   `(,cache (make-hasheq)))
