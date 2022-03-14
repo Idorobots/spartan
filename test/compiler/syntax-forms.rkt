@@ -40,7 +40,15 @@
 
  (it "elaborates valid dos"
      (check ((sym (gen-symbol-node 'do))
-             (exprs (gen-list (gen-integer 1 5) gen-valid-symbol-node))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node sym body)))
+            (let ((result (expand se node)))
+              (assert (ast-node-location result)
+                      ;; NOTE The wrapper is removed automatically.
+                      (ast-node-location body))
+              (assert result body)))
+     (check ((sym (gen-symbol-node 'do))
+             (exprs (gen-list (gen-integer 2 5) gen-valid-symbol-node))
              (node (apply gen-specific-list-node sym exprs)))
             (let ((result (expand se node)))
               (assert (ast-node-location result)
@@ -48,7 +56,7 @@
               (assert (ast-node-context result)
                       "Bad `do` syntax")
               (assert-ast result
-                          (ast-body exprs1 ...)
+                          (do exprs1 ...)
                           (assert exprs1 exprs)))))
 
  (it "disallows bad do syntax"
@@ -63,7 +71,20 @@
      (check ((sym (gen-symbol-node 'lambda))
              (formals (gen-arg-list (gen-integer 0 3)))
              (fs (apply gen-specific-list-node formals))
-             (body (gen-arg-list (gen-integer 1 3)))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node sym fs body)))
+            (let ((result (expand se node)))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert-ast result
+                          (lambda formals1
+                            body1)
+                          (assert formals1 formals)
+                          (assert body1 body))))
+     (check ((sym (gen-symbol-node 'lambda))
+             (formals (gen-arg-list (gen-integer 0 3)))
+             (fs (apply gen-specific-list-node formals))
+             (body (gen-arg-list (gen-integer 2 5)))
              (node (apply gen-specific-list-node sym fs body)))
             (let ((result (expand se node)))
               (assert (ast-node-location result)
@@ -74,7 +95,7 @@
                       "Bad `lambda` body syntax")
               (assert-ast result
                           (lambda formals1
-                            (ast-body body1 ...))
+                            (do body1 ...))
                           (assert formals1 formals)
                           (assert body1 body)))))
 
@@ -128,7 +149,32 @@
                               vars
                               vals)))
              (bs (apply gen-specific-list-node bindings))
-             (body (gen-arg-list (gen-integer 1 3)))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node sym bs body)))
+            (let ((result (expand se node)))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert-ast result
+                          (let bindings1
+                              body1)
+                          (assert (map ast-node-location bindings1)
+                                  (map ast-node-location bindings))
+                          (assert (map ast-binding-var bindings1)
+                                  vars)
+                          (assert (map ast-binding-val bindings1)
+                                  vals)
+                          (assert body1 body))))
+     (check ((sym (gen-symbol-node 'let))
+             (vars (gen-arg-list (gen-integer 1 3)))
+             (vals (gen-arg-list (length vars)))
+             (bindings (lambda (rand)
+                         (map (lambda (var val)
+                                (sample (gen-specific-list-node var val)
+                                        rand))
+                              vars
+                              vals)))
+             (bs (apply gen-specific-list-node bindings))
+             (body (gen-arg-list (gen-integer 2 5)))
              (node (apply gen-specific-list-node sym bs body)))
             (let ((result (expand se node)))
               (assert (ast-node-location result)
@@ -139,7 +185,7 @@
                       "Bad `let` body syntax")
               (assert-ast result
                           (let bindings1
-                            (ast-body body1 ...))
+                            (do body1 ...))
                           (assert (map ast-node-location bindings1)
                                   (map ast-node-location bindings))
                           (assert (map ast-binding-var bindings1)
@@ -214,7 +260,32 @@
                               vars
                               vals)))
              (bs (apply gen-specific-list-node bindings))
-             (body (gen-arg-list (gen-integer 1 3)))
+             (body gen-valid-symbol-node)
+             (node (gen-specific-list-node sym bs body)))
+            (let ((result (expand se node)))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert-ast result
+                          (letrec bindings1
+                              body1)
+                          (assert (map ast-node-location bindings1)
+                                  (map ast-node-location bindings))
+                          (assert (map ast-binding-var bindings1)
+                                  vars)
+                          (assert (map ast-binding-val bindings1)
+                                  vals)
+                          (assert body1 body))))
+     (check ((sym (gen-symbol-node 'letrec))
+             (vars (gen-arg-list (gen-integer 1 3)))
+             (vals (gen-arg-list (length vars)))
+             (bindings (lambda (rand)
+                         (map (lambda (var val)
+                                (sample (gen-specific-list-node var val)
+                                        rand))
+                              vars
+                              vals)))
+             (bs (apply gen-specific-list-node bindings))
+             (body (gen-arg-list (gen-integer 2 5)))
              (node (apply gen-specific-list-node sym bs body)))
             (let ((result (expand se node)))
               (assert (ast-node-location result)
@@ -225,7 +296,7 @@
                       "Bad `letrec` body syntax")
               (assert-ast result
                           (letrec bindings1
-                            (ast-body body1 ...))
+                            (do body1 ...))
                           (assert (map ast-node-location bindings1)
                                   (map ast-node-location bindings))
                           (assert (map ast-binding-var bindings1)
@@ -336,6 +407,23 @@
               (assert (ast-node-location result)
                       (ast-node-location node))
               (assert (generated? (ast-def-value result)))
+              (assert-ast result
+                          (def name1
+                               (lambda formals1
+                                 body1))
+                          (assert name1 name)
+                          (assert formals1 formals)
+                          (assert body1 body))))
+     (check ((sym (gen-symbol-node 'define))
+             (name gen-valid-symbol-node)
+             (formals (gen-arg-list (gen-integer 0 3)))
+             (signature (apply gen-specific-list-node name formals))
+             (body (gen-arg-list (gen-integer 2 5)))
+             (node (apply gen-specific-list-node sym signature body)))
+            (let ((result (expand se node)))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert (generated? (ast-def-value result)))
               (assert (ast-node-location (ast-lambda-body (ast-def-value result)))
                       (ast-node-location node))
               (assert (ast-node-context (ast-lambda-body (ast-def-value result)))
@@ -343,7 +431,7 @@
               (assert-ast result
                           (def name1
                                (lambda formals1
-                                 (ast-body body1)))
+                                 (do body1 ...)))
                           (assert name1 name)
                           (assert formals1 formals)
                           (assert body1 body)))))

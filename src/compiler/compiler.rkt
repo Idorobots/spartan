@@ -50,7 +50,7 @@
                   'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
-               body-expand
+               body-expand ;; FIXME Just for the stray def check.
                quasiquote-expand
                annotate-constants
                annotate-free-vars

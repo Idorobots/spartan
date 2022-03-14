@@ -5,27 +5,31 @@
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/errors.rkt")
-(require "../../src/compiler/passes/body.rkt")
+(require "../../src/compiler/passes/body.rkt") ;; FIXME Just for the stray defs test.
+(require "../../src/compiler/expander/expander.rkt")
+(require "../../src/compiler/expander/syntax-forms.rkt")
 
 (define gen-body-neutral-node (gen-one-of gen-value-node gen-non-value-node))
 
+(define se (make-static-environment))
+
 (describe
- "body expansion"
+ "body expander"
  (it "should only operate on `body` nodes"
      (check ((node gen-body-neutral-node))
-            (assert (expand-body node)
+            (assert (expand se node)
                     node)))
 
  (it "should expand well-formed body correctly"
      (check ((ctx (gen-text (gen-integer 10 20)))
              (expr gen-body-neutral-node)
              (node (gen-specific-body-node ctx expr)))
-            (assert (expand-body node)
+            (assert (expand se node)
                     expr))
      (check ((ctx (gen-text (gen-integer 10 20)))
              (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx exprs)))
-            (let ((result (expand-body node)))
+            (let ((result (expand se node)))
               (assert-ast result
                           (do expanded-exprs ...)
                           (assert expanded-exprs exprs))
@@ -35,7 +39,7 @@
              (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
              (non-defs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx (append defs non-defs))))
-            (let ((result (expand-body node)))
+            (let ((result (expand se node)))
               (assert-ast result
                           (letrec bindings
                             (do body ...))
@@ -60,8 +64,17 @@
              (node (apply gen-specific-body-node ctx exprs)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (expand-body node))
+                      (expand se node))
                     (format "~a, expected at least one non-definition expression within:" ctx))))
+
+ (it "should preserve error context"
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
+             (node (apply gen-specific-body-node ctx exprs)))
+            (assert (ast-node-context (expand se node)) ctx))))
+
+(describe
+ "body expansion"
 
  (it "should disallow stray defs"
      (check ((ctx (gen-text (gen-integer 10 20)))
@@ -69,10 +82,4 @@
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
                       (expand-body node))
-                    (format "~a, not allowed in this context:" ctx))))
-
- (it "should preserve error context"
-     (check ((ctx (gen-text (gen-integer 10 20)))
-             (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
-             (node (apply gen-specific-body-node ctx exprs)))
-            (assert (ast-node-context (expand-body node)) ctx))))
+                    (format "~a, not allowed in this context:" ctx)))))

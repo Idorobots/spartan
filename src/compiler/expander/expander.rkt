@@ -52,10 +52,17 @@
 
    ;; Regular application
    ((list values ...)
-    (expand env
-            (apply-expander '&application
-                             env
-                             expr)))
+    ;; NOTE Handles its own internal expansions.
+    (apply-expander '&application
+                    env
+                    expr))
+
+   ;; Body with local definition support
+   ((ast-body exprs ...)
+    ;; NOTE Handles its own internal expansions.
+    (apply-expander '&body
+                    env
+                    expr))
 
    ;; Syntactic closures
    ((ast-syntactic-closure closure-env free expr)
@@ -120,7 +127,9 @@
 (define (make-static-environment)
   (hasheq
    ;; Special expanders
-   '&application (make-builtin-expander app-expander) ;; FIXME Kinda hacky...
+   ;; FIXME Kinda hacky...
+   '&application (make-builtin-expander (make-app-expander expand))
+   '&body (make-builtin-expander (make-body-expander expand))
 
    ;; Syntax forms
    'if (make-builtin-expander if-expander)

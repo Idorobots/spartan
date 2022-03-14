@@ -284,14 +284,65 @@
        node
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
-(define (app-expander expr use-env def-env)
-  (match-ast expr
-   ((list op args ...)
-    (replace expr
-             (make-ast-app (ast-node-location expr)
-                           op
-                           args)))
-   (else
-    (raise-compilation-error
-     expr
-     "Bad call syntax, expected at least one expression within the call:"))))
+(define (make-app-expander expand)
+  (define (app-expander expr use-env def-env)
+    (match-ast expr
+     ((list op args ...)
+      (replace expr
+               (expand use-env
+                       (make-ast-app (ast-node-location expr)
+                                     op
+                                     args))))
+     (else
+      (raise-compilation-error
+       expr
+       "Bad call syntax, expected at least one expression within the call:"))))
+  app-expander)
+
+(define (make-body-expander expand)
+  (define (body-expander expr use-env def-env)
+    (match-ast expr
+     ((ast-body exprs ...)
+      (let* ((pre-expanded (map (partial expand use-env) exprs))
+             (defs (extract-defs pre-expanded))
+             (non-defs (extract-non-defs pre-expanded)))
+        (if (> (length defs) 0)
+            (generated
+             (make-ast-letrec (ast-node-location expr)
+                              (unique-bindings defs (ast-node-context expr))
+                              (reconstruct-simple-body non-defs expr)))
+            (reconstruct-simple-body pre-expanded expr))))
+     (else
+      (compiler-bug "Invalid ast-body object" expr))))
+  body-expander)
+
+(define (extract-defs exprs)
+  (foldr (lambda (e acc)
+           (match-ast e
+            ((def name value)
+             (cons (generated
+                    (make-ast-binding (ast-node-location e) name value))
+                   acc))
+            (else acc)))
+         '()
+         exprs))
+
+(define (extract-non-defs exprs)
+  (filter (compose not ast-def?)
+          exprs))
+
+(define (reconstruct-simple-body exprs parent)
+  (let ((ctx (ast-node-context* parent "Bad `do` syntax")))
+    (cond ((= (length exprs) 0)
+           (raise-compilation-error
+            parent
+            (format "~a, expected at least one non-definition expression within:" ctx)))
+          ((= (length exprs) 1)
+           (car exprs))
+          (else
+           (generated
+            ;; NOTE The context should be preserved.
+            (set-ast-node-context
+             (make-ast-do (ast-node-location parent)
+                          exprs)
+             ctx))))))
