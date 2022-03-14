@@ -1,0 +1,177 @@
+;; This example finds sets of non-transitive dice using the amb choice operator.
+;; See http://www.singingbanana.com/dice/article.htm for non-transitive dice info.
+
+(define fail-stack (ref '()))
+
+(define (current-continuation)
+  (letcc k (k k)))
+
+(define (fail)
+  (let ((s (deref fail-stack)))
+    (if (nil? s)
+        (raise "backtracking stack exhausted!")
+        (let ((point (car s)))
+          (assign! fail-stack (cdr s))
+          (point point)))))
+
+(define (amb choices)
+  (let ((mut-choices (ref choices)))
+    (let* ((cc (current-continuation))
+           (cs (deref mut-choices)))
+      (if (nil? cs)
+          (fail)
+          (let ((c (car cs)))
+            (assign! mut-choices (cdr cs))
+            (assign! fail-stack (cons cc
+                                      (deref fail-stack)))
+            c)))))
+
+(define (assert condition)
+  (unless condition
+    (fail)))
+
+;; Some utils
+(define (iota from to)
+  (if (> from to)
+      '()
+      (cons from (iota (+ 1 from) to))))
+
+(define (filter p lst)
+  (if (nil? lst)
+      lst
+      (let ((first (car lst))
+            (rest (filter p (cdr lst))))
+        (if (p first)
+            (cons first rest)
+            rest))))
+
+(define (map f lst)
+  (if (nil? lst)
+      lst
+      (cons (f (car lst))
+            (map f (cdr lst)))))
+
+(define (foldl f acc lst)
+  (if (nil? lst)
+      acc
+      (f (car lst)
+         (foldl f acc (cdr lst)))))
+
+(define (length lst)
+  (if (nil? lst)
+      0
+      (+ 1 (length (cdr lst)))))
+
+(define (nth lst i)
+  (cond ((nil? lst)
+         (raise "too few elements on the list!"))
+        ((= i 0)
+         (car lst))
+        (else
+         (nth (cdr lst) (- i 1)))))
+
+(define (repeat times f)
+  (if (= times 0)
+      '()
+      (cons (f)
+            (repeat (- times 1)
+                    f))))
+
+(define (unique lst)
+  (if (nil? lst)
+      lst
+      (let ((first (car lst)))
+        (cons first
+              (unique
+               (filter (lambda (v)
+                         (not (equal? v first)))
+                       (cdr lst)))))))
+
+(define (count value lst)
+  (length (filter (lambda (v)
+                    (equal? v value))
+                  lst)))
+
+(define (combinations lst k)
+  (cond ((= k 0)
+         '(()))
+        ((nil? lst)
+         '())
+        (else
+         (append (map
+                  (lambda (x)
+                    (cons (car lst) x))
+                  (combinations lst (- k 1)))
+                 (combinations (cdr lst) k)))))
+
+;; A die is represented by a num-sides long combination with repeats of the side values appearing on the die.
+(define (dice sides min max)
+  (amb (combinations (iota min max) sides)))
+
+;; Win probability is determined by summing all propabilities of sides scoring more than the other die.
+(define (probability-distribution die)
+  (let ((len (length die)))
+    (map (lambda (value)
+           (cons value
+                 (/ (count value die)
+                    len)))
+         (unique die))))
+
+(define (win-probability a b)
+  (foldl +
+         0
+         (map (lambda (av)
+                (foldl (lambda (bv acc)
+                         (if (> (car av)
+                                (car bv))
+                             (+ acc
+                                (* (cdr av)
+                                   (cdr bv)))
+                             acc))
+                       0
+                       b))
+              a)))
+
+(display "Finding a set of non-transitive dice according to a specification.")
+(newline)
+
+(let* ((num-dice 3)
+       (num-sides 6)
+       (min-side 1)
+       (max-side 6)
+       (win-threshold 0.5)
+       (counter (ref 0))
+       ;; Make some dice.
+       (dice (repeat num-dice
+                     (lambda ()
+                       (dice num-sides min-side max-side))))
+       ;; Compute their probability distribution.
+       (probs (map probability-distribution dice))
+       ;; Compute how likely each dice is to beat the next one on the list.
+       (win-probs (map (lambda (i)
+                         (win-probability (nth probs i)
+                                          (nth probs (modulo (+ i 1)
+                                                             num-dice))))
+                       (iota 0 (- num-dice 1)))))
+  (assign! counter (+ 1 (deref counter)))
+  (when (= 0 (modulo (deref counter) 100000))
+    (display "Tested ")
+    (display (deref counter))
+    (display " sets so far, currently testing: ")
+    (display dice)
+    (newline))
+  ;; And finally, ensure that these dice are non-transitive....
+  (map (lambda (v)
+         (assert (> v win-threshold)))
+       win-probs)
+  ;; ...and the dice are not trivial...
+  (map (lambda (die)
+         (assert (> (length (unique die)) 1)))
+       dice)
+  ;; ...and the win propabilities are all equal.
+  (assert (= 1 (length (unique win-probs))))
+  ;; The resulting non-transitive dice:
+  (display dice)
+  (newline)
+  (display win-probs)
+  (newline))

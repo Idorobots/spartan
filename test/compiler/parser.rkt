@@ -171,7 +171,8 @@
               (assert (ast->plain (p contents))
                       (expected-read contents))))
           (filter (lambda (filename)
-                    (not (equal? filename "test/sprtn/logger.sprtn")))
+                    (not (member filename (list "test/sprtn/logger.sprtn"
+                                                "test/sprtn/amb2.sprtn"))))
                   (filter (lambda (filename)
                             (string-suffix? filename ".sprtn"))
                           (map (lambda (path)
