@@ -9,7 +9,7 @@
          generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
          generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat
          ;; FIXME For test access
-         inline-rules optimize-rules)
+         inline-rules prune-rules optimize-rules)
 
 ;; Parser generator
 (define (generate-grammar rules)
@@ -17,7 +17,8 @@
          (hash (gensym 'hash))
          (input (gensym 'input))
          (inlined (inline-rules rules))
-         (optimized (optimize-rules inlined))
+         (pruned (prune-rules top-name inlined))
+         (optimized (optimize-rules pruned))
          (caches (map (lambda (_) (gensym 'cache)) optimized)))
     `(define ,top-name
        (let ,(map generate-cache caches)
@@ -68,6 +69,35 @@
                pattern)))
         (else
          pattern)))
+
+(define +peg-prune-loops+ 5)
+
+(define (prune-rules top-name rules)
+  (define (prune-rules-once rules)
+    (let ((used (foldl append (list top-name) (map collect-nonterminals rules))))
+      (filter (lambda (r)
+                (member (car r) used))
+              rules)))
+  (let loop ((i +peg-prune-loops+)
+             (rs rules)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? rs prev))
+        rs
+        (loop (- i 1)
+              (prune-rules-once rs)
+              rs))))
+
+(define (collect-nonterminals rule)
+  (define (collect-in-pattern pattern)
+    (cond ((symbol? pattern)
+           (list pattern))
+          ((pair? pattern)
+           (append (collect-in-pattern (car pattern))
+                   (collect-in-pattern (cdr pattern))))
+          (else
+           '())))
+  (uniq (collect-in-pattern (cadr rule))))
 
 (define +peg-optimize-loops+ 5)
 

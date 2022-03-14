@@ -269,6 +269,16 @@
                     (lambda (input result)
                       result)))))
 
+ (it "prunes unused rules"
+     (assert (prune-rules 'R1 '((R1 R2)
+                                (R2 (/ R2 R4))
+                                (R3 "foo")
+                                (R4 R2)
+                                (R5 (+ R3))))
+             '((R1 R2)
+               (R2 (/ R2 R4))
+               (R4 R2))))
+
  (it "optimizes rules"
      (let ((rules
             '((R1 (/ A A))
