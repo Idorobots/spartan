@@ -112,12 +112,24 @@
     ((list '~ subpatterns ...)
      #:when (every? string? subpatterns)
      (foldr string-append-immutable "" subpatterns))
+    ((list '~ (list '* subpattern))
+     #:when (string? subpattern)
+     (string-append-immutable "(" subpattern ")*"))
+    ((list '~ (list '+ subpattern))
+     #:when (string? subpattern)
+     (string-append-immutable "(" subpattern ")+"))
+    ((list '~ (list '? subpattern))
+     #:when (string? subpattern)
+     (string-append-immutable "(" subpattern ")?"))
     ((list '~ subpatterns ...)
      (cons '~ (map optimize-pattern subpatterns)))
 
     ;; Selection
     ((list '/ subpattern)
      (optimize-pattern subpattern))
+    ((list '/ subpatterns ...)
+     #:when (every? string? subpatterns)
+     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "|") ")"))
     ((list '/ subpatterns ...)
      (list* '/ (splice-by (lambda (p)
                             (if (tagged-list? '/ p)
@@ -142,6 +154,17 @@
     ;; Terminals, etc
     (else
      pattern)))
+
+(define (regexp-escape p)
+  (case p
+    ((".") "\\.")
+    (("(") "\\(")
+    ((")") "\\)")
+    (("[") "\\[")
+    (("]") "\\]")
+    (("{") "\\{")
+    (("}") "\\}")
+    (else p)))
 
 (define (splice-by transform patterns)
   (let loop ((acc '())
