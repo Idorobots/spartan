@@ -7,7 +7,9 @@
 
 (provide generate-grammar
          generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
-         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat)
+         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat
+         ;; FIXME For test access
+         inline-rules prune-rules optimize-rules)
 
 ;; Parser generator
 (define (generate-grammar rules)
@@ -15,21 +17,24 @@
          (hash (gensym 'hash))
          (input (gensym 'input))
          (inlined (inline-rules rules))
-         (caches (map (lambda (_) (gensym 'cache)) inlined)))
+         (pruned (prune-rules top-name inlined))
+         (optimized (optimize-rules pruned))
+         (caches (map (lambda (_) (gensym 'cache)) optimized)))
     `(define ,top-name
        (let ,(map generate-cache caches)
-         (letrec ,(map generate-rule inlined caches)
+         (letrec ,(map generate-rule optimized caches)
            (lambda (,input)
              ,@(map clear-cache caches)
              (,top-name ,input 0)))))))
 
 (define +peg-inline-loops+ 5)
 
+(define (non-transforming? rule)
+  (equal? 2 (length rule)))
+
 (define (inline-rules rules)
   (define (inline-rules-once rules)
-    (let* ((inlineable (filter (lambda (rule)
-                                 (equal? 2 (length rule)))
-                               rules)))
+    (let* ((inlineable (filter non-transforming? rules)))
       (map (lambda (r)
              (inline-rule inlineable r))
            rules)))
@@ -60,10 +65,163 @@
         ((symbol? pattern)
          (let ((r (assoc pattern rules)))
            (if r
-               (cdr r)
+               (cadr r)
                pattern)))
         (else
          pattern)))
+
+(define +peg-prune-loops+ 5)
+
+(define (prune-rules top-name rules)
+  (define (prune-rules-once rules)
+    (let ((used (foldl append (list top-name) (map collect-nonterminals rules))))
+      (filter (lambda (r)
+                (member (car r) used))
+              rules)))
+  (let loop ((i +peg-prune-loops+)
+             (rs rules)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? rs prev))
+        rs
+        (loop (- i 1)
+              (prune-rules-once rs)
+              rs))))
+
+(define (collect-nonterminals rule)
+  (define (collect-in-pattern pattern)
+    (cond ((symbol? pattern)
+           (list pattern))
+          ((pair? pattern)
+           (append (collect-in-pattern (car pattern))
+                   (collect-in-pattern (cdr pattern))))
+          (else
+           '())))
+  (uniq (collect-in-pattern (cadr rule))))
+
+(define +peg-optimize-loops+ 5)
+
+(define (optimize-rules rules)
+  (define (optimize-rules-once rules)
+    (map optimize-rule rules))
+  (let loop ((i +peg-optimize-loops+)
+             (rs rules)
+             (prev '()))
+    (if (or (= i 0)
+            (equal? rs prev))
+        rs
+        (loop (- i 1)
+              (optimize-rules-once rs)
+              rs))))
+
+(define (optimize-rule rule)
+  (let ((name (car rule))
+        (pattern (cadr rule))
+        (transform (cddr rule)))
+    (list* name
+           (optimize-pattern pattern)
+           transform)))
+
+(define (optimize-pattern pattern)
+  (match pattern
+    ;; No low-hanging optimization fruit.
+    ((list '* subpatterns ...)
+     (cons '* (map optimize-pattern subpatterns)))
+    ((list '+ subpatterns ...)
+     (cons '+ (map optimize-pattern subpatterns)))
+    ((list '? subpatterns ...)
+     (cons '? (map optimize-pattern subpatterns)))
+    ((list '! subpatterns ...)
+     (cons '! (map optimize-pattern subpatterns)))
+    ((list '& subpatterns ...)
+     (cons '& (map optimize-pattern subpatterns)))
+
+    ;; Concat
+    ((list '~ subpatterns ...)
+     #:when (every? string-or-eof? subpatterns)
+     (string-join (map regexp-escape subpatterns) ""))
+    ((list '~ (list '* subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")*"))
+    ((list '~ (list '+ subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")+"))
+    ((list '~ (list '? subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")?"))
+    ((list '~ subpatterns ...)
+     (cons '~ (map optimize-pattern subpatterns)))
+
+    ;; Drop
+    ((list ': subpatterns ...)
+     #:when (every? string-or-eof? subpatterns)
+     (list ': (string-join (map regexp-escape subpatterns) "")))
+    ((list ': (list '* subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")*")))
+    ((list ': (list '+ subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")+")))
+    ((list ': (list '? subpatterns ...))
+     #:when (every? string-or-eof? subpatterns)
+     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")?")))
+    ((list ': subpatterns ...)
+     (cons ': (map optimize-pattern subpatterns)))
+
+    ;; Selection
+    ((list '/ subpattern)
+     (optimize-pattern subpattern))
+    ((list '/ subpatterns ...)
+     #:when (every? string-or-eof? subpatterns)
+     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "|") ")"))
+    ((list '/ subpatterns ...)
+     (list* '/ (splice-by (lambda (p)
+                            (if (tagged-list? '/ p)
+                                (cdr p)
+                                (list p)))
+                          (map optimize-pattern
+                               (uniq subpatterns)))))
+
+    ;; Sequences
+    ((list subpattern)
+     (optimize-pattern subpattern))
+    ((list subpatterns ...)
+     (splice-by (lambda (p)
+                  (if (and (list? p)
+                           (not (null? p))
+                           (not (member (car p) '(/ * + ? ! & : ~))))
+                      p
+                      (list p)))
+                (map optimize-pattern
+                     subpatterns)))
+
+    ;; Terminals, etc
+    (else
+     pattern)))
+
+(define (string-or-eof? p)
+  (or (string? p)
+      (empty? p)))
+
+(define (regexp-escape p)
+  (match p
+    ("." "\\.")
+    ("(" "\\(")
+    (")" "\\)")
+    ("[" "\\[")
+    ("]" "\\]")
+    ("{" "\\{")
+    ("}" "\\}")
+    ((list) "$")
+    (else p)))
+
+(define (splice-by transform patterns)
+  (let loop ((acc '())
+             (ps patterns))
+    (if (empty? ps)
+        acc
+        (loop (append acc (transform (car ps)))
+              (cdr ps)))))
 
 (define (generate-cache cache)
   `(,cache (make-hasheq)))
@@ -149,15 +307,17 @@
 ;; (...)
 (define (generate-sequence subrules input offset cont)
   (cont (let loop ((subrules subrules)
-                   (matches '())
+                   (results '())
                    (last-end offset))
           (if (empty? subrules)
-              `(matches ,(cons 'list (reverse matches))
-                        ,offset
+              `(matches ,(cons 'list
+                               (map (lambda (r)
+                                      `(match-match ,r))
+                                    (reverse results)))
+                        (match-start ,(last results))
                         ,last-end)
               (let ((subrule (car subrules))
                     (result (gensym 'result))
-                    (mat (gensym 'match))
                     (end (gensym 'end)))
                 (generate-rule-pattern subrule
                                        input
@@ -165,10 +325,9 @@
                                        (lambda (r)
                                          `(let ((,result ,r))
                                             (if (matches? ,result)
-                                                (let ((,mat (match-match ,result))
-                                                      (,end (match-end ,result)))
+                                                (let ((,end (match-end ,result)))
                                                   ,(loop (cdr subrules)
-                                                         (cons mat matches)
+                                                         (cons result results)
                                                          end))
                                                 (no-match))))))))))
 
@@ -192,9 +351,10 @@
   (let ((subrule (cdr subrules))
         (result (gensym 'result))
         (end (gensym 'end))
-        (matches (gensym 'matches))
-        (loop (gensym 'loop)))
-    (cont `(let ,loop ((,matches '())
+        (results (gensym 'results))
+        (loop (gensym 'loop))
+        (final (gensym 'final-result)))
+    (cont `(let ,loop ((,results '())
                        (,end ,offset))
                 ,(generate-rule-pattern subrule
                                         input
@@ -202,10 +362,14 @@
                                         (lambda (r)
                                           `(let ((,result ,r))
                                              (if (matches? ,result)
-                                                 (,loop (cons (match-match ,result)
-                                                              ,matches)
+                                                 (,loop (cons ,result ,results)
                                                         (match-end ,result))
-                                                 (matches (reverse ,matches) ,offset ,end)))))))))
+                                                 (let ((,final (reverse ,results)))
+                                                   (matches (map match-match ,final)
+                                                            (if (empty? ,final)
+                                                                ,offset
+                                                                (match-start (car ,final)))
+                                                            ,end))))))))))
 
 ;; (+ ...)
 (define (generate-one-or-more subrules input offset cont)
@@ -214,15 +378,12 @@
                            input
                            offset
                            (lambda (rest)
-                             (generate-rule-pattern subrule
-                                                    input
-                                                    offset
-                                                    (lambda (first)
-                                                      ;; NOTE Ignores the result and relies on (* ...) to match it again.
-                                                      ;; FIXME Might be a bit slow at times.
-                                                      (cont `(if (matches? ,first)
-                                                                 ,rest
-                                                                 (no-match)))))))))
+                             (let ((result (gensym 'result)))
+                               (cont `(let ((,result ,rest))
+                                        (if (and (matches? ,result)
+                                                 (= 0 (length (match-match ,result))))
+                                            (no-match)
+                                            ,result))))))))
 
 ;; (? ...)
 (define (generate-optional subrules input offset cont)
@@ -283,6 +444,7 @@
                            (let ((result (gensym 'result)))
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
+                                          ;; FIXME This produces a hard-to debug error when a match is not a list of strings.
                                           (matches (foldr string-append-immutable "" (match-match ,result))
                                                    (match-start ,result)
                                                    (match-end ,result))

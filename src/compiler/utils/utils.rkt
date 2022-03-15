@@ -3,7 +3,7 @@
 ;; Various utilities
 
 (provide empty? every? some? sorted? tagged-list? symbol<?
-         last concat offset iota
+         last concat uniq offset iota
          id partial flip constantly
          array array-ref array-assign!
          ->)
@@ -30,6 +30,18 @@
       (and (pred (car lst)
                  (cadr lst))
            (sorted? (cdr lst) pred))))
+
+(define (uniq lst)
+  (let loop ((acc '())
+             (lst lst))
+    (cond ((empty? lst)
+           (reverse acc))
+          ((member (car lst) acc)
+           (loop acc (cdr lst)))
+          (else
+           (loop (cons (car lst)
+                       acc)
+                 (cdr lst))))))
 
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
