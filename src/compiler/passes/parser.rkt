@@ -226,12 +226,10 @@
 
  (Spacing
   (: (* (/ "[ \t\v\r\n]+" Comment)))
-  ;; FIXME Prevents inlining of this rule making it hit the cache more often and perform better.
-  (lambda (input result)
-    result))
+  no-inline)
 
  (Comment
-  (";[^\n]*" (/ "\n" EOF)))
+  (~ ";[^\n]*" (/ "\n" EOF)))
  (EOF
   ()))
 
@@ -252,3 +250,8 @@
             (env-set env
                      'ast (car result)
                      'errors (cadr result))))))
+
+(define no-inline
+  ;; NOTE Prevents inlining of this rule making it hit the cache more often and perform better.
+  (lambda (input result)
+    result))
