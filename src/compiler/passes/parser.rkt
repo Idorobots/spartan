@@ -203,8 +203,7 @@
                start
                end))))
 
- ;; NOTE The above is basically the same as this, except less readable:
- (SymbolContents
+  (SymbolContents
    (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
 
  (SymbolInitial
