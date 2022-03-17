@@ -9,7 +9,6 @@
 ;; The frontend
 (require "passes/parser.rkt")
 (require "passes/macro-expander.rkt")
-(require "passes/body.rkt")
 (require "passes/qq.rkt")
 (require "passes/const.rkt")
 (require "passes/validate.rkt")
@@ -50,7 +49,6 @@
                   'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
-               body-expand ;; FIXME Just for the stray def check.
                quasiquote-expand
                annotate-constants
                annotate-free-vars
@@ -60,7 +58,7 @@
                alpha-convert
                (optimize
                 (list (sequence annotate-free-vars
-                               inline-lambdas)
+                                inline-lambdas)
                       inline-builtins
                       propagate-constants
                       fold-constants
@@ -76,7 +74,7 @@
                continuation-passing-convert
                (optimize
                 (list (sequence annotate-free-vars
-                               inline-lambdas)
+                                inline-lambdas)
                       propagate-constants
                       fold-constants
                       (sequence annotate-free-vars

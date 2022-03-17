@@ -20,7 +20,7 @@
                 'globals a-set?
                 'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
    (lambda (env)
      (let ((result (collect-errors (env-get env 'errors)
                                    (lambda ()
@@ -114,10 +114,11 @@
          (set-ast-app-op (validate-app-procedure (validate-ast undefined unused used-before-def op)))
          (set-ast-app-args (map (partial validate-ast undefined unused used-before-def) args))))
     ((def name value)
-     ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars value))))
-       (-> expr
+       (raise-compilation-error
+        ;; NOTE So that we might find more meaningful errors in there.
+        (-> expr
            (set-ast-def-name (validate-ast (set)
                                            unused
                                            used-before-def
@@ -125,7 +126,8 @@
            (set-ast-def-value (validate-ast (set-difference undefined bound)
                                             (set)
                                             used-before-def
-                                            value)))))
+                                            value)))
+        (format "~a, not allowed in this context:" (ast-node-context* expr "Bad `define` syntax")))))
     (else
      (walk-ast (partial validate-ast undefined unused used-before-def)
                expr))))

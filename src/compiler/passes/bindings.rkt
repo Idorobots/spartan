@@ -17,7 +17,7 @@
   (pass (schema "annotate-bindings"
                 'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
         (lambda (env)
           (env-update env 'ast (partial analyze-bindings #f)))))
 

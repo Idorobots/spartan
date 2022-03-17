@@ -87,4 +87,12 @@
                                      compilation-error-what))
                       (validate-ast (set) (set) (set) node))
                     (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
-                            (extract-node-type op))))))
+                            (extract-node-type op)))))
+
+  (it "should disallow stray defs"
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (node (gen-with-ctx gen-valid-def-node ctx)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (validate-ast (set) (set) (set) node))
+                    (format "~a, not allowed in this context:" ctx)))))

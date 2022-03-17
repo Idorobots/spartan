@@ -5,7 +5,6 @@
 (require "../testing.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/errors.rkt")
-(require "../../src/compiler/passes/body.rkt") ;; FIXME Just for the stray defs test.
 (require "../../src/compiler/expander/expander.rkt")
 (require "../../src/compiler/expander/syntax-forms.rkt")
 
@@ -72,14 +71,3 @@
              (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx exprs)))
             (assert (ast-node-context (expand se node)) ctx))))
-
-(describe
- "body expansion"
-
- (it "should disallow stray defs"
-     (check ((ctx (gen-text (gen-integer 10 20)))
-             (node (gen-with-ctx gen-valid-def-node ctx)))
-            (assert (with-handlers ((compilation-error?
-                                     compilation-error-what))
-                      (expand-body node))
-                    (format "~a, not allowed in this context:" ctx)))))

@@ -17,7 +17,7 @@
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing ;; NOTE These can still appear within quoted values.
                                     number symbol string list
                                     if do let letrec binding lambda app
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
         (lambda (env)
           (env-update env 'ast wrap-constants))))
 
