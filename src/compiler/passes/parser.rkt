@@ -36,7 +36,7 @@
   (Spacing ")")
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (raise-compilation-error
                 (make-ast-location (location start end))
@@ -50,7 +50,7 @@
   (Spacing "'" Expression)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-quote (location start end)
                                (caddr matching))
@@ -60,7 +60,7 @@
   (Spacing "`" Expression)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-quasiquote (location start end)
                                     (caddr matching))
@@ -70,7 +70,7 @@
   (Spacing "," Expression)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-unquote (location start end)
                                  (caddr matching))
@@ -80,7 +80,7 @@
   (Spacing ",@" Expression)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-unquote-splicing (location start end)
                                           (caddr matching))
@@ -90,7 +90,7 @@
   (Spacing (/ "'" "`" ",@" ","))
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (raise-compilation-error
                 (make-ast-location (location start end))
@@ -105,7 +105,7 @@
   (Spacing "\"" StringContents "\"")
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result))
            (content (caddr matching)))
       (matches (make-ast-string (location start end) content)
@@ -115,7 +115,7 @@
   (Spacing "\"" StringContents EOF)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result))
            (content (caddr matching)))
       (matches (raise-compilation-error
@@ -132,7 +132,7 @@
   (Spacing "(" ListContents Spacing ")")
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-list (location start end)
                               (caddr matching))
@@ -142,7 +142,7 @@
   (Spacing "(" ListContents Spacing EOF)
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (raise-compilation-error
                 (make-ast-location (location start end))
@@ -156,11 +156,11 @@
   (/ Symbol Number))
 
  (Number
-  (Spacing "[+\\-]?[0-9]+(\\.[0-9]+)?")
+  (Spacing (~ (~ (? Sign)) (~ (+ Digit)) (~ (? "." (~ (+ Digit))))))
   (lambda (input result)
     (let* ((matching (match-match result))
            (spacing-start (match-start result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-number (location start end)
                                 (string->number (cadr matching)))
@@ -173,7 +173,7 @@
   (Spacing SymbolContents (! "."))
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (make-ast-symbol (location start end)
                                 (string->symbol (cadr matching)))
@@ -183,7 +183,7 @@
   (Spacing SymbolContents (+ (: ".") SymbolContents) (! "."))
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (expand-structure-refs (location start end)
                                       (string->symbol (cadr matching))
@@ -194,7 +194,7 @@
   (Spacing (~ (+ (/ "." SymbolContents))))
   (lambda (input result)
     (let* ((matching (match-match result))
-           (start (car matching))
+           (start (match-start result))
            (end (match-end result)))
       (matches (raise-compilation-error
                 (make-ast-location (location start end))
@@ -203,40 +203,33 @@
                start
                end))))
 
- (SymbolContents
-  "(([a-zA-Z]|[#!$%*/:<=>?~_^])([a-zA-Z]|[0-9]|[!$%*/:<=>?~_^@]|[+\\-])*|[+\\-])")
+  (SymbolContents
+   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
 
- ;; NOTE The above is basically the same as this, except less readable:
- ;; (SymbolContents
- ;;   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+ (SymbolInitial
+   (/ Alpha Special "#"))
 
- ;; (SymbolInitial
- ;;   (/ Alpha Special "#"))
+ (SymbolSubsequent
+   (/ SymbolInitial "@" Digit Sign))
 
- ;; (SymbolSubsequent
- ;;   (/ SymbolInitial "@" Digit Sign))
+ (Alpha
+   "[a-zA-Z]")
 
- ;; (Alpha
- ;;   "[a-zA-Z]")
+ (Special
+   "[!$%*/:<=>?~_^]")
 
- ;; (Special
- ;;   "[!$%*/:<=>?~_^]")
+ (Digit
+   "[0-9]")
 
- ;; (Digit
- ;;   "[0-9]")
-
- ;; (Sign
- ;;   "[+\\-]")
+ (Sign
+   "[+\\-]")
 
  (Spacing
   (: (* (/ "[ \t\v\r\n]+" Comment)))
-  (lambda (input result)
-    (let ((start (match-start result))
-          (end (match-end result)))
-      ;; NOTE So that we can skip the spacing later.
-      (matches end start end))))
+  no-inline)
+
  (Comment
-  (: ";[^\n]*" (/ "\n" EOF)))
+  (~ ";[^\n]*" (/ "\n" EOF)))
  (EOF
   ()))
 
@@ -257,3 +250,8 @@
             (env-set env
                      'ast (car result)
                      'errors (cadr result))))))
+
+(define no-inline
+  ;; NOTE Prevents inlining of this rule making it hit the cache more often and perform better.
+  (lambda (input result)
+    result))
