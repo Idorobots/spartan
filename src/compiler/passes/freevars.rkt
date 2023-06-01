@@ -16,7 +16,7 @@
   (pass (schema "annotate-free-vars"
                 'ast (ast-subset? '(const symbol
                                     if do let letrec fix binding lambda app ;; NOTE fix, since this pass is used multiple times.
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
         (lambda (env)
           (env-update env 'ast compute-free-vars))))
 
@@ -55,7 +55,7 @@
                (set-ast-node-free-vars (set-sum (map ast-node-free-vars args))
                                        expr))
               ((def name val)
-               ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
+               ;; NOTE This can still occur as a misplaced definition, so we process it so that we can find more errors in validation.
                (let ((bound (ast-node-free-vars name)))
                  (set-ast-node-free-vars (set-difference (ast-node-free-vars val)
                                                          bound)

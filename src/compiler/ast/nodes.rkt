@@ -510,3 +510,31 @@
 
 (define (set-ast-error-expr node expr)
   (set-ast-node-data node expr))
+
+;; Syntactic closure
+(struct ast-syntactic-closure-data (env free-vars expr) #:transparent #:constructor-name make-ast-syntactic-closure-data)
+
+(define (make-ast-syntactic-closure loc env free-vars expr)
+  (generated
+   (make-ast-node* 'syntactic-closure loc (make-ast-syntactic-closure-data env free-vars expr))))
+
+(define (ast-syntactic-closure? node)
+  (is-type? node 'syntactic-closure))
+
+(define (ast-syntactic-closure-env node)
+  (ast-syntactic-closure-data-env (ast-node-data node)))
+
+(define (set-ast-syntactic-closure-env node env)
+  (set-ast-node-data node (struct-copy ast-syntactic-closure-data (ast-node-data node) (env env))))
+
+(define (ast-syntactic-closure-free-vars node)
+  (ast-syntactic-closure-data-free-vars (ast-node-data node)))
+
+(define (set-ast-syntactic-closure-free-vars node free-vars)
+  (set-ast-node-data node (struct-copy ast-syntactic-closure-data (ast-node-data node) (free-vars free-vars))))
+
+(define (ast-syntactic-closure-expr node)
+  (ast-syntactic-closure-data-expr (ast-node-data node)))
+
+(define (set-ast-syntactic-closure-expr node expr)
+  (set-ast-node-data node (struct-copy ast-syntactic-closure-data (ast-node-data node) (expr expr))))

@@ -317,7 +317,8 @@
                       (gen-unquote-node gen-simple-node)
                       (gen-unquote-splicing-node gen-simple-node)
                       gen-valid-body-node
-                      gen-const-node)
+                      gen-const-node
+                      (gen-syntactic-closure-node gen-simple-node))
           rand))
 
 (define (gen-ast-node rand)
@@ -339,6 +340,15 @@
 
 (define (gen-location-node rand)
   (make-ast-location (sample gen-location rand)))
+
+(define (gen-syntactic-closure-node gen-node)
+  (lambda (rand)
+    (let ((n (sample gen-node rand))
+          (loc (sample gen-location rand)))
+      (make-ast-syntactic-closure loc
+                                  (hasheq)
+                                  (set)
+                                  n))))
 
 (define (gen-specific-list gen parameters)
   (lambda (rand)

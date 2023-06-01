@@ -459,7 +459,7 @@ test/sprtn/errors/syntax-forms.sprtn(67,2): Bad call syntax, expected an express
  68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
+test/sprtn/errors/syntax-forms.sprtn(69,1): Bad `define` syntax, not allowed in this context:
  67 [33m|[39m((23))
  68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)
@@ -467,7 +467,7 @@ test/sprtn/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an express
  70 [33m|[39m((do 23 bar) 23)
  71 [33m|[39m((if 5 foo bar) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(69,1): Bad `define` syntax, not allowed in this context:
+test/sprtn/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
  67 [33m|[39m((23))
  68 [33m|[39m((bar2 23) 5)
  69 [33m|[39m((define (faz x) x) 23)

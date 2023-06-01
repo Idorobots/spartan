@@ -12,7 +12,7 @@
 
 (provide validate
          ;; FIXME For test access.
-         validate-ast)
+         validate-ast extract-node-type)
 
 (define validate
   (pass (schema "validate"
@@ -20,7 +20,7 @@
                 'globals a-set?
                 'ast (ast-subset? '(const symbol
                                     if do let letrec binding lambda app
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
    (lambda (env)
      (let ((result (collect-errors (env-get env 'errors)
                                    (lambda ()
@@ -109,11 +109,16 @@
              (format "Unused variable `~a`, rename to `_` to avoid this error:" value)))
            (else
             expr)))
+    ((app op args ...)
+     (-> expr
+         (set-ast-app-op (validate-app-procedure (validate-ast undefined unused used-before-def op)))
+         (set-ast-app-args (map (partial validate-ast undefined unused used-before-def) args))))
     ((def name value)
-     ;; NOTE This can still occur as a subnode of <error>, so we process it so that we can find more errors in validation.
      (let* ((bound (ast-node-bound-vars expr))
             (unused (set-difference bound (ast-node-free-vars value))))
-       (-> expr
+       (raise-compilation-error
+        ;; NOTE So that we might find more meaningful errors in there.
+        (-> expr
            (set-ast-def-name (validate-ast (set)
                                            unused
                                            used-before-def
@@ -121,7 +126,8 @@
            (set-ast-def-value (validate-ast (set-difference undefined bound)
                                             (set)
                                             used-before-def
-                                            value)))))
+                                            value)))
+        (format "~a, not allowed in this context:" (ast-node-context* expr "Bad `define` syntax")))))
     (else
      (walk-ast (partial validate-ast undefined unused used-before-def)
                expr))))
@@ -145,3 +151,23 @@
                               b)
                 (loop (set-union seen (ast-node-bound-vars b))
                       (cdr bs)))))))
+
+(define (extract-node-type node)
+  (match-ast node
+   ((const (symbol _))
+    ;; FIXME This would ideally report a "constant symbol"
+    'quote)
+   ((const expr)
+    (ast-node-type expr))
+   ((ast-error expr)
+    (extract-node-type expr))
+   (else
+    (ast-node-type node))))
+
+(define (validate-app-procedure op)
+  (let ((type (extract-node-type op)))
+    (if (member type '(symbol if do body lambda let letrec app primop-app))
+        op
+        (raise-compilation-error
+         op
+         (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:" type)))))

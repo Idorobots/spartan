@@ -9,8 +9,6 @@
 ;; The frontend
 (require "passes/parser.rkt")
 (require "passes/macro-expander.rkt")
-(require "passes/elaboration.rkt")
-(require "passes/body.rkt")
 (require "passes/qq.rkt")
 (require "passes/const.rkt")
 (require "passes/validate.rkt")
@@ -45,14 +43,12 @@
   (foldl run-pass
          (env-set env
                   'errors '()
-                  'macros (make-builtin-macros)
+                  'static-env (make-static-environment)
                   'globals (make-global-definitions-list)
                   'instrument (env-get* env 'instrument id)
                   'optimize (env-get* env 'optimize optimize-naive))
          (list parse
                macro-expand
-               elaborate
-               body-expand
                quasiquote-expand
                annotate-constants
                annotate-free-vars
@@ -62,7 +58,7 @@
                alpha-convert
                (optimize
                 (list (sequence annotate-free-vars
-                               inline-lambdas)
+                                inline-lambdas)
                       inline-builtins
                       propagate-constants
                       fold-constants
@@ -78,7 +74,7 @@
                continuation-passing-convert
                (optimize
                 (list (sequence annotate-free-vars
-                               inline-lambdas)
+                                inline-lambdas)
                       propagate-constants
                       fold-constants
                       (sequence annotate-free-vars

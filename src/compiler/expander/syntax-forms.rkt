@@ -1,125 +1,14 @@
 #lang racket
 
-;; Semantic elaboration.
-;; This phase checks syntax form correctness - if different syntax forms are used correctly, reserved keywords are used in the right positions, etc.
+;; Built-in syntax forms expander implementations
 
 (require "../utils/utils.rkt")
-(require "../env.rkt")
-(require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
 
-(provide elaborate
-         ;; FIXME Used by some other passes.
-         unique-bindings valid-bindings valid-symbol
-         ;; FIXME For test access.
-         elaborate-unquoted +reserved-keywords+)
+(provide (all-defined-out))
 
-(define elaborate
-  (pass (schema "elaborate"
-                'errors a-list?
-                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
-                                    number symbol string list
-                                    if let binding lambda app def
-                                    primop-app body <error>)))
-        (lambda (env)
-          (let ((result (collect-errors (env-get env 'errors)
-                                        (lambda ()
-                                          (elaborate-unquoted (env-get env 'ast))))))
-            (env-set env
-                     'ast (car result)
-                     'errors (cadr result))))))
-
-(define (elaborate-unquoted expr)
-  (case (ast-node-type expr)
-    ((<error> quote number symbol string)
-     expr)
-    ((do)
-     (set-ast-do-exprs expr (map elaborate-unquoted (ast-do-exprs expr))))
-    ((body)
-     (set-ast-body-exprs expr (map elaborate-unquoted (ast-body-exprs expr))))
-    ((if)
-     (-> expr
-         (set-ast-if-condition (elaborate-unquoted (ast-if-condition expr)))
-         (set-ast-if-then (elaborate-unquoted (ast-if-then expr)))
-         (set-ast-if-else (elaborate-unquoted (ast-if-else expr)))))
-    ((lambda)
-     (set-ast-lambda-body expr (elaborate-unquoted (ast-lambda-body expr))))
-    ((let)
-     (-> expr
-         (set-ast-let-body (elaborate-unquoted (ast-let-body expr)))
-         (set-ast-let-bindings (map elaborate-unquoted (ast-let-bindings expr)))))
-    ((letrec)
-     (-> expr
-         (set-ast-letrec-body (elaborate-unquoted (ast-letrec-body expr)))
-         (set-ast-letrec-bindings (map elaborate-unquoted (ast-letrec-bindings expr)))))
-    ((binding)
-     (-> expr
-         (set-ast-binding-var (elaborate-unquoted (ast-binding-var expr)))
-         (set-ast-binding-val (elaborate-unquoted (ast-binding-val expr)))))
-    ((def)
-     (set-ast-def-value expr (elaborate-unquoted (ast-def-value expr))))
-    ((quasiquote)
-     (set-ast-quasiquote-expr expr (elaborate-quoted (ast-quasiquote-expr expr))))
-    ((unquote)
-     (set-ast-unquote-expr expr (elaborate-unquoted (ast-unquote-expr expr))))
-    ((unquote-splicing)
-     (set-ast-unquote-splicing-expr expr (elaborate-unquoted (ast-unquote-splicing-expr expr))))
-    ((primop-app)
-     (set-ast-primop-app-args expr (map elaborate-unquoted (ast-primop-app-args expr))))
-    ((app)
-     (elaborate-app expr))
-    ((list)
-     (elaborate-unquoted
-      (reconstruct-syntax-forms expr)))
-    (else (compiler-bug "Unrecognized expression passed to elaborate-unquoted:" expr))))
-
-(define (elaborate-quoted expr)
-  ;; NOTE We don't want the value within quasiquote to be elaborated.
-  (case (ast-node-type expr)
-    ((<error> quote number symbol string) expr)
-    ((unquote)
-     (set-ast-unquote-expr expr (elaborate-unquoted (ast-unquote-expr expr))))
-    ((unquote-splicing)
-     (set-ast-unquote-splicing-expr expr (elaborate-unquoted (ast-unquote-splicing-expr expr))))
-    ((list)
-     (let ((values (ast-list-values expr)))
-       (if (and (not (empty? values))
-                (is-type? (car values) 'symbol)
-                (member (ast-symbol-value (car values)) '(unquote unquote-splicing)))
-           (elaborate-quoted (reconstruct-unquote expr))
-           (set-ast-list-values expr (map elaborate-quoted values)))))
-    (else (compiler-bug "Unrecognized expression passed to elaborate-quoted:" expr))))
-
-(define (elaborate-app expr)
-  (-> expr
-      (set-ast-app-op (valid-app-procedure (elaborate-unquoted (ast-app-op expr))))
-      (set-ast-app-args (map elaborate-unquoted (ast-app-args expr)))))
-
-(define (reconstruct-syntax-forms expr)
-  (let ((values (ast-list-values expr)))
-    (if (and (not (empty? values))
-             (is-type? (car values) 'symbol))
-        (case (ast-symbol-value (car values))
-          ((if)
-           (reconstruct-if expr))
-          ((do)
-           (reconstruct-do expr))
-          ((lambda)
-           (reconstruct-lambda expr))
-          ((let letrec)
-           (reconstruct-let expr))
-          ((quote quasiquote)
-           (reconstruct-quote expr))
-          ((unquote unquote-splicing)
-           (reconstruct-unquote expr))
-          ((define)
-           (reconstruct-def expr))
-          (else
-           (reconstruct-app expr)))
-        (reconstruct-app expr))))
-
-(define (reconstruct-if expr)
+(define (if-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'if) condition then else)
     (replace expr
@@ -133,7 +22,7 @@
        node
        "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
 
-(define (reconstruct-do expr)
+(define (do-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'do) first rest ...)
     ;; NOTE User-supplied do needs to be body-expanded as well.
@@ -146,7 +35,7 @@
        node
        "Bad `do` syntax, expected at least one expression to follow:")))))
 
-(define (reconstruct-lambda expr)
+(define (lambda-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'lambda) formals first rest ...)
     (replace expr
@@ -221,7 +110,7 @@
        symbol
        (format "~a, expected a symbol but got a ~a instead:" prefix (ast-node-type symbol)))))
 
-(define (reconstruct-let expr)
+(define (let-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'let) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
@@ -230,6 +119,18 @@
                            (make-ast-body (ast-node-location expr)
                                           (cons first-body rest-body)
                                           "Bad `let` body syntax"))))
+   ((list (symbol 'let) (list) first rest ...)
+    (make-ast-body (ast-node-location expr)
+                   (cons first rest)
+                   "Bad `let` body syntax"))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       node
+       "Bad `let` syntax, expected a list of bindings followed by a body:")))))
+
+(define (letrec-expander expr use-env def-env)
+  (match-ast expr
    ((list (symbol 'letrec) (list first-binding rest-bindings ...) first-body rest-body ...)
     (replace expr
              (make-ast-letrec (ast-node-location expr)
@@ -237,16 +138,15 @@
                               (make-ast-body (ast-node-location expr)
                                              (cons first-body rest-body)
                                              "Bad `letrec` body syntax"))))
-   ((list head (list) first rest ...)
+   ((list (symbol 'letrec) (list) first rest ...)
     (make-ast-body (ast-node-location expr)
                    (cons first rest)
-                   (format "Bad `~a` body syntax" (safe-symbol-value head))))
+                   "Bad `letrec` body syntax"))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        node
-       (format "Bad `~a` syntax, expected a list of bindings followed by a body:"
-               (ast-symbol-value node)))))))
+       "Bad `letrec` syntax, expected a list of bindings followed by a body:")))))
 
 (define (valid-bindings bindings prefix)
   (legal-bindings
@@ -308,12 +208,20 @@
                          (format "~a, expected a pair of an identifier and a value:" prefix))))
                  (make-ast-binding (ast-node-location binding) e e)))))
 
-(define (reconstruct-quote expr)
+(define (quote-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'quote) value)
     (replace expr
              (make-ast-quote (ast-node-location expr)
                              value)))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       node
+       "Bad `quote` syntax, expected exactly one expression to follow:")))))
+
+(define (quasiquote-expander expr use-env def-env)
+  (match-ast expr
    ((list (symbol 'quasiquote) value)
     (replace expr
              (make-ast-quasiquote (ast-node-location expr)
@@ -322,15 +230,22 @@
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        node
-       (format "Bad `~a` syntax, expected exactly one expression to follow:"
-               (ast-symbol-value node)))))))
+       "Bad `quasiquote` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-unquote expr)
+(define (unquote-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'unquote) value)
     (replace expr
              (make-ast-unquote (ast-node-location expr)
                                value)))
+   (else
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       node
+       "Bad `unquote` syntax, expected exactly one expression to follow:")))))
+
+(define (unquote-splicing-expander expr use-env def-env)
+  (match-ast expr
    ((list (symbol 'unquote-splicing) value)
     (replace expr
              (make-ast-unquote-splicing (ast-node-location expr)
@@ -339,10 +254,9 @@
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        node
-       (format "Bad `~a` syntax, expected exactly one expression to follow:"
-               (ast-symbol-value node)))))))
+       "Bad `unquote-splicing` syntax, expected exactly one expression to follow:")))))
 
-(define (reconstruct-def expr)
+(define (def-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'define) (list name formals ...) first rest ...)
     (let ((func-def (ast-list-nth expr 1))
@@ -370,22 +284,79 @@
        node
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
 
-(define (reconstruct-app expr)
-  (match-ast expr
-   ((list op args ...)
-    (replace expr
-             (make-ast-app (ast-node-location expr)
-                           op
-                           args)))
-   (else
-    (raise-compilation-error
-     expr
-     "Bad call syntax, expected at least one expression within the call:"))))
+(define (make-app-expander expand)
+  (define (app-expander expr use-env def-env)
+    (match-ast expr
+     ((list op args ...)
+      (replace expr
+               (expand use-env
+                       (make-ast-app (ast-node-location expr)
+                                     op
+                                     args))))
+     (else
+      (raise-compilation-error
+       expr
+       "Bad call syntax, expected at least one expression within the call:"))))
+  app-expander)
 
-(define (valid-app-procedure op)
-  (let ((type (ast-node-type op)))
-    (if (member type '(symbol if do body lambda let letrec app primop-app))
-        op
-        (raise-compilation-error
-         op
-         (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:" type)))))
+(define (make-body-expander expand)
+  (define (body-expander expr use-env def-env)
+    (match-ast expr
+     ((ast-body exprs ...)
+      ;; FIXME Should this pre-expand with a limited env and only one level deep, so that we get defs, syntax defs and bodies expanded?
+      ;; What about macros that expand to defs?
+      ;; Can this perform an expansion fix-point?
+      ;; Expand all nodes, see if there are any syntax defs in scope, expand again with the extended env and repeat.
+      ;; What about existing macro redefinitions? Should these be disallowed?
+      ;; Introduce expansion phases?
+      ;; - 0 - runtime
+      ;; - 1 - macros
+      ;; - 2 - macro binders
+      ;; - 3 - syntax elaboration
+      (let* ((pre-expanded (map (partial expand use-env) exprs))
+             ;; TODO
+             ;; - pre-expand should also contain def-syntax nodes that omit expansion of their internals.
+             ;; - def-syntax nodes should be extracted same as definitions and put in a wrapping letrec of their own.
+             ;; - The use-env should be extended with extra syntax and then the body expansion should proceed.
+             (defs (extract-defs pre-expanded))
+             (non-defs (extract-non-defs pre-expanded)))
+        (if (> (length defs) 0)
+            (generated
+             (make-ast-letrec (ast-node-location expr)
+                              (unique-bindings defs (ast-node-context expr))
+                              (reconstruct-simple-body non-defs expr)))
+            (reconstruct-simple-body pre-expanded expr))))
+     (else
+      (compiler-bug "Invalid ast-body object" expr))))
+  body-expander)
+
+(define (extract-defs exprs)
+  (foldr (lambda (e acc)
+           (match-ast e
+            ((def name value)
+             (cons (generated
+                    (make-ast-binding (ast-node-location e) name value))
+                   acc))
+            (else acc)))
+         '()
+         exprs))
+
+(define (extract-non-defs exprs)
+  (filter (compose not ast-def?)
+          exprs))
+
+(define (reconstruct-simple-body exprs parent)
+  (let ((ctx (ast-node-context* parent "Bad `do` syntax")))
+    (cond ((= (length exprs) 0)
+           (raise-compilation-error
+            parent
+            (format "~a, expected at least one non-definition expression within:" ctx)))
+          ((= (length exprs) 1)
+           (car exprs))
+          (else
+           (generated
+            ;; NOTE The context should be preserved.
+            (set-ast-node-context
+             (make-ast-do (ast-node-location parent)
+                          exprs)
+             ctx))))))

@@ -79,6 +79,8 @@
     (set-ast-error-expr expr (f acc value)))
    ((ast-location _)
     expr)
+   ((ast-syntactic-closure _ _ value)
+    (set-ast-syntactic-closure-expr expr (f acc value)))
    (else
     (compiler-bug "Unexpected expression: " expr))))
 

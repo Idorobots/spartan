@@ -19,7 +19,7 @@
                 'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
                                     number symbol string list
                                     if do let letrec binding lambda app
-                                    primop-app <error>)))
+                                    primop-app def <error>)))
         (lambda (env)
           (let ((result (collect-errors (env-get env 'errors)
                                         (lambda ()
