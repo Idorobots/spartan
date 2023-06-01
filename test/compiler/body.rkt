@@ -70,4 +70,31 @@
      (check ((ctx (gen-text (gen-integer 10 20)))
              (exprs (gen-list (gen-integer 2 5) gen-body-neutral-node))
              (node (apply gen-specific-body-node ctx exprs)))
-            (assert (ast-node-context (expand se node)) ctx))))
+            (assert (ast-node-context (expand se node)) ctx)))
+
+ (it "should continue expansion within the subexpressions"
+     (check ((ctx (gen-text (gen-integer 10 20)))
+             (defs (gen-list (gen-integer 1 5) gen-valid-def-node))
+             (fun (gen-symbol-node 'test))
+             (body (gen-specific-list-node fun gen-body-neutral-node))
+             (node (apply gen-specific-body-node ctx (cons body defs))))
+            (let ((result (expand se node)))
+              (assert-ast result
+                          (letrec bindings
+                            ;; NOTE Indicates that the expansion proceeded to the body.
+                            (app op args ...))
+                          (assert (length bindings)
+                                  (length defs))
+                          (map (lambda (b d)
+                                 (assert (ast-binding-var b)
+                                         (ast-def-name d))
+                                 (assert (ast-binding-val b)
+                                         (ast-def-value d)))
+                               bindings
+                               defs)
+                          (assert op fun)
+                          (assert args (ast-list-cdr body)))
+              (assert (ast-node-location result)
+                      (ast-node-location node))
+              (assert (ast-node-location (ast-letrec-body result))
+                      (ast-node-location body))))))

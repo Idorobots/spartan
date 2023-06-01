@@ -303,7 +303,21 @@
   (define (body-expander expr use-env def-env)
     (match-ast expr
      ((ast-body exprs ...)
+      ;; FIXME Should this pre-expand with a limited env and only one level deep, so that we get defs, syntax defs and bodies expanded?
+      ;; What about macros that expand to defs?
+      ;; Can this perform an expansion fix-point?
+      ;; Expand all nodes, see if there are any syntax defs in scope, expand again with the extended env and repeat.
+      ;; What about existing macro redefinitions? Should these be disallowed?
+      ;; Introduce expansion phases?
+      ;; - 0 - runtime
+      ;; - 1 - macros
+      ;; - 2 - macro binders
+      ;; - 3 - syntax elaboration
       (let* ((pre-expanded (map (partial expand use-env) exprs))
+             ;; TODO
+             ;; - pre-expand should also contain def-syntax nodes that omit expansion of their internals.
+             ;; - def-syntax nodes should be extracted same as definitions and put in a wrapping letrec of their own.
+             ;; - The use-env should be extended with extra syntax and then the body expansion should proceed.
              (defs (extract-defs pre-expanded))
              (non-defs (extract-non-defs pre-expanded)))
         (if (> (length defs) 0)
