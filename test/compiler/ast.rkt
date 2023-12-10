@@ -111,18 +111,18 @@
  "ast-eqv?"
  (it "should find the same trees equivalent"
      (check ((node gen-ast-node))
-            (assert (ast-eqv? node node))))
+            (assert ast-eqv? node node)))
 
  (it "should find same contents with different metadata equivalent"
      (check ((var gen-valid-symbol)
              (a (gen-symbol-node var))
              (b (gen-symbol-node var)))
-            (assert (ast-eqv? a b))))
+            (assert ast-eqv? a b)))
 
  (it "should not find different trees equivalent"
-     (check ((a (gen-list (gen-integer 1 5) gen-ast-node))
-             (b (gen-list (gen-integer 1 5) gen-ast-node)))
-            (assert (not (ast-eqv? a b))))))
+     (check ((a (gen-list (gen-integer 5 10) gen-ast-node))
+             (b (gen-list (gen-integer 5 10) gen-ast-node)))
+            (assert (compose not ast-eqv?) a b))))
 
 (describe
  "match-ast"
