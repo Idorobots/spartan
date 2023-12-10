@@ -46,7 +46,8 @@
                   'static-env (make-static-environment)
                   'globals (make-global-definitions-list)
                   'instrument (env-get* env 'instrument id)
-                  'optimize (env-get* env 'optimize optimize-naive))
+                  'optimize (env-get* env 'optimize optimize-naive)
+                  'target (env-get* env 'target 'scheme))
          (list parse
                macro-expand
                quasiquote-expand
