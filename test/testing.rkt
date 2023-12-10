@@ -189,9 +189,15 @@
                 test-cases)))
        tests))
 
-(define (run-all-tests)
+(define (run-all-tests test-names)
   (let* ((failed-tests (ref '()))
-         (tests (reverse (deref *registered-test-suites*)))
+         (all-tests (reverse (deref *registered-test-suites*)))
+         (tests (if (empty? test-names)
+                    all-tests
+                    (filter (lambda (t)
+                              (member (car t)
+                                      test-names))
+                            all-tests)))
          (total-time (time-execution (run-tests tests failed-tests))))
     (if (empty? (deref failed-tests))
         (begin
