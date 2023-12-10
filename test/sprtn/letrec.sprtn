@@ -1,0 +1,7 @@
+(letrec ((q (lambda () 8))
+         (f (lambda (x) (+  x (q))))
+         (r (lambda () (f (q))))
+         (s (lambda () (+ (r) (f 2))))
+         (g (lambda () (+ (r) (s))))
+         (t (lambda () (g))))
+  (t))
