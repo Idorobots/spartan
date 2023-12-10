@@ -14,6 +14,8 @@
          ;; FIXME For test access.
          validate-ast extract-node-type)
 
+(define +min-distance-score+ 5)
+
 (define validate
   (pass (schema "validate"
                 'errors a-list?
@@ -119,7 +121,7 @@
                expr
                (if (and (not (empty? scored))
                         ;; 5 is arbitrarily selected to make sure we only propose close-enough defined variables.
-                        (<= (caar scored) 5)
+                        (<= (caar scored) +min-distance-score+)
                         ;; This ensures we won't go overboard with short variable names proposals.
                         (<= (caar scored) (string-length value-str)))
                    (format "Undefined variable `~a`, did you mean `~a`:" value (cdar scored))
