@@ -1,4 +1,4 @@
-test/sprtn/errors/symbol-format.sprtn(1,0): Undefined variable `this`:
+test/sprtn/errors/symbol-format.sprtn(1,0): Undefined variable `this`, did you mean `cons`:
   1 [33m|[39mthis.is.actually.valid
     [33m|[39m[31m^^^^^^^^^^^^^^^^^^^^^^[39m
   2 [33m|[39mthis.wont.fly.though.

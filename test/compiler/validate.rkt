@@ -16,8 +16,26 @@
              (node (apply gen-specific-do-node symbols)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast undefined (set) (set) node))
+                      (validate-ast (set) undefined (set) (set) node))
                     (format "Undefined variable `~a`:" (ast-symbol-value (car symbols))))))
+
+ (it "should propose only suitable replacements for undefined variables"
+     (check ((symbols (gen-arg-list (gen-integer 1 5)))
+             (first-symbol (ast-symbol-value (car symbols)))
+             (undefined (apply set (map ast-symbol-value symbols)))
+             (known-short (string->symbol (string-append (symbol->string first-symbol)
+                                                   "*")))
+             (known-long (string->symbol (string-append (symbol->string first-symbol)
+                                                   "*23456")))
+             (node (apply gen-specific-do-node symbols)))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (validate-ast (set known-short) undefined (set) (set) node))
+                    (format "Undefined variable `~a`, did you mean `~a`:" first-symbol known-short))
+            (assert (with-handlers ((compilation-error?
+                                     compilation-error-what))
+                      (validate-ast (set known-long) undefined (set) (set) node))
+                    (format "Undefined variable `~a`:" first-symbol))))
 
  (it "should not report actual defined variables"
      (check ((args1 (gen-arg-list (gen-integer 1 3)))
@@ -32,7 +50,7 @@
                                    fv1)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast undefined (set) (set) node))
+                      (validate-ast (set) undefined (set) (set) node))
                     (format "Undefined variable `~a`:" (ast-symbol-value (car args2))))))
 
  (it "should report unused variables"
@@ -43,7 +61,7 @@
                                 bound)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast (set) (set) (set) node))
+                      (validate-ast (set) (set) (set) (set) node))
                     (format "Unused variable `~a`, rename to `_` to avoid this error:" (ast-symbol-value (car args))))))
 
  (it "should not report unused `_`"
@@ -52,7 +70,7 @@
              (body (gen-number-node gen-number))
              (node (gen-with-bv (gen-lambda-node args body)
                                 bound)))
-            (assert (validate-ast (set) (set) (set) node)
+            (assert (validate-ast (set) (set) (set) (set) node)
                     node)))
 
  (it "should report variables used before definition"
@@ -61,7 +79,7 @@
              (node (apply gen-specific-do-node symbols)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast (set) (set) used-before-def node))
+                      (validate-ast (set) (set) (set) used-before-def node))
                     (format "Variable `~a` used before its definition:" (ast-symbol-value (car symbols))))))
 
  (it "should not report lazy variables used before definition"
@@ -72,7 +90,7 @@
              (body (gen-with-fv (gen-number-node gen-number)
                                 used-before-def))
              (node (gen-lambda-node args body)))
-            (assert (validate-ast (set) (set) used-before-def node)
+            (assert (validate-ast (set) (set) (set) used-before-def node)
                     node)))
 
  (it "should report invalid application operations"
@@ -85,7 +103,7 @@
              (node (apply gen-app-node op args)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast (set) (set) (set) node))
+                      (validate-ast (set) (set) (set) (set) node))
                     (format "Bad call syntax, expected an expression that evaluates to a procedure but got a ~a instead:"
                             (extract-node-type op)))))
 
@@ -94,5 +112,5 @@
              (node (gen-with-ctx gen-valid-def-node ctx)))
             (assert (with-handlers ((compilation-error?
                                      compilation-error-what))
-                      (validate-ast (set) (set) (set) node))
+                      (validate-ast (set) (set) (set) (set) node))
                     (format "~a, not allowed in this context:" ctx)))))

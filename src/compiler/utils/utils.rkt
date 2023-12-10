@@ -6,7 +6,8 @@
          last concat uniq offset iota
          id partial flip constantly
          array array-ref array-assign!
-         ->)
+         matrix matrix-ref matrix-assign!
+         -> levenshtein-distance)
 
 ;; Basic definitions making Scheme less-of-a-Scheme:
 (define (empty? lst)
@@ -61,6 +62,15 @@
 (define (array-assign! array index value)
   (vector-set! array index value))
 
+(define (matrix rows cols value)
+  (build-vector rows (lambda (_) (make-vector cols value))))
+
+(define (matrix-ref matrix row col)
+  (vector-ref (vector-ref matrix row) col))
+
+(define (matrix-assign! matrix row col value)
+  (vector-set! (vector-ref matrix row) col value))
+
 ;; Other stuff
 (define-syntax ->
   (syntax-rules ()
@@ -100,3 +110,26 @@
   (if (> from to)
       '()
       (cons from (iota (+ from step) to step))))
+
+(define (levenshtein-distance str1 str2)
+  (let* ((len1 (string-length str1))
+         (len2 (string-length str2))
+         (distances (matrix (+ 1 len1) (+ 1 len2) 0)))
+    ;; Initializing the matrix
+    (for ((i (iota 0 len1 1)))
+      (matrix-assign! distances i 0 i))
+    (for ((j (iota 0 len2 1)))
+      (matrix-assign! distances 0 j j))
+    ;; Filling the matrix using dynamic programming
+    (for* ((i (iota 1 len1 1))
+           (j (iota 1 len2 1)))
+      (let ((cost (if (char=? (string-ref str1 (- i 1))
+                              (string-ref str2 (- j 1)))
+                      0
+                      1)))
+        (matrix-assign! distances i j
+                        (min (+ cost (matrix-ref distances (- i 1) (- j 1)))
+                             (+ 1 (matrix-ref distances (- i 1) j))
+                             (+ 1 (matrix-ref distances i (- j 1)))))))
+    ;; Return the Levenshtein distance
+    (matrix-ref distances len1 len2)))
