@@ -1,4 +1,4 @@
-test/sprtn/errors/unmatched-parens.sprtn(2,22): Undefined variable `valid`:
+test/sprtn/errors/unmatched-parens.sprtn(2,22): Undefined variable `valid`, did you mean `false`:
   1 [33m|[39m(define (foo _)
   2 [33m|[39m  `(this unquote is ,@valid)
     [33m|[39m                      [31m^^^^^[39m

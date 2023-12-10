@@ -163,7 +163,7 @@ test/sprtn/errors/syntax-forms.sprtn(27,6): Bad `let` bindings syntax, expected 
  28 [33m|[39m(let ((23 x)) 23)
  29 [33m|[39m(let (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(27,6): Undefined variable `x`:
+test/sprtn/errors/syntax-forms.sprtn(27,6): Undefined variable `x`, did you mean `*`:
  25 [33m|[39m(let () 23)
  26 [33m|[39m(let x 23)
  27 [33m|[39m(let (x) 23)
@@ -179,7 +179,7 @@ test/sprtn/errors/syntax-forms.sprtn(28,7): Bad `let` bindings syntax, expected 
  29 [33m|[39m(let (()) 23)
  30 [33m|[39m(let ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(28,10): Undefined variable `x`:
+test/sprtn/errors/syntax-forms.sprtn(28,10): Undefined variable `x`, did you mean `*`:
  26 [33m|[39m(let x 23)
  27 [33m|[39m(let (x) 23)
  28 [33m|[39m(let ((23 x)) 23)
@@ -259,7 +259,7 @@ test/sprtn/errors/syntax-forms.sprtn(38,9): Bad `letrec` bindings syntax, expect
  39 [33m|[39m(letrec ((23 x)) 23)
  40 [33m|[39m(letrec (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(38,9): Undefined variable `x`:
+test/sprtn/errors/syntax-forms.sprtn(38,9): Undefined variable `x`, did you mean `*`:
  36 [33m|[39m(letrec () 23)
  37 [33m|[39m(letrec x 23)
  38 [33m|[39m(letrec (x) 23)
@@ -275,7 +275,7 @@ test/sprtn/errors/syntax-forms.sprtn(39,10): Bad `letrec` bindings syntax, expec
  40 [33m|[39m(letrec (()) 23)
  41 [33m|[39m(letrec ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(39,13): Undefined variable `x`:
+test/sprtn/errors/syntax-forms.sprtn(39,13): Undefined variable `x`, did you mean `*`:
  37 [33m|[39m(letrec x 23)
  38 [33m|[39m(letrec (x) 23)
  39 [33m|[39m(letrec ((23 x)) 23)
