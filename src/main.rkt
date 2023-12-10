@@ -15,7 +15,11 @@
          run-string
          run-instrumented-string
          run-file
-         run-instrumented-file)
+         run-instrumented-file
+         compile-string
+         compile-instrumented-string
+         compile-file
+         compile-instrumented-file)
 
 (provide (all-from-out "runtime/rt.rkt"))
 
@@ -46,22 +50,34 @@
 (define (run expr)
   (run-instrumented expr id))
 
-(define (run-instrumented-string input instrument)
-  (run-code
-   (compile
+(define (compile-instrumented-string input instrument)
+  (compile
     (env 'input input
          'module "string"
-         'instrument instrument))))
+         'instrument instrument)))
+
+(define (compile-string input)
+  (compile-instrumented-string input id))
+
+(define (run-instrumented-string input instrument)
+  (run-code
+   (compile-instrumented-string input instrument)))
 
 (define (run-string input)
   (run-instrumented-string input id))
 
-(define (run-instrumented-file filename instrument)
-  (run-code
-   (compile
+(define (compile-instrumented-file filename instrument)
+  (compile
     (env 'input (slurp filename)
          'module filename
-         'instrument instrument))))
+         'instrument instrument)))
+
+(define (compile-file filename)
+  (compile-instrumented-file filename id))
+
+(define (run-instrumented-file filename instrument)
+  (run-code
+   (compile-instrumented-file filename instrument)))
 
 (define (run-file filename)
   (run-instrumented-file filename id))
