@@ -2,4 +2,5 @@
                  (if (= 0 x)
                      1
                      (* x (fact (- x 1)))))))
-  (fact 2))
+  (display (fact 23))
+  (newline))
