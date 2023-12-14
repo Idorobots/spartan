@@ -44,7 +44,7 @@
                      (symbol->safe (car v))
                      (cdr v))
              acc))
-          ""
+          (format "let __kontCounter = ~a;~n" +js-continuation-hops+)
           +js-primops+))
   (displayln
    (foldr (lambda (v acc)
@@ -109,7 +109,7 @@
               bindings))
 
       ((lambda args body)
-       (format "(function(~a){~a})"
+       (format "((~a) => {~a})"
                (string-join (map (lambda (a)
                                    (generate-js-node id a))
                                  args)
@@ -195,12 +195,12 @@
                              (generate-js-node id a))
                            args)))
          (return
-          (format "{args:[~a]}"
+          (format "[~a]"
                   (string-join args-js ", ")))))
 
       ((primop-app '&env-ref env offset)
        (return
-        (format "(~a.args[~a])"
+        (format "(~a[~a])"
                 (generate-js-node id env)
                 (generate-js-node id offset))))
 
@@ -222,10 +222,19 @@
                   (string-join args-js ", ")))))
 
       ((primop-app '&yield-cont k h)
-       (return
-        (format "{kont: ~a,hole:~a}"
-                (generate-js-node id k)
-                (generate-js-node id h))))
+       (let ((kont (generate-js-node id k))
+             (hole (generate-js-node id h)))
+         (format "if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
+                 (return
+                  (format "~a.fun(~a.env, ~a)"
+                          kont
+                          kont
+                          hole))
+                 +js-continuation-hops+
+                 (return
+                  (format "{kont: ~a,hole:~a}"
+                          kont
+                          hole)))))
 
       ((primop-app op args ...)
        (let ((args-js (map (lambda (a)
@@ -243,6 +252,8 @@
 
       (else
        (compiler-bug "Unsupported AST node type:" expr))))
+
+(define +js-continuation-hops+ 100)
 
 (define +js-primops+
   '((display . "(/*display*/function(v) { process.stdout.write(\"\"+v) })")
