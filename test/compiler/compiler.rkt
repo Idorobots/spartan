@@ -37,6 +37,16 @@
        (assert optimized?)
        (assert result ''42)))
 
+ (it "doesn't run optimization if disabled"
+     (let* ((optimized? #f)
+            (result (compile (env 'module "optimize"
+                                  'optimize (lambda (env passes)
+                                              (set! optimized? #t)
+                                              (optimize-naive env passes))
+                                  'optimization-level 0
+                                  'input "(* 2 2)"))))
+       (assert (not optimized?))))
+
  (it "runs configured instrumentation"
      (let* ((instrumented? #f)
             (result (compile (env 'module "instrument"

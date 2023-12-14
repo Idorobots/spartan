@@ -10,16 +10,24 @@
          estimate-performance +perf-cost+ score-table score-of score-of*)
 
 (define (optimize passes)
-  (pass (schema "optimize") ;; NOTE Schema depends on the passes.
+  ;; NOTE Schema depends on the passes.
+  (pass (schema "optimize"
+                'optimizer a-symbol?
+                'optimization-level a-number?)
         (lambda (env)
-          ((env-get env 'optimize)
-           passes
-           env))))
+          (if (> (env-get env 'optimization-level) 0)
+              ((env-get* env 'optimize ;; NOTE For backwards compatibility in tests.
+                         (case (env-get env 'optimizer)
+                           ((naive) optimize-naive)
+                           ((super) optimize-super)))
+               passes
+               env)
+              env))))
 
 (define +optimization-loops+ 23)
 
 (define (optimize-naive passes env)
-  (let loop ((i +optimization-loops+)
+  (let loop ((i (* (env-get env 'optimization-level) +optimization-loops+))
              (acc env)
              (prev '()))
     (if (or (= i 0)
@@ -33,7 +41,7 @@
 
 (define (optimize-super passes env)
   (let ((initial (score env)))
-    (let loop ((i +optimization-loops+)
+    (let loop ((i (* (env-get env 'optimization-level) +optimization-loops+))
                (runs (list initial))
                (prev (scored +inf.0 '())))
       (let ((best-run (car runs)))

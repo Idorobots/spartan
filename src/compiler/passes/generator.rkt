@@ -17,7 +17,7 @@
                 'target a-symbol?)
         (lambda (env)
           (case (env-get env 'target)
-            ((js)
+            ((ECMAScript6)
              (generate-js env))
             (else
              (generate-scheme env))))))
@@ -37,7 +37,7 @@
 
 (define (generate-js env)
   ;; Generate JavaScript code for the root node
-  (display
+  (string-append
    (foldr (lambda (v acc)
             (string-append
              (format "const ~a = ~a;~n"
@@ -45,8 +45,7 @@
                      (cdr v))
              acc))
           (format "let __kontCounter = ~a;~n" +js-continuation-hops+)
-          +js-primops+))
-  (displayln
+          +js-primops+)
    (foldr (lambda (v acc)
             (string-append
              (generate-js-const (car v) (cdr v))
