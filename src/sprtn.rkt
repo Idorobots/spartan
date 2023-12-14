@@ -7,9 +7,19 @@
 (require "compiler/compiler.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/utils/utils.rkt")
+(require "main.rkt")
+
+(require "runtime/rt.rkt")
+(require "rete/rete.rkt")
+(provide (all-from-out "runtime/rt.rkt"))
+(provide (all-from-out "rete/rete.rkt"))
 
 (define (print-usage)
-  (displayln "Usage: sprtn [option]...
+  (displayln "Usage: sprtn [command] [option]...
+Commands:
+  compile                       Compiles the supplied Spartan file without executing it.
+  exec                          Compiles & executes the supplied Spartan file.
+
 Options:
   --help                        Displays this information.
   -i, --input [filename]        Names the input Spartan file.
@@ -23,16 +33,34 @@ Options:
 
 Bug reports & documentation available at <https://www.github.com/Idorobots/spartan>."))
 
-;; NOTE When you have a hammer, every problem looks like a PEG parser.
+;; NOTE When you have a hammer, every problem looks like a PEG grammar.
 (generate-parser
  (CommandLineArguments
-  ((* Option) (? RestArguments) Spacing EOF)
+  (Command (* Option) (? RestArguments) Spacing EOF)
   (lambda (input result)
-    (let ((opts (car (match-match result)))
-          (rest (cadr (match-match result))))
-      (matches (flatten (list opts rest))
+    (let ((cmd (car (match-match result)))
+          (opts (cadr (match-match result)))
+          (rest (caddr (match-match result))))
+      (matches (flatten (list cmd opts rest))
                (match-start result)
                (match-end result)))))
+
+ (Command
+  (/ Compile InvalidCommand))
+
+ (Compile
+  (Spacing (/ "compile" "exec"))
+  (lambda (input result)
+    (m result 'command (string->symbol (cadr (match-match result))))))
+
+ (InvalidCommand
+  NonWhiteSpace
+  (lambda (input result)
+    (let ((match (match-match result))
+          (start (match-start result))
+          (end (match-end result)))
+      (option-error "sprtn" input start end
+                    "Invalid command `~a` specified, expected one of: {compile|exec}" match))))
 
  (Option
   (/ Help Input Output Optimizer Phase Optimize Target InvalidOption))
@@ -189,7 +217,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (let ((p (lambda ()
              (if (string? result)
                  (display result)
-                 (pretty-print result)))))
+                 (pretty-write result)))))
     (if (equal? filename 'stdout)
         (p)
         (with-output-to-file filename p))))
@@ -199,12 +227,19 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
        (input (string-join (vector->list args) " "))
        (parsed (CommandLineArguments input)))
   (if (matches? parsed)
-      (let* ((init (apply env (match-match parsed))))
+      (let* ((init (apply env (match-match parsed)))
+             (command (case (env-get init 'command)
+                        ((compile)
+                         compile)
+                        ((exec)
+                         (lambda (env)
+                           (run-code
+                            (compile env)))))))
         (unless (env-contains? init 'input-file)
           (command-error "An input file must be specified!"))
         (-> init
             (env-set 'module (env-get init 'input-file))
             (env-set 'input (slurp (env-get init 'input-file)))
-            (compile)
+            (command)
             (store-result (env-get* init 'output-file 'stdout))))
       (command-error "Invalid invocation!")))
