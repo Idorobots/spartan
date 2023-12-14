@@ -4,9 +4,11 @@
 
 (require "compiler/env.rkt")
 (require "compiler/peggen.rkt")
+(require "compiler/errors.rkt")
 (require "compiler/compiler.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/utils/utils.rkt")
+
 (require "main.rkt")
 
 (require "runtime/rt.rkt")
@@ -229,17 +231,20 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (if (matches? parsed)
       (let* ((init (apply env (match-match parsed)))
              (command (case (env-get init 'command)
-                        ((compile)
-                         compile)
-                        ((exec)
-                         (lambda (env)
-                           (run-code
-                            (compile env)))))))
+                        ((compile) compile)
+                        ((exec)    (compose run-code compile)))))
         (unless (env-contains? init 'input-file)
           (command-error "An input file must be specified!"))
-        (-> init
-            (env-set 'module (env-get init 'input-file))
-            (env-set 'input (slurp (env-get init 'input-file)))
-            (command)
-            (store-result (env-get* init 'output-file 'stdout))))
+        (with-handlers
+            ((compilation-error?
+              (lambda (e)
+                (displayln (compilation-error-what e))))
+             ((constantly #t)
+              (lambda (e)
+                (displayln (format "Aborted due to an error: ~a" e)))))
+          (-> init
+              (env-set 'module (env-get init 'input-file))
+              (env-set 'input (slurp (env-get init 'input-file)))
+              (command)
+              (store-result (env-get* init 'output-file 'stdout)))))
       (command-error "Invalid invocation!")))
