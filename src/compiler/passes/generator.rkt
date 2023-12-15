@@ -38,34 +38,36 @@
 (define +js-continuation-hops+ 100)
 
 (define +js-primops+
-  '((nil . "null")
-    (display . "{env: null, fun: (function(e, v, c) { process.stdout.write(JSON.stringify(v)); return {kont: c, hole: null} })}")
-    (newline . "{env: null, fun: (function(e, c) { process.stdout.write(\"\\n\"); return {kont: c, hole: null} })}")
-    (+ . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: (a + b) } })}")
-    (- . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: (a - b) } })}")
-    (* . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a * b } })}")
-    (/ . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a / b } })}")
-    (modulo . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a % b } })}")
-    (quotient . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: Math.floor(a/b) } })}")
-    (< . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a < b } })}")
-    (<= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a <= b } })}")
-    (> . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a > b } })}")
-    (>= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a >= b } })}")
-    (= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a == b } })}")
-    (cons . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: { car: a, cdr: b} } })}")
-    (car . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l.car } })}")
-    (cdr . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l.cdr } })}")
-    (list . "{env: null, fun: (function(e, ...args) { const c = args.last(); const vals = args.slice(1, args.length() - 1); const lst = ((rest) => (rest.length() === 0) ? null : {car: rest[0], cdr: lst(rest.slice(1))}); return {kont: c, hole: lst(vals)} })}")
-    (nil? . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l === null } })}")
-    (eq? . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a == b } })}")
-    (equal? . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a === b } })}")
-    (not . "{env: null, fun: (function(e, a, c) { return {kont: c, hole: a === null } })}")
-    (ref . "{env: null, fun: (function(e, init, c) { return {kont: c, hole: { ref: init } } })}")
-    (assign! . "{env: null, fun: (function(e, ref, val, c) { ref.ref = val; return {kont: c, hole: ref }})}")
-    (deref . "{env: null, fun: (function(e, ref, c) { return {kont: c, hole: ref.ref }})}")
-    (call/current-continuation . "{env: null, fun: (function(e, f, c) { return f.fun(f.env, {env: null, fun: (e, ret, _) => ({kont: c, hole: ret}) }, c)})}")
+  '((debug . "false")
+    (nil . "null")
+    (display . "{fun: (function(e, v, c) { process.stdout.write(JSON.stringify(v)); return {kont: c, hole: null} })}")
+    (newline . "{fun: (function(e, c) { process.stdout.write(\"\\n\"); return {kont: c, hole: null} })}")
+    (+ . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a + b) } })}")
+    (- . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a - b) } })}")
+    (* . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a * b) } })}")
+    (/ . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a / b) } })}")
+    (modulo . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a % b) } })}")
+    (quotient . "{fun: (function(e, a, b, c) { return {kont: c, hole: Math.floor(a/b) } })}")
+    (< . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a < b) } })}")
+    (<= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a <= b) } })}")
+    (> . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a > b) } })}")
+    (>= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a >= b) } })}")
+    (= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a == b) } })}")
+    (cons . "{fun: (function(e, a, b, c) { return {kont: c, hole: { car: a, cdr: b} } })}")
+    (car . "{fun: (function(e, l, c) { return {kont: c, hole: l.car } })}")
+    (cdr . "{fun: (function(e, l, c) { return {kont: c, hole: l.cdr } })}")
+    (list . "{fun: (function(e, ...args) { const c = args[args.length - 1]; const vals = args.slice(0, args.length - 1); const lst = ((rest) => (rest.length === 0) ? null : {car: rest[0], cdr: lst(rest.slice(1))}); return {kont: c, hole: lst(vals)} })}")
+    (append "{fun: (function (e, a, b, c) { const app = ((rest) => (rest === null) ? b : {car: rest.car, cdr: app(rest.cdr)}); return {kont: c, hole: app(a) } })}")
+    (nil? . "{fun: (function(e, l, c) { return {kont: c, hole: (l === null) } })}")
+    (eq? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a == b) } })}")
+    (equal? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a === b) } })}")
+    (not . "{fun: (function(e, a, c) { return {kont: c, hole: (a === null) } })}")
+    (ref . "{fun: (function(e, init, c) { return {kont: c, hole: { ref: init } } })}")
+    (assign! . "{fun: (function(e, r, val, c) { r.ref = val; return {kont: c, hole: r }})}")
+    (deref . "{fun: (function(e, r, c) { return {kont: c, hole: r.ref }})}")
+    (call/current-continuation . "{fun: (function(e, f, c) { return f.fun(f.env, {env: null, fun: (e, ret, _) => ({kont: c, hole: ret}) }, c)})}")
     ;; TODO Rely on continuations instead.
-    (raise . "{env: null, fun: (function(e, ex, c) { throw ex })}")))
+    (raise . "{fun: (function(e, ex, c) { throw ex })}")))
 
 (define (generate-js env)
   ;; Generate JavaScript code for the root node
@@ -92,7 +94,7 @@
 
 (define (generate-js-root expr)
   ;; NOTE Needed to avoid stack overflow due to continuations.
-  (format "let cc = (function(){~a})();~nwhile(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") {cc = cc.kont.fun(cc.kont.env, cc.hole)}"
+  (format "let cc = (function(){~a})();~nwhile(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") { if(__debug) console.log(cc); cc = cc.kont.fun(cc.kont.env, cc.hole)}"
           (generate-js-node generate-js-leaf expr)))
 
 (define (generate-js-leaf value)
@@ -129,9 +131,16 @@
       ((const v)
        (generate-js-node return v))
 
+      ((lambda args body)
+       (format "((~a) => {~a})"
+               (string-join (map (partial generate-js-node id)
+                                 args)
+                            ", ")
+               (generate-js-node generate-js-leaf body)))
+
       ((if c t e)
        ;; FIXME Booleans should be treated according to the language semantics.
-       (format "if(~a){~a}else{~a}"
+       (format "if (~a) { ~a } else { ~a }"
                (generate-js-node id c)
                (generate-js-node return t)
                (generate-js-node return e)))
@@ -142,24 +151,18 @@
                         (generate-js-node id (ast-binding-var b))
                         (generate-js-node id (ast-binding-val b))
                         acc))
-              (generate-js-node generate-js-leaf body)
+              (generate-js-node return body)
               bindings))
 
-      ((lambda args body)
-       (format "((~a) => {~a})"
-               (string-join (map (partial generate-js-node id)
-                                 args)
-                            ", ")
-               (generate-js-node generate-js-leaf body)))
-
       ((do exprs ...)
-       (let ((ret (last exprs))
-             (statements (take exprs (- (length exprs) 1))))
+       (let* ((last-s (last exprs))
+              (statements (take exprs (- (length exprs) 1)))
+              (ret (generate-js-node return last-s)))
          (format "~a; ~a"
                  (string-join (map (partial generate-js-node id)
                                    statements)
                               ";")
-                 (generate-js-node return ret))))
+                 ret)))
 
       ;; Math primops
       ((primop-app '+ a b)
@@ -256,6 +259,12 @@
                       "null"
                       args)))
 
+      ((primop-app 'append a b)
+       (return
+        (format "(function() { const app = ((rest, tail) => (rest === null) ? tail : {car: rest.car, cdr: app(rest.cdr, tail)}); return app(~a, ~a)})()"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
       ((primop-app 'nil? l)
        (return
         (format "(~a === null)"
@@ -333,28 +342,37 @@
 
       ((primop-app '&apply c args ...)
        (let ((args-js (map (partial generate-js-node id)
-                           args))
-             (closure (generate-js-node id c)))
-         (return
-          (format "(~a.fun(~a.env, ~a))"
-                  closure
-                  closure
-                  (string-join args-js ", ")))))
+                           args)))
+         (generate-js-node
+          (lambda (closure)
+                             (return
+                              (format "(~a.fun(~a.env, ~a))"
+                                      closure
+                                      closure
+                                      (string-join args-js ", "))))
+                           c)))
 
       ((primop-app '&yield-cont k h)
-       (let ((kont (generate-js-node id k))
-             (hole (generate-js-node id h)))
-         (format "if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
-                 (return
-                  (format "~a.fun(~a.env, ~a)"
-                          kont
-                          kont
-                          hole))
-                 +js-continuation-hops+
-                 (return
-                  (format "{kont: ~a,hole:~a}"
-                          kont
-                          hole)))))
+       (generate-js-node
+        (lambda (kont)
+          (format "if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
+                  (generate-js-node
+                   (lambda (v)
+                     (return
+                      (format "~a.fun(~a.env, ~a)"
+                              kont
+                              kont
+                              v)))
+                   h)
+                  +js-continuation-hops+
+                  (generate-js-node
+                   (lambda (v)
+                     (return
+                      (format "{kont: ~a,hole:~a}"
+                              kont
+                              v)))
+                   h)))
+        k))
 
       ;; Modules & structures primops
       ((primop-app '&structure-binding name value)
