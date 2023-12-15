@@ -255,7 +255,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                     (pretty-write result))))))
     (if (equal? filename 'stdout)
         (p)
-        (with-output-to-file filename p))))
+        (with-output-to-file filename p
+          #:exists 'replace))))
 
 (let* ((args (current-command-line-arguments))
        ;; FIXME Kinda redundant to stringify these when they were almost already parsed.
@@ -274,7 +275,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                 (displayln (compilation-error-what e))))
              ((constantly #t)
               (lambda (e)
-                (displayln (format "Aborted due to an error: ~a" e)))))
+                (displayln (format "Aborted due to an error: ~a" e))
+                (exit 1))))
           (-> init
               (env-set 'module (env-get init 'input-file))
               (env-set 'input (slurp (env-get init 'input-file)))
