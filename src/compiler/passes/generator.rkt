@@ -35,6 +35,38 @@
         `(begin ,@data
                 ,init))))
 
+(define +js-continuation-hops+ 100)
+
+(define +js-primops+
+  '((nil . "null")
+    (display . "{env: null, fun: (function(e, v, c) { process.stdout.write(JSON.stringify(v)); return {kont: c, hole: null} })}")
+    (newline . "{env: null, fun: (function(e, c) { process.stdout.write(\"\\n\"); return {kont: c, hole: null} })}")
+    (+ . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: (a + b) } })}")
+    (- . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: (a - b) } })}")
+    (* . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a * b } })}")
+    (/ . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a / b } })}")
+    (modulo . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a % b } })}")
+    (quotient . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: Math.floor(a/b) } })}")
+    (< . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a < b } })}")
+    (<= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a <= b } })}")
+    (> . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a > b } })}")
+    (>= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a >= b } })}")
+    (= . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a == b } })}")
+    (cons . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: { car: a, cdr: b} } })}")
+    (car . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l.car } })}")
+    (cdr . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l.cdr } })}")
+    (list . "{env: null, fun: (function(e, ...args) { const c = args.last(); const vals = args.slice(1, args.length() - 1); const lst = ((rest) => (rest.length() === 0) ? null : {car: rest[0], cdr: lst(rest.slice(1))}); return {kont: c, hole: lst(vals)} })}")
+    (nil? . "{env: null, fun: (function(e, l, c) { return {kont: c, hole: l === null } })}")
+    (eq? . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a == b } })}")
+    (equal? . "{env: null, fun: (function(e, a, b, c) { return {kont: c, hole: a === b } })}")
+    (not . "{env: null, fun: (function(e, a, c) { return {kont: c, hole: a === null } })}")
+    (ref . "{env: null, fun: (function(e, init, c) { return {kont: c, hole: { ref: init } } })}")
+    (assign! . "{env: null, fun: (function(e, ref, val, c) { ref.ref = val; return {kont: c, hole: ref }})}")
+    (deref . "{env: null, fun: (function(e, ref, c) { return {kont: c, hole: ref.ref }})}")
+    (call/current-continuation . "{env: null, fun: (function(e, f, c) { return f.fun(f.env, {env: null, fun: (e, ret, _) => ({kont: c, hole: ret}) }, c)})}")
+    ;; TODO Rely on continuations instead.
+    (raise . "{env: null, fun: (function(e, ex, c) { throw ex })}")))
+
 (define (generate-js env)
   ;; Generate JavaScript code for the root node
   (string-append
@@ -60,7 +92,7 @@
 
 (define (generate-js-root expr)
   ;; NOTE Needed to avoid stack overflow due to continuations.
-  (format "let cc = (function(){~a})();~nwhile(typeof cc === \"object\" && typeof cc.kont === \"object\") {cc = cc.kont.fun(cc.kont.env, cc.hole)}"
+  (format "let cc = (function(){~a})();~nwhile(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") {cc = cc.kont.fun(cc.kont.env, cc.hole)}"
           (generate-js-node generate-js-leaf expr)))
 
 (define (generate-js-leaf value)
@@ -68,9 +100,7 @@
 
 (define (generate-js-node return expr)
     (match-ast expr
-      ((const v)
-       (generate-js-node return v))
-
+      ;; AST nodes
       ((string value)
        (return
         (format "~v" value)))
@@ -92,7 +122,15 @@
        (return
         (format "~a" s)))
 
+      ((const (symbol s))
+       (return
+        (format "\"~a\"" s)))
+
+      ((const v)
+       (generate-js-node return v))
+
       ((if c t e)
+       ;; FIXME Booleans should be treated according to the language semantics.
        (format "if(~a){~a}else{~a}"
                (generate-js-node id c)
                (generate-js-node return t)
@@ -109,8 +147,7 @@
 
       ((lambda args body)
        (format "((~a) => {~a})"
-               (string-join (map (lambda (a)
-                                   (generate-js-node id a))
+               (string-join (map (partial generate-js-node id)
                                  args)
                             ", ")
                (generate-js-node generate-js-leaf body)))
@@ -119,12 +156,12 @@
        (let ((ret (last exprs))
              (statements (take exprs (- (length exprs) 1))))
          (format "~a; ~a"
-                 (string-join (map (lambda (s)
-                                     (generate-js-node id s))
+                 (string-join (map (partial generate-js-node id)
                                    statements)
                               ";")
                  (generate-js-node return ret))))
 
+      ;; Math primops
       ((primop-app '+ a b)
        (return
         (format "(~a + ~a)"
@@ -161,12 +198,37 @@
                 (generate-js-node id a)
                 (generate-js-node id b))))
 
+      ((primop-app '<= a b)
+       (return
+        (format "(~a <= ~a)"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
       ((primop-app '> a b)
        (return
         (format "(~a > ~a)"
                 (generate-js-node id a)
                 (generate-js-node id b))))
 
+      ((primop-app '>= a b)
+       (return
+        (format "(~a >= ~a)"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
+      ((primop-app 'modulo a b)
+       (return
+        (format "(~a % ~a)"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
+      ((primop-app 'quotient a b)
+       (return
+        (format "(Math.floor(~a / ~a))"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
+      ;; List primops.
       ((primop-app 'car l)
        (return
         (format "(~a.car)"
@@ -183,6 +245,67 @@
                 (generate-js-node id a)
                 (generate-js-node id b))))
 
+      ((primop-app 'list)
+       (return "null"))
+
+      ((primop-app 'list args ...)
+       (return (foldr (lambda (a acc)
+                        (format "{car:~a,cdr:~a}"
+                                (generate-js-node id a)
+                                acc))
+                      "null"
+                      args)))
+
+      ((primop-app 'nil? l)
+       (return
+        (format "(~a === null)"
+                (generate-js-node id l))))
+
+      ;; Boolean primops
+      ((primop-app 'eq? a b)
+       (return
+        (format "(~a == ~a)"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
+      ((primop-app 'equal? a b)
+       (return
+        (format "(~a === ~a)"
+                (generate-js-node id a)
+                (generate-js-node id b))))
+
+      ((primop-app 'not a)
+       (return
+        (format "(~a === null)"
+                (generate-js-node id a))))
+
+      ;; IO primops
+      ((primop-app 'display a)
+       (return
+        (format "(process.stdout.write(JSON.stringify(~a)), null)"
+                (generate-js-node id a))))
+
+      ((primop-app 'newline)
+       (return "(process.stdout.write(\"\\n\"), null)"))
+
+      ;; Mutable primops
+      ((primop-app 'ref a)
+       (return
+        (format "{ref: ~a}"
+                (generate-js-node id a))))
+
+      ((primop-app 'deref a)
+       (return
+        (format "(~a.ref)"
+                (generate-js-node id a))))
+
+      ((primop-app 'assign! a b)
+       (let ((a-js (generate-js-node id a))
+             (b-js (generate-js-node id b)))
+         (return
+          (format "((~a.ref = ~a), ~a)" a-js b-js a-js))))
+
+      ;; Closure & continuation primops.
       ((primop-app '&make-closure env fun)
        (return
         (format "{env:~a,fun:~a}"
@@ -190,8 +313,7 @@
                 (generate-js-node id fun))))
 
       ((primop-app '&make-env args ...)
-       (let ((args-js (map (lambda (a)
-                             (generate-js-node id a))
+       (let ((args-js (map (partial generate-js-node id)
                            args)))
          (return
           (format "[~a]"
@@ -205,13 +327,12 @@
 
       ((primop-app '&set-closure-env! c env)
        (return
-        (format "~a.env = ~a"
+        (format "(~a.env = ~a)"
                 (generate-js-node id c)
                 (generate-js-node id env))))
 
       ((primop-app '&apply c args ...)
-       (let ((args-js (map (lambda (a)
-                             (generate-js-node id a))
+       (let ((args-js (map (partial generate-js-node id)
                            args))
              (closure (generate-js-node id c)))
          (return
@@ -235,50 +356,28 @@
                           kont
                           hole)))))
 
-      ((primop-app op args ...)
-       (let ((args-js (map (lambda (a)
-                             (generate-js-node id a))
-                           args)))
+      ;; Modules & structures primops
+      ((primop-app '&structure-binding name value)
+       (return
+        (format "{name: ~a, value: ~a}"
+                (generate-js-node id name)
+                (generate-js-node id value))))
+
+      ((primop-app '&make-structure bindings ...)
+       (let ((bindings-js (map (partial generate-js-node id)
+                               bindings)))
          (return
-          (format "(~a(~a))"
-                  (if (assoc op +js-primops+)
-                      (symbol->safe op)
-                      (compiler-bug "Unsupported primop:" op))
-                  (string-join args-js ", ")))))
+          (format "(function() {const __s = {}; [~a].map((b) => __s[b.name] = b.value); return __s})()"
+                (string-join bindings-js ", ")))))
+
+      ((primop-app '&structure-ref s name)
+       (return
+        (format "(~a[~a])"
+                (generate-js-node id s)
+                (generate-js-node id name))))
 
       ((primop-app op args ...)
        (compiler-bug "Unsupported primop:" op))
 
       (else
        (compiler-bug "Unsupported AST node type:" expr))))
-
-(define +js-continuation-hops+ 100)
-
-(define +js-primops+
-  '((display . "(/*display*/function(v) { process.stdout.write(\"\"+v) })")
-    (newline . "(/*newline*/function() { process.stdout.write(\"\\n\") })")
-    (+ . "(/*+*/function(a, b) { return a + b })")
-    (- . "(/*-*/function(a, b) { return a - b })")
-    (* . "(/***/function(a, b) { return a * b })")
-    (/ . "(/*/*/function(a, b) { return a / b })")
-    (modulo . "(/*modulo*/function(a, b) { return a % b })")
-    (quotient . "(/*quotient*/function(a, b) { return Math.floor(a/b) })")
-    (< . "(/*<*/function(a, b) { return a < b })")
-    (> . "(/*>*/function(a, b) { return a > b })")
-    (= . "(/*=*/function(a, b) { return a = b })")
-    (cons . "(/*cons*/function(a, b) { return { car: a, cdr: b} })")
-    (car . "(/*car*/function(l) { return l.car })")
-    (cdr . "(/*cdr*/function(l) { return l.cdr })")
-    (list . "(/*list*/function(...vals) { return (vals.length() === 0) ? null : {car: vals[0], cdr: this(...vals.slice(1))} })")
-    (nil? . "(/*nil?*/function(l) { return l === null })")
-    (equal? . "(/*equal?*/function(a, b) { return a === b })")
-    (not . "(/*not*/function(a) { return !a })")
-    (ref . "(/*ref*/function(init) { return { ref: init } })")
-    (assign! . "(/*assign!*/function(ref, val) { ref.ref = val })")
-    (deref . "(/*deref*/function(ref) { return ref.ref })")
-    (&make-closure . "(/*&make-closure*/function(env, fun) { return {env: env, fun: fun} })")
-    (&set-closure-env! . "(/*&set-closure-env!*/function(c, env) { c.env = env })")
-    (&make-env . "(/*&make-env*/function(...args) { return {args: args} })")
-    (&env-ref . "(/*&env-ref*/function(env, offset) { return env.args[offset] })")
-    (&apply . "(/*&apply*/function(c, ...args) { return c.fun(c.env, ...args) })")
-    (&yield-cont . "(/*&yield-cont*/function(k, h) { return {kont: k, hole: h} })")))
