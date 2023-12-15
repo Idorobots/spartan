@@ -142,5 +142,6 @@
                ((def) (list 'define (ast-def-name expr) (ast-def-value expr)))
                ((app) (list* (ast-app-op expr) (ast-app-args expr)))
                ((primop-app) (list* (ast-primop-app-op expr) (ast-primop-app-args expr)))
+               ((<error>) '<error>)
                (else (compiler-bug "Unexpected expression: " expr))))
            ast))

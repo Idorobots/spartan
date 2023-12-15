@@ -1,7 +1,6 @@
 #lang racket
 
 ;; The compiler
-
 (require "env.rkt")
 (require "pass.rkt")
 (require "utils/utils.rkt")
@@ -37,56 +36,95 @@
 (require "passes/rename.rkt")
 (require "passes/generator.rkt")
 
-(provide compile)
+(provide compile add-defaults assemble-pipeline run-pipeline)
+
+(define (add-defaults env)
+  (env-set env
+           ;; Compiler specific
+           'errors '()
+           'last-phase (env-get* env 'last-phase 'codegen)
+           ;; Expander & compilation envs.
+           'static-env (make-static-environment)
+           'globals (make-global-definitions-list)
+           ;; Parse transforms
+           'instrument (env-get* env 'instrument id)
+           ;; Optimization
+           'optimizer (env-get* env 'optimizer 'naive)
+           'optimization-level (env-get* env 'optimization-level 1)
+           ;; Code generation
+           'target (env-get* env 'target 'r7rs)))
+
+(define (full-pipeline opts-early opts-late)
+  (list parse
+        'parse
+        macro-expand
+        quasiquote-expand
+        'expand
+        annotate-constants
+        annotate-free-vars
+        annotate-bindings
+        validate
+        report-errors
+        alpha-convert
+        'alpha
+        (optimize opts-early)
+        'optimize-early
+        annotate-free-vars
+        annotate-bindings
+        reorder-letrec-bindings
+        fix-letrec
+        'letrec
+        continuation-passing-convert
+        'cps
+        (optimize opts-late)
+        'optimize-late
+        instrument
+        'instrument
+        annotate-free-vars
+        closure-convert
+        'closures
+        globalize
+        'hoist
+        symbol-rename
+        generate-target-code
+        'codegen))
+
+(define (assemble-pipeline env)
+  (let* ((opts-early (list (sequence annotate-free-vars
+                                     inline-lambdas)
+                           inline-builtins
+                           propagate-constants
+                           fold-constants
+                           (sequence annotate-free-vars
+                                     eliminate-common-subexpressions)
+                           propagate-copies
+                           (sequence annotate-free-vars
+                                     eliminate-dead-code)))
+         (opts-late (list (sequence annotate-free-vars
+                                    inline-lambdas)
+                          propagate-constants
+                          fold-constants
+                          (sequence annotate-free-vars
+                                    eliminate-common-subexpressions)
+                          propagate-copies
+                          (sequence annotate-free-vars
+                                    eliminate-dead-code)))
+         (pipeline (full-pipeline opts-early opts-late))
+         (phase (env-get env 'last-phase)))
+    (let loop ((p pipeline))
+      (cond ((empty? p)
+             '())
+            ((equal? (car p) phase)
+             '())
+            ((symbol? (car p))
+             (loop (cdr p)))
+            (else
+             (cons (car p)
+                   (loop (cdr p))))))))
+
+(define (run-pipeline pipeline env)
+  (foldl run-pass env pipeline))
 
 (define (compile env)
-  (foldl run-pass
-         (env-set env
-                  'errors '()
-                  'static-env (make-static-environment)
-                  'globals (make-global-definitions-list)
-                  'instrument (env-get* env 'instrument id)
-                  'optimizer (env-get* env 'optimizer 'naive)
-                  'optimization-level (env-get* env 'optimization-level 1)
-                  'target (env-get* env 'target 'r7rs))
-         (list parse
-               macro-expand
-               quasiquote-expand
-               annotate-constants
-               annotate-free-vars
-               annotate-bindings
-               validate
-               report-errors
-               alpha-convert
-               (optimize
-                (list (sequence annotate-free-vars
-                                inline-lambdas)
-                      inline-builtins
-                      propagate-constants
-                      fold-constants
-                      (sequence annotate-free-vars
-                                eliminate-common-subexpressions)
-                      propagate-copies
-                      (sequence annotate-free-vars
-                                eliminate-dead-code)))
-               annotate-free-vars
-               annotate-bindings
-               reorder-letrec-bindings
-               fix-letrec
-               continuation-passing-convert
-               (optimize
-                (list (sequence annotate-free-vars
-                                inline-lambdas)
-                      propagate-constants
-                      fold-constants
-                      (sequence annotate-free-vars
-                                eliminate-common-subexpressions)
-                      propagate-copies
-                      (sequence annotate-free-vars
-                                eliminate-dead-code)))
-               instrument
-               annotate-free-vars
-               closure-convert
-               globalize
-               symbol-rename
-               generate-target-code)))
+  (let ((e (add-defaults env)))
+    (run-pipeline (assemble-pipeline e) e)))

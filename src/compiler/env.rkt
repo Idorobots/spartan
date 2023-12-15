@@ -2,10 +2,12 @@
 
 ;; Static compilation env.
 
-(provide env env-get env-get* env-contains? env-set env-update)
+(provide env env? env-get env-get* env-contains? env-set env-update env-remove)
 
 (define (env . properties)
   (apply hasheq properties))
+
+(define env? hash?)
 
 (define (env-get env property)
   (hash-ref env property))
@@ -23,3 +25,6 @@
 
 (define (env-update env property f)
   (env-set env property (f (env-get env property))))
+
+(define (env-remove env key)
+  (hash-remove env key))

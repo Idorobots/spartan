@@ -6,6 +6,7 @@
 (require "compiler/peggen.rkt")
 (require "compiler/errors.rkt")
 (require "compiler/compiler.rkt")
+(require "compiler/ast/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/utils/utils.rkt")
 
@@ -22,27 +23,38 @@ Commands:
   compile                       Compiles the supplied Spartan file without executing it.
   exec                          Compiles & executes the supplied Spartan file.
 
-Options:
+General options:
   --help                        Displays this information.
   -i, --input [filename]        Names the input Spartan file.
   -o, --output [filename]       Names the output file.
-  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|closure|hoist|rename|codegen}
+
+Compilation options:
+  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|instrument|closures|hoist|codegen}
                                 Selects up to which compilation phase (inclusive) the pipeline will run.
-  -o,--optimize {0|1}           Selects the level of optimizations (0 = off). Default = 1.
+
+Optimization options:
+  -o,--optimize {0|1|2|3}       Selects the level of optimizations (0 = off). Default = 1.
   --optimizer {naive|super}     Selects the optimizer implementation. Default = naive.
+
+Code generation options:
   --target {r7rs|ECMAScript6}   Selects the compilation target. Default = r7rs.
-  -- [rest]                     Passes the remaining arguments to the executed script.
+
+Code generation options:
+  -- [argument]...              Passes the remaining arguments to the executed script.
 
 Bug reports & documentation available at <https://www.github.com/Idorobots/spartan>."))
 
 ;; NOTE When you have a hammer, every problem looks like a PEG grammar.
 (generate-parser
  (CommandLineArguments
-  (Command (* Option) (? RestArguments) Spacing EOF)
+  (/ Help
+     (Command (* Option) (? RestArguments) Spacing EOF)
+     MissingCommand)
   (lambda (input result)
-    (let ((cmd (car (match-match result)))
-          (opts (cadr (match-match result)))
-          (rest (caddr (match-match result))))
+    (let* ((cmdline (match-match result))
+           (cmd (car cmdline))
+           (opts (cadr cmdline))
+           (rest (caddr cmdline)))
       (matches (flatten (list cmd opts rest))
                (match-start result)
                (match-end result)))))
@@ -64,11 +76,17 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (option-error "sprtn" input start end
                     "Invalid command `~a` specified, expected one of: {compile|exec}" match))))
 
+ (MissingCommand
+  (Spacing EOF)
+  (lambda (input result)
+    (print-usage)
+    (exit 0)))
+
  (Option
   (/ Help Input Output Optimizer Phase Optimize Target InvalidOption))
 
  (Help
-  (Spacing "--help")
+  (Spacing "--help" (/ WhiteSpace EOF))
   (lambda (input result)
     (print-usage)
     (exit 0)))
@@ -92,7 +110,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (m result 'last-phase (string->symbol match)))))
 
  (CompilerPhase
-  (/ (/ "parse" "expand" "alpha" "optimize-early" "letrec" "cps" "optimize-late" "closure" "hoist" "rename" "codegen")
+  (/ (/ "parse" "expand" "alpha" "optimize-early" "letrec" "cps" "optimize-late"
+        "instrument" "closures" "hoist" "rename" "codegen")
      InvalidCompilerPhase))
 
  (InvalidCompilerPhase
@@ -111,7 +130,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (m result 'optimization-level (string->number match)))))
 
  (OptimizationLevel
-  (/ (/ "0" "1") InvalidOptimizationLevel))
+  (/ (/ "0" "1" "2" "3") InvalidOptimizationLevel))
 
  (InvalidOptimizationLevel
   NonWhiteSpace
@@ -202,12 +221,13 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
 (define (option-error prefix input start end f . args)
   (displayln (apply format f args))
   (newline)
-  (displayln (format "sprtn ~a" input))
-  (displayln (format "~a ~a~a"
+  (displayln (format "  sprtn ~a" input))
+  (displayln (format "  ~a ~a~a"
                      (make-string (string-length prefix) #\space)
                      (make-string start #\space)
                      (red (make-string (- end start) #\^))))
   (newline)
+  (displayln (format "Try `sprtn --help` for usage information."))
   (exit 1))
 
 (define (command-error f . args)
@@ -217,9 +237,22 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
 
 (define (store-result result filename)
   (let ((p (lambda ()
-             (if (string? result)
-                 (display result)
-                 (pretty-write result)))))
+             (cond ((string? result)
+                    (display result))
+                   ((and (env? result)
+                         (env-contains? result 'ast))
+                    (pretty-write (ast->plain (env-get result 'ast))))
+                   ((and (env? result)
+                         (env-contains? result 'init))
+                    (pretty-write (list 'begin
+                                        (map (lambda (kv)
+                                               (list 'define
+                                                     (car kv)
+                                                     (ast->plain (cdr kv))))
+                                             (env-get result 'data))
+                                        (ast->plain (env-get result 'init)))))
+                   (else
+                    (pretty-write result))))))
     (if (equal? filename 'stdout)
         (p)
         (with-output-to-file filename p))))

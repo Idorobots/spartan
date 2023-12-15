@@ -6,6 +6,7 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../utils/gensym.rkt")
+(require "../utils/utils.rkt")
 
 (provide globalize
          ;; FIXME For test access.
@@ -16,10 +17,10 @@
                 'ast (ast-subset? '(const symbol if do let binding lambda primop-app)))
         (lambda (env)
           (let ((result (hoist-values (env-get env 'ast))))
-            (env-set env
-                     'ast '()
-                     'data (car result)
-                     'init (cadr result))))))
+            (-> env
+                (env-remove 'ast)
+                (env-set 'data (car result)
+                         'init (cadr result)))))))
 
 (define (hoist-values expr)
   (let* ((hoisted '())
