@@ -4,8 +4,8 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+(require "../utils/assets.rkt")
 (require "../utils/utils.rkt")
-(require "rename.rkt")
 
 (provide generate-target-code)
 
@@ -36,51 +36,12 @@
                 ,init))))
 
 (define +js-continuation-hops+ 100)
-
-(define +js-primops+
-  '((debug . "false")
-    (nil . "null")
-    (write . "(function(o) { switch(typeof o) { case \"string\": process.stdout.write(o); break; case \"object\": if(o === null) {__write(\"()\"); break; } __write(\"(\"); __write(o.car); __write(\" . \"); __write(o.cdr); __write(\")\"); break; default: process.stdout.write(JSON.stringify(o)) }})")
-    (display . "{fun: (function(e, v, c) { __write(v); return {kont: c, hole: null} })}")
-    (newline . "{fun: (function(e, c) { __write(\"\\n\"); return {kont: c, hole: null} })}")
-    (+ . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a + b) } })}")
-    (- . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a - b) } })}")
-    (* . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a * b) } })}")
-    (/ . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a / b) } })}")
-    (modulo . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a % b) } })}")
-    (quotient . "{fun: (function(e, a, b, c) { return {kont: c, hole: Math.floor(a/b) } })}")
-    (< . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a < b) } })}")
-    (<= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a <= b) } })}")
-    (> . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a > b) } })}")
-    (>= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a >= b) } })}")
-    (= . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a == b) } })}")
-    (cons . "{fun: (function(e, a, b, c) { return {kont: c, hole: { car: a, cdr: b} } })}")
-    (car . "{fun: (function(e, l, c) { return {kont: c, hole: l.car } })}")
-    (cdr . "{fun: (function(e, l, c) { return {kont: c, hole: l.cdr } })}")
-    (list . "{fun: (function(e, ...args) { const c = args[args.length - 1]; const vals = args.slice(0, args.length - 1); const lst = ((rest) => (rest.length === 0) ? null : {car: rest[0], cdr: lst(rest.slice(1))}); return {kont: c, hole: lst(vals)} })}")
-    (append "{fun: (function (e, a, b, c) { const app = ((rest) => (rest === null) ? b : {car: rest.car, cdr: app(rest.cdr)}); return {kont: c, hole: app(a) } })}")
-    (nil? . "{fun: (function(e, l, c) { return {kont: c, hole: (l === null) } })}")
-    (eq? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a == b) } })}")
-    (equal? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a === b) } })}")
-    (not . "{fun: (function(e, a, c) { return {kont: c, hole: !a } })}")
-    (ref . "{fun: (function(e, init, c) { return {kont: c, hole: { ref: init } } })}")
-    (assign! . "{fun: (function(e, r, val, c) { r.ref = val; return {kont: c, hole: r }})}")
-    (deref . "{fun: (function(e, r, c) { return {kont: c, hole: r.ref }})}")
-    (call/current-continuation . "{fun: (function(e, f, c) { return f.fun(f.env, {env: null, fun: (e, ret, _) => ({kont: c, hole: ret}) }, c)})}")
-    ;; TODO Rely on continuations instead.
-    (raise . "{fun: (function(e, ex, c) { throw ex })}")))
+(define +js-bootstrap+ (embed-file-contents "../targets/bootstrap.js"))
 
 (define (generate-js env)
   ;; Generate JavaScript code for the root node
   (string-append
-   (foldr (lambda (v acc)
-            (string-append
-             (format "const ~a = ~a;~n"
-                     (symbol->safe (car v))
-                     (cdr v))
-             acc))
-          (format "let __kontCounter = ~a;~n" +js-continuation-hops+)
-          +js-primops+)
+   +js-bootstrap+
    (foldr (lambda (v acc)
             (string-append
              (generate-js-const (car v) (cdr v))
@@ -95,7 +56,12 @@
 
 (define (generate-js-root expr)
   ;; NOTE Needed to avoid stack overflow due to continuations.
-  (format "let cc = (function(){~a})();~nwhile(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") { if(__debug) console.log(cc); cc = cc.kont.fun(cc.kont.env, cc.hole)}"
+  (format "let __kontCounter = ~a;
+let cc = (function(){~a})();
+while(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") {
+  cc = cc.kont.fun(cc.kont.env, cc.hole)
+}"
+          +js-continuation-hops+
           (generate-js-node generate-js-leaf expr)))
 
 (define (generate-js-leaf value)
@@ -347,8 +313,7 @@
          (generate-js-node
           (lambda (closure)
                              (return
-                              (format "(~a.fun(~a.env, ~a))"
-                                      closure
+                              (format "(__apply(~a, ~a))"
                                       closure
                                       (string-join args-js ", "))))
                            c)))
@@ -360,8 +325,7 @@
                   (generate-js-node
                    (lambda (v)
                      (return
-                      (format "~a.fun(~a.env, ~a)"
-                              kont
+                      (format "__apply(~a, ~a)"
                               kont
                               v)))
                    h)
@@ -386,7 +350,7 @@
        (let ((bindings-js (map (partial generate-js-node id)
                                bindings)))
          (return
-          (format "(function() {const __s = {}; [~a].map((b) => __s[b.name] = b.value); return __s})()"
+          (format "(function() {const __s = { struct: true }; [~a].map((b) => __s[b.name] = b.value); return __s})()"
                 (string-join bindings-js ", ")))))
 
       ((primop-app '&structure-ref s name)
