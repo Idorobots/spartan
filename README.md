@@ -9,10 +9,11 @@ Spartan is a small Lisp dialect that serves me as a test bed for programming lan
 - exception handling with restarts (`raise` & `handle`) relying on the continuations,
 - actor model (`spawn`, `send`, `recv`),
 - a built-in, Rete-based Rule Based System (`signal!`, `assert!`, `retract!`, `select` and `notify-whenever`),
+- two compilation targets (`ECMAScript6`, `r7rs`).
 
 See [here](test/sprtn) for some usage examples.
 
-The compiler is far from being useful, it doesn't even have a code generator yet, and it performs only rudimentary low-hanging fruit optimizations. It loosely follows the nanopass framework, with currently implemented passes being:
+The compiler is far from being useful, it performs only rudimentary low-hanging fruit optimizations. It loosely follows the nanopass framework, with currently implemented passes being:
 
 - parsing,
 - built-in macro expansion,
@@ -36,4 +37,5 @@ The compiler is far from being useful, it doesn't even have a code generator yet
 - continuation passing style transformation,
 - flat closure conversion,
 - global value hoisting,
-- target-safe name mangling.
+- target-safe name mangling,
+- target code generation.

@@ -34,14 +34,14 @@ function __write(o) {
           break;
         } else if (typeof i.cdr === "object" && i.cdr.car !== undefined) {
           __write(" ");
-          i = i.cdr
+          i = i.cdr;
         } else {
           __write(" . ");
           __write(i.cdr);
           break;
         }
       }
-      __write(")")
+      __write(")");
     }
     break;
   default:
