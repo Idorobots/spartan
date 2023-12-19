@@ -42,6 +42,11 @@
                (emit-const expr
                            (generated
                             (make-ast-list (ast-node-location expr) (cons first rest)))))
+              ((primop-app 'cons (primop-app 'car (symbol x)) (primop-app 'cdr (symbol x)))
+               ;; NOTE Making it an artificial node as it replaces a whole expression.
+               (generated
+                (make-ast-symbol (ast-node-location expr)
+                                 x)))
               ;; List predicates
               ((primop-app 'nil? (const (list args ...)))
                (emit-bool expr
