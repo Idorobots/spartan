@@ -1,11 +1,21 @@
 // Internal procedures
-function __apply(c, ...args) {
+function __apply1(c, a) {
+  return c.fun(c.env, a);
+}
+
+function __apply2(c, a, b) {
+  return c.fun(c.env, a, b);
+}
+
+function __apply3(c_, a, b, c) {
+  return c_.fun(c_.env, a, b, c);
+}
+
+function __applyN(c, ...args) {
   return c.fun(c.env, ...args);
 }
 
-function __apply_cont(k, h) {
-  return { kont: k, hole: h };
-}
+const __apply_cont = __apply1;
 
 function __write(o) {
   switch(typeof o) {
@@ -194,7 +204,7 @@ const __deref = {
 const __callDIVcurrent_continuation = {
   fun: (e, f, c) => {
     const reified = { fun: (e, ret, _) => __apply_cont(c, ret) };
-    return __apply(f, reified, c);
+    return __apply2(f, reified, c);
   }
 };
 const __raise = {

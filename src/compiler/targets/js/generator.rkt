@@ -281,12 +281,21 @@ while(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") 
                 (generate-js-node id env))))
 
       ((primop-app '&apply c args ...)
-       (let ((args-js (map (partial generate-js-node id)
-                           args)))
+       (let* ((args-js (map (partial generate-js-node id)
+                           args))
+              (variant (cond ((= (length args) 1)
+                              "1")
+                             ((= (length args) 2)
+                              "2")
+                             ((= (length args) 3)
+                              "3")
+                             (else
+                              "N"))))
          (generate-js-node
           (lambda (closure)
                              (return
-                              (format "(__apply(~a, ~a))"
+                              (format "(__apply~a(~a, ~a))"
+                                      variant
                                       closure
                                       (string-join args-js ", "))))
                            c)))
@@ -298,7 +307,7 @@ while(cc !== null && typeof cc === \"object\" && typeof cc.kont === \"object\") 
                   (generate-js-node
                    (lambda (v)
                      (return
-                      (format "__apply(~a, ~a)"
+                      (format "__apply_cont(~a, ~a)"
                               kont
                               v)))
                    h)
