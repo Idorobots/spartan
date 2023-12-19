@@ -9,7 +9,8 @@
 (require "runtime/rt.rkt")
 (require "rete/rete.rkt")
 
-(provide run-code
+(provide intern-instrument
+         run-code
          run
          run-instrumented
          run-string
@@ -25,10 +26,16 @@
 
 (provide (all-from-out "rete/rete.rkt"))
 
+(define-namespace-anchor anc)
+(define ns (namespace-anchor->namespace anc))
+
+(define (intern-instrument expr)
+  (eval expr ns))
+
 (define (run-code expr)
   (reset-rete!)
   (reset-tasks! '())
-  (spawn-task! (&yield-cont (closurize eval) expr)
+  (spawn-task! (&yield-cont (closurize intern-instrument) expr)
                (closurize
                 (lambda (e _)
                   (display ";; Execution finished due to an unhandled error: ")

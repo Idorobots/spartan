@@ -12,10 +12,7 @@
 
 (require "main.rkt")
 
-(require "runtime/rt.rkt")
-(require "rete/rete.rkt")
-(provide (all-from-out "runtime/rt.rkt"))
-(provide (all-from-out "rete/rete.rkt"))
+(provide (all-from-out "main.rkt"))
 
 (define (print-usage)
   (displayln "Usage: sprtn [command] [option]...
