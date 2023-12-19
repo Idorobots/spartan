@@ -50,11 +50,11 @@
            'instrument (env-get* env 'instrument id)
            ;; Optimization
            'optimizer (env-get* env 'optimizer 'naive)
-           'optimization-level (env-get* env 'optimization-level 1)
+           'optimization-level (env-get* env 'optimization-level 2)
            ;; Code generation
            'target (env-get* env 'target 'r7rs)))
 
-(define (full-pipeline opts-early opts-late)
+(define (full-pipeline opts-early opts-late opts-final)
   (list parse
         'parse
         macro-expand
@@ -83,33 +83,50 @@
         annotate-free-vars
         closure-convert
         'closures
+        (optimize opts-final)
+        'optimize-final
         globalize
         'hoist
         symbol-rename
+        'rename
         generate-target-code
         'codegen))
 
 (define (assemble-pipeline env)
-  (let* ((opts-early (list (sequence annotate-free-vars
-                                     inline-lambdas)
-                           inline-builtins
-                           propagate-constants
-                           fold-constants
-                           (sequence annotate-free-vars
-                                     eliminate-common-subexpressions)
-                           propagate-copies
-                           (sequence annotate-free-vars
-                                     eliminate-dead-code)))
-         (opts-late (list (sequence annotate-free-vars
-                                    inline-lambdas)
-                          propagate-constants
-                          fold-constants
-                          (sequence annotate-free-vars
-                                    eliminate-common-subexpressions)
-                          propagate-copies
-                          (sequence annotate-free-vars
-                                    eliminate-dead-code)))
-         (pipeline (full-pipeline opts-early opts-late))
+  (let* ((opt-level (env-get env 'optimization-level))
+         (opts-early (if (> opt-level 0)
+                         (list (sequence annotate-free-vars
+                                         inline-lambdas)
+                               inline-builtins
+                               propagate-constants
+                               fold-constants
+                               (sequence annotate-free-vars
+                                         eliminate-common-subexpressions)
+                               propagate-copies
+                               (sequence annotate-free-vars
+                                         eliminate-dead-code))
+                         '()))
+         (opts-late (if (> opt-level 1)
+                        (list (sequence annotate-free-vars
+                                        inline-lambdas)
+                              propagate-constants
+                              fold-constants
+                              (sequence annotate-free-vars
+                                        eliminate-common-subexpressions)
+                              propagate-copies
+                              (sequence annotate-free-vars
+                                        eliminate-dead-code))
+                        '()))
+         (opts-final (if (> opt-level 2)
+                         (list propagate-constants
+                               fold-constants
+                               (sequence annotate-free-vars
+                                         eliminate-common-subexpressions)
+                               propagate-copies
+                               (sequence annotate-free-vars
+                                         eliminate-dead-code))
+                         '()))
+         (pipeline (full-pipeline opts-early opts-late opts-final))
          (phase (env-get env 'last-phase)))
     (let loop ((p pipeline))
       (cond ((empty? p)

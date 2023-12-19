@@ -29,11 +29,11 @@ General options:
   -o, --output [filename]       Names the output file.
 
 Compilation options:
-  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|instrument|closures|hoist|codegen}
+  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|instrument|closures|optimize-final|hoist|rename|codegen}
                                 Selects up to which compilation phase (inclusive) the pipeline will run.
 
 Optimization options:
-  -o,--optimize {0|1|2|3}       Selects the level of optimizations (0 = off). Default = 1.
+  -o,--optimize {0|1|2|3}       Selects the level of optimizations (0 = off). Default = 2.
   --optimizer {naive|super}     Selects the optimizer implementation. Default = naive.
 
 Code generation options:
@@ -111,7 +111,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
 
  (CompilerPhase
   (/ (/ "parse" "expand" "alpha" "optimize-early" "letrec" "cps" "optimize-late"
-        "instrument" "closures" "hoist" "rename" "codegen")
+        "instrument" "closures" "optimize-final" "hoist" "rename" "codegen")
      InvalidCompilerPhase))
 
  (InvalidCompilerPhase

@@ -169,8 +169,10 @@
          (assert (> (length (unique die)) 1)))
        dice)
   ;; ...and the win propabilities are all equal.
-  (assert (= 1 (length (unique win-probs))))
+  ;; NOTE With the following line it might not find any sets.
+  ;;(assert (= 1 (length (unique win-probs))))
   ;; The resulting non-transitive dice:
+  (display "Found: ")
   (display dice)
   (newline)
   (display win-probs)

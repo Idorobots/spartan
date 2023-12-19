@@ -40,8 +40,9 @@
 (define +js-primops+
   '((debug . "false")
     (nil . "null")
-    (display . "{fun: (function(e, v, c) { process.stdout.write(JSON.stringify(v)); return {kont: c, hole: null} })}")
-    (newline . "{fun: (function(e, c) { process.stdout.write(\"\\n\"); return {kont: c, hole: null} })}")
+    (write . "(function(o) { switch(typeof o) { case \"string\": process.stdout.write(o); break; case \"object\": if(o === null) {__write(\"()\"); break; } __write(\"(\"); __write(o.car); __write(\" . \"); __write(o.cdr); __write(\")\"); break; default: process.stdout.write(JSON.stringify(o)) }})")
+    (display . "{fun: (function(e, v, c) { __write(v); return {kont: c, hole: null} })}")
+    (newline . "{fun: (function(e, c) { __write(\"\\n\"); return {kont: c, hole: null} })}")
     (+ . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a + b) } })}")
     (- . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a - b) } })}")
     (* . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a * b) } })}")
@@ -61,7 +62,7 @@
     (nil? . "{fun: (function(e, l, c) { return {kont: c, hole: (l === null) } })}")
     (eq? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a == b) } })}")
     (equal? . "{fun: (function(e, a, b, c) { return {kont: c, hole: (a === b) } })}")
-    (not . "{fun: (function(e, a, c) { return {kont: c, hole: (a === null) } })}")
+    (not . "{fun: (function(e, a, c) { return {kont: c, hole: !a } })}")
     (ref . "{fun: (function(e, init, c) { return {kont: c, hole: { ref: init } } })}")
     (assign! . "{fun: (function(e, r, val, c) { r.ref = val; return {kont: c, hole: r }})}")
     (deref . "{fun: (function(e, r, c) { return {kont: c, hole: r.ref }})}")
@@ -285,17 +286,17 @@
 
       ((primop-app 'not a)
        (return
-        (format "(~a === null)"
+        (format "(!~a)"
                 (generate-js-node id a))))
 
       ;; IO primops
       ((primop-app 'display a)
        (return
-        (format "(process.stdout.write(JSON.stringify(~a)), null)"
+        (format "(__write(~a), null)"
                 (generate-js-node id a))))
 
       ((primop-app 'newline)
-       (return "(process.stdout.write(\"\\n\"), null)"))
+       (return "(__write(\"\\n\"), null)"))
 
       ;; Mutable primops
       ((primop-app 'ref a)
