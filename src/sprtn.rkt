@@ -19,6 +19,7 @@
 Commands:
   compile                       Compiles the supplied Spartan file without executing it.
   exec                          Compiles & executes the supplied Spartan file.
+  repl                          Starts an interactive read eval print loop environment.
 
 General options:
   --help                        Displays this information.
@@ -60,7 +61,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (/ Compile InvalidCommand))
 
  (Compile
-  (Spacing (/ "compile" "exec"))
+  (Spacing (/ "compile" "exec" "repl"))
   (lambda (input result)
     (m result 'command (string->symbol (cadr (match-match result))))))
 
@@ -260,23 +261,89 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
        (input (string-join (vector->list args) " "))
        (parsed (CommandLineArguments input)))
   (if (matches? parsed)
-      (let* ((init (apply env (match-match parsed)))
-             (command (case (env-get init 'command)
-                        ((compile) compile)
-                        ((exec)    (compose run-code compile)))))
-        (unless (env-contains? init 'input-file)
-          (command-error "An input file must be specified!"))
-        (with-handlers
-            ((compilation-error?
-              (lambda (e)
-                (displayln (compilation-error-what e))))
-             ((constantly #t)
-              (lambda (e)
-                (displayln (format "Aborted due to an error: ~a" e))
-                (exit 1))))
-          (-> init
-              (env-set 'module (env-get init 'input-file))
-              (env-set 'input (slurp (env-get init 'input-file)))
-              (command)
-              (store-result (env-get* init 'output-file 'stdout)))))
+      (let* ((init (apply env (match-match parsed))))
+        (case (env-get init 'command)
+          ;; Just run the compiler.
+          ((compile)
+           (unless (env-contains? init 'input-file)
+             (command-error "An input file must be specified!"))
+           (with-handlers
+               ((compilation-error?
+                 (lambda (e)
+                   (displayln (compilation-error-what e))))
+                ((constantly #t)
+                 (lambda (e)
+                   (displayln (format "Compilation aborted due to an error: ~a" e))
+                   (exit 1))))
+             (-> init
+                 (env-set 'module (env-get init 'input-file))
+                 (env-set 'input (slurp (env-get init 'input-file)))
+                 (compile)
+                 (store-result (env-get* init 'output-file 'stdout)))))
+          ;; Run the provided script in r7rs target only.
+          ((exec)
+           (unless (env-contains? init 'input-file)
+             (command-error "An input file must be specified!"))
+           ;; TODO Check if target is Scheme.
+           (with-handlers
+               ((compilation-error?
+                 (lambda (e)
+                   (displayln (compilation-error-what e))))
+                ((constantly #t)
+                 (lambda (e)
+                   (displayln (format "Execution aborted due to an error: ~a" e))
+                   (exit 1))))
+             (-> init
+                 (env-set 'module (env-get init 'input-file))
+                 (env-set 'input (slurp (env-get init 'input-file)))
+                 (compile)
+                 (run-code))))
+          ((repl)
+           (displayln "Spartan REPL. Type ;help for help.")
+           (let loop ((e (env-set init 'module "repl"))
+                      (listing "")
+                      (show-compiled #f))
+             (display ">> ")
+             (let ((input (read-line)))
+               ;; TODO Add a special syntax for overriding certain lines BASIC style.
+               (case input
+                 ((";help")
+                  (displayln "; Available commands: ;help, ;q[uit], ;exit, ;list, ;compiled {on|off}")
+                  (loop e listing show-compiled))
+                 ((";q" ";quit" ";exit")
+                  (exit 0))
+                 ((";list")
+                  (displayln "; Current listing:")
+                  ;; TODO Prefix with ";" and line numbers
+                  (displayln listing)
+                  (loop e listing show-compiled))
+                 ((";compiled on")
+                  (displayln "; Enabling compilation output.")
+                  (loop e listing #t))
+                 ((";compiled off")
+                  (displayln "; Disabling compilation output.")
+                  (loop e listing #f))
+                 (("")
+                  (loop e listing show-compiled))
+                 (else
+                  (with-handlers
+                      ((compilation-error?
+                        (lambda (err)
+                          (displayln (compilation-error-what err))
+                          (loop e listing show-compiled)))
+                       ((constantly #t)
+                        (lambda (err)
+                          (displayln (format "Error: ~a" (exn-message err)))
+                          (show-stacktrace (exn-continuation-marks err))
+                          (loop e listing show-compiled))))
+                    (let* ((new-listing (string-append listing input "\n"))
+                           (new-env (env-set e 'input new-listing))
+                           (compiled (compile new-env))
+                           (result (run-code compiled)))
+                      (when show-compiled
+                        (displayln "; Compilation result:")
+                        ;; TODO Prefix with ";"
+                        (pretty-write compiled))
+                      (pretty-write result)
+                      (loop new-env new-listing show-compiled))))))))))
       (command-error "Invalid invocation!")))

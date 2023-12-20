@@ -6,7 +6,7 @@
 
 (provide (struct-out compilation-error) compilation-error-location
          raise-compilation-error collect-errors
-         compiler-bug)
+         compiler-bug show-stacktrace)
 
 ;; Syntax error
 
@@ -43,12 +43,12 @@
 
 ;; Internal compiler errors
 
-(define (show-stacktrace)
-  (for ([s (continuation-mark-set->context (current-continuation-marks))]
+(define (show-stacktrace marks)
+  (for ([s (continuation-mark-set->context marks)]
         [i (in-naturals)])
     ;; show just the names, not the full source information
     (when (car s) (printf "~s: ~s\n" i s))))
 
 (define (compiler-bug what context)
-  (show-stacktrace)
+  (show-stacktrace (current-continuation-marks))
   (error (format "Likely a compiler bug! ~a ~a" what context)))

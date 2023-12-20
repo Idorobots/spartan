@@ -49,7 +49,7 @@
 
 (define (format-error module input location what)
   (let* ((lines (count-lines input))
-         (margin (inexact->exact (truncate (max +min-margin+ (ceiling (log lines 10))))))
+         (margin (inexact->exact (truncate (max +min-margin+ (ceiling (log (max lines 1) 10))))))
          (ellided-size (inexact->exact (truncate (floor (/ (- +ellide-blocks-larger-than+ 1) 2.0)))))
          (start (offset->line-and-col input (location-start location)))
          (start-line (car start))
