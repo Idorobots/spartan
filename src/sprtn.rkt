@@ -22,6 +22,7 @@ Commands:
 
 General options:
   --help                        Displays this information.
+  --color {on|off}              Toggles colored terminal output. Default = on
   -i, --input [filename]        Names the input Spartan file.
   -o, --output [filename]       Names the output file.
 
@@ -45,13 +46,13 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
 (generate-parser
  (CommandLineArguments
   (/ Help
-     (Command (* Option) (? RestArguments) Spacing EOF)
+     (Command (/ WhiteSpace EOF) (* Option) (? RestArguments) Spacing EOF)
      MissingCommand)
   (lambda (input result)
     (let* ((cmdline (match-match result))
            (cmd (car cmdline))
-           (opts (cadr cmdline))
-           (rest (caddr cmdline)))
+           (opts (caddr cmdline))
+           (rest (cadddr cmdline)))
       (matches (flatten (list cmd opts rest))
                (match-start result)
                (match-end result)))))
@@ -80,7 +81,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
     (exit 0)))
 
  (Option
-  (/ Help Input Output Optimizer Phase Optimize Target InvalidOption))
+  (/ Help Color Input Output Optimizer Phase Optimize Target InvalidOption))
 
  (Help
   (Spacing "--help" (/ WhiteSpace EOF))
@@ -88,20 +89,38 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
     (print-usage)
     (exit 0)))
 
- (Input
-  (Spacing (/ "-i" "--input") Spacing NonWhiteSpace)
+ (Color
+  (Spacing "--color" OptionSeparator OnOff)
   (lambda (input result)
     (let ((match (cadddr (match-match result))))
+      (m result 'color (equal? match "on")))))
+
+ (OnOff
+  (/ "on" "off" InvalidToggle))
+
+ (InvalidToggle
+  NonWhiteSpace
+  (lambda (input result)
+    (let ((match (match-match result))
+          (start (match-start result))
+          (end (match-end result)))
+      (option-error "sprtn" input start end
+                    "Invalid toggle value `~a` specified, expected one of: {on|off}" match))))
+
+ (Input
+  (Spacing (/ ("-i" Spacing) ("--input" OptionSeparator)) NonWhiteSpace)
+  (lambda (input result)
+    (let ((match (caddr (match-match result))))
       (m result 'input-file match))))
 
  (Output
-  (Spacing (/ "-o" "--output") Spacing NonWhiteSpace)
+  (Spacing (/ ("-o" Spacing) ("--output" OptionSeparator)) NonWhiteSpace)
   (lambda (input result)
-    (let ((match (cadddr (match-match result))))
+    (let ((match (caddr (match-match result))))
       (m result 'output-file match))))
 
  (Phase
-  (Spacing "--phase" Spacing CompilerPhase)
+  (Spacing "--phase" OptionSeparator CompilerPhase)
   (lambda (input result)
     (let ((match (cadddr (match-match result))))
       (m result 'last-phase (string->symbol match)))))
@@ -121,9 +140,9 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                     "Invalid compilation phase `~a` specified, expected one of: {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|closure|hoist|rename}" match))))
 
  (Optimize
-  (Spacing (/ "-O" "--optimize") Spacing OptimizationLevel)
+  (Spacing (/ ("-O" Spacing) ("--optimize" OptionSeparator)) OptimizationLevel)
   (lambda (input result)
-    (let ((match (cadddr (match-match result))))
+    (let ((match (caddr (match-match result))))
       (m result 'optimization-level (string->number match)))))
 
  (OptimizationLevel
@@ -139,7 +158,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                     "Invalid optimization level `~a` specified, expected one of: {0|1}" match))))
 
  (Optimizer
-  (Spacing "--optimizer" Spacing OptimizerAlgorithm)
+  (Spacing "--optimizer" OptionSeparator OptimizerAlgorithm)
   (lambda (input result)
     (let ((match (cadddr (match-match result))))
       (m result 'optimizer (string->symbol match)))))
@@ -157,7 +176,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                     "Invalid optmizer `~a` specified, expected one of: {naive|super}" match))))
 
  (Target
-  (Spacing "--target" Spacing CodegenTarget)
+  (Spacing "--target" OptionSeparator CodegenTarget)
   (lambda (input result)
     (let ((match (cadddr (match-match result))))
       (m result 'target (string->symbol match)))))
@@ -195,6 +214,9 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
  (Spacing
   (: * WhiteSpace)
   no-inline)
+
+ (OptionSeparator
+  (/ WhiteSpace "="))
 
  (WhiteSpace
   "[ \t\v\r\n]+")
@@ -261,6 +283,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
        (parsed (CommandLineArguments input)))
   (if (matches? parsed)
       (let* ((init (apply env (match-match parsed))))
+        (set-color-output (env-get* init 'color #t))
         (case (env-get init 'command)
           ;; Just run the compiler.
           ((compile)

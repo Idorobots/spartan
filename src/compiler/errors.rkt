@@ -1,12 +1,14 @@
 #lang racket
 
+(require syntax/srcloc)
+
 (require "utils/utils.rkt")
 (require "utils/refs.rkt")
 (require "ast/nodes.rkt")
 
 (provide (struct-out compilation-error) compilation-error-location
          raise-compilation-error collect-errors
-         compiler-bug show-stacktrace)
+         compiler-bug get-stacktrace)
 
 ;; Syntax error
 
@@ -42,13 +44,16 @@
     (list result (deref errors))))
 
 ;; Internal compiler errors
-
-(define (show-stacktrace marks)
-  (for ([s (continuation-mark-set->context marks)]
-        [i (in-naturals)])
-    ;; show just the names, not the full source information
-    (when (car s) (printf "~s: ~s\n" i s))))
+(define (get-stacktrace marks)
+  (map (lambda (s)
+         (let ((loc (cdr s)))
+           (format "~a(~a,~a): ~a"
+                   (or (source-location-source loc) "?")
+                   (or (source-location-line loc) "?")
+                   (or (source-location-column loc) "?")
+                   (car s))))
+       (continuation-mark-set->context marks)))
 
 (define (compiler-bug what context)
-  (show-stacktrace (current-continuation-marks))
+  (map displayln (get-stacktrace (current-continuation-marks)))
   (error (format "Likely a compiler bug! ~a ~a" what context)))
