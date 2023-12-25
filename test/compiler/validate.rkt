@@ -108,6 +108,7 @@
                             (extract-node-type op)))))
 
   (it "should disallow stray defs"
+     ;; FIXME This should actually be allowed as long as it results in a module object.
      (check ((ctx (gen-text (gen-integer 10 20)))
              (node (gen-with-ctx gen-valid-def-node ctx)))
             (assert (with-handlers ((compilation-error?

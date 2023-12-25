@@ -282,8 +282,15 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
        (input (string-join (vector->list args) " "))
        (parsed (CommandLineArguments input)))
   (if (matches? parsed)
-      (let* ((init (apply env (match-match parsed))))
-        (set-color-output (env-get* init 'color #t))
+      (let* ((init (apply env (append
+                               ;; Apply defaults.
+                               '(color #t
+                                 last-phase codegen
+                                 optimizer naive
+                                 optimization-level 2
+                                 target r7rs)
+                               (match-match parsed)))))
+        (set-color-output (env-get init 'color))
         (case (env-get init 'command)
           ;; Just run the compiler.
           ((compile)

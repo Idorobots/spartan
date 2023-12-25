@@ -42,6 +42,7 @@
   (env-set env
            ;; Compiler specific
            'errors '()
+           'first-phase (env-get* env 'first-phase 'start)
            'last-phase (env-get* env 'last-phase 'codegen)
            ;; Expander & compilation envs.
            'static-env (make-static-environment)
@@ -55,7 +56,8 @@
            'target (env-get* env 'target 'r7rs)))
 
 (define (full-pipeline opts-early opts-late opts-final)
-  (list parse
+  (list 'start
+        parse
         'parse
         macro-expand
         quasiquote-expand
@@ -64,6 +66,7 @@
         annotate-free-vars
         annotate-bindings
         validate
+        'validate
         report-errors
         alpha-convert
         'alpha
@@ -91,6 +94,24 @@
         'rename
         generate-target-code
         'codegen))
+
+(define (trim-pipeline pipeline first-phase last-phase)
+  (let trim-start ((remaining pipeline))
+    (cond ((empty? remaining)
+           '())
+          ((equal? (car remaining) first-phase)
+           (let trim-end ((p remaining))
+             (cond ((empty? p)
+                    '())
+                   ((equal? (car p) last-phase)
+                    '())
+                   ((symbol? (car p))
+                    (trim-end (cdr p)))
+                   (else
+                    (cons (car p)
+                          (trim-end (cdr p)))))))
+          (else
+           (trim-start (cdr remaining))))))
 
 (define (assemble-pipeline env)
   (let* ((opt-level (env-get env 'optimization-level))
@@ -127,21 +148,14 @@
                                          eliminate-dead-code))
                          '()))
          (pipeline (full-pipeline opts-early opts-late opts-final))
-         (phase (env-get env 'last-phase)))
-    (let loop ((p pipeline))
-      (cond ((empty? p)
-             '())
-            ((equal? (car p) phase)
-             '())
-            ((symbol? (car p))
-             (loop (cdr p)))
-            (else
-             (cons (car p)
-                   (loop (cdr p))))))))
+         (last-phase (env-get env 'last-phase))
+         (first-phase (env-get env 'first-phase)))
+    (trim-pipeline pipeline first-phase last-phase)))
 
 (define (run-pipeline pipeline env)
   (foldl run-pass env pipeline))
 
 (define (compile env)
-  (let ((e (add-defaults env)))
-    (run-pipeline (assemble-pipeline e) e)))
+  (let* ((e (add-defaults env))
+         (pipeline (assemble-pipeline e)))
+    (run-pipeline pipeline e)))

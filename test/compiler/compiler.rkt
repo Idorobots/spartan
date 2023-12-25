@@ -61,4 +61,17 @@
                                                                (* n (fact (- n 1)))))))
                                             (fact 120))"))))
        (assert instrumented?)
-       (assert result ''23.5))))
+       (assert result ''23.5)))
+
+ (it "runs the correct phases"
+     (let* ((parsed (compile (env 'module "phases"
+                                  'input "(define (foo x) x)"
+                                  'last-phase 'parse)))
+            (expanded (compile (env-set parsed
+                                        'input ""
+                                        'first-phase 'parse
+                                        'last-phase 'expand))))
+       (assert (ast->plain (env-get parsed 'ast))
+               '(define (foo x) x))
+       (assert (ast->plain (env-get expanded 'ast))
+               '(define foo (lambda (x) x))))))

@@ -28,8 +28,9 @@
                   (let* ((name (gensym 'global)))
                     (set! hoisted (cons (cons name expr)
                                         hoisted))
-                    (make-ast-symbol (ast-node-location expr)
-                                     name))))
+                    (generated
+                     (make-ast-symbol (ast-node-location expr)
+                                     name)))))
          (init (map-ast
                 (lambda (expr)
                   (match-ast

@@ -3,7 +3,7 @@
 ;; Error handling tests
 
 (require "../testing.rkt")
-(require "../../src/compiler/passes/errors.rkt")
+(require "../../src/compiler/errors.rkt")
 
 (describe
  "errors"
