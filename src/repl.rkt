@@ -47,10 +47,10 @@ Available settings:
   (constantly (m 'quit)))
 
  (LineEdit
-  (Spacing "[1-9][0-9]{0,2}" Spacing "|" ".*" EOF)
+  (Spacing "[1-9][0-9]{0,2}" Spacing "|" (? "[ ]") ".*" EOF)
   (lambda (input result)
     (let ((match (match-match result)))
-      (m 'edit (string->number (nth 1 match)) (nth 4 match)))))
+      (m 'edit (string->number (nth 1 match)) (nth 5 match)))))
 
  (List
   (Spacing ";list" Spacing EOF)
