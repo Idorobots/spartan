@@ -329,6 +329,6 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                  (run-code))))
           ((repl)
            (-> init
-               (env-set 'module "input")
+               (env-set 'module "repl")
                (run-repl)))))
       (command-error "Invalid invocation!")))
