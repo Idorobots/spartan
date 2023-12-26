@@ -34,7 +34,7 @@ Available settings:
 
 (generate-parser
  (ReplCommand
-  (/ Help Quit List Clear Run Color Autorun Debug)
+  (/ Help Quit LineEdit List Clear Run Color Autorun Debug)
   (lambda (input result)
     result))
 
@@ -45,6 +45,12 @@ Available settings:
  (Quit
   (Spacing (/ ";q" ";quit" ";exit") Spacing EOF)
   (constantly (m 'quit)))
+
+ (LineEdit
+  (Spacing "[1-9][0-9]{0,2}" Spacing "|" ".*" EOF)
+  (lambda (input result)
+    (let ((match (match-match result)))
+      (m 'edit (string->number (nth 1 match)) (nth 4 match)))))
 
  (List
   (Spacing ";list" Spacing EOF)
@@ -111,7 +117,7 @@ Available settings:
       "off"))
 
 (define (print-prompt line)
-  (display (format "~a | " line)))
+  (display (format "~a ~a " line (yellow "|"))))
 
 (define (add-line env input)
   (let ((line (env-get env 'line))
@@ -119,6 +125,12 @@ Available settings:
     (env-set env
              'listing (cons (cons line input) listing)
              'line (+ 1 line))))
+
+(define (edit-line env line input)
+  (env-update env
+              'listing
+              (lambda (l)
+                (cons (cons line input) l))))
 
 (define (listing-line-number l)
   (car l))
@@ -155,7 +167,7 @@ Available settings:
   (display
    (listing->formatted-string listing
                               (lambda (line content)
-                                (format "~a | ~a~n" line content)))))
+                                (format "~a ~a ~a~n" line (yellow "|") content)))))
 
 (define (output->string output)
   (with-output-to-string
@@ -191,7 +203,6 @@ Available settings:
     ((show-stacktrace) "stacktrace-output")))
 
 (define (run-repl init)
-  ;; TODO Handle line number preffixed inputs.
   (print-greeting)
   (let loop ((env (env-set init
                            'line 2
@@ -255,6 +266,11 @@ Available settings:
                    (print-comment (output->string (run-code compiled))))
                  (loop new-env)))))
 
+      (define (maybe-run env)
+        (if (env-get env 'autorun)
+            (run env)
+            (loop env)))
+
       (let* ((input (read-line (current-input-port) 'any))
              (result (ReplCommand input)))
         (if (matches? result)
@@ -265,6 +281,8 @@ Available settings:
                (loop env))
               ((list 'quit)
                (exit 0))
+              ((list 'edit line input)
+               (maybe-run (edit-line env line input)))
               ((list 'list)
                (print-comment "Current listing:")
                (print-listing (env-get env 'listing))
@@ -282,7 +300,4 @@ Available settings:
                (print-comment (format "~a ~a" (endisstr state) (cmdstr command)))
                (loop (env-set env command state))))
             ;; Otherwise treat it as code input.
-            (let ((new-env (add-line env input)))
-              (if (env-get env 'autorun)
-                  (run new-env)
-                  (loop new-env))))))))
+            (maybe-run (add-line env input)))))))

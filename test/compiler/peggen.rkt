@@ -52,14 +52,14 @@
  (it "\"terminal\" uses compiled regexps for multi-char patterns"
      (gensym-reset!)
      (assert (generate-matcher "foo" 'in 'off id)
-             '(let ((result1 (regexp-match #rx"^foo" in off)))
+             '(let ((result1 (regexp-match #px"^foo" in off)))
                 (if result1
                     (matches (car result1) off (+ off (string-length (car result1))))
                     (no-match))))
      (gensym-reset!)
      (assert (generate-matcher "foo" 'in 'off stripper)
              '(strip
-               (let ((result1 (regexp-match #rx"^foo" in off)))
+               (let ((result1 (regexp-match #px"^foo" in off)))
                  (if result1
                      (matches (car result1) off (+ off (string-length (car result1))))
                      (no-match))))))
