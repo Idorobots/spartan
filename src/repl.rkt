@@ -220,56 +220,84 @@ Available settings:
                       (get-stacktrace (exn-continuation-marks err))))
           (loop env))))
 
-      (define (run new-env)
+      (define (run-strict new-env)
         (let* ((input (listing->string (env-get new-env 'listing)))
                (e (env-set new-env
                            'input input
                            'last-phase 'validate))
                (validated (compile e))
-               (errors (env-get validated 'errors))
-               (unused (filter (lambda (e)
-                                 (string-prefix? (compilation-error-what e) "Unused variable"))
-                               errors))
-               (unterminated (filter (lambda (e)
-                                       (string-prefix? (compilation-error-what e) "Unterminated"))
-                                     errors))
-               (rest (filter (lambda (e)
-                               (and (not (member e unused))
-                                    (not (member e unterminated))))
-                             errors)))
-          (cond ((not (empty? rest))
-                 ;; Report the remaining errors.
-                 (for-each (lambda (error)
-                             (let ((location (compilation-error-location error))
-                                   (what (compilation-error-what error)))
-                               (print-comment (format-error (env-get e 'module)
-                                                            input
-                                                            location
-                                                            what))
-                               (print-comment "\n")))
-                           (source-order rest))
-                 ;; Restart from the last state.
-                 (loop env))
-                ((not (empty? unterminated))
-                 ;; Continue gathering lines.
-                 (loop new-env))
-                (else
-                 ;; Proceed as normal, but strip the error object out of the AST.
-                 (let ((compiled (compile (env-set validated
-                                                   'ast (strip-errors (env-get validated 'ast))
-                                                   'errors '()
-                                                   'first-phase 'validate
-                                                   'last-phase (env-get new-env 'last-phase)))))
-                   (when (env-get new-env 'show-compiled)
-                     (print-comment "Compilation result:")
-                     (print-comment (output->string compiled)))
-                   (print-comment (output->string (run-code compiled))))
-                 (loop new-env)))))
+               (errors (env-get validated 'errors)))
+          (if (not (empty? errors))
+              (begin
+                ;; Report all the errors.
+                (for-each (lambda (error)
+                            (let ((location (compilation-error-location error))
+                                  (what (compilation-error-what error)))
+                              (print-comment (format-error (env-get e 'module)
+                                                           input
+                                                           location
+                                                           what))
+                              (print-comment "\n")))
+                          (source-order errors))
+                (loop env))
+              ;; Proceed as normal.
+              (let ((compiled (compile (env-set validated
+                                                'first-phase 'validate
+                                                'last-phase (env-get new-env 'last-phase)))))
+                (when (env-get new-env 'show-compiled)
+                  (print-comment "Compilation result:")
+                  (print-comment (output->string compiled)))
+                (print-comment (output->string (run-code compiled)))))))
 
-      (define (maybe-run env)
-        (if (env-get env 'autorun)
-            (run env)
-            (loop env)))
+      (define (run-laxed new-env)
+        (if (env-get new-env 'autorun)
+            (let* ((input (listing->string (env-get new-env 'listing)))
+                   (e (env-set new-env
+                               'input input
+                               'last-phase 'validate))
+                   (validated (compile e))
+                   (errors (env-get validated 'errors))
+                   (unused (filter (lambda (e)
+                                     (string-prefix? (compilation-error-what e) "Unused variable"))
+                                   errors))
+                   (unterminated (filter (lambda (e)
+                                           (let ((what (compilation-error-what e)))
+                                             (or (string-prefix? what "Unterminated")
+                                                 (string-prefix? what "No expression following"))))
+                                         errors))
+                   (rest (filter (lambda (e)
+                                   (and (not (member e unused))
+                                        (not (member e unterminated))))
+                                 errors)))
+              (cond ((not (empty? rest))
+                     ;; Report the remaining errors.
+                     (for-each (lambda (error)
+                                 (let ((location (compilation-error-location error))
+                                       (what (compilation-error-what error)))
+                                   (print-comment (format-error (env-get e 'module)
+                                                                input
+                                                                location
+                                                                what))
+                                   (print-comment "\n")))
+                               (source-order rest))
+                     ;; Restart from the last state.
+                     (loop env))
+                    ((not (empty? unterminated))
+                     ;; Continue gathering lines.
+                     (loop new-env))
+                    (else
+                     ;; Proceed as normal, but strip the error object out of the AST.
+                     (let ((compiled (compile (env-set validated
+                                                       'ast (strip-errors (env-get validated 'ast))
+                                                       'errors '()
+                                                       'first-phase 'validate
+                                                       'last-phase (env-get new-env 'last-phase)))))
+                       (when (env-get new-env 'show-compiled)
+                         (print-comment "Compilation result:")
+                         (print-comment (output->string compiled)))
+                       (print-comment (output->string (run-code compiled))))
+                     (loop new-env))))
+            (loop new-env)))
 
       (let* ((input (read-line (current-input-port) 'any))
              (result (ReplCommand input)))
@@ -282,13 +310,13 @@ Available settings:
               ((list 'quit)
                (exit 0))
               ((list 'edit line input)
-               (maybe-run (edit-line env line input)))
+               (run-laxed (edit-line env line input)))
               ((list 'list)
                (print-comment "Current listing:")
                (print-listing (env-get env 'listing))
                (loop env))
               ((list 'run)
-               (run env))
+               (run-strict env))
               ((list 'clear)
                (print-comment "Listing cleared.")
                (loop (env-set env 'line 1 'listing '())))
@@ -300,4 +328,4 @@ Available settings:
                (print-comment (format "~a ~a" (endisstr state) (cmdstr command)))
                (loop (env-set env command state))))
             ;; Otherwise treat it as code input.
-            (maybe-run (add-line env input)))))))
+            (run-laxed (add-line env input)))))))
