@@ -120,6 +120,11 @@
      (assert (pe ".")
              (list "Invalid symbol `.` specified at: 0 1")))
 
+ (it "handles special characters correctly"
+     (assert (p "|")
+             (make-ast-symbol (location 0 1)
+                              '\|)))
+
  (it "handles unterminated lists gracefully"
      (assert (pe "(")
              (list "Unterminated list, expected a closing `)` to follow: 0 1"))
