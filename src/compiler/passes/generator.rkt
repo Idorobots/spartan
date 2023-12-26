@@ -15,7 +15,7 @@
                 'target a-symbol?)
         (lambda (env)
           (case (env-get env 'target)
-            ((ECMAScript6)
+            ((ES6)
              (generate-js env))
             (else
              (generate-scheme env))))))

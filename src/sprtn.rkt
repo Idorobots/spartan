@@ -35,7 +35,7 @@ Optimization options:
   --optimizer {naive|super}     Selects the optimizer implementation. Default = naive.
 
 Code generation options:
-  --target {r7rs|ECMAScript6}   Selects the compilation target. Default = r7rs.
+  --target {r7rs|ES6}           Selects the compilation target. Default = r7rs.
 
 Code generation options:
   -- [argument]...              Passes the remaining arguments to the executed script.
@@ -182,7 +182,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (m result 'target (string->symbol match)))))
 
  (CodegenTarget
-  (/ (/ "r7rs" "ECMAScript6") InvalidTarget))
+  (/ (/ "r7rs" "ES6") InvalidTarget))
 
  (InvalidTarget
   NonWhiteSpace
@@ -191,7 +191,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
           (start (match-start result))
           (end (match-end result)))
       (option-error "sprtn" input start end
-                    "Invalid compilation target `~a` specified, expected one of: {r7rs|ECMAScript6}" match))))
+                    "Invalid compilation target `~a` specified, expected one of: {r7rs|ES6}" match))))
 
  (InvalidOption
   (Spacing (! "--" WhiteSpace) NonWhiteSpace)

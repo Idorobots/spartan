@@ -9,7 +9,7 @@ Spartan is a small Lisp dialect that serves me as a test bed for programming lan
 - exception handling with restarts (`raise` & `handle`) relying on the continuations,
 - actor model (`spawn`, `send`, `recv`),
 - a built-in, Rete-based Rule Based System (`signal!`, `assert!`, `retract!`, `select` and `notify-whenever`),
-- two compilation targets (`ECMAScript6`, `r7rs`).
+- two compilation targets (`ES6`, `r7rs`).
 
 See [here](test/sprtn) for some usage examples.
 
