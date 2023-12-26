@@ -118,13 +118,13 @@
   (let* ((number (number->string (+ 1 line)))
          (spacing (make-string (- margin (string-length number)) #\space))
          (content (normalize-for-display (get-line input line))))
-    (format "~a~a ~a~a" spacing number (yellow "|") content)))
+    (format "~a~a ~a ~a" spacing number (yellow "|") content)))
 
 (define (format-underline margin col-start col-end)
   (let ((margin (make-string margin #\space))
         (spacing (make-string col-start #\space))
         (underline (red (make-string (- col-end col-start) #\^))))
-    (format "~a ~a~a~a~n" margin (yellow "|") spacing underline)))
+    (format "~a ~a ~a~a~n" margin (yellow "|") spacing underline)))
 
 (define (format-ellide margin)
   (let ((margin (make-string (- margin 3) #\space)))
