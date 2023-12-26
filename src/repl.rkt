@@ -2,6 +2,7 @@
 
 (require "compiler/ast.rkt")
 (require "compiler/env.rkt")
+(require "compiler/peggen.rkt")
 (require "compiler/errors.rkt")
 (require "compiler/compiler.rkt")
 (require "compiler/utils/io.rkt")
@@ -9,10 +10,6 @@
 (require "main.rkt")
 
 (provide run-repl)
-
-(define (print-greeting)
-  ;; TODO Version info.
-  (print-comment (gray "Spartan REPL. Type ;help for help.")))
 
 (define (print-usage env)
   (print-comment
@@ -28,12 +25,85 @@ Available commands:
 Available settings:
   ;color {on|off}            Toggles colored terminal output. Current = ~a
   ;autorun {on|off}          Toggles automatic execution of listings after each entered line. Current = ~a
-  ;debug-compiled {on|off}   Toggles debug output of the target compiled code. Current = ~a
-  ;debug-stacktrace {on|off} Toggles debug output of compiler error stacktraces. Current = ~a"
+  ;debug compiled {on|off}   Toggles debug output of the target compiled code. Current = ~a
+  ;debug stacktrace {on|off} Toggles debug output of compiler error stacktraces. Current = ~a"
            (toggle-state env 'color)
-           (toggle-state env 'auto-run)
+           (toggle-state env 'autorun)
            (toggle-state env 'show-compiled)
            (toggle-state env 'show-stacktrace))))
+
+(generate-parser
+ (ReplCommand
+  (/ Help Quit List Clear Run Color Autorun Debug)
+  (lambda (input result)
+    result))
+
+ (Help
+  (Spacing ";help" Spacing EOF)
+  (constantly (m 'help)))
+
+ (Quit
+  (Spacing (/ ";q" ";quit" ";exit") Spacing EOF)
+  (constantly (m 'quit)))
+
+ (List
+  (Spacing ";list" Spacing EOF)
+  (constantly (m 'list)))
+
+ (Clear
+  (Spacing ";clear" Spacing EOF)
+  (constantly (m 'clear)))
+
+ (Run
+  (Spacing ";run" Spacing EOF)
+  (constantly (m 'run)))
+
+ (Color
+  (Spacing ";color" WhiteSpace OnOff Spacing EOF)
+  (lambda (input result)
+    (m 'color (nth 3 (match-match result)))))
+
+ (Autorun
+  (Spacing ";autorun" WhiteSpace OnOff Spacing EOF)
+  (lambda (input result)
+    (m 'autorun (nth 3 (match-match result)))))
+
+ (Debug
+  (Spacing ";debug" WhiteSpace (/ "compiled" "stacktrace") WhiteSpace OnOff Spacing EOF)
+  (lambda (input result)
+    (m (string->symbol
+        (string-append "show-"
+                       (nth 3 (match-match result))))
+       (nth 5 (match-match result)))))
+
+ (OnOff
+  (/ "on" "off" InvalidToggle))
+
+ (InvalidToggle
+  NonWhiteSpace
+  (lambda (input result)
+    (let ((match (match-match result)))
+      (print-comment (format "Error: Invalid toggle value `~a` specified, expected one of: {on|off}" match))
+      'skip)))
+
+ (Spacing
+  (: * WhiteSpace))
+
+ (WhiteSpace
+  "[ \t\v\r\n]+")
+
+ (NonWhiteSpace
+  "[^ \t\v\r\n]+")
+
+ (EOF
+  ()))
+
+(define (m . values)
+  (matches values 0 0))
+
+(define (print-greeting)
+  ;; TODO Version info.
+  (print-comment (gray "Spartan REPL. Type ;help for help.")))
 
 (define (toggle-state env toggle)
   (if (env-get env toggle)
@@ -110,13 +180,23 @@ Available settings:
                  node))
            ast))
 
+(define (endisstr state)
+  (if state "Enabled" "Disabled"))
+
+(define (cmdstr command)
+  (case command
+    ((color) "colored output")
+    ((autorun) "autorun")
+    ((show-compiled) "compilation output")
+    ((show-stacktrace) "stacktrace-output")))
+
 (define (run-repl init)
   ;; TODO Handle line number preffixed inputs.
   (print-greeting)
   (let loop ((env (env-set init
                            'line 2
                            'listing '((1 . "23")) ;; FIXME Needed for now to get the defines working in the REPL.
-                           'auto-run #t
+                           'autorun #t
                            'show-compiled #f
                            'show-stacktrace #f)))
     (print-prompt (env-get env 'line))
@@ -175,52 +255,34 @@ Available settings:
                    (print-comment (output->string (run-code compiled))))
                  (loop new-env)))))
 
-      (let ((input (read-line (current-input-port) 'any)))
-        (case input
-          (("")
-           (loop env))
-          ((";help")
-           (print-usage env)
-           (loop env))
-          ((";q" ";quit" ";exit")
-           (exit 0))
-          ((";list")
-           (print-comment "Current listing:")
-           (print-listing (env-get env 'listing))
-           (loop env))
-          ((";clear")
-           (print-comment "Listing cleared.")
-           (loop (env-set env 'line 1 'listing '())))
-          ((";run")
-           (run env))
-          ((";autorun on")
-           (print-comment "Enabled auto-run.")
-           (loop (env-set env 'auto-run #t)))
-          ((";autorun off")
-           (print-comment "Disabled auto-run.")
-           (loop (env-set env 'auto-run #f)))
-          ((";color on")
-           (set-color-output #t)
-           (print-comment "Enabled colored output.")
-           (loop (env-set env 'color #t)))
-          ((";color off")
-           (set-color-output #f)
-           (print-comment "Disabled colored output.")
-           (loop (env-set env 'color #f)))
-          ((";debug-compiled on")
-           (print-comment "Enabled compilation output.")
-           (loop (env-set env 'show-compiled #t)))
-          ((";debug-compiled off")
-           (print-comment "Disabled compilation output.")
-           (loop (env-set env 'show-compiled #f)))
-          ((";debug-stacktrace on")
-           (print-comment "Enabled stacktrace output.")
-           (loop (env-set env 'show-stacktrace #t)))
-          ((";debug-stacktrace off")
-           (print-comment "Disabled stacktrace output.")
-           (loop (env-set env 'show-stacktrace #f)))
-          (else
-           (let ((new-env (add-line env input)))
-             (if (env-get env 'auto-run)
-                 (run new-env)
-                 (loop new-env)))))))))
+      (let* ((input (read-line (current-input-port) 'any))
+             (result (ReplCommand input)))
+        (if (matches? result)
+            ;; If it's a command, execute it.
+            (match (match-match result)
+              ((list 'help)
+               (print-usage env)
+               (loop env))
+              ((list 'quit)
+               (exit 0))
+              ((list 'list)
+               (print-comment "Current listing:")
+               (print-listing (env-get env 'listing))
+               (loop env))
+              ((list 'run)
+               (run env))
+              ((list 'clear)
+               (print-comment "Listing cleared.")
+               (loop (env-set env 'line 1 'listing '())))
+              ((list command 'skip)
+               (loop env))
+              ((list command state)
+               (when (equal? command 'color)
+                 (set-color-output state))
+               (print-comment (format "~a ~a" (endisstr state) (cmdstr command)))
+               (loop (env-set env command state))))
+            ;; Otherwise treat it as code input.
+            (let ((new-env (add-line env input)))
+              (if (env-get env 'autorun)
+                  (run new-env)
+                  (loop new-env))))))))

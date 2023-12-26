@@ -3,7 +3,7 @@
 ;; Various utilities
 
 (provide empty? every? some? sorted? tagged-list? symbol<?
-         last concat uniq zip offset iota
+         last nth concat uniq zip offset iota
          id partial flip constantly
          array array-ref array-assign!
          matrix matrix-ref matrix-assign!
@@ -55,6 +55,9 @@
 
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
+
+(define (nth i lst)
+  (list-ref lst i))
 
 (define (concat a b)
   (if (empty? a)
