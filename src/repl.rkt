@@ -67,12 +67,12 @@ Available settings:
  (Color
   (Spacing ";color" WhiteSpace OnOff Spacing EOF)
   (lambda (input result)
-    (m 'color (nth 3 (match-match result)))))
+    (m 'color (equal? (nth 3 (match-match result)) "on"))))
 
  (Autorun
   (Spacing ";autorun" WhiteSpace OnOff Spacing EOF)
   (lambda (input result)
-    (m 'autorun (nth 3 (match-match result)))))
+    (m 'autorun (equal? (nth 3 (match-match result)) "on"))))
 
  (Debug
   (Spacing ";debug" WhiteSpace (/ "compiled" "stacktrace") WhiteSpace OnOff Spacing EOF)
@@ -80,7 +80,7 @@ Available settings:
     (m (string->symbol
         (string-append "show-"
                        (nth 3 (match-match result))))
-       (nth 5 (match-match result)))))
+       (equal? (nth 5 (match-match result)) "on"))))
 
  (OnOff
   (/ "on" "off" InvalidToggle))
@@ -325,7 +325,7 @@ Available settings:
               ((list command state)
                (when (equal? command 'color)
                  (set-color-output state))
-               (print-comment (format "~a ~a" (endisstr state) (cmdstr command)))
+               (print-comment (format "~a ~a." (endisstr state) (cmdstr command)))
                (loop (env-set env command state))))
             ;; Otherwise treat it as code input.
             (run-laxed (add-line env input)))))))
