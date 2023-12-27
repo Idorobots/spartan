@@ -247,7 +247,8 @@ Available settings:
                 (when (env-get new-env 'show-compiled)
                   (print-comment "Compilation result:")
                   (print-comment (output->string compiled)))
-                (print-comment (output->string (run-code compiled)))))))
+                (print-comment (output->string (run-code compiled)))
+                (loop new-env)))))
 
       (define (run-laxed new-env)
         (if (env-get new-env 'autorun)
