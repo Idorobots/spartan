@@ -17,7 +17,7 @@
   (displayln "Usage: sprtn [command] [option]...
 Commands:
   compile                       Compiles the supplied Spartan file without executing it.
-  exec                          Compiles & executes the supplied Spartan file.
+  run                           Compiles & executes the supplied Spartan file.
   repl                          Starts an interactive read eval print loop environment.
 
 General options:
@@ -61,7 +61,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (/ ValidCommand InvalidCommand))
 
  (ValidCommand
-  (Spacing (/ "compile" "exec" "repl"))
+  (Spacing (/ "compile" "run" "repl"))
   (lambda (input result)
     (m result 'command (string->symbol (cadr (match-match result))))))
 
@@ -72,7 +72,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
           (start (match-start result))
           (end (match-end result)))
       (option-error "sprtn" input start end
-                    "Invalid command `~a` specified, expected one of: {compile|exec|repl}" match))))
+                    "Invalid command `~a` specified, expected one of: {compile|run|repl}" match))))
 
  (MissingCommand
   (Spacing EOF)
@@ -310,7 +310,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                  (compile)
                  (store-result (env-get* init 'output-file 'stdout)))))
           ;; Run the provided script in r7rs target only.
-          ((exec)
+          ((run)
            (unless (env-contains? init 'input-file)
              (command-error "An input file must be specified!"))
            ;; TODO Check if target is Scheme.

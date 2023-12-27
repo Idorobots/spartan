@@ -9,9 +9,14 @@ Spartan is a small Lisp dialect that serves me as a test bed for programming lan
 - exception handling with restarts (`raise` & `handle`) relying on the continuations,
 - actor model (`spawn`, `send`, `recv`),
 - a built-in, Rete-based Rule Based System (`signal!`, `assert!`, `retract!`, `select` and `notify-whenever`),
-- two compilation targets (`ES6`, `r7rs`).
+- two compilation targets (`ES6`, `r7rs`),
+- a CLI tool `sprtn` with support for `compile`, `run` and `repl` commands.
 
-See [here](examples) for some usage examples.
+See [here](examples) for some usage examples. You can run these examples with:
+
+```
+$ ./sprtn run -i examples/amb.sprtn
+```
 
 The compiler is far from being useful, it performs only rudimentary low-hanging fruit optimizations. It loosely follows the nanopass framework, with currently implemented passes being:
 
