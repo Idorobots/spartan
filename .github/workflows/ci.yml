@@ -23,5 +23,8 @@ jobs:
           variant: CS
           version: stable
 
+      - name: Build the compiler CLI.
+        run: ./build.sh
+
       - name: Run the test suite.
         run: ./run-tests.sh
