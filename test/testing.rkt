@@ -14,6 +14,13 @@
 (provide (all-defined-out))
 (provide (all-from-out "gen.rkt"))
 
+(define +perf-dir+ "test/data/perf/")
+(define +output-dir+ "test/data/outputs/")
+
+(define (base-name filename)
+  (let-values (((base name dir?) (split-path filename)))
+    (path->string name)))
+
 (define-struct assert-exception (predicate expression value expected))
 
 (define-syntax describe
@@ -58,7 +65,7 @@
     ((_ filename instrument)
      (test-file filename instrument id))
     ((_ filename instrument preprocess)
-     (let ((expected-file (string-append filename ".output")))
+     (let ((expected-file (string-append +output-dir+ (base-name filename) ".output")))
        (if (file-exists? expected-file)
            (let ((expected (slurp expected-file)))
              (assert (preprocess (run-instrumented-test-file filename instrument))
@@ -79,7 +86,7 @@
 (define-syntax test-perf
   (syntax-rules ()
     ((_ filename factor)
-     (test-perf (string-append filename ".perf") factor
+     (test-perf (string-append +perf-dir+ (base-name filename) ".perf") factor
                 (collect-garbage 'major)
                 (time-execution
                  (run-test-file filename))))

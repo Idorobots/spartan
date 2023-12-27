@@ -11,7 +11,7 @@ Spartan is a small Lisp dialect that serves me as a test bed for programming lan
 - a built-in, Rete-based Rule Based System (`signal!`, `assert!`, `retract!`, `select` and `notify-whenever`),
 - two compilation targets (`ES6`, `r7rs`).
 
-See [here](test/sprtn) for some usage examples.
+See [here](examples) for some usage examples.
 
 The compiler is far from being useful, it performs only rudimentary low-hanging fruit optimizations. It loosely follows the nanopass framework, with currently implemented passes being:
 

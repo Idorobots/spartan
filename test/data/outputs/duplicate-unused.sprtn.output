@@ -1,10 +1,10 @@
-test/sprtn/errors/duplicate-unused.sprtn(1,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(1,7): Unused variable `x`, rename to `_` to avoid this error:
   1 [33m|[39m (let ((x 23)
     [33m|[39m        [31m^[39m
   2 [33m|[39m       (y 'nope)
   3 [33m|[39m       (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(3,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(3,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
   1 [33m|[39m (let ((x 23)
   2 [33m|[39m       (y 'nope)
   3 [33m|[39m       (x 5))
@@ -12,7 +12,7 @@ test/sprtn/errors/duplicate-unused.sprtn(3,6): Bad `let` bindings syntax, duplic
   4 [33m|[39m   y)
   5 [33m|[39m (let ((x 1)
 
-test/sprtn/errors/duplicate-unused.sprtn(3,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(3,7): Unused variable `x`, rename to `_` to avoid this error:
   1 [33m|[39m (let ((x 23)
   2 [33m|[39m       (y 'nope)
   3 [33m|[39m       (x 5))
@@ -20,7 +20,7 @@ test/sprtn/errors/duplicate-unused.sprtn(3,7): Unused variable `x`, rename to `_
   4 [33m|[39m   y)
   5 [33m|[39m (let ((x 1)
 
-test/sprtn/errors/duplicate-unused.sprtn(5,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(5,7): Unused variable `x`, rename to `_` to avoid this error:
   3 [33m|[39m       (x 5))
   4 [33m|[39m   y)
   5 [33m|[39m (let ((x 1)
@@ -28,7 +28,7 @@ test/sprtn/errors/duplicate-unused.sprtn(5,7): Unused variable `x`, rename to `_
   6 [33m|[39m       (x 2)
   7 [33m|[39m       (x 3)
 
-test/sprtn/errors/duplicate-unused.sprtn(6,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(6,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
   4 [33m|[39m   y)
   5 [33m|[39m (let ((x 1)
   6 [33m|[39m       (x 2)
@@ -36,7 +36,7 @@ test/sprtn/errors/duplicate-unused.sprtn(6,6): Bad `let` bindings syntax, duplic
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
 
-test/sprtn/errors/duplicate-unused.sprtn(6,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(6,7): Unused variable `x`, rename to `_` to avoid this error:
   4 [33m|[39m   y)
   5 [33m|[39m (let ((x 1)
   6 [33m|[39m       (x 2)
@@ -44,7 +44,7 @@ test/sprtn/errors/duplicate-unused.sprtn(6,7): Unused variable `x`, rename to `_
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
 
-test/sprtn/errors/duplicate-unused.sprtn(7,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(7,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
   5 [33m|[39m (let ((x 1)
   6 [33m|[39m       (x 2)
   7 [33m|[39m       (x 3)
@@ -52,7 +52,7 @@ test/sprtn/errors/duplicate-unused.sprtn(7,6): Bad `let` bindings syntax, duplic
   8 [33m|[39m       (x 4)
   9 [33m|[39m       (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(7,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(7,7): Unused variable `x`, rename to `_` to avoid this error:
   5 [33m|[39m (let ((x 1)
   6 [33m|[39m       (x 2)
   7 [33m|[39m       (x 3)
@@ -60,7 +60,7 @@ test/sprtn/errors/duplicate-unused.sprtn(7,7): Unused variable `x`, rename to `_
   8 [33m|[39m       (x 4)
   9 [33m|[39m       (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(8,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(8,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
   6 [33m|[39m       (x 2)
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
@@ -68,7 +68,7 @@ test/sprtn/errors/duplicate-unused.sprtn(8,6): Bad `let` bindings syntax, duplic
   9 [33m|[39m       (x 5))
  10 [33m|[39m   23)
 
-test/sprtn/errors/duplicate-unused.sprtn(8,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(8,7): Unused variable `x`, rename to `_` to avoid this error:
   6 [33m|[39m       (x 2)
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
@@ -76,7 +76,7 @@ test/sprtn/errors/duplicate-unused.sprtn(8,7): Unused variable `x`, rename to `_
   9 [33m|[39m       (x 5))
  10 [33m|[39m   23)
 
-test/sprtn/errors/duplicate-unused.sprtn(9,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(9,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
   9 [33m|[39m       (x 5))
@@ -84,7 +84,7 @@ test/sprtn/errors/duplicate-unused.sprtn(9,6): Bad `let` bindings syntax, duplic
  10 [33m|[39m   23)
  11 [33m|[39m (letrec ((x 23)
 
-test/sprtn/errors/duplicate-unused.sprtn(9,7): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(9,7): Unused variable `x`, rename to `_` to avoid this error:
   7 [33m|[39m       (x 3)
   8 [33m|[39m       (x 4)
   9 [33m|[39m       (x 5))
@@ -92,7 +92,7 @@ test/sprtn/errors/duplicate-unused.sprtn(9,7): Unused variable `x`, rename to `_
  10 [33m|[39m   23)
  11 [33m|[39m (letrec ((x 23)
 
-test/sprtn/errors/duplicate-unused.sprtn(11,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(11,10): Unused variable `x`, rename to `_` to avoid this error:
   9 [33m|[39m       (x 5))
  10 [33m|[39m   23)
  11 [33m|[39m (letrec ((x 23)
@@ -100,7 +100,7 @@ test/sprtn/errors/duplicate-unused.sprtn(11,10): Unused variable `x`, rename to 
  12 [33m|[39m          (y 'nope)
  13 [33m|[39m          (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(13,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(13,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
  11 [33m|[39m (letrec ((x 23)
  12 [33m|[39m          (y 'nope)
  13 [33m|[39m          (x 5))
@@ -108,7 +108,7 @@ test/sprtn/errors/duplicate-unused.sprtn(13,9): Bad `letrec` bindings syntax, du
  14 [33m|[39m   y)
  15 [33m|[39m (letrec ((x 1)
 
-test/sprtn/errors/duplicate-unused.sprtn(13,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(13,10): Unused variable `x`, rename to `_` to avoid this error:
  11 [33m|[39m (letrec ((x 23)
  12 [33m|[39m          (y 'nope)
  13 [33m|[39m          (x 5))
@@ -116,7 +116,7 @@ test/sprtn/errors/duplicate-unused.sprtn(13,10): Unused variable `x`, rename to 
  14 [33m|[39m   y)
  15 [33m|[39m (letrec ((x 1)
 
-test/sprtn/errors/duplicate-unused.sprtn(15,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(15,10): Unused variable `x`, rename to `_` to avoid this error:
  13 [33m|[39m          (x 5))
  14 [33m|[39m   y)
  15 [33m|[39m (letrec ((x 1)
@@ -124,7 +124,7 @@ test/sprtn/errors/duplicate-unused.sprtn(15,10): Unused variable `x`, rename to 
  16 [33m|[39m          (x 2)
  17 [33m|[39m          (x 3)
 
-test/sprtn/errors/duplicate-unused.sprtn(16,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(16,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
  14 [33m|[39m   y)
  15 [33m|[39m (letrec ((x 1)
  16 [33m|[39m          (x 2)
@@ -132,7 +132,7 @@ test/sprtn/errors/duplicate-unused.sprtn(16,9): Bad `letrec` bindings syntax, du
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
 
-test/sprtn/errors/duplicate-unused.sprtn(16,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(16,10): Unused variable `x`, rename to `_` to avoid this error:
  14 [33m|[39m   y)
  15 [33m|[39m (letrec ((x 1)
  16 [33m|[39m          (x 2)
@@ -140,7 +140,7 @@ test/sprtn/errors/duplicate-unused.sprtn(16,10): Unused variable `x`, rename to 
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
 
-test/sprtn/errors/duplicate-unused.sprtn(17,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(17,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
  15 [33m|[39m (letrec ((x 1)
  16 [33m|[39m          (x 2)
  17 [33m|[39m          (x 3)
@@ -148,7 +148,7 @@ test/sprtn/errors/duplicate-unused.sprtn(17,9): Bad `letrec` bindings syntax, du
  18 [33m|[39m          (x 4)
  19 [33m|[39m          (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(17,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(17,10): Unused variable `x`, rename to `_` to avoid this error:
  15 [33m|[39m (letrec ((x 1)
  16 [33m|[39m          (x 2)
  17 [33m|[39m          (x 3)
@@ -156,7 +156,7 @@ test/sprtn/errors/duplicate-unused.sprtn(17,10): Unused variable `x`, rename to 
  18 [33m|[39m          (x 4)
  19 [33m|[39m          (x 5))
 
-test/sprtn/errors/duplicate-unused.sprtn(18,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(18,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
  16 [33m|[39m          (x 2)
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
@@ -164,7 +164,7 @@ test/sprtn/errors/duplicate-unused.sprtn(18,9): Bad `letrec` bindings syntax, du
  19 [33m|[39m          (x 5))
  20 [33m|[39m   23)
 
-test/sprtn/errors/duplicate-unused.sprtn(18,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(18,10): Unused variable `x`, rename to `_` to avoid this error:
  16 [33m|[39m          (x 2)
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
@@ -172,7 +172,7 @@ test/sprtn/errors/duplicate-unused.sprtn(18,10): Unused variable `x`, rename to 
  19 [33m|[39m          (x 5))
  20 [33m|[39m   23)
 
-test/sprtn/errors/duplicate-unused.sprtn(19,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/duplicate-unused.sprtn(19,9): Bad `letrec` bindings syntax, duplicate binding identifier `x`:
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
  19 [33m|[39m          (x 5))
@@ -180,7 +180,7 @@ test/sprtn/errors/duplicate-unused.sprtn(19,9): Bad `letrec` bindings syntax, du
  20 [33m|[39m   23)
  21 [33m|[39m (lambda (x y x)
 
-test/sprtn/errors/duplicate-unused.sprtn(19,10): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(19,10): Unused variable `x`, rename to `_` to avoid this error:
  17 [33m|[39m          (x 3)
  18 [33m|[39m          (x 4)
  19 [33m|[39m          (x 5))
@@ -188,7 +188,7 @@ test/sprtn/errors/duplicate-unused.sprtn(19,10): Unused variable `x`, rename to 
  20 [33m|[39m   23)
  21 [33m|[39m (lambda (x y x)
 
-test/sprtn/errors/duplicate-unused.sprtn(21,9): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(21,9): Unused variable `x`, rename to `_` to avoid this error:
  19 [33m|[39m          (x 5))
  20 [33m|[39m   23)
  21 [33m|[39m (lambda (x y x)
@@ -196,7 +196,7 @@ test/sprtn/errors/duplicate-unused.sprtn(21,9): Unused variable `x`, rename to `
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
 
-test/sprtn/errors/duplicate-unused.sprtn(21,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+test/data/errors/duplicate-unused.sprtn(21,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
  19 [33m|[39m          (x 5))
  20 [33m|[39m   23)
  21 [33m|[39m (lambda (x y x)
@@ -204,7 +204,7 @@ test/sprtn/errors/duplicate-unused.sprtn(21,13): Bad `lambda` formal arguments s
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
 
-test/sprtn/errors/duplicate-unused.sprtn(21,13): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(21,13): Unused variable `x`, rename to `_` to avoid this error:
  19 [33m|[39m          (x 5))
  20 [33m|[39m   23)
  21 [33m|[39m (lambda (x y x)
@@ -212,7 +212,7 @@ test/sprtn/errors/duplicate-unused.sprtn(21,13): Unused variable `x`, rename to 
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
 
-test/sprtn/errors/duplicate-unused.sprtn(23,9): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(23,9): Unused variable `x`, rename to `_` to avoid this error:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -220,7 +220,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,9): Unused variable `x`, rename to `
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,11): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+test/data/errors/duplicate-unused.sprtn(23,11): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -228,7 +228,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,11): Bad `lambda` formal arguments s
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,11): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(23,11): Unused variable `x`, rename to `_` to avoid this error:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -236,7 +236,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,11): Unused variable `x`, rename to 
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+test/data/errors/duplicate-unused.sprtn(23,13): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -244,7 +244,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,13): Bad `lambda` formal arguments s
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,13): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(23,13): Unused variable `x`, rename to `_` to avoid this error:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -252,7 +252,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,13): Unused variable `x`, rename to 
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,15): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+test/data/errors/duplicate-unused.sprtn(23,15): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -260,7 +260,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,15): Bad `lambda` formal arguments s
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,15): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(23,15): Unused variable `x`, rename to `_` to avoid this error:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -268,7 +268,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,15): Unused variable `x`, rename to 
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,17): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
+test/data/errors/duplicate-unused.sprtn(23,17): Bad `lambda` formal arguments syntax, duplicate formal argument `x`:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)
@@ -276,7 +276,7 @@ test/sprtn/errors/duplicate-unused.sprtn(23,17): Bad `lambda` formal arguments s
  24 [33m|[39m   23)
  25 [33m|[39m 
 
-test/sprtn/errors/duplicate-unused.sprtn(23,17): Unused variable `x`, rename to `_` to avoid this error:
+test/data/errors/duplicate-unused.sprtn(23,17): Unused variable `x`, rename to `_` to avoid this error:
  21 [33m|[39m (lambda (x y x)
  22 [33m|[39m   y)
  23 [33m|[39m (lambda (x x x x x)

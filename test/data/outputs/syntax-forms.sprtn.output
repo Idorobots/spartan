@@ -1,17 +1,17 @@
-test/sprtn/errors/syntax-forms.sprtn(1,1): Bad `quote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(1,1): Bad `quote` syntax, expected exactly one expression to follow:
   1 [33m|[39m (quote)
     [33m|[39m  [31m^^^^^[39m
   2 [33m|[39m (quasiquote)
   3 [33m|[39m (unquote)
 
-test/sprtn/errors/syntax-forms.sprtn(2,1): Bad `quasiquote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(2,1): Bad `quasiquote` syntax, expected exactly one expression to follow:
   1 [33m|[39m (quote)
   2 [33m|[39m (quasiquote)
     [33m|[39m  [31m^^^^^^^^^^[39m
   3 [33m|[39m (unquote)
   4 [33m|[39m (unquote-splicing)
 
-test/sprtn/errors/syntax-forms.sprtn(3,1): Bad `unquote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(3,1): Bad `unquote` syntax, expected exactly one expression to follow:
   1 [33m|[39m (quote)
   2 [33m|[39m (quasiquote)
   3 [33m|[39m (unquote)
@@ -19,7 +19,7 @@ test/sprtn/errors/syntax-forms.sprtn(3,1): Bad `unquote` syntax, expected exactl
   4 [33m|[39m (unquote-splicing)
   5 [33m|[39m (quote 23)
 
-test/sprtn/errors/syntax-forms.sprtn(4,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(4,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
   2 [33m|[39m (quasiquote)
   3 [33m|[39m (unquote)
   4 [33m|[39m (unquote-splicing)
@@ -27,7 +27,7 @@ test/sprtn/errors/syntax-forms.sprtn(4,1): Bad `unquote-splicing` syntax, expect
   5 [33m|[39m (quote 23)
   6 [33m|[39m (quasiquote 23)
 
-test/sprtn/errors/syntax-forms.sprtn(7,0): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+test/data/errors/syntax-forms.sprtn(7,0): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
   5 [33m|[39m (quote 23)
   6 [33m|[39m (quasiquote 23)
   7 [33m|[39m (unquote 23)
@@ -35,7 +35,7 @@ test/sprtn/errors/syntax-forms.sprtn(7,0): Misplaced `unquote`, expected to be e
   8 [33m|[39m (unquote-splicing 23)
   9 [33m|[39m (quote 23 5)
 
-test/sprtn/errors/syntax-forms.sprtn(8,0): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+test/data/errors/syntax-forms.sprtn(8,0): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
   6 [33m|[39m (quasiquote 23)
   7 [33m|[39m (unquote 23)
   8 [33m|[39m (unquote-splicing 23)
@@ -43,7 +43,7 @@ test/sprtn/errors/syntax-forms.sprtn(8,0): Misplaced `unquote-splicing`, expecte
   9 [33m|[39m (quote 23 5)
  10 [33m|[39m (quasiquote 1 2 3)
 
-test/sprtn/errors/syntax-forms.sprtn(9,1): Bad `quote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(9,1): Bad `quote` syntax, expected exactly one expression to follow:
   7 [33m|[39m (unquote 23)
   8 [33m|[39m (unquote-splicing 23)
   9 [33m|[39m (quote 23 5)
@@ -51,7 +51,7 @@ test/sprtn/errors/syntax-forms.sprtn(9,1): Bad `quote` syntax, expected exactly 
  10 [33m|[39m (quasiquote 1 2 3)
  11 [33m|[39m (unquote 23 4)
 
-test/sprtn/errors/syntax-forms.sprtn(10,1): Bad `quasiquote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(10,1): Bad `quasiquote` syntax, expected exactly one expression to follow:
   8 [33m|[39m (unquote-splicing 23)
   9 [33m|[39m (quote 23 5)
  10 [33m|[39m (quasiquote 1 2 3)
@@ -59,7 +59,7 @@ test/sprtn/errors/syntax-forms.sprtn(10,1): Bad `quasiquote` syntax, expected ex
  11 [33m|[39m (unquote 23 4)
  12 [33m|[39m (unquote-splicing 1 2 3)
 
-test/sprtn/errors/syntax-forms.sprtn(11,1): Bad `unquote` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(11,1): Bad `unquote` syntax, expected exactly one expression to follow:
   9 [33m|[39m (quote 23 5)
  10 [33m|[39m (quasiquote 1 2 3)
  11 [33m|[39m (unquote 23 4)
@@ -67,7 +67,7 @@ test/sprtn/errors/syntax-forms.sprtn(11,1): Bad `unquote` syntax, expected exact
  12 [33m|[39m (unquote-splicing 1 2 3)
  13 [33m|[39m (quasiquote (unquote-splicing foo))
 
-test/sprtn/errors/syntax-forms.sprtn(12,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+test/data/errors/syntax-forms.sprtn(12,1): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
  10 [33m|[39m (quasiquote 1 2 3)
  11 [33m|[39m (unquote 23 4)
  12 [33m|[39m (unquote-splicing 1 2 3)
@@ -75,7 +75,7 @@ test/sprtn/errors/syntax-forms.sprtn(12,1): Bad `unquote-splicing` syntax, expec
  13 [33m|[39m (quasiquote (unquote-splicing foo))
  14 [33m|[39m (if)
 
-test/sprtn/errors/syntax-forms.sprtn(13,12): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
+test/data/errors/syntax-forms.sprtn(13,12): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
  11 [33m|[39m (unquote 23 4)
  12 [33m|[39m (unquote-splicing 1 2 3)
  13 [33m|[39m (quasiquote (unquote-splicing foo))
@@ -83,7 +83,7 @@ test/sprtn/errors/syntax-forms.sprtn(13,12): Misplaced `unquote-splicing`, expec
  14 [33m|[39m (if)
  15 [33m|[39m (if 23)
 
-test/sprtn/errors/syntax-forms.sprtn(14,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+test/data/errors/syntax-forms.sprtn(14,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
  12 [33m|[39m (unquote-splicing 1 2 3)
  13 [33m|[39m (quasiquote (unquote-splicing foo))
  14 [33m|[39m (if)
@@ -91,7 +91,7 @@ test/sprtn/errors/syntax-forms.sprtn(14,1): Bad `if` syntax, expected exactly th
  15 [33m|[39m (if 23)
  16 [33m|[39m (if 23 5)
 
-test/sprtn/errors/syntax-forms.sprtn(15,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+test/data/errors/syntax-forms.sprtn(15,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
  13 [33m|[39m (quasiquote (unquote-splicing foo))
  14 [33m|[39m (if)
  15 [33m|[39m (if 23)
@@ -99,7 +99,7 @@ test/sprtn/errors/syntax-forms.sprtn(15,1): Bad `if` syntax, expected exactly th
  16 [33m|[39m (if 23 5)
  17 [33m|[39m (if 1 2 3)
 
-test/sprtn/errors/syntax-forms.sprtn(16,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+test/data/errors/syntax-forms.sprtn(16,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
  14 [33m|[39m (if)
  15 [33m|[39m (if 23)
  16 [33m|[39m (if 23 5)
@@ -107,7 +107,7 @@ test/sprtn/errors/syntax-forms.sprtn(16,1): Bad `if` syntax, expected exactly th
  17 [33m|[39m (if 1 2 3)
  18 [33m|[39m (if 1 2 3 4 5)
 
-test/sprtn/errors/syntax-forms.sprtn(18,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+test/data/errors/syntax-forms.sprtn(18,1): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
  16 [33m|[39m (if 23 5)
  17 [33m|[39m (if 1 2 3)
  18 [33m|[39m (if 1 2 3 4 5)
@@ -115,7 +115,7 @@ test/sprtn/errors/syntax-forms.sprtn(18,1): Bad `if` syntax, expected exactly th
  19 [33m|[39m (do)
  20 [33m|[39m (do 1)
 
-test/sprtn/errors/syntax-forms.sprtn(19,1): Bad `do` syntax, expected at least one expression to follow:
+test/data/errors/syntax-forms.sprtn(19,1): Bad `do` syntax, expected at least one expression to follow:
  17 [33m|[39m (if 1 2 3)
  18 [33m|[39m (if 1 2 3 4 5)
  19 [33m|[39m (do)
@@ -123,7 +123,7 @@ test/sprtn/errors/syntax-forms.sprtn(19,1): Bad `do` syntax, expected at least o
  20 [33m|[39m (do 1)
  21 [33m|[39m (do 1 2)
 
-test/sprtn/errors/syntax-forms.sprtn(22,1): Bad `let` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(22,1): Bad `let` syntax, expected a list of bindings followed by a body:
  20 [33m|[39m (do 1)
  21 [33m|[39m (do 1 2)
  22 [33m|[39m (let)
@@ -131,7 +131,7 @@ test/sprtn/errors/syntax-forms.sprtn(22,1): Bad `let` syntax, expected a list of
  23 [33m|[39m (let x)
  24 [33m|[39m (let ())
 
-test/sprtn/errors/syntax-forms.sprtn(23,1): Bad `let` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(23,1): Bad `let` syntax, expected a list of bindings followed by a body:
  21 [33m|[39m (do 1 2)
  22 [33m|[39m (let)
  23 [33m|[39m (let x)
@@ -139,7 +139,7 @@ test/sprtn/errors/syntax-forms.sprtn(23,1): Bad `let` syntax, expected a list of
  24 [33m|[39m (let ())
  25 [33m|[39m (let () 23)
 
-test/sprtn/errors/syntax-forms.sprtn(24,1): Bad `let` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(24,1): Bad `let` syntax, expected a list of bindings followed by a body:
  22 [33m|[39m (let)
  23 [33m|[39m (let x)
  24 [33m|[39m (let ())
@@ -147,7 +147,7 @@ test/sprtn/errors/syntax-forms.sprtn(24,1): Bad `let` syntax, expected a list of
  25 [33m|[39m (let () 23)
  26 [33m|[39m (let x 23)
 
-test/sprtn/errors/syntax-forms.sprtn(26,1): Bad `let` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(26,1): Bad `let` syntax, expected a list of bindings followed by a body:
  24 [33m|[39m (let ())
  25 [33m|[39m (let () 23)
  26 [33m|[39m (let x 23)
@@ -155,7 +155,7 @@ test/sprtn/errors/syntax-forms.sprtn(26,1): Bad `let` syntax, expected a list of
  27 [33m|[39m (let (x) 23)
  28 [33m|[39m (let ((23 x)) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(27,6): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(27,6): Bad `let` bindings syntax, expected a pair of an identifier and a value:
  25 [33m|[39m (let () 23)
  26 [33m|[39m (let x 23)
  27 [33m|[39m (let (x) 23)
@@ -163,7 +163,7 @@ test/sprtn/errors/syntax-forms.sprtn(27,6): Bad `let` bindings syntax, expected 
  28 [33m|[39m (let ((23 x)) 23)
  29 [33m|[39m (let (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(27,6): Undefined variable `x`, did you mean `*`:
+test/data/errors/syntax-forms.sprtn(27,6): Undefined variable `x`, did you mean `*`:
  25 [33m|[39m (let () 23)
  26 [33m|[39m (let x 23)
  27 [33m|[39m (let (x) 23)
@@ -171,7 +171,7 @@ test/sprtn/errors/syntax-forms.sprtn(27,6): Undefined variable `x`, did you mean
  28 [33m|[39m (let ((23 x)) 23)
  29 [33m|[39m (let (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(28,7): Bad `let` bindings syntax, expected a symbol but got a number instead:
+test/data/errors/syntax-forms.sprtn(28,7): Bad `let` bindings syntax, expected a symbol but got a number instead:
  26 [33m|[39m (let x 23)
  27 [33m|[39m (let (x) 23)
  28 [33m|[39m (let ((23 x)) 23)
@@ -179,7 +179,7 @@ test/sprtn/errors/syntax-forms.sprtn(28,7): Bad `let` bindings syntax, expected 
  29 [33m|[39m (let (()) 23)
  30 [33m|[39m (let ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(28,10): Undefined variable `x`, did you mean `*`:
+test/data/errors/syntax-forms.sprtn(28,10): Undefined variable `x`, did you mean `*`:
  26 [33m|[39m (let x 23)
  27 [33m|[39m (let (x) 23)
  28 [33m|[39m (let ((23 x)) 23)
@@ -187,7 +187,7 @@ test/sprtn/errors/syntax-forms.sprtn(28,10): Undefined variable `x`, did you mea
  29 [33m|[39m (let (()) 23)
  30 [33m|[39m (let ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(29,6): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(29,6): Bad `let` bindings syntax, expected a pair of an identifier and a value:
  27 [33m|[39m (let (x) 23)
  28 [33m|[39m (let ((23 x)) 23)
  29 [33m|[39m (let (()) 23)
@@ -195,7 +195,7 @@ test/sprtn/errors/syntax-forms.sprtn(29,6): Bad `let` bindings syntax, expected 
  30 [33m|[39m (let ((x 23)) x)
  31 [33m|[39m (let ((x 23) y) x)
 
-test/sprtn/errors/syntax-forms.sprtn(31,13): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(31,13): Bad `let` bindings syntax, expected a pair of an identifier and a value:
  29 [33m|[39m (let (()) 23)
  30 [33m|[39m (let ((x 23)) x)
  31 [33m|[39m (let ((x 23) y) x)
@@ -203,7 +203,7 @@ test/sprtn/errors/syntax-forms.sprtn(31,13): Bad `let` bindings syntax, expected
  32 [33m|[39m (let ((x 23) y z) x)
  33 [33m|[39m (letrec)
 
-test/sprtn/errors/syntax-forms.sprtn(32,13): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(32,13): Bad `let` bindings syntax, expected a pair of an identifier and a value:
  30 [33m|[39m (let ((x 23)) x)
  31 [33m|[39m (let ((x 23) y) x)
  32 [33m|[39m (let ((x 23) y z) x)
@@ -211,7 +211,7 @@ test/sprtn/errors/syntax-forms.sprtn(32,13): Bad `let` bindings syntax, expected
  33 [33m|[39m (letrec)
  34 [33m|[39m (letrec x)
 
-test/sprtn/errors/syntax-forms.sprtn(32,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(32,15): Bad `let` bindings syntax, expected a pair of an identifier and a value:
  30 [33m|[39m (let ((x 23)) x)
  31 [33m|[39m (let ((x 23) y) x)
  32 [33m|[39m (let ((x 23) y z) x)
@@ -219,7 +219,7 @@ test/sprtn/errors/syntax-forms.sprtn(32,15): Bad `let` bindings syntax, expected
  33 [33m|[39m (letrec)
  34 [33m|[39m (letrec x)
 
-test/sprtn/errors/syntax-forms.sprtn(33,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(33,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
  31 [33m|[39m (let ((x 23) y) x)
  32 [33m|[39m (let ((x 23) y z) x)
  33 [33m|[39m (letrec)
@@ -227,7 +227,7 @@ test/sprtn/errors/syntax-forms.sprtn(33,1): Bad `letrec` syntax, expected a list
  34 [33m|[39m (letrec x)
  35 [33m|[39m (letrec ())
 
-test/sprtn/errors/syntax-forms.sprtn(34,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(34,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
  32 [33m|[39m (let ((x 23) y z) x)
  33 [33m|[39m (letrec)
  34 [33m|[39m (letrec x)
@@ -235,7 +235,7 @@ test/sprtn/errors/syntax-forms.sprtn(34,1): Bad `letrec` syntax, expected a list
  35 [33m|[39m (letrec ())
  36 [33m|[39m (letrec () 23)
 
-test/sprtn/errors/syntax-forms.sprtn(35,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(35,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
  33 [33m|[39m (letrec)
  34 [33m|[39m (letrec x)
  35 [33m|[39m (letrec ())
@@ -243,7 +243,7 @@ test/sprtn/errors/syntax-forms.sprtn(35,1): Bad `letrec` syntax, expected a list
  36 [33m|[39m (letrec () 23)
  37 [33m|[39m (letrec x 23)
 
-test/sprtn/errors/syntax-forms.sprtn(37,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
+test/data/errors/syntax-forms.sprtn(37,1): Bad `letrec` syntax, expected a list of bindings followed by a body:
  35 [33m|[39m (letrec ())
  36 [33m|[39m (letrec () 23)
  37 [33m|[39m (letrec x 23)
@@ -251,7 +251,7 @@ test/sprtn/errors/syntax-forms.sprtn(37,1): Bad `letrec` syntax, expected a list
  38 [33m|[39m (letrec (x) 23)
  39 [33m|[39m (letrec ((23 x)) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(38,9): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(38,9): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
  36 [33m|[39m (letrec () 23)
  37 [33m|[39m (letrec x 23)
  38 [33m|[39m (letrec (x) 23)
@@ -259,7 +259,7 @@ test/sprtn/errors/syntax-forms.sprtn(38,9): Bad `letrec` bindings syntax, expect
  39 [33m|[39m (letrec ((23 x)) 23)
  40 [33m|[39m (letrec (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(38,9): Undefined variable `x`, did you mean `*`:
+test/data/errors/syntax-forms.sprtn(38,9): Undefined variable `x`, did you mean `*`:
  36 [33m|[39m (letrec () 23)
  37 [33m|[39m (letrec x 23)
  38 [33m|[39m (letrec (x) 23)
@@ -267,7 +267,7 @@ test/sprtn/errors/syntax-forms.sprtn(38,9): Undefined variable `x`, did you mean
  39 [33m|[39m (letrec ((23 x)) 23)
  40 [33m|[39m (letrec (()) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(39,10): Bad `letrec` bindings syntax, expected a symbol but got a number instead:
+test/data/errors/syntax-forms.sprtn(39,10): Bad `letrec` bindings syntax, expected a symbol but got a number instead:
  37 [33m|[39m (letrec x 23)
  38 [33m|[39m (letrec (x) 23)
  39 [33m|[39m (letrec ((23 x)) 23)
@@ -275,7 +275,7 @@ test/sprtn/errors/syntax-forms.sprtn(39,10): Bad `letrec` bindings syntax, expec
  40 [33m|[39m (letrec (()) 23)
  41 [33m|[39m (letrec ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(39,13): Undefined variable `x`, did you mean `*`:
+test/data/errors/syntax-forms.sprtn(39,13): Undefined variable `x`, did you mean `*`:
  37 [33m|[39m (letrec x 23)
  38 [33m|[39m (letrec (x) 23)
  39 [33m|[39m (letrec ((23 x)) 23)
@@ -283,7 +283,7 @@ test/sprtn/errors/syntax-forms.sprtn(39,13): Undefined variable `x`, did you mea
  40 [33m|[39m (letrec (()) 23)
  41 [33m|[39m (letrec ((x 23)) x)
 
-test/sprtn/errors/syntax-forms.sprtn(40,9): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(40,9): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
  38 [33m|[39m (letrec (x) 23)
  39 [33m|[39m (letrec ((23 x)) 23)
  40 [33m|[39m (letrec (()) 23)
@@ -291,7 +291,7 @@ test/sprtn/errors/syntax-forms.sprtn(40,9): Bad `letrec` bindings syntax, expect
  41 [33m|[39m (letrec ((x 23)) x)
  42 [33m|[39m (letrec ((x 23) y) x)
 
-test/sprtn/errors/syntax-forms.sprtn(42,16): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(42,16): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
  40 [33m|[39m (letrec (()) 23)
  41 [33m|[39m (letrec ((x 23)) x)
  42 [33m|[39m (letrec ((x 23) y) x)
@@ -299,7 +299,7 @@ test/sprtn/errors/syntax-forms.sprtn(42,16): Bad `letrec` bindings syntax, expec
  43 [33m|[39m (letrec ((x 23) y z) x)
  44 [33m|[39m (lambda)
 
-test/sprtn/errors/syntax-forms.sprtn(43,16): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(43,16): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
  41 [33m|[39m (letrec ((x 23)) x)
  42 [33m|[39m (letrec ((x 23) y) x)
  43 [33m|[39m (letrec ((x 23) y z) x)
@@ -307,7 +307,7 @@ test/sprtn/errors/syntax-forms.sprtn(43,16): Bad `letrec` bindings syntax, expec
  44 [33m|[39m (lambda)
  45 [33m|[39m (lambda x)
 
-test/sprtn/errors/syntax-forms.sprtn(43,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
+test/data/errors/syntax-forms.sprtn(43,18): Bad `letrec` bindings syntax, expected a pair of an identifier and a value:
  41 [33m|[39m (letrec ((x 23)) x)
  42 [33m|[39m (letrec ((x 23) y) x)
  43 [33m|[39m (letrec ((x 23) y z) x)
@@ -315,7 +315,7 @@ test/sprtn/errors/syntax-forms.sprtn(43,18): Bad `letrec` bindings syntax, expec
  44 [33m|[39m (lambda)
  45 [33m|[39m (lambda x)
 
-test/sprtn/errors/syntax-forms.sprtn(44,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+test/data/errors/syntax-forms.sprtn(44,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
  42 [33m|[39m (letrec ((x 23) y) x)
  43 [33m|[39m (letrec ((x 23) y z) x)
  44 [33m|[39m (lambda)
@@ -323,7 +323,7 @@ test/sprtn/errors/syntax-forms.sprtn(44,1): Bad `lambda` syntax, expected a form
  45 [33m|[39m (lambda x)
  46 [33m|[39m (lambda ())
 
-test/sprtn/errors/syntax-forms.sprtn(45,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+test/data/errors/syntax-forms.sprtn(45,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
  43 [33m|[39m (letrec ((x 23) y z) x)
  44 [33m|[39m (lambda)
  45 [33m|[39m (lambda x)
@@ -331,7 +331,7 @@ test/sprtn/errors/syntax-forms.sprtn(45,1): Bad `lambda` syntax, expected a form
  46 [33m|[39m (lambda ())
  47 [33m|[39m (lambda x 23)
 
-test/sprtn/errors/syntax-forms.sprtn(46,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+test/data/errors/syntax-forms.sprtn(46,1): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
  44 [33m|[39m (lambda)
  45 [33m|[39m (lambda x)
  46 [33m|[39m (lambda ())
@@ -339,7 +339,7 @@ test/sprtn/errors/syntax-forms.sprtn(46,1): Bad `lambda` syntax, expected a form
  47 [33m|[39m (lambda x 23)
  48 [33m|[39m (lambda () 23)
 
-test/sprtn/errors/syntax-forms.sprtn(47,8): Bad `lambda` formal arguments syntax, expected a list of identifiers:
+test/data/errors/syntax-forms.sprtn(47,8): Bad `lambda` formal arguments syntax, expected a list of identifiers:
  45 [33m|[39m (lambda x)
  46 [33m|[39m (lambda ())
  47 [33m|[39m (lambda x 23)
@@ -347,7 +347,7 @@ test/sprtn/errors/syntax-forms.sprtn(47,8): Bad `lambda` formal arguments syntax
  48 [33m|[39m (lambda () 23)
  49 [33m|[39m (lambda (x) x)
 
-test/sprtn/errors/syntax-forms.sprtn(50,9): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+test/data/errors/syntax-forms.sprtn(50,9): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
  48 [33m|[39m (lambda () 23)
  49 [33m|[39m (lambda (x) x)
  50 [33m|[39m (lambda ((x y)) 23)
@@ -355,7 +355,7 @@ test/sprtn/errors/syntax-forms.sprtn(50,9): Bad `lambda` formal arguments syntax
  51 [33m|[39m (lambda ((x) (y)) 23)
  52 [33m|[39m (lambda (23) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(51,9): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+test/data/errors/syntax-forms.sprtn(51,9): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
  49 [33m|[39m (lambda (x) x)
  50 [33m|[39m (lambda ((x y)) 23)
  51 [33m|[39m (lambda ((x) (y)) 23)
@@ -363,7 +363,7 @@ test/sprtn/errors/syntax-forms.sprtn(51,9): Bad `lambda` formal arguments syntax
  52 [33m|[39m (lambda (23) 23)
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
 
-test/sprtn/errors/syntax-forms.sprtn(51,13): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
+test/data/errors/syntax-forms.sprtn(51,13): Bad `lambda` formal arguments syntax, expected a symbol but got a list instead:
  49 [33m|[39m (lambda (x) x)
  50 [33m|[39m (lambda ((x y)) 23)
  51 [33m|[39m (lambda ((x) (y)) 23)
@@ -371,7 +371,7 @@ test/sprtn/errors/syntax-forms.sprtn(51,13): Bad `lambda` formal arguments synta
  52 [33m|[39m (lambda (23) 23)
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
 
-test/sprtn/errors/syntax-forms.sprtn(52,9): Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:
+test/data/errors/syntax-forms.sprtn(52,9): Bad `lambda` formal arguments syntax, expected a symbol but got a number instead:
  50 [33m|[39m (lambda ((x y)) 23)
  51 [33m|[39m (lambda ((x) (y)) 23)
  52 [33m|[39m (lambda (23) 23)
@@ -379,7 +379,7 @@ test/sprtn/errors/syntax-forms.sprtn(52,9): Bad `lambda` formal arguments syntax
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
  54 [33m|[39m (define)
 
-test/sprtn/errors/syntax-forms.sprtn(53,9): Bad `lambda` formal arguments syntax, expected a symbol but got a string instead:
+test/data/errors/syntax-forms.sprtn(53,9): Bad `lambda` formal arguments syntax, expected a symbol but got a string instead:
  51 [33m|[39m (lambda ((x) (y)) 23)
  52 [33m|[39m (lambda (23) 23)
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
@@ -387,7 +387,7 @@ test/sprtn/errors/syntax-forms.sprtn(53,9): Bad `lambda` formal arguments syntax
  54 [33m|[39m (define)
  55 [33m|[39m (define foo)
 
-test/sprtn/errors/syntax-forms.sprtn(54,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+test/data/errors/syntax-forms.sprtn(54,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
  52 [33m|[39m (lambda (23) 23)
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
  54 [33m|[39m (define)
@@ -395,7 +395,7 @@ test/sprtn/errors/syntax-forms.sprtn(54,1): Bad `define` syntax, expected either
  55 [33m|[39m (define foo)
  56 [33m|[39m (define 23 foo)
 
-test/sprtn/errors/syntax-forms.sprtn(55,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+test/data/errors/syntax-forms.sprtn(55,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
  53 [33m|[39m (lambda ("some arg I dunno might delete") 23)
  54 [33m|[39m (define)
  55 [33m|[39m (define foo)
@@ -403,7 +403,7 @@ test/sprtn/errors/syntax-forms.sprtn(55,1): Bad `define` syntax, expected either
  56 [33m|[39m (define 23 foo)
  57 [33m|[39m (define foo 23)
 
-test/sprtn/errors/syntax-forms.sprtn(56,8): Bad `define` syntax, expected a symbol but got a number instead:
+test/data/errors/syntax-forms.sprtn(56,8): Bad `define` syntax, expected a symbol but got a number instead:
  54 [33m|[39m (define)
  55 [33m|[39m (define foo)
  56 [33m|[39m (define 23 foo)
@@ -411,7 +411,7 @@ test/sprtn/errors/syntax-forms.sprtn(56,8): Bad `define` syntax, expected a symb
  57 [33m|[39m (define foo 23)
  58 [33m|[39m (define () 23)
 
-test/sprtn/errors/syntax-forms.sprtn(58,8): Bad `define` syntax, expected a symbol but got a list instead:
+test/data/errors/syntax-forms.sprtn(58,8): Bad `define` syntax, expected a symbol but got a list instead:
  56 [33m|[39m (define 23 foo)
  57 [33m|[39m (define foo 23)
  58 [33m|[39m (define () 23)
@@ -419,7 +419,7 @@ test/sprtn/errors/syntax-forms.sprtn(58,8): Bad `define` syntax, expected a symb
  59 [33m|[39m (define (bar) 23)
  60 [33m|[39m (define (bar1 x) x)
 
-test/sprtn/errors/syntax-forms.sprtn(61,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+test/data/errors/syntax-forms.sprtn(61,1): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
  59 [33m|[39m (define (bar) 23)
  60 [33m|[39m (define (bar1 x) x)
  61 [33m|[39m (define (bar))
@@ -427,7 +427,7 @@ test/sprtn/errors/syntax-forms.sprtn(61,1): Bad `define` syntax, expected either
  62 [33m|[39m (define (bar2 23) 5)
  63 [33m|[39m ()
 
-test/sprtn/errors/syntax-forms.sprtn(62,14): Bad `define` function signature syntax, expected a symbol but got a number instead:
+test/data/errors/syntax-forms.sprtn(62,14): Bad `define` function signature syntax, expected a symbol but got a number instead:
  60 [33m|[39m (define (bar1 x) x)
  61 [33m|[39m (define (bar))
  62 [33m|[39m (define (bar2 23) 5)
@@ -435,7 +435,7 @@ test/sprtn/errors/syntax-forms.sprtn(62,14): Bad `define` function signature syn
  63 [33m|[39m ()
  64 [33m|[39m (foo)
 
-test/sprtn/errors/syntax-forms.sprtn(63,0): Bad call syntax, expected at least one expression within the call:
+test/data/errors/syntax-forms.sprtn(63,0): Bad call syntax, expected at least one expression within the call:
  61 [33m|[39m (define (bar))
  62 [33m|[39m (define (bar2 23) 5)
  63 [33m|[39m ()
@@ -443,7 +443,7 @@ test/sprtn/errors/syntax-forms.sprtn(63,0): Bad call syntax, expected at least o
  64 [33m|[39m (foo)
  65 [33m|[39m ((bar1))
 
-test/sprtn/errors/syntax-forms.sprtn(66,1): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+test/data/errors/syntax-forms.sprtn(66,1): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
  64 [33m|[39m (foo)
  65 [33m|[39m ((bar1))
  66 [33m|[39m (23)
@@ -451,7 +451,7 @@ test/sprtn/errors/syntax-forms.sprtn(66,1): Bad call syntax, expected an express
  67 [33m|[39m ((23))
  68 [33m|[39m ((bar2 23) 5)
 
-test/sprtn/errors/syntax-forms.sprtn(67,2): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
+test/data/errors/syntax-forms.sprtn(67,2): Bad call syntax, expected an expression that evaluates to a procedure but got a number instead:
  65 [33m|[39m ((bar1))
  66 [33m|[39m (23)
  67 [33m|[39m ((23))
@@ -459,7 +459,7 @@ test/sprtn/errors/syntax-forms.sprtn(67,2): Bad call syntax, expected an express
  68 [33m|[39m ((bar2 23) 5)
  69 [33m|[39m ((define (faz x) x) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(69,1): Bad `define` syntax, not allowed in this context:
+test/data/errors/syntax-forms.sprtn(69,1): Bad `define` syntax, not allowed in this context:
  67 [33m|[39m ((23))
  68 [33m|[39m ((bar2 23) 5)
  69 [33m|[39m ((define (faz x) x) 23)
@@ -467,7 +467,7 @@ test/sprtn/errors/syntax-forms.sprtn(69,1): Bad `define` syntax, not allowed in 
  70 [33m|[39m ((do 23 bar) 23)
  71 [33m|[39m ((if 5 foo bar) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
+test/data/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an expression that evaluates to a procedure but got a def instead:
  67 [33m|[39m ((23))
  68 [33m|[39m ((bar2 23) 5)
  69 [33m|[39m ((define (faz x) x) 23)
@@ -475,7 +475,7 @@ test/sprtn/errors/syntax-forms.sprtn(69,1): Bad call syntax, expected an express
  70 [33m|[39m ((do 23 bar) 23)
  71 [33m|[39m ((if 5 foo bar) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(69,10): Unused variable `faz`, rename to `_` to avoid this error:
+test/data/errors/syntax-forms.sprtn(69,10): Unused variable `faz`, rename to `_` to avoid this error:
  67 [33m|[39m ((23))
  68 [33m|[39m ((bar2 23) 5)
  69 [33m|[39m ((define (faz x) x) 23)
@@ -483,7 +483,7 @@ test/sprtn/errors/syntax-forms.sprtn(69,10): Unused variable `faz`, rename to `_
  70 [33m|[39m ((do 23 bar) 23)
  71 [33m|[39m ((if 5 foo bar) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(72,1): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
+test/data/errors/syntax-forms.sprtn(72,1): Bad call syntax, expected an expression that evaluates to a procedure but got a string instead:
  70 [33m|[39m ((do 23 bar) 23)
  71 [33m|[39m ((if 5 foo bar) 23)
  72 [33m|[39m ("some function")
@@ -491,7 +491,7 @@ test/sprtn/errors/syntax-forms.sprtn(72,1): Bad call syntax, expected an express
  73 [33m|[39m ('foo 23)
  74 [33m|[39m ((lambda (x) x) 23)
 
-test/sprtn/errors/syntax-forms.sprtn(73,1): Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:
+test/data/errors/syntax-forms.sprtn(73,1): Bad call syntax, expected an expression that evaluates to a procedure but got a quote instead:
  71 [33m|[39m ((if 5 foo bar) 23)
  72 [33m|[39m ("some function")
  73 [33m|[39m ('foo 23)
@@ -499,7 +499,7 @@ test/sprtn/errors/syntax-forms.sprtn(73,1): Bad call syntax, expected an express
  74 [33m|[39m ((lambda (x) x) 23)
  75 [33m|[39m 'x
 
-test/sprtn/errors/syntax-forms.sprtn(77,0): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
+test/data/errors/syntax-forms.sprtn(77,0): Misplaced `unquote`, expected to be enclosed within a `quasiquote`:
  75 [33m|[39m 'x
  76 [33m|[39m `y
  77 [33m|[39m ,z
@@ -507,7 +507,7 @@ test/sprtn/errors/syntax-forms.sprtn(77,0): Misplaced `unquote`, expected to be 
  78 [33m|[39m ,@wat
  79 [33m|[39m '(,z)
 
-test/sprtn/errors/syntax-forms.sprtn(78,0): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
+test/data/errors/syntax-forms.sprtn(78,0): Misplaced `unquote-splicing`, expected to be enclosed within a `quasiquote`:
  76 [33m|[39m `y
  77 [33m|[39m ,z
  78 [33m|[39m ,@wat
@@ -515,7 +515,7 @@ test/sprtn/errors/syntax-forms.sprtn(78,0): Misplaced `unquote-splicing`, expect
  79 [33m|[39m '(,z)
  80 [33m|[39m '(,@wat)
 
-test/sprtn/errors/syntax-forms.sprtn(82,1): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
+test/data/errors/syntax-forms.sprtn(82,1): Misplaced `unquote-splicing`, expected to be enclosed within a spliceable value:
  80 [33m|[39m '(,@wat)
  81 [33m|[39m `,bar
  82 [33m|[39m `,@wat

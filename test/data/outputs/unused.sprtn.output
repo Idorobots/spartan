@@ -1,8 +1,8 @@
-test/sprtn/errors/unused.sprtn(1,0): Bad `define` syntax, not allowed in this context:
+test/data/errors/unused.sprtn(1,0): Bad `define` syntax, not allowed in this context:
   1 [33m|[39m (define foo 23)
     [33m|[39m [31m^^^^^^^^^^^^^^^[39m
 
-test/sprtn/errors/unused.sprtn(1,8): Unused variable `foo`, rename to `_` to avoid this error:
+test/data/errors/unused.sprtn(1,8): Unused variable `foo`, rename to `_` to avoid this error:
   1 [33m|[39m (define foo 23)
     [33m|[39m         [31m^^^[39m
 

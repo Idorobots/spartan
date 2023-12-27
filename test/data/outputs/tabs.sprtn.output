@@ -1,11 +1,11 @@
-test/sprtn/errors/tabs.sprtn(2,4): Bad `let` bindings syntax, duplicate binding identifier `x`:
+test/data/errors/tabs.sprtn(2,4): Bad `let` bindings syntax, duplicate binding identifier `x`:
   1 [33m|[39m (let ((x 5)
   2 [33m|[39m     (x 23)
     [33m|[39m     [31m^^^^^^[39m
   3 [33m|[39m       (y 5)
   4 [33m|[39m  	  (y 23))
 
-test/sprtn/errors/tabs.sprtn(3,7): Unused variable `y`, rename to `_` to avoid this error:
+test/data/errors/tabs.sprtn(3,7): Unused variable `y`, rename to `_` to avoid this error:
   1 [33m|[39m (let ((x 5)
   2 [33m|[39m     (x 23)
   3 [33m|[39m       (y 5)
@@ -13,7 +13,7 @@ test/sprtn/errors/tabs.sprtn(3,7): Unused variable `y`, rename to `_` to avoid t
   4 [33m|[39m  	  (y 23))
   5 [33m|[39m   x)
 
-test/sprtn/errors/tabs.sprtn(4,4): Bad `let` bindings syntax, duplicate binding identifier `y`:
+test/data/errors/tabs.sprtn(4,4): Bad `let` bindings syntax, duplicate binding identifier `y`:
   2 [33m|[39m     (x 23)
   3 [33m|[39m       (y 5)
   4 [33m|[39m  	  (y 23))
@@ -21,7 +21,7 @@ test/sprtn/errors/tabs.sprtn(4,4): Bad `let` bindings syntax, duplicate binding 
   5 [33m|[39m   x)
   6 [33m|[39m 
 
-test/sprtn/errors/tabs.sprtn(4,5): Unused variable `y`, rename to `_` to avoid this error:
+test/data/errors/tabs.sprtn(4,5): Unused variable `y`, rename to `_` to avoid this error:
   2 [33m|[39m     (x 23)
   3 [33m|[39m       (y 5)
   4 [33m|[39m  	  (y 23))
