@@ -2,8 +2,8 @@
 
 ;; Module system tests.
 
-(require "testing.rkt")
-(require "../src/main.rkt")
+(require "../testing.rkt")
+(require "../../src/main.rkt")
 
 (describe
  "module system"

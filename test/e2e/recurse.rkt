@@ -2,8 +2,8 @@
 
 ;; Recursion tests
 
-(require "testing.rkt")
-(require "../src/main.rkt")
+(require "../testing.rkt")
+(require "../../src/main.rkt")
 
 (describe
  "Recursion"

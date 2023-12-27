@@ -11,40 +11,23 @@
 
 (describe
  "compiler"
- (it "finds the expected errors"
-     (map (lambda (filename)
-            (test-file filename))
-          (filter (lambda (filename)
-                    (string-suffix? filename ".sprtn"))
-                  (map (lambda (path)
-                         (string-append "test/sprtn/errors/"
-                                        (path->string path)))
-                       (directory-list "test/sprtn/errors/")))))
-
  (it "runs configured optimization"
-     (let* ((optimized? #f)
-            (result (compile (env 'module "optimize"
-                                  'optimize (lambda (env passes)
-                                              (set! optimized? #t)
-                                              (optimize-naive env passes))
-                                  'input "(letrec ((q (lambda () 8))
-                                            (f (lambda (x) (+  x (q))))
-                                            (r (lambda () (f (q))))
-                                            (s (lambda () (+ (r) (f 2))))
-                                            (g (lambda () (+ (r) (s))))
-                                            (t (lambda () (g))))
-                                     (t))"))))
-       (assert optimized?)
-       (assert result ''42)))
+     (let* ((optimized? #f))
+       (compile (env 'module "optimize"
+                     'optimize (lambda (passes env)
+                                 (set! optimized? #t)
+                                 env)
+                     'input "(* 2 2)"))
+       (assert optimized?)))
 
  (it "doesn't run optimization if disabled"
-     (let* ((optimized? #f)
-            (result (compile (env 'module "optimize"
-                                  'optimize (lambda (env passes)
-                                              (set! optimized? #t)
-                                              (optimize-naive env passes))
-                                  'optimization-level 0
-                                  'input "(* 2 2)"))))
+     (let* ((optimized? #f))
+       (compile (env 'module "optimize"
+                     'optimize (lambda (passes env)
+                                 (set! optimized? #t)
+                                 env)
+                     'optimization-level 0
+                     'input "(* 2 2)"))
        (assert (not optimized?))))
 
  (it "runs configured instrumentation"

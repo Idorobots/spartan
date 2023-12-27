@@ -2,12 +2,12 @@
 
 ;; Actual code exmaples
 
-(require "testing.rkt")
-(require "../src/main.rkt")
-(require "../src/runtime/rt.rkt")
-(require "../src/rete/rete.rkt")
-(require "../src/compiler/ast.rkt")
-(require "../src/compiler/utils/utils.rkt")
+(require "../testing.rkt")
+(require "../../src/main.rkt")
+(require "../../src/runtime/rt.rkt")
+(require "../../src/rete/rete.rkt")
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 
 ;; Silence task info logs since these might vary in the specific timings.
 (intern-instrument
