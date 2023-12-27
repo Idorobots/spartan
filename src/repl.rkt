@@ -127,10 +127,11 @@ Available settings:
              'line (+ 1 line))))
 
 (define (edit-line env line input)
-  (env-update env
-              'listing
-              (lambda (l)
-                (cons (cons line input) l))))
+  (let* ((listing (env-get env 'listing))
+         (updated (cons (cons line input) listing)))
+    (env-set env
+             'line (+ 1 (foldl max line (map listing-line-number updated)))
+             'listing updated)))
 
 (define (listing-line-number l)
   (car l))

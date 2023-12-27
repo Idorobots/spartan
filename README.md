@@ -106,11 +106,11 @@ There's also a _basic_ twist - the REPL accepts a full listing and allows editin
 ;; Disabled autorun.
 2 | 1 | (print "Hello world!")
 2 | 2 | (goto 1)
-2 | ;list
+3 | ;list
 ;; Current listing:
 1 | (print "Hello world!")
 2 | (goto 1)
-2 | ;run
+3 | ;run
 ;; repl(1,1): Undefined variable `print`, did you mean `list`:
 ;;   1 | (print "Hello world!")
 ;;     |  ^^^^^
@@ -121,17 +121,17 @@ There's also a _basic_ twist - the REPL accepts a full listing and allows editin
 ;;   2 | (goto 1)
 ;;     |  ^^^^
 ;;   3 |
-2 | 2 | (newline)
-2 | ;list
+3 | 2 | (newline)
+3 | ;list
 ;; Current listing:
 1 | (print "Hello world!")
 2 | (newline)
-2 | 1 | (display "Hello world!")
-2 | ;list
+3 | 1 | (display "Hello world!")
+3 | ;list
 ;; Current listing:
 1 | (display "Hello world!")
 2 | (newline)
-2 | ;run
+3 | ;run
 Hello world!
 ;; #<void>
 ```
