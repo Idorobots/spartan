@@ -44,7 +44,7 @@ Available settings:
   (constantly (m 'help)))
 
  (Quit
-  (Spacing (/ ";q" ";quit" ";exit") Spacing EOF)
+  (Spacing (/ ";quit" ";q" ";exit") Spacing EOF)
   (constantly (m 'quit)))
 
  (LineEdit
@@ -305,6 +305,9 @@ Available settings:
             (loop new-env)))
 
       (let* ((input (read-line (current-input-port) 'any))
+             (_ (when (eof-object? input)
+                  ;; NOTE Not running interactively and reached the end of input.
+                  (exit 0)))
              (result (ReplCommand input)))
         (if (matches? result)
             ;; If it's a command, execute it.
