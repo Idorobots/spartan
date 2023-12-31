@@ -1,0 +1,4 @@
+;; NOTE The inner `n` would be confused with the outer `n` after CPS.
+(display (let ((n 23))
+           (+ n (let ((n (- n 1)))
+                  n))))

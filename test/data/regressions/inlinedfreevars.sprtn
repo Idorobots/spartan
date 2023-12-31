@@ -1,0 +1,6 @@
+(display (let ((x 23))
+           (let ((foo (lambda ()
+                        ;; NOTE The `x` here would point to the inner `x = 5` binding after `foo` got inlined.
+                        x))
+                 (x 5))
+             (+ x (foo)))))

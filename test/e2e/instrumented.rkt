@@ -67,38 +67,4 @@
 
  (it "should support the RBS"
      (test-instrumented-file "examples/rbs.sprtn" instrument-for-test)
-     (test-instrumented-file "examples/cep.sprtn" instrument-for-test))
-
- (it "handles reused variables correctly"
-     (assert (run '(let ((n 23))
-                     (+ n (let ((n (- n 1)))
-                            n))))
-             45)
-     (assert (run '(letrec ((fact (lambda (n)
-                                    (if (< n 2)
-                                        n
-                                        (* n ;; NOTE the `n` here would be propagated into the `let` resulting in wrong computation.
-                                           (let ((n (- n 1)))
-                                             (if (< n 2)
-                                                 n
-                                                 (* n (fact (- n 1))))))))))
-                     (if (< 10 2)
-                         10
-                         (* 10 (fact 9)))))
-             3628800))
-
- (it "handles free variables in inlined procedures correctly"
-     (assert (run '(let ((x 23))
-                     (let ((foo (lambda ()
-                                  ;; NOTE The `x` here would point to the inner `x = 5` binding after `foo` got inlined.
-                                  x))
-                           (x 5))
-                       (+ x (foo)))))
-             28))
-
- (it "optimizes bindings out correctly"
-     (assert (run '(list
-                    (let ((x1 '7)) (if (= '0 x1) 't nil))
-                    ;; NOTE This `x2` would remain as a free variable (and therefore an undefined variable) despite being optimized out.
-                    (let ((x2 '7)) (if (= '0 x2) nil 't))))
-             '(() t))))
+     (test-instrumented-file "examples/cep.sprtn" instrument-for-test)))

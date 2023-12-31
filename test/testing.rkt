@@ -79,9 +79,10 @@
            (let ((expected (slurp expected-file)))
              (assert (preprocess (run filename))
                      (preprocess expected)))
-           (with-output-to-file expected-file
-             (lambda ()
-               (display (run filename)))))))))
+           (let ((result (run filename)))
+             (with-output-to-file expected-file
+               (lambda ()
+                 (display result)))))))))
 
 (define-syntax test-file
   (syntax-rules ()

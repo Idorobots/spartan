@@ -88,7 +88,13 @@
       (run-with-snapshot run "examples/logger.sprtn"))
 
   (it "should support continuations"
-      (run-with-snapshot run "examples/coroutines.sprtn"))))
+      (run-with-snapshot run "examples/coroutines.sprtn"))
+
+  (it "should handle regressions correctly"
+      (run-with-snapshot run "test/data/regressions/reusedvars.sprtn")
+      (run-with-snapshot run "test/data/regressions/reusedvars2.sprtn")
+      (run-with-snapshot run "test/data/regressions/inlinedfreevars.sprtn")
+      (run-with-snapshot run "test/data/regressions/optimizedoutbindings.sprtn"))))
 
 (parameterized
  ;; Examples supported by R7RS.
