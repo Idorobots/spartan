@@ -15,13 +15,24 @@
 (provide (all-from-out "gen.rkt"))
 
 (define +perf-dir+ "test/data/perf/")
-(define +output-dir+ "test/data/outputs/")
+(define +snapshot-dir+ "test/data/snapshots/")
 
 (define (base-name filename)
   (let-values (((base name dir?) (split-path filename)))
     (path->string name)))
 
 (define-struct assert-exception (predicate expression value expected))
+
+(define-syntax parameterized
+  (syntax-rules ()
+    ((_ () body ...)
+     '())
+    ((_ ((name value) ...) body ...)
+     (let ((name value) ...)
+       body ...))
+    ((_ ((name value values ...) ...) body ...)
+     (begin (parameterized ((name value) ...) body ...)
+            (parameterized ((name values ...) ...) body ...)))))
 
 (define-syntax describe
   (syntax-rules ()
@@ -58,21 +69,38 @@
                 (pattern body ...)
                 (else (raise (make-assert-exception 'match-ast 'expr expr 'pattern)))))))
 
+(define-syntax run-with-snapshot
+  (syntax-rules ()
+    ((_ run filename)
+     (run-with-snapshot run filename id))
+    ((_ run filename preprocess)
+     (let ((expected-file (string-append +snapshot-dir+ (base-name filename) ".output")))
+       (if (file-exists? expected-file)
+           (let ((expected (slurp expected-file)))
+             (assert (preprocess (run filename))
+                     (preprocess expected)))
+           (with-output-to-file expected-file
+             (lambda ()
+               (display (run filename)))))))))
+
 (define-syntax test-file
   (syntax-rules ()
     ((_ filename)
      (test-file filename id))
+    ((_ filename preprocess)
+     (run-with-snapshot run-test-file
+                        filename
+                        preprocess))))
+
+(define-syntax test-instrumented-file
+  (syntax-rules ()
     ((_ filename instrument)
-     (test-file filename instrument id))
+     (test-instrumented-file filename instrument id))
     ((_ filename instrument preprocess)
-     (let ((expected-file (string-append +output-dir+ (base-name filename) ".output")))
-       (if (file-exists? expected-file)
-           (let ((expected (slurp expected-file)))
-             (assert (preprocess (run-instrumented-test-file filename instrument))
-                     (preprocess expected)))
-           (with-output-to-file expected-file
-             (lambda ()
-               (display (run-instrumented-test-file filename instrument)))))))))
+     (run-with-snapshot (lambda (f)
+                          (run-instrumented-test-file f instrument))
+                        filename
+                        preprocess))))
 
 (define-syntax time-execution
   (syntax-rules ()

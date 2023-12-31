@@ -1,6 +1,6 @@
 #lang racket
 
-;; Actual code exmaples
+;; Code examples that require instrumentation.
 
 (require "../testing.rkt")
 (require "../../src/main.rkt")
@@ -53,37 +53,21 @@
            ast))
 
 (describe
- "Spartan"
- (it "should support basic language features"
-     (test-file "examples/hello.sprtn")
-     (test-file "examples/math.sprtn")
-     (test-file "examples/letrec.sprtn")
-     (test-file "examples/fact.sprtn")
-     (test-file "examples/fibonacci.sprtn")
-     (test-file "examples/logger.sprtn")
-     (test-file "examples/rsa.sprtn"))
+ "instrumented r7rs target"
 
  (it "should support continuations"
-     ;; NOTE Should not be instrumented to maximize the chance of colliding continuations when using a single delimited stack.
-     (test-file "examples/continuations.sprtn" id sort-lines)
-     (test-file "examples/errors.sprtn" instrument-for-test)
-     (test-file "examples/errors3.sprtn" instrument-for-test)
-     (test-file "examples/coroutines.sprtn")
-     (test-file "examples/coroutines2.sprtn")
-     (test-file "examples/coroutines3.sprtn")
-     (test-file "examples/amb.sprtn"))
+     (test-instrumented-file "examples/errors.sprtn" instrument-for-test)
+     (test-instrumented-file "examples/errors3.sprtn" instrument-for-test))
 
  (it "should support Actor Model"
-     (test-file "examples/uprocs.sprtn" instrument-for-test)
-     (test-file "examples/uprocs2.sprtn" instrument-for-test sort-lines)
-     (test-file "examples/msgwait.sprtn")
-     (test-file "examples/fibonacci2.sprtn" instrument-for-test)
-     (test-file "examples/errors2.sprtn" instrument-for-test))
+     (test-instrumented-file "examples/uprocs.sprtn" instrument-for-test)
+     (test-instrumented-file "examples/uprocs2.sprtn" instrument-for-test sort-lines)
+     (test-instrumented-file "examples/fibonacci2.sprtn" instrument-for-test)
+     (test-instrumented-file "examples/errors2.sprtn" instrument-for-test))
 
  (it "should support the RBS"
-     (test-file "examples/rbs2.sprtn")
-     (test-file "examples/rbs.sprtn" instrument-for-test)
-     (test-file "examples/cep.sprtn" instrument-for-test))
+     (test-instrumented-file "examples/rbs.sprtn" instrument-for-test)
+     (test-instrumented-file "examples/cep.sprtn" instrument-for-test))
 
  (it "handles reused variables correctly"
      (assert (run '(let ((n 23))
