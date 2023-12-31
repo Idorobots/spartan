@@ -326,7 +326,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
                  (compile)
-                 (run-code))))
+                 (run-code)))
+           (void))
           ((repl)
            (-> init
                (env-set 'module "repl")
