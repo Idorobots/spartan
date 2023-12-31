@@ -3,7 +3,7 @@
 ;; Various utilities
 
 (provide empty? every? some? sorted? tagged-list? symbol<?
-         last concat uniq offset iota
+         last nth concat uniq zip offset iota
          id partial flip constantly
          array array-ref array-assign!
          matrix matrix-ref matrix-assign!
@@ -44,8 +44,20 @@
                        acc)
                  (cdr lst))))))
 
+(define (zip a b)
+  (if (or (empty? a)
+          (empty? b))
+      '()
+      (cons (cons (car a)
+                  (car b))
+            (zip (cdr a)
+                 (cdr b)))))
+
 (define (last lst)
   (list-ref lst (- (length lst) 1)))
+
+(define (nth i lst)
+  (list-ref lst i))
 
 (define (concat a b)
   (if (empty? a)

@@ -1,0 +1,11 @@
+(display (letrec ((fact (lambda (n)
+                          (if (< n 2)
+                              n
+                              (* n ;; NOTE the `n` here would be propagated into the `let` resulting in wrong computation.
+                                 (let ((n (- n 1)))
+                                   (if (< n 2)
+                                       n
+                                       (* n (fact (- n 1))))))))))
+           (if (< 10 2)
+               10
+               (* 10 (fact 9)))))

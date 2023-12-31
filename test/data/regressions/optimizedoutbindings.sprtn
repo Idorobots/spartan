@@ -1,0 +1,4 @@
+(display (list
+          (let ((x1 '7)) (if (= '0 x1) 't nil))
+          ;; NOTE This `x2` would remain as a free variable (and therefore an undefined variable) despite being optimized out.
+          (let ((x2 '7)) (if (= '0 x2) nil 't))))

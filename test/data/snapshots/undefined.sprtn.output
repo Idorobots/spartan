@@ -1,0 +1,200 @@
+test/data/errors/undefined.sprtn(1,0): Undefined variable `a`, did you mean `*`:
+  1 [33m|[39m a
+    [33m|[39m [31m^[39m
+  2 [33m|[39m (define (f a b) (* a b c))
+  3 [33m|[39m (f d)
+
+test/data/errors/undefined.sprtn(2,23): Undefined variable `c`, did you mean `*`:
+  1 [33m|[39m a
+  2 [33m|[39m (define (f a b) (* a b c))
+    [33m|[39m                        [31m^[39m
+  3 [33m|[39m (f d)
+  4 [33m|[39m (e f)
+
+test/data/errors/undefined.sprtn(3,3): Undefined variable `d`, did you mean `*`:
+  1 [33m|[39m a
+  2 [33m|[39m (define (f a b) (* a b c))
+  3 [33m|[39m (f d)
+    [33m|[39m    [31m^[39m
+  4 [33m|[39m (e f)
+  5 [33m|[39m (if (g h)
+
+test/data/errors/undefined.sprtn(4,1): Undefined variable `e`, did you mean `*`:
+  2 [33m|[39m (define (f a b) (* a b c))
+  3 [33m|[39m (f d)
+  4 [33m|[39m (e f)
+    [33m|[39m  [31m^[39m
+  5 [33m|[39m (if (g h)
+  6 [33m|[39m     j
+
+test/data/errors/undefined.sprtn(5,5): Undefined variable `g`, did you mean `*`:
+  3 [33m|[39m (f d)
+  4 [33m|[39m (e f)
+  5 [33m|[39m (if (g h)
+    [33m|[39m      [31m^[39m
+  6 [33m|[39m     j
+  7 [33m|[39m     k)
+
+test/data/errors/undefined.sprtn(5,7): Undefined variable `h`, did you mean `*`:
+  3 [33m|[39m (f d)
+  4 [33m|[39m (e f)
+  5 [33m|[39m (if (g h)
+    [33m|[39m        [31m^[39m
+  6 [33m|[39m     j
+  7 [33m|[39m     k)
+
+test/data/errors/undefined.sprtn(6,4): Undefined variable `j`, did you mean `*`:
+  4 [33m|[39m (e f)
+  5 [33m|[39m (if (g h)
+  6 [33m|[39m     j
+    [33m|[39m     [31m^[39m
+  7 [33m|[39m     k)
+  8 [33m|[39m 'l
+
+test/data/errors/undefined.sprtn(7,4): Undefined variable `k`, did you mean `*`:
+  5 [33m|[39m (if (g h)
+  6 [33m|[39m     j
+  7 [33m|[39m     k)
+    [33m|[39m     [31m^[39m
+  8 [33m|[39m 'l
+  9 [33m|[39m `m
+
+test/data/errors/undefined.sprtn(10,2): Undefined variable `n`, did you mean `*`:
+  8 [33m|[39m 'l
+  9 [33m|[39m `m
+ 10 [33m|[39m `,n
+    [33m|[39m   [31m^[39m
+ 11 [33m|[39m `(o p ,@q r)
+ 12 [33m|[39m (let ((s t)
+
+test/data/errors/undefined.sprtn(11,8): Undefined variable `q`, did you mean `*`:
+  9 [33m|[39m `m
+ 10 [33m|[39m `,n
+ 11 [33m|[39m `(o p ,@q r)
+    [33m|[39m         [31m^[39m
+ 12 [33m|[39m (let ((s t)
+ 13 [33m|[39m       (t u))
+
+test/data/errors/undefined.sprtn(12,9): Undefined variable `t`, did you mean `t`:
+ 10 [33m|[39m `,n
+ 11 [33m|[39m `(o p ,@q r)
+ 12 [33m|[39m (let ((s t)
+    [33m|[39m          [31m^[39m
+ 13 [33m|[39m       (t u))
+ 14 [33m|[39m   (* s t u))
+
+test/data/errors/undefined.sprtn(13,9): Undefined variable `u`, did you mean `*`:
+ 11 [33m|[39m `(o p ,@q r)
+ 12 [33m|[39m (let ((s t)
+ 13 [33m|[39m       (t u))
+    [33m|[39m          [31m^[39m
+ 14 [33m|[39m   (* s t u))
+ 15 [33m|[39m (letrec ((u v)
+
+test/data/errors/undefined.sprtn(14,9): Undefined variable `u`, did you mean `*`:
+ 12 [33m|[39m (let ((s t)
+ 13 [33m|[39m       (t u))
+ 14 [33m|[39m   (* s t u))
+    [33m|[39m          [31m^[39m
+ 15 [33m|[39m (letrec ((u v)
+ 16 [33m|[39m          (v w))
+
+test/data/errors/undefined.sprtn(15,12): Variable `v` used before its definition:
+ 13 [33m|[39m       (t u))
+ 14 [33m|[39m   (* s t u))
+ 15 [33m|[39m (letrec ((u v)
+    [33m|[39m             [31m^[39m
+ 16 [33m|[39m          (v w))
+ 17 [33m|[39m   (* u v w))
+
+test/data/errors/undefined.sprtn(16,12): Undefined variable `w`, did you mean `*`:
+ 14 [33m|[39m   (* s t u))
+ 15 [33m|[39m (letrec ((u v)
+ 16 [33m|[39m          (v w))
+    [33m|[39m             [31m^[39m
+ 17 [33m|[39m   (* u v w))
+ 18 [33m|[39m (letrec ((v (cons 23 u))
+
+test/data/errors/undefined.sprtn(17,9): Undefined variable `w`, did you mean `*`:
+ 15 [33m|[39m (letrec ((u v)
+ 16 [33m|[39m          (v w))
+ 17 [33m|[39m   (* u v w))
+    [33m|[39m          [31m^[39m
+ 18 [33m|[39m (letrec ((v (cons 23 u))
+ 19 [33m|[39m          (u (cons 5 (lambda () v))))
+
+test/data/errors/undefined.sprtn(18,21): Variable `u` used before its definition:
+ 16 [33m|[39m          (v w))
+ 17 [33m|[39m   (* u v w))
+ 18 [33m|[39m (letrec ((v (cons 23 u))
+    [33m|[39m                      [31m^[39m
+ 19 [33m|[39m          (u (cons 5 (lambda () v))))
+ 20 [33m|[39m   (* u v))
+
+test/data/errors/undefined.sprtn(27,5): Undefined variable `typo`, did you mean `typo5`:
+ 25 [33m|[39m       (typo5 5)
+ 26 [33m|[39m       (typo-dash 0))
+ 27 [33m|[39m   (* typo 23 typo5)
+    [33m|[39m      [31m^^^^[39m
+ 28 [33m|[39m   (* typo23 typo 5)
+ 29 [33m|[39m   (* typo23 opyt5)
+
+test/data/errors/undefined.sprtn(28,12): Undefined variable `typo`, did you mean `typo5`:
+ 26 [33m|[39m       (typo-dash 0))
+ 27 [33m|[39m   (* typo 23 typo5)
+ 28 [33m|[39m   (* typo23 typo 5)
+    [33m|[39m             [31m^^^^[39m
+ 29 [33m|[39m   (* typo23 opyt5)
+ 30 [33m|[39m   (* typo23typo5)
+
+test/data/errors/undefined.sprtn(29,12): Undefined variable `opyt5`, did you mean `list`:
+ 27 [33m|[39m   (* typo 23 typo5)
+ 28 [33m|[39m   (* typo23 typo 5)
+ 29 [33m|[39m   (* typo23 opyt5)
+    [33m|[39m             [31m^^^^^[39m
+ 30 [33m|[39m   (* typo23typo5)
+ 31 [33m|[39m   (* typo23typo23)
+
+test/data/errors/undefined.sprtn(30,5): Undefined variable `typo23typo5`, did you mean `typo23`:
+ 28 [33m|[39m   (* typo23 typo 5)
+ 29 [33m|[39m   (* typo23 opyt5)
+ 30 [33m|[39m   (* typo23typo5)
+    [33m|[39m      [31m^^^^^^^^^^^[39m
+ 31 [33m|[39m   (* typo23typo23)
+ 32 [33m|[39m   (* typo6 typo24)
+
+test/data/errors/undefined.sprtn(31,5): Undefined variable `typo23typo23`:
+ 29 [33m|[39m   (* typo23 opyt5)
+ 30 [33m|[39m   (* typo23typo5)
+ 31 [33m|[39m   (* typo23typo23)
+    [33m|[39m      [31m^^^^^^^^^^^^[39m
+ 32 [33m|[39m   (* typo6 typo24)
+ 33 [33m|[39m   (* typo-dash type-dash typo_dash))
+
+test/data/errors/undefined.sprtn(32,5): Undefined variable `typo6`, did you mean `typo5`:
+ 30 [33m|[39m   (* typo23typo5)
+ 31 [33m|[39m   (* typo23typo23)
+ 32 [33m|[39m   (* typo6 typo24)
+    [33m|[39m      [31m^^^^^[39m
+ 33 [33m|[39m   (* typo-dash type-dash typo_dash))
+
+test/data/errors/undefined.sprtn(32,11): Undefined variable `typo24`, did you mean `typo23`:
+ 30 [33m|[39m   (* typo23typo5)
+ 31 [33m|[39m   (* typo23typo23)
+ 32 [33m|[39m   (* typo6 typo24)
+    [33m|[39m            [31m^^^^^^[39m
+ 33 [33m|[39m   (* typo-dash type-dash typo_dash))
+
+test/data/errors/undefined.sprtn(33,15): Undefined variable `type-dash`, did you mean `typo-dash`:
+ 31 [33m|[39m   (* typo23typo23)
+ 32 [33m|[39m   (* typo6 typo24)
+ 33 [33m|[39m   (* typo-dash type-dash typo_dash))
+    [33m|[39m                [31m^^^^^^^^^[39m
+
+test/data/errors/undefined.sprtn(33,25): Undefined variable `typo_dash`, did you mean `typo-dash`:
+ 31 [33m|[39m   (* typo23typo23)
+ 32 [33m|[39m   (* typo6 typo24)
+ 33 [33m|[39m   (* typo-dash type-dash typo_dash))
+    [33m|[39m                          [31m^^^^^^^^^[39m
+
+Compilation aborted due to 26 errors.

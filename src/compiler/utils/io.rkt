@@ -1,8 +1,15 @@
 #lang racket
 
+(require "./refs.rkt")
+
 ;; File IO
 
-(provide println red green yellow spit slurp tmp-file)
+(provide println red green yellow gray spit slurp tmp-file set-color-output)
+
+(define +colors-enabled+ (ref #t))
+
+(define (set-color-output state)
+  (assign! +colors-enabled+ state))
 
 (define (println . args)
   (if (> (length args) 1)
@@ -11,7 +18,9 @@
   (newline))
 
 (define (ansi-wrap a b text)
-  (format "\u001b[~am~a\u001b[~am" a text b))
+  (if (deref +colors-enabled+)
+      (format "\u001b[~am~a\u001b[~am" a text b)
+      text))
 
 (define (red text)
   (ansi-wrap 31 39 text))
@@ -21,6 +30,9 @@
 
 (define (yellow text)
   (ansi-wrap 33 39 text))
+
+(define (gray text)
+  (ansi-wrap 90 39 text))
 
 (define (spit filename content)
   (with-output-to-file filename

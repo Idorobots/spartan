@@ -15,7 +15,7 @@
  (it "optimizes the code"
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
-                           'input (slurp "test/sprtn/math.sprtn")))
+                           'input (slurp "examples/math.sprtn")))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
      (assert (compile (env 'module "optimize"
@@ -41,7 +41,7 @@
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
-                           'input (slurp "test/sprtn/math.sprtn")))
+                           'input (slurp "examples/math.sprtn")))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
      (assert (compile (env 'module "optimize"

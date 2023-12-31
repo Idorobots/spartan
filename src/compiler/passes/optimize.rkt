@@ -4,17 +4,25 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 (require "../utils/pmap.rkt")
+(require "../utils/utils.rkt")
 
 (provide optimize optimize-naive optimize-super
          ;; FIXME For test access.
          estimate-performance +perf-cost+ score-table score-of score-of*)
 
 (define (optimize passes)
-  (pass (schema "optimize") ;; NOTE Schema depends on the passes.
-        (lambda (env)
-          ((env-get env 'optimize)
-           passes
-           env))))
+  ;; NOTE Schema depends on the passes.
+  (pass (schema "optimize"
+                'optimizer a-symbol?)
+        (if (empty? passes)
+            id
+            (lambda (env)
+              ((env-get* env 'optimize ;; NOTE For backwards compatibility in tests.
+                         (case (env-get env 'optimizer)
+                           ((naive) optimize-naive)
+                           ((super) optimize-super)))
+               passes
+               env)))))
 
 (define +optimization-loops+ 23)
 

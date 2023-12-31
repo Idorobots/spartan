@@ -13,7 +13,7 @@
 (require "monitor.rkt")
 
 (provide nil? notify-whenever
-         __nil __true __false __not __car __cadr __cddr __list __cons __append __concat __equalQUEST __nilQUEST
+         __nil __true __false __not __car __cdr __cadr __cddr __list __cons __append __concat __equalQUEST __nilQUEST
          __MULT __PLUS ___ __DIV __zeroQUEST __modulo __quotient __remainder __EQUAL __LESS __LESSEQUAL __GREATER __GREATEREQUAL
          __ref __deref __assignBANG __callDIVcurrent_continuation __callDIVreset __callDIVshift __callDIVhandler __raise
          __sleep __self __send __spawn __recv __task_info __monitor

@@ -1,0 +1,6 @@
+(letrec ((fact (lambda (x)
+                 (if (= 0 x)
+                     1
+                     (* x (fact (- x 1)))))))
+  (display (fact 23))
+  (newline))

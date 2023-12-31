@@ -2,7 +2,8 @@
 
 (require "../env.rkt")
 (require "../pass.rkt")
-(require "../ast/utils.rkt")
+(require "../targets/js/generator.rkt")
+(require "../targets/scheme/generator.rkt")
 
 (provide generate-target-code)
 
@@ -10,16 +11,11 @@
   (pass (schema "generate-target-code"
                 'data (list-of? (a-pair? a-symbol?
                                          (ast-subset? '(const symbol if do let binding lambda primop-app))))
-                'init (ast-subset? '(const symbol if do let binding primop-app)))
+                'init (ast-subset? '(const symbol if do let binding primop-app))
+                'target a-symbol?)
         (lambda (env)
-          ;; FIXME Actually implement a proper code-gen.
-          (let ((data (map (lambda (v)
-                             (list 'define
-                                   (car v)
-                                   (ast->plain (cdr v))))
-                           (env-get env 'data)))
-                (init (ast->plain (env-get env 'init))))
-            (if (empty? data)
-                init
-                `(begin ,@data
-                        ,init))))))
+          (case (env-get env 'target)
+            ((ES6)
+             (generate-js env))
+            (else
+             (generate-scheme env))))))

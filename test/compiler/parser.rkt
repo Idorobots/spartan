@@ -120,6 +120,11 @@
      (assert (pe ".")
              (list "Invalid symbol `.` specified at: 0 1")))
 
+ (it "handles special characters correctly"
+     (assert (p "|")
+             (make-ast-symbol (location 0 1)
+                              '\|)))
+
  (it "handles unterminated lists gracefully"
      (assert (pe "(")
              (list "Unterminated list, expected a closing `)` to follow: 0 1"))
@@ -171,11 +176,11 @@
               (assert (ast->plain (p contents))
                       (expected-read contents))))
           (filter (lambda (filename)
-                    (not (member filename (list "test/sprtn/logger.sprtn"
-                                                "test/sprtn/amb2.sprtn"))))
+                    (not (member filename (list "examples/logger.sprtn"
+                                                "examples/amb2.sprtn"))))
                   (filter (lambda (filename)
                             (string-suffix? filename ".sprtn"))
                           (map (lambda (path)
-                                 (string-append "test/sprtn/"
+                                 (string-append "examples/"
                                                 (path->string path)))
-                               (directory-list "test/sprtn/")))))))
+                               (directory-list "examples/")))))))

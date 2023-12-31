@@ -11,31 +11,24 @@
 
 (describe
  "compiler"
- (it "finds the expected errors"
-     (map (lambda (filename)
-            (test-file filename))
-          (filter (lambda (filename)
-                    (string-suffix? filename ".sprtn"))
-                  (map (lambda (path)
-                         (string-append "test/sprtn/errors/"
-                                        (path->string path)))
-                       (directory-list "test/sprtn/errors/")))))
-
  (it "runs configured optimization"
-     (let* ((optimized? #f)
-            (result (compile (env 'module "optimize"
-                                  'optimize (lambda (env passes)
-                                              (set! optimized? #t)
-                                              (optimize-naive env passes))
-                                  'input "(letrec ((q (lambda () 8))
-                                            (f (lambda (x) (+  x (q))))
-                                            (r (lambda () (f (q))))
-                                            (s (lambda () (+ (r) (f 2))))
-                                            (g (lambda () (+ (r) (s))))
-                                            (t (lambda () (g))))
-                                     (t))"))))
-       (assert optimized?)
-       (assert result ''42)))
+     (let* ((optimized? #f))
+       (compile (env 'module "optimize"
+                     'optimize (lambda (passes env)
+                                 (set! optimized? #t)
+                                 env)
+                     'input "(* 2 2)"))
+       (assert optimized?)))
+
+ (it "doesn't run optimization if disabled"
+     (let* ((optimized? #f))
+       (compile (env 'module "optimize"
+                     'optimize (lambda (passes env)
+                                 (set! optimized? #t)
+                                 env)
+                     'optimization-level 0
+                     'input "(* 2 2)"))
+       (assert (not optimized?))))
 
  (it "runs configured instrumentation"
      (let* ((instrumented? #f)
@@ -51,4 +44,17 @@
                                                                (* n (fact (- n 1)))))))
                                             (fact 120))"))))
        (assert instrumented?)
-       (assert result ''23.5))))
+       (assert result ''23.5)))
+
+ (it "runs the correct phases"
+     (let* ((parsed (compile (env 'module "phases"
+                                  'input "(define (foo x) x)"
+                                  'last-phase 'parse)))
+            (expanded (compile (env-set parsed
+                                        'input ""
+                                        'first-phase 'parse
+                                        'last-phase 'expand))))
+       (assert (ast->plain (env-get parsed 'ast))
+               '(define (foo x) x))
+       (assert (ast->plain (env-get expanded 'ast))
+               '(define foo (lambda (x) x))))))

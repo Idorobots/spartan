@@ -46,18 +46,21 @@
 (require "rt/actor.rkt")
 
 ;; Some integration tests:
-(require "recurse.rkt")
-(require "modules.rkt")
-(require "integration.rkt")
+(require "e2e/compiler.rkt")
+(require "e2e/recurse.rkt")
+(require "e2e/modules.rkt")
+(require "e2e/targets.rkt")
+(require "e2e/instrumented.rkt")
+(require "e2e/repl.rkt")
 
 ;; Performance tests:
-(require "performance.rkt")
+(require "perf/performance.rkt")
 
 ;; Actual test running.
 ;; NOTE This is required for the code fragment evaluation.
 (require "../src/runtime/rt.rkt")
 (provide (all-from-out "../src/runtime/rt.rkt"))
-(provide (all-from-out "integration.rkt"))
+(provide (all-from-out "e2e/instrumented.rkt"))
 
 ;; NOTE These ones for the parser generator tests.
 (require "../src/compiler/peggen.rkt")

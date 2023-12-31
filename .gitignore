@@ -3,3 +3,5 @@ docs/img/working/
 *.blg
 *.tex
 generated
+build
+sprtn
