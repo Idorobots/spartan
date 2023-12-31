@@ -6,6 +6,7 @@
 (require "compiler/errors.rkt")
 (require "compiler/compiler.rkt")
 (require "compiler/utils/io.rkt")
+(require "compiler/utils/gensym.rkt")
 (require "compiler/utils/utils.rkt")
 (require "main.rkt")
 
@@ -222,6 +223,7 @@ Available settings:
           (loop env))))
 
       (define (run-strict new-env)
+        (gensym-reset!)
         (let* ((input (listing->string (env-get new-env 'listing)))
                (e (env-set new-env
                            'input input
@@ -252,6 +254,7 @@ Available settings:
                 (loop new-env)))))
 
       (define (run-laxed new-env)
+        (gensym-reset!)
         (if (env-get new-env 'autorun)
             (let* ((input (listing->string (env-get new-env 'listing)))
                    (e (env-set new-env
