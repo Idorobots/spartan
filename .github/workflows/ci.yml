@@ -13,15 +13,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Racket environment
-        uses: Bogdanp/setup-racket@v1.7
+        uses: Bogdanp/setup-racket@v1.11
         with:
           architecture: x64
           distribution: full
           variant: CS
           version: stable
+
+      - name: Setup ES6 target env.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 21
 
       - name: Build the compiler CLI.
         run: ./build.sh
