@@ -6,7 +6,7 @@
 (require "../../src/compiler/utils/io.rkt")
 
 (define +compiler-bin+ "./build/bin/sprtn")
-(define +js-bin+ "/usr/bin/node")
+(define +js-bin+ (path->string (find-executable-path "node")))
 
 (define (return-status-equal? a b)
   (equal? a b))
