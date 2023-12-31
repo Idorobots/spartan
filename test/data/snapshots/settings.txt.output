@@ -1,0 +1,10 @@
+[90m;; [39m[90mSpartan REPL. Type ;help for help.[39m
+2 [33m|[39m [90m;; [39mDisabled autorun.
+2 [33m|[39m ;; Disabled colored output.
+2 | ;; Enabled compilation output.
+2 | ;; Enabled stacktrace-output.
+2 | ;; Disabled stacktrace-output.
+2 | ;; Enabled compilation output.
+2 | ;; Enabled autorun.
+2 | [90m;; [39mEnabled colored output.
+2 [33m|[39m 

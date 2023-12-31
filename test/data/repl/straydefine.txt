@@ -1,0 +1,4 @@
+;autorun off
+;clear
+(define (foo x) (display x) (newline))
+;run

@@ -1,0 +1,1 @@
+(define (fib x) (if (< n 2) n (+ (fib (minus n 1)) (fab (- n 2)))))

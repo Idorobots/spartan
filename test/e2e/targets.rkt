@@ -3,13 +3,9 @@
 ;; Actual compiler tests for different targets.
 
 (require "../testing.rkt")
-(require "../../src/compiler/utils/io.rkt")
 
 (define +compiler-bin+ "./build/bin/sprtn")
 (define +js-bin+ (path->string (find-executable-path "node")))
-
-(define (return-status-equal? a b)
-  (equal? a b))
 
 (define (make-r7rs-runner opts)
   (lambda (f)

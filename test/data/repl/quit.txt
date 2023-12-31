@@ -1,0 +1,3 @@
+;quit
+;; Should not print the next lines output.
+;help

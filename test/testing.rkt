@@ -287,3 +287,6 @@
               (null? expected)
               -1))
         (else (error "Invalid performance values supplied: " actual expected))))
+
+(define (return-status-equal? a b)
+  (equal? a b))

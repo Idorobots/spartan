@@ -1,0 +1,8 @@
+;autorun off
+;color off
+;debug compiled on
+;debug stacktrace on
+;debug stacktrace off
+;debug compiled on
+;autorun on
+;color on
