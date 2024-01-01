@@ -1,29 +1,11 @@
 // Internal procedures
-function __apply1(c, a) {
-  return c.fun(c.env, a);
-}
-
-function __apply2(c, a, b) {
-  return c.fun(c.env, a, b);
-}
-
-function __apply3(c_, a, b, c) {
-  return c_.fun(c_.env, a, b, c);
-}
-
-function __applyN(c, ...args) {
-  return c.fun(c.env, ...args);
-}
-
-const __apply_cont = __apply1;
-
 function __write(o) {
   switch(typeof o) {
   case "string":
     process.stdout.write(o);
     break;
   case "object":
-    if (o === null) {
+    if (o === __nil) {
       __write("()")
     } else if(o.ref !== undefined) {
       __write("#<ref>")
@@ -37,10 +19,10 @@ function __write(o) {
       __write("(");
       let i = o;
 
-      while (i !== null) {
+      while (i !== __nil) {
         __write(i.car);
 
-        if(i.cdr === null) {
+        if(i.cdr === __nil) {
           break;
         } else if (typeof i.cdr === "object" && i.cdr.car !== undefined) {
           __write(" ");
@@ -64,152 +46,123 @@ function __write(o) {
 const __nil = null;
 
 // Bootstrap procedures
-const __display = {
-  fun: (e, v, c) => {
-    __write(v);
-    return __apply_cont(c, null);
-  }
-};
-const __newline = {
-  fun: (e, c) => {
-    __write("\n");
-    return __apply_cont(c, null);
-  }
-};
-const __PLUS = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a + b));
-  }
-};
-const ___ = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a - b));
-  }
-};
-const __MULT = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a * b));
-  }
-};
-const __DIV = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a / b));
-  }
-};
-const __modulo = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a % b));
-  }
-};
-const __quotient = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, Math.floor(a/b));
-  }
-};
-const __LESS = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a < b));
-  }
-};
-const __LESSEQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a <= b));
-  }
-};
-const __GREATER = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a > b));
-  }
-};
-const __GREATEREQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a >= b));
-  }
-};
-const __EQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a == b));
-  }
-};
-const __cons = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, { car: a, cdr: b });
-  }
-};
-const __car = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, l.car);
-  }
-};
-const __cdr = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, l.cdr);
-  }
-};
-const __list = {
-  fun: (e, ...args) => {
-    const c = args[args.length - 1];
-    const vals = args.slice(0, args.length - 1);
-    const lst = ((rest) => (rest.length === 0)
-                 ? null
-                 : { car: rest[0], cdr: lst(rest.slice(1)) });
-    return __apply_cont(c, lst(vals));
-  }
-};
-const __append = {
-  fun: (e, a, b, c) => {
-    const app = ((rest) => (rest === null)
-                 ? b
-                 : { car: rest.car, cdr: app(rest.cdr) });
-    return __apply_cont(c, app(a));
-  }
+const __display = (v, c) => {
+  __write(v);
+  return c(__nil);
 };
 
-const __nilQUEST = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, (l === null));
-  }
+const __newline = (c) => {
+  __write("\n");
+  return c(__nil);
 };
-const __eqQUEST = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a == b));
-  }
+
+const __PLUS = (a, b, c) => {
+  return c((a + b));
 };
-const __equalQUEST = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a === b));
-  }
+
+const ___ = (a, b, c) => {
+  return c((a - b));
 };
-const __not = {
-  fun: (e, a, c) => {
-    return __apply_cont(c, !a);
-  }
+
+const __MULT = (a, b, c) => {
+  return c((a * b));
 };
-const __ref = {
-  fun: (e, init, c) => {
-    return __apply_cont(c, { ref: init });
-  }
+
+const __DIV = (a, b, c) => {
+  return c((a / b));
 };
-const __assignBANG = {
-  fun: (e, r, val, c) => {
-    r.ref = val;
-    return __apply_cont(c, r);
-  }
+
+const __modulo = (a, b, c) => {
+  return c((a % b));
 };
-const __deref = {
-  fun: (e, r, c) => {
-    return __apply_cont(c, r.ref);
-  }
+
+const __quotient = (a, b, c) => {
+  return c(Math.floor(a/b));
 };
-const __callDIVcurrent_continuation = {
-  fun: (e, f, c) => {
-    const reified = { fun: (e, ret, _) => __apply_cont(c, ret) };
-    return __apply2(f, reified, c);
-  }
+
+const __LESS = (a, b, c) => {
+  return c((a < b));
 };
-const __raise = {
-  fun: (e, ex, c) => {
-    // FIXME Actually implement this.
-    throw ex
-  }
+
+const __LESSEQUAL = (a, b, c) => {
+  return c((a <= b));
+};
+
+const __GREATER = (a, b, c) => {
+  return c((a > b));
+};
+
+const __GREATEREQUAL = (a, b, c) => {
+  return c((a >= b));
+};
+
+const __EQUAL = (a, b, c) => {
+  return c((a == b));
+};
+
+const __cons = (a, b, c) => {
+  return c({ car: a, cdr: b });
+};
+
+const __car = (l, c) => {
+  return c(l.car);
+};
+
+const __cdr = (l, c) => {
+  return c(l.cdr);
+};
+
+const __list = (...args) => {
+  const c = args[args.length - 1];
+  const vals = args.slice(0, args.length - 1);
+  const lst = ((rest) => (rest.length === 0)
+               ? __nil
+               : { car: rest[0], cdr: lst(rest.slice(1)) });
+  return c(lst(vals));
+};
+
+const __append = (a, b, c) => {
+  const app = ((rest) => (rest === __nil)
+               ? b
+               : { car: rest.car, cdr: app(rest.cdr) });
+  return c(app(a));
+};
+
+const __nilQUEST = (l, c) => {
+  return c((l === __nil));
+};
+
+const __eqQUEST = (a, b, c) => {
+  return c((a == b));
+};
+
+const __equalQUEST = (a, b, c) => {
+  return c((a === b));
+};
+
+const __not = (a, c) => {
+  return c(!a);
+};
+
+const __ref = (init, c) => {
+  return c({ ref: init });
+};
+
+const __assignBANG = (r, val, c) => {
+  r.ref = val;
+  return c(r);
+};
+
+const __deref = (r, c) => {
+  return c(r.ref);
+};
+
+const __callDIVcurrent_continuation = (f, c) => {
+  const reified = (ret, _) => c(ret);
+  return f(reified, c);
+};
+
+const __raise = (ex, c) => {
+  // FIXME Actually implement this.
+  throw ex
 };

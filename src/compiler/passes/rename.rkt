@@ -9,9 +9,9 @@
 (require "../pass.rkt")
 (require "../ast.rkt")
 
-(provide symbol-rename
+(provide symbol-rename symbol->safe
          ;; FIXME For test access.
-         mangle-names symbol->safe)
+         mangle-names)
 
 (define symbol-rename
   (pass (schema "symbol-rename"
