@@ -21,32 +21,8 @@ See [here](examples) for some usage examples. You can run these examples with:
 
 There are also numerous [test files](test/data/errors) available showcasing the compilation error handling features:
 
-```
-$ ./sprtn exec -i test/data/errors/duplicate-unused.sprtn
-Invalid command `exec` specified, expected one of: {compile|run|repl}
+<p align="center"><img alt="errors" src="images/errors.gif" /></p>
 
-  sprtn exec -i test/data/errors/duplicate-unused.sprtn
-        ^^^^
-
-Try `sprtn --help` for usage information.
-
-$ ./sprtn run -i test/data/errors/duplicate-unused.sprtn
-test/data/errors/duplicate-unused.sprtn(1,7): Unused variable `x`, rename to `_` to avoid this error:
-  1 | (let ((x 23)
-    |        ^
-  2 |       (y 'nope)
-  3 |       (x 5))
-
-test/data/errors/duplicate-unused.sprtn(3,6): Bad `let` bindings syntax, duplicate binding identifier `x`:
-  1 | (let ((x 23)
-  2 |       (y 'nope)
-  3 |       (x 5))
-    |       ^^^^^
-  4 |   y)
-  5 | (let ((x 1)
-
-...
-```
 
 ## Compiler
 
