@@ -10,6 +10,7 @@
          set->list)
 
 ;; NOTE This is actually performing better than the built-in set implementation.
+;; NOTE Also tried: using hasheq, binary trees.
 
 (define (set? s)
   (and (list? s)
