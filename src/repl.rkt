@@ -35,9 +35,7 @@ Available settings:
 
 (generate-parser
  (ReplCommand
-  (/ Help Quit LineEdit List Clear Run Color Autorun Debug)
-  (lambda (input result)
-    result))
+  (/ Help Quit LineEdit List Clear Run Color Autorun Debug))
 
  (Help
   (Spacing ";help" Spacing EOF)
