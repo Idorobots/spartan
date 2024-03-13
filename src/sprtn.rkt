@@ -137,7 +137,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
           (start (match-start result))
           (end (match-end result)))
       (option-error "sprtn" input start end
-                    "Invalid compilation phase `~a` specified, expected one of: {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|closure|hoist|rename}" match))))
+                    "Invalid compilation phase `~a` specified, expected one of: {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|closures|hoist|rename}" match))))
 
  (Optimize
   (Spacing (/ ("-O" Spacing) ("--optimize" OptionSeparator)) OptimizationLevel)
