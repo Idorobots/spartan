@@ -1,7 +1,8 @@
-<img align="left" src="foof.png" height="75" /> <h1>Spartan</h1>
+<h1><img align="left" alt="foof" src="images/foof.png" height="100" />Spartan</h1>
 
-Spartan is a small Lisp dialect that serves me as a test bed for programming language features. Currently implemented features are:
+Spartan is a small Lisp dialect that serves me as a test bed for programming language features.
 
+Currently implemented features are:
 - executable language grammar defined as a (PEG parser generator)-generated parser,
 - recursion by way of `letrec` conversion with strongly conected components reordering & assignment conversions,
 - a first-class module system with a shorthand accessor syntax (`module`, `structure` and `foo.bar`).
@@ -16,10 +17,7 @@ Spartan is a small Lisp dialect that serves me as a test bed for programming lan
 
 See [here](examples) for some usage examples. You can run these examples with:
 
-```
-$ ./sprtn run -i examples/hello.sprtn
-Hello world!
-```
+<p align="center"><img alt="hello" src="images/hello.gif" /></p
 
 There are also numerous [test files](test/data/errors) available showcasing the compilation error handling features:
 
