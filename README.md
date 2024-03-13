@@ -63,38 +63,4 @@ The REPL supports a traditional flow of read-eval-print - each line entered is e
 
 There's also a _basic_ twist - the REPL accepts a full listing and allows editing it line by line:
 
-```
-;; Spartan REPL. Type ;help for help.
-2 | ;autorun off
-;; Disabled autorun.
-2 | 1 | (print "Hello world!")
-2 | 2 | (goto 1)
-3 | ;list
-;; Current listing:
-1 | (print "Hello world!")
-2 | (goto 1)
-3 | ;run
-;; repl(1,1): Undefined variable `print`, did you mean `list`:
-;;   1 | (print "Hello world!")
-;;     |  ^^^^^
-;;   2 | (goto 1)
-;;   3 |
-;; repl(2,1): Undefined variable `goto`, did you mean `not`:
-;;   1 | (print "Hello world!")
-;;   2 | (goto 1)
-;;     |  ^^^^
-;;   3 |
-3 | 2 | (newline)
-3 | ;list
-;; Current listing:
-1 | (print "Hello world!")
-2 | (newline)
-3 | 1 | (display "Hello world!")
-3 | ;list
-;; Current listing:
-1 | (display "Hello world!")
-2 | (newline)
-3 | ;run
-Hello world!
-;; #<void>
-```
+<p align="center"><img alt="basic" src="images/basic.gif" /></p>
