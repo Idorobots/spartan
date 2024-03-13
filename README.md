@@ -23,7 +23,6 @@ There are also numerous [test files](test/data/errors) available showcasing the 
 
 <p align="center"><img alt="errors" src="images/errors.gif" /></p>
 
-
 ## Compiler
 
 Run `./build.sh` to build the compiler CLI.
@@ -59,18 +58,8 @@ The compiler is far from being useful, it performs only rudimentary low-hanging 
 
 The REPL supports a traditional flow of read-eval-print - each line entered is executed automatically and the results are printed immediately:
 
-```
-$ ./sprtn repl
-;; Spartan REPL. Type ;help for help.
-2 | (define (greet who)
-3 |   (display "Hello ")
-4 |   (display who)
-5 |   (newline))
-;; #<void>
-6 | (greet "world!")
-Hello world!
-;; #<void>
-```
+<p align="center"><img alt="repl" src="images/repl.gif" /></p>
+
 
 There's also a _basic_ twist - the REPL accepts a full listing and allows editing it line by line:
 
