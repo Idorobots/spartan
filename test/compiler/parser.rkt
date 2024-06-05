@@ -123,7 +123,10 @@
  (it "handles special characters correctly"
      (assert (p "|")
              (make-ast-symbol (location 0 1)
-                              '\|)))
+                              '\|))
+     (assert (p "&")
+             (make-ast-symbol (location 0 1)
+                              '&)))
 
  (it "handles unterminated lists gracefully"
      (assert (pe "(")
