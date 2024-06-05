@@ -186,4 +186,15 @@
                           (map (lambda (path)
                                  (string-append "examples/"
                                                 (path->string path)))
-                               (directory-list "examples/")))))))
+                               (directory-list "examples/"))))))
+
+ (it "handles string escapes"
+     (assert (p "\"\\n\"")
+             (make-ast-string (location 0 4)
+                              "\n"))
+     (assert (p "\"hurr\\\"durr\"")
+             (make-ast-string (location 0 12)
+                              "hurr\"durr"))
+     (assert (p "\"\\u2603\"")
+             (make-ast-string (location 0 8)
+                              "\u2603"))))

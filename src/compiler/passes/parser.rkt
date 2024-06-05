@@ -102,7 +102,7 @@
  (String
   (/ ProperString UnterminatedString))
  (ProperString
-  (Spacing "\"" StringContents "\"")
+  (Spacing DoubleQuote StringContents DoubleQuote)
   (lambda (input result)
     (let* ((matching (match-match result))
            (start (match-start result))
@@ -112,7 +112,7 @@
                start
                end))))
  (UnterminatedString
-  (Spacing "\"" StringContents EOF)
+  (Spacing DoubleQuote StringContents EOF)
   (lambda (input result)
     (let* ((matching (match-match result))
            (start (match-start result))
@@ -123,8 +123,27 @@
                 "Unterminated string literal, expected a closing `\"` to follow:")
                start
                end))))
+ ;; (StringContents
+ ;;  "[^\"]*")
  (StringContents
-  "[^\"]*")
+  (~ (* (/ UnescapedStringCharacter EscapedStringCharacter))))
+ (UnescapedStringCharacter
+  ((! (/ DoubleQuote BackSlash)) "([a-z]|.)") ;; FIXME Dot is interpreted as just a dot.
+  ;; FIXME This ought to be handled by the combinator operator.
+  (lambda (input result)
+    (matches (cadr (match-match result))
+             (match-start result)
+             (match-end result))))
+ (EscapedStringCharacter
+  (~ BackSlash EscapeSequence))
+ (DoubleQuote
+  "\"")
+
+ (EscapeSequence
+  ;; FIXME This would ideally parse the escape sequence.
+  (/ DoubleQuote BackSlash "b" "f" "n" "r" "t" "v" (~ "u" HexDigit HexDigit HexDigit HexDigit)))
+ (BackSlash
+  "\\")
 
  (List
   (/ ProperList UnterminatedList))
@@ -220,6 +239,9 @@
 
  (Digit
    "[0-9]")
+
+ (HexDigit
+  "[0-9a-fA-F]")
 
  (Sign
    "[+\\-]")
