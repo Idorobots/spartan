@@ -63,4 +63,6 @@
         ((equal? char #\@) "AT")
         ((equal? char #\$) "DOLLAR")
         ((equal? char #\~) "TYLDE")
+        ((> (char->integer char) 255)
+         (format "U~x" (char->integer char)))
         (else (string char))))

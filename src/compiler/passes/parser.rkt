@@ -240,22 +240,23 @@
   (~ SymbolInitial (~ (* SymbolSubsequent))))
 
  (SymbolInitial
-   (/ Alpha Special (rx "\\p{L}")))
+  (/ Alpha Special (rx "(\\p{L}|\\p{So}|\\p{Sm}|\\p{Sc})")))
 
  (SymbolSubsequent
-   (/ SymbolInitial Digit (rx "\\p{N}") (rx "\\p{S}")))
+  ;; NOTE @ needs to be disallowed in initial position, or otherwise it'll interfere with ,@
+  (/ SymbolInitial "@" Digit (rx "\\p{N}")))
 
  (Alpha
-   (rx "[a-zA-Z]")
-   ;; FIXME This one seems to be slower than the remaining PEG vs RegEx cases.
-   ;; FIXME It's also way less convenient.
-   ;; (/ "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"
-   ;;    "A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" "R" "S" "T" "U" "V" "W" "X" "Y" "Z")
-   )
+  (rx "[a-zA-Z]")
+  ;; FIXME This one seems to be slower than the remaining PEG vs RegEx cases.
+  ;; FIXME It's also way less convenient.
+  ;; (/ "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"
+  ;;    "A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" "R" "S" "T" "U" "V" "W" "X" "Y" "Z")
+  )
 
  (Special
-   ;; (rx "[!$%*/:<=>?~_^|&@#+\\-]")
-   (/ "!" "$" "%" "*" "/" ":" "<" "=" ">" "?" "~" "_" "^" "|" "&" "@" "#" Sign))
+  ;; (rx "[!$%*/:<=>?~_^|&#+\\-]")
+  (/ "!" "$" "%" "*" "/" ":" "<" "=" ">" "?" "~" "_" "^" "|" "&" "#" Sign))
 
  (Digit
   ;; (rx "[0-9]")
