@@ -138,8 +138,7 @@
                 start
                 end))))
  (UnescapedStringCharacter
-  ;; FIXME Dot is interpreted as just a dot.
-  (~ (! (/ "\"" "\\")) "(.)"))
+  (~ (! (/ "\"" "\\")) Any))
  (EscapedStringCharacter
   (/ ValidEscapeSequence InvalidEscapeSequence))
  (ValidEscapeSequence
@@ -150,8 +149,7 @@
              (match-end result))))
 
  (InvalidEscapeSequence
-  ;; FIXME Dot is interpreted as just a dot.
-  ("\\" "(.)")
+  ("\\" Any)
   (lambda (input result)
     (let ((start (match-start result))
           (end (match-end result)))
@@ -191,7 +189,7 @@
   (/ Symbol Number))
 
  (Number
-  (Spacing (~ (~ (? Sign)) (~ (+ Digit)) (~ (? "." (~ (+ Digit))))))
+  (Spacing (~ (? Sign) (~ (+ Digit)) (? (~ "." (~ (+ Digit))))))
   (lambda (input result)
     (let* ((matching (match-match result))
            (spacing-start (match-start result))
@@ -238,36 +236,47 @@
                start
                end))))
 
-  (SymbolContents
-   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+ (SymbolContents
+  (~ SymbolInitial (~ (* SymbolSubsequent))))
 
  (SymbolInitial
-   (/ Alpha Special "#"))
+   (/ Alpha Special (rx "\\p{L}")))
 
  (SymbolSubsequent
-   (/ SymbolInitial "@" Digit Sign))
+   (/ SymbolInitial Digit (rx "\\p{N}") (rx "\\p{S}")))
 
  (Alpha
-   "[a-zA-Z]")
+   (rx "[a-zA-Z]")
+   ;; FIXME This one seems to be slower than the remaining PEG vs RegEx cases.
+   ;; FIXME It's also way less convenient.
+   ;; (/ "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"
+   ;;    "A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" "R" "S" "T" "U" "V" "W" "X" "Y" "Z")
+   )
 
  (Special
-   "[!$%*/:<=>?~_^|&]")
+   ;; (rx "[!$%*/:<=>?~_^|&@#+\\-]")
+   (/ "!" "$" "%" "*" "/" ":" "<" "=" ">" "?" "~" "_" "^" "|" "&" "@" "#" Sign))
 
  (Digit
-   "[0-9]")
+  ;; (rx "[0-9]")
+  (/ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
 
  (HexDigit
-  "[0-9a-fA-F]")
+  ;; (rx "[0-9a-fA-F]")
+  (/ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f" "A" "B" "C" "D" "E" "F"))
 
  (Sign
-   "[+\\-]")
+  (/ "+" "-"))
+
+ (Any
+  (rx "."))
 
  (Spacing
-  (: (* (/ "[ \t\v\r\n]+" Comment)))
+  (: (* (/ " " "\t" "\v" "\r" "\n" Comment)))
   no-inline)
 
  (Comment
-  (~ ";[^\n]*" (/ "\n" EOF)))
+  (~ ";" (rx "[^\n]*") (/ "\n" EOF)))
  (EOF
   ()))
 

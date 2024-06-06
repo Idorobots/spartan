@@ -213,7 +213,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
           (m result 'rest-args (caddr match))))))
 
  (Anything
-  ".*")
+  (rx ".*"))
 
  (Spacing
   (: * WhiteSpace)
@@ -223,10 +223,10 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (/ WhiteSpace "="))
 
  (WhiteSpace
-  "[ \t\v\r\n]+")
+  (rx "[ \t\v\r\n]+"))
 
  (NonWhiteSpace
-  "[^ \t\v\r\n]+")
+  (rx "[^ \t\v\r\n]+"))
 
  (EOF
   ()))

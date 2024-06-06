@@ -46,7 +46,7 @@ Available settings:
   (constantly (m 'quit)))
 
  (LineEdit
-  (Spacing "[1-9][0-9]{0,2}" Spacing "|" (? "[ ]") ".*" EOF)
+  (Spacing (rx "[1-9][0-9]{0,2}") Spacing "|" (? " ") (rx ".*") EOF)
   (lambda (input result)
     (let ((match (match-match result)))
       (m 'edit (string->number (nth 1 match)) (nth 5 match)))))
@@ -95,10 +95,10 @@ Available settings:
   (: * WhiteSpace))
 
  (WhiteSpace
-  "[ \t\v\r\n]+")
+  (rx "[ \t\v\r\n]+"))
 
  (NonWhiteSpace
-  "[^ \t\v\r\n]+")
+  (rx "[^ \t\v\r\n]+"))
 
  (EOF
   ()))
