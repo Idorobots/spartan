@@ -203,27 +203,27 @@
              '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     result1
-                    (matches '() off off))))
+                    (matches "" off off))))
      (gensym-reset!)
      (assert (generate-optional '(? Foo) 'in 'off stripper)
              '(strip
                (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      result1
-                     (matches '() off off))))))
+                     (matches "" off off))))))
 
  (it "(! ...) fails if a match is found"
      (gensym-reset!)
      (assert (generate-not '(! Foo) 'in 'off id)
              '(if (matches? (Foo in off))
                   (no-match)
-                  (matches '() off off)))
+                  (matches "" off off)))
      (gensym-reset!)
      (assert (generate-not '(! Foo) 'in 'off stripper)
              '(strip
                (if (matches? (Foo in off))
                    (no-match)
-                   (matches '() off off)))))
+                   (matches "" off off)))))
 
  (it "(& ...) doesn't advance the scan"
      (gensym-reset!)
@@ -246,7 +246,7 @@
              '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (let ((end2 (match-end result1)))
-                      (matches '() end2 end2))
+                      (matches "" end2 end2))
                     (no-match))))
      (gensym-reset!)
      (assert (generate-drop '(: Foo) 'in 'off stripper)
@@ -254,7 +254,7 @@
                (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (let ((end2 (match-end result1)))
-                       (matches '() end2 end2))
+                       (matches "" end2 end2))
                      (no-match))))))
 
  (it "(~ ...) concatenates all submatches"
@@ -611,6 +611,6 @@
 
  (it "properly sets the start of a sequence begining with a drop"
      (assert (DropSeq "foobarbaz")
-             (matches '(() "bar" "baz")
+             (matches '("" "bar" "baz")
                       3
                       9))))

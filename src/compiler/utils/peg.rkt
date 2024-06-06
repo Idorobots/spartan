@@ -396,7 +396,7 @@
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
                                           ,result
-                                          (matches '() ,offset ,offset))))))))
+                                          (matches "" ,offset ,offset))))))))
 
 ;; (! ...)
 (define (generate-not subrules input offset cont)
@@ -406,7 +406,7 @@
                          (lambda (result)
                            (cont `(if (matches? ,result)
                                       (no-match)
-                                      (matches '() ,offset ,offset))))))
+                                      (matches "" ,offset ,offset))))))
 
 ;; (& ...)
 (define (generate-and subrules input offset cont)
@@ -433,7 +433,7 @@
                                       (if (matches? ,result)
                                           ;; NOTE Skips the scan.
                                           (let ((,end (match-end ,result)))
-                                            (matches '() ,end ,end))
+                                            (matches "" ,end ,end))
                                           (no-match))))))))
 
 ;; (~ ...)

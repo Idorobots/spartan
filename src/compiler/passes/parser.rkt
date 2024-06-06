@@ -139,12 +139,7 @@
                 end))))
  (UnescapedStringCharacter
   ;; FIXME Dot is interpreted as just a dot.
-  ((! (/ "\"" "\\")) "(.)")
-  ;; FIXME This ought to be handled by the ~ combinator.
-  (lambda (input result)
-    (matches (cadr (match-match result))
-             (match-start result)
-             (match-end result))))
+  (~ (! (/ "\"" "\\")) "(.)"))
  (EscapedStringCharacter
   (/ ValidEscapeSequence InvalidEscapeSequence))
  (ValidEscapeSequence
