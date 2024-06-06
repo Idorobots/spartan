@@ -197,4 +197,12 @@
                               "hurr\"durr"))
      (assert (p "\"\\u2603\"")
              (make-ast-string (location 0 8)
-                              "\u2603"))))
+                              "\u2603"))
+     (assert (pe "\"\\g\"")
+             (list "Invalid string literal: 1 3"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 1 3"))
+     (assert (pe "\"\\g\\g")
+             (list "Unterminated string literal, expected a closing `\"` to follow: 0 5"
+                   "Invalid string literal: 1 5"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 3 5"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 1 3"))))

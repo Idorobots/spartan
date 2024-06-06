@@ -102,7 +102,7 @@
  (String
   (/ ProperString UnterminatedString))
  (ProperString
-  (Spacing DoubleQuote StringContents DoubleQuote)
+  (Spacing "\"" StringContents "\"")
   (lambda (input result)
     (let* ((matching (match-match result))
            (start (match-start result))
@@ -112,7 +112,7 @@
                start
                end))))
  (UnterminatedString
-  (Spacing DoubleQuote StringContents EOF)
+  (Spacing "\"" StringContents EOF)
   (lambda (input result)
     (let* ((matching (match-match result))
            (start (match-start result))
@@ -123,27 +123,48 @@
                 "Unterminated string literal, expected a closing `\"` to follow:")
                start
                end))))
- ;; (StringContents
- ;;  "[^\"]*")
  (StringContents
-  (~ (* (/ UnescapedStringCharacter EscapedStringCharacter))))
+  (* (/ UnescapedStringCharacter EscapedStringCharacter))
+  (lambda (input result)
+    (let ((match (match-match result))
+          (start (match-start result))
+          (end (match-end result)))
+      (matches  (if (every? string? match)
+                    (foldr string-append-immutable "" match)
+                    ;; FIXME This is a bit redundant, but might make more sense when ${} embeds are implemented.
+                    (raise-compilation-error
+                     (make-ast-location (location start end))
+                     "Invalid string literal:"))
+                start
+                end))))
  (UnescapedStringCharacter
-  ((! (/ DoubleQuote BackSlash)) "([a-z]|.)") ;; FIXME Dot is interpreted as just a dot.
-  ;; FIXME This ought to be handled by the combinator operator.
+  ;; FIXME Dot is interpreted as just a dot.
+  ((! (/ "\"" "\\")) "(.)")
+  ;; FIXME This ought to be handled by the ~ combinator.
   (lambda (input result)
     (matches (cadr (match-match result))
              (match-start result)
              (match-end result))))
  (EscapedStringCharacter
-  (~ BackSlash EscapeSequence))
- (DoubleQuote
-  "\"")
+  (/ ValidEscapeSequence InvalidEscapeSequence))
+ (ValidEscapeSequence
+  ("\\" (/ "\"" "\\" "b" "f" "n" "r" "t" "v" (~ "u" HexDigit HexDigit HexDigit HexDigit)))
+  (lambda (input result)
+    (matches (unescape (cadr (match-match result)))
+             (match-start result)
+             (match-end result))))
 
- (EscapeSequence
-  ;; FIXME This would ideally parse the escape sequence.
-  (/ DoubleQuote BackSlash "b" "f" "n" "r" "t" "v" (~ "u" HexDigit HexDigit HexDigit HexDigit)))
- (BackSlash
-  "\\")
+ (InvalidEscapeSequence
+  ;; FIXME Dot is interpreted as just a dot.
+  ("\\" "(.)")
+  (lambda (input result)
+    (let ((start (match-start result))
+          (end (match-end result)))
+      (matches (raise-compilation-error
+                (make-ast-location (location start end))
+                "Invalid escape sequence in string literal, did you mean `\\\\`?")
+               start
+               end))))
 
  (List
   (/ ProperList UnterminatedList))
@@ -277,3 +298,20 @@
   ;; NOTE Prevents inlining of this rule making it hit the cache more often and perform better.
   (lambda (input result)
     result))
+
+(define (unescape sequence)
+  (match sequence
+    ("\\" "\\")
+    ("\"" "\"")
+    ("b" "\b")
+    ("f" "\f")
+    ("n" "\n")
+    ("r" "\r")
+    ("t" "\t")
+    ("v" "\v")
+    (else ;; NOTE Unicode escape
+     (-> sequence
+         (substring 1)
+         (string->number 16)
+         (integer->char)
+         (string)))))

@@ -1,0 +1,11 @@
+""
+"hello world"
+"hello world\n"
+"hello ☃"
+"\t"
+"\\v"
+"\u2603"
+"\g"
+"\u123"
+"\""
+"\\"" ;; Unterminated.
