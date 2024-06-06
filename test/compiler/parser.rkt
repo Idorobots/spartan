@@ -123,7 +123,10 @@
  (it "handles special characters correctly"
      (assert (p "|")
              (make-ast-symbol (location 0 1)
-                              '\|)))
+                              '\|))
+     (assert (p "&")
+             (make-ast-symbol (location 0 1)
+                              '&)))
 
  (it "handles unterminated lists gracefully"
      (assert (pe "(")
@@ -183,4 +186,23 @@
                           (map (lambda (path)
                                  (string-append "examples/"
                                                 (path->string path)))
-                               (directory-list "examples/")))))))
+                               (directory-list "examples/"))))))
+
+ (it "handles string escapes"
+     (assert (p "\"\\n\"")
+             (make-ast-string (location 0 4)
+                              "\n"))
+     (assert (p "\"hurr\\\"durr\"")
+             (make-ast-string (location 0 12)
+                              "hurr\"durr"))
+     (assert (p "\"\\u2603\"")
+             (make-ast-string (location 0 8)
+                              "\u2603"))
+     (assert (pe "\"\\g\"")
+             (list "Invalid string literal: 1 3"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 1 3"))
+     (assert (pe "\"\\g\\g")
+             (list "Unterminated string literal, expected a closing `\"` to follow: 0 5"
+                   "Invalid string literal: 1 5"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 3 5"
+                   "Invalid escape sequence in string literal, did you mean `\\\\`? 1 3"))))

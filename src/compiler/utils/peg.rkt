@@ -6,8 +6,9 @@
 (require "utils.rkt")
 
 (provide generate-grammar
-         generate-eof generate-nonterminal generate-matcher generate-sequence generate-or generate-zero-or-more
-         generate-one-or-more generate-optional generate-not generate-and generate-drop generate-concat
+         generate-eof generate-nonterminal generate-terminal generate-matcher generate-sequence generate-or
+         generate-zero-or-more generate-one-or-more generate-optional generate-not generate-and generate-drop
+         generate-concat
          ;; FIXME For test access
          inline-rules prune-rules optimize-rules)
 
@@ -138,33 +139,33 @@
 
     ;; Concat
     ((list '~ subpatterns ...)
-     #:when (every? string-or-eof? subpatterns)
-     (string-join (map regexp-escape subpatterns) ""))
+     #:when (every? string? subpatterns)
+     (string-join subpatterns ""))
     ((list '~ (list '* subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")*"))
+     #:when (every? rx-matcher? subpatterns)
+     (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")*")))
     ((list '~ (list '+ subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")+"))
+     #:when (every? rx-matcher? subpatterns)
+     (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")+")))
     ((list '~ (list '? subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")?"))
+     #:when (every? rx-matcher? subpatterns)
+     (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")?")))
     ((list '~ subpatterns ...)
      (cons '~ (map optimize-pattern subpatterns)))
 
     ;; Drop
     ((list ': subpatterns ...)
-     #:when (every? string-or-eof? subpatterns)
-     (list ': (string-join (map regexp-escape subpatterns) "")))
+     #:when (every? string? subpatterns)
+     (list ': (string-join subpatterns "")))
     ((list ': (list '* subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")*")))
+     #:when (every? rx-matcher? subpatterns)
+     (list ': (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")*"))))
     ((list ': (list '+ subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")+")))
+     #:when (every? rx-matcher? subpatterns)
+     (list ': (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")+"))))
     ((list ': (list '? subpatterns ...))
-     #:when (every? string-or-eof? subpatterns)
-     (list ': (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "") ")?")))
+     #:when (every? rx-matcher? subpatterns)
+     (list ': (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "") ")?"))))
     ((list ': subpatterns ...)
      (cons ': (map optimize-pattern subpatterns)))
 
@@ -172,8 +173,8 @@
     ((list '/ subpattern)
      (optimize-pattern subpattern))
     ((list '/ subpatterns ...)
-     #:when (every? string-or-eof? subpatterns)
-     (string-append-immutable "(" (string-join (map regexp-escape subpatterns) "|") ")"))
+     #:when (every? rx-matcher? subpatterns)
+     (list 'rx (string-append-immutable "(" (string-join (map rx-normalize subpatterns) "|") ")")))
     ((list '/ subpatterns ...)
      (list* '/ (splice-by (lambda (p)
                             (if (tagged-list? '/ p)
@@ -189,7 +190,7 @@
      (splice-by (lambda (p)
                   (if (and (list? p)
                            (not (null? p))
-                           (not (member (car p) '(/ * + ? ! & : ~))))
+                           (not (member (car p) '(/ * + ? ! & : ~ rx))))
                       p
                       (list p)))
                 (map optimize-pattern
@@ -199,21 +200,11 @@
     (else
      pattern)))
 
-(define (string-or-eof? p)
-  (or (string? p)
-      (empty? p)))
+(define (rx-matcher? p)
+  (tagged-list? 'rx p))
 
-(define (regexp-escape p)
-  (match p
-    ("." "\\.")
-    ("(" "\\(")
-    (")" "\\)")
-    ("[" "\\[")
-    ("]" "\\]")
-    ("{" "\\{")
-    ("}" "\\}")
-    ((list) "$")
-    (else p)))
+(define (rx-normalize p)
+  (string-join (cdr p) ""))
 
 (define (splice-by transform patterns)
   (let loop ((acc '())
@@ -263,24 +254,26 @@
 (define nonterminal? symbol?)
 
 (define (generate-rule-pattern rule input offset cont)
-  (cond ((empty? rule)            (generate-eof rule input offset cont))
-        ((nonterminal? rule)      (generate-nonterminal rule input offset cont))
-        ((terminal? rule)         (generate-matcher rule input offset cont))
-        ((equal? (length rule) 1) (generate-rule-pattern (car rule) input offset cont))
-        ((tagged-list? '/ rule)   (generate-or rule input offset cont))
-        ((tagged-list? '* rule)   (generate-zero-or-more rule input offset cont))
-        ((tagged-list? '+ rule)   (generate-one-or-more rule input offset cont))
-        ((tagged-list? ': rule)   (generate-drop rule input offset cont))
-        ((tagged-list? '? rule)   (generate-optional rule input offset cont))
-        ((tagged-list? '! rule)   (generate-not rule input offset cont))
-        ((tagged-list? '& rule)   (generate-and rule input offset cont))
-        ((tagged-list? '~ rule)   (generate-concat rule input offset cont))
-        (else                     (generate-sequence rule input offset cont))))
+  (match rule
+    ((list)                    (generate-eof rule input offset cont))
+    ((list '/ clauses ...)     (generate-or rule input offset cont))
+    ((list '* cluases ...)     (generate-zero-or-more rule input offset cont))
+    ((list '+ clauses ...)     (generate-one-or-more rule input offset cont))
+    ((list ': clauses ...)     (generate-drop rule input offset cont))
+    ((list '? clauses ...)     (generate-optional rule input offset cont))
+    ((list '! clauses ...)     (generate-not rule input offset cont))
+    ((list '& clauses ...)     (generate-and rule input offset cont))
+    ((list '~ clauses ...)     (generate-concat rule input offset cont))
+    ((list 'rx clauses ...)    (generate-matcher clauses input offset cont))
+    ((list clause)             (generate-rule-pattern clause input offset cont))
+    ((list clauses ...)        (generate-sequence rule input offset cont))
+    (r #:when (nonterminal? r) (generate-nonterminal rule input offset cont))
+    (r #:when (terminal? r)    (generate-terminal rule input offset cont))))
 
 ;; EOF
 (define (generate-eof rule input offset cont)
   (cont `(if (equal? ,offset (string-length ,input))
-             (matches '() ,offset ,offset)
+             (matches "" ,offset ,offset)
              (no-match))))
 
 ;; Nonterminal
@@ -288,21 +281,30 @@
   (cont `(,rule-name ,input ,offset)))
 
 ;; "terminal"
-(define (generate-matcher regex input offset cont)
-  (cont (if (equal? 1 (string-length regex)) ;; FIXME Won't work for "." and other single char regexps.
-            (let ((char (string-ref regex 0)))
-              `(if (and (< ,offset (string-length ,input))
-                        (equal? (string-ref ,input ,offset) ,char))
-                   (matches ,regex ,offset (+ 1 ,offset))
-                   (no-match)))
-            (let ((r (pregexp (string-append-immutable "^" regex)))
-                  (result (gensym 'result)))
-              `(let ((,result (regexp-match ,r ,input ,offset)))
-                 (if ,result
-                     (matches (car ,result)
+(define (generate-terminal value input offset cont)
+  (cont `(if (< (+ ,offset ,(- (string-length value) 1)) (string-length ,input))
+             ,(let loop ((chars (string->list value))
+                         (offt 0))
+                (if (empty? chars)
+                    `(matches ,value
                               ,offset
-                              (+ ,offset (string-length (car ,result))))
-                     (no-match)))))))
+                              (+ ,offset ,(string-length value)))
+                    `(if (equal? (string-ref ,input (+ ,offset ,offt)) ,(car chars))
+                         ,(loop (cdr chars) (+ offt 1))
+                         (no-match))))
+             (no-match))))
+
+;; (rx ...)
+(define (generate-matcher regexps input offset cont)
+  (let ((regex (string-join regexps "")))
+    (cont (let ((r (pregexp (string-append-immutable "^" regex)))
+                (result (gensym 'result)))
+            `(let ((,result (regexp-match ,r ,input ,offset)))
+               (if ,result
+                   (matches (car ,result)
+                            ,offset
+                            (+ ,offset (string-length (car ,result))))
+                   (no-match)))))))
 
 ;; (...)
 (define (generate-sequence subrules input offset cont)
@@ -395,7 +397,7 @@
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
                                           ,result
-                                          (matches '() ,offset ,offset))))))))
+                                          (matches "" ,offset ,offset))))))))
 
 ;; (! ...)
 (define (generate-not subrules input offset cont)
@@ -405,7 +407,7 @@
                          (lambda (result)
                            (cont `(if (matches? ,result)
                                       (no-match)
-                                      (matches '() ,offset ,offset))))))
+                                      (matches "" ,offset ,offset))))))
 
 ;; (& ...)
 (define (generate-and subrules input offset cont)
@@ -432,7 +434,7 @@
                                       (if (matches? ,result)
                                           ;; NOTE Skips the scan.
                                           (let ((,end (match-end ,result)))
-                                            (matches '() ,end ,end))
+                                            (matches "" ,end ,end))
                                           (no-match))))))))
 
 ;; (~ ...)
@@ -445,6 +447,7 @@
                              (cont `(let ((,result ,r))
                                       (if (matches? ,result)
                                           ;; FIXME This produces a hard-to debug error when a match is not a list of strings.
+                                          ;; FIXME Still true in 2024. :+1:
                                           (matches (foldr string-append-immutable "" (match-match ,result))
                                                    (match-start ,result)
                                                    (match-end ,result))

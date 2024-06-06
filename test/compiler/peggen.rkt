@@ -21,12 +21,12 @@
  (it "EOF matches just the end of file"
      (assert (generate-eof '() 'in 'off id)
              '(if (equal? off (string-length in))
-                  (matches '() off off)
+                  (matches "" off off)
                   (no-match)))
      (assert (generate-eof '() 'in 'off stripper)
              '(strip
                (if (equal? off (string-length in))
-                   (matches '() off off)
+                   (matches "" off off)
                    (no-match)))))
 
  (it "Nonterminal forwards to the correct rule"
@@ -35,41 +35,57 @@
      (assert (generate-nonterminal 'Foo 'in 'off stripper)
              '(strip (Foo in off))))
 
- (it "\"terminal\" handles single character patterns efficiently"
+ (it "\"terminal\" handles patterns efficiently"
      (gensym-reset!)
-     (assert (generate-matcher "f" 'in 'off id)
-             '(if (and (< off (string-length in))
-                       (equal? (string-ref in off) #\f))
-                  (matches "f" off (+ 1 off))
-                  (no-match)))
+     (assert (generate-terminal "f" 'in 'off id)
+             '(if(< (+ off 0) (string-length in))
+                 (if (equal? (string-ref in (+ off 0)) #\f)
+                     (matches "f" off (+ off 1))
+                     (no-match))
+                 (no-match)))
      (gensym-reset!)
-     (assert (generate-matcher "f" 'in 'off stripper)
+     (assert (generate-terminal "foo" 'in 'off stripper)
              '(strip
-               (if (and (< off (string-length in))
-                        (equal? (string-ref in off) #\f))
-                   (matches "f" off (+ 1 off))
+               (if (< (+ off 2) (string-length in))
+                   (if (equal? (string-ref in (+ off 0)) #\f)
+                       (if (equal? (string-ref in (+ off 1)) #\o)
+                           (if (equal? (string-ref in (+ off 2)) #\o)
+                               (matches "foo" off (+ off 3))
+                               (no-match))
+                           (no-match))
+                       (no-match))
                    (no-match)))))
- (it "\"terminal\" uses compiled regexps for multi-char patterns"
+
+ (it "\"terminal\" handles syntax characters fine"
      (gensym-reset!)
-     (assert (generate-matcher "foo" 'in 'off id)
+     (assert (generate-terminal "'" 'in 'off id)
+             '(if (< (+ off 0) (string-length in))
+                  (if (equal? (string-ref in (+ off 0)) #\')
+                      (matches "'" off (+ off 1))
+                      (no-match))
+                  (no-match))))
+
+ (it "(rx ...) uses compiled regexps"
+     (gensym-reset!)
+     (assert (generate-matcher '("foo") 'in 'off id)
              '(let ((result1 (regexp-match #px"^foo" in off)))
                 (if result1
                     (matches (car result1) off (+ off (string-length (car result1))))
                     (no-match))))
      (gensym-reset!)
-     (assert (generate-matcher "foo" 'in 'off stripper)
+     (assert (generate-matcher '("foo") 'in 'off stripper)
              '(strip
                (let ((result1 (regexp-match #px"^foo" in off)))
                  (if result1
                      (matches (car result1) off (+ off (string-length (car result1))))
-                     (no-match))))))
- (it "\"terminal\" handles synatx characters fine"
+                     (no-match)))))
      (gensym-reset!)
-     (assert (generate-matcher "'" 'in 'off id)
-             '(if (and (< off (string-length in))
-                       (equal? (string-ref in off) #\'))
-                  (matches "'" off (+ 1 off))
-                  (no-match))))
+     (assert (generate-matcher '("foo" "bar") 'in 'off stripper)
+             '(strip
+               (let ((result1 (regexp-match #px"^foobar" in off)))
+                 (if result1
+                     (matches (car result1) off (+ off (string-length (car result1))))
+                     (no-match))))))
 
  (it "(...) sequences matchers"
      (gensym-reset!)
@@ -203,27 +219,27 @@
              '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     result1
-                    (matches '() off off))))
+                    (matches "" off off))))
      (gensym-reset!)
      (assert (generate-optional '(? Foo) 'in 'off stripper)
              '(strip
                (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      result1
-                     (matches '() off off))))))
+                     (matches "" off off))))))
 
  (it "(! ...) fails if a match is found"
      (gensym-reset!)
      (assert (generate-not '(! Foo) 'in 'off id)
              '(if (matches? (Foo in off))
                   (no-match)
-                  (matches '() off off)))
+                  (matches "" off off)))
      (gensym-reset!)
      (assert (generate-not '(! Foo) 'in 'off stripper)
              '(strip
                (if (matches? (Foo in off))
                    (no-match)
-                   (matches '() off off)))))
+                   (matches "" off off)))))
 
  (it "(& ...) doesn't advance the scan"
      (gensym-reset!)
@@ -246,7 +262,7 @@
              '(let ((result1 (Foo in off)))
                 (if (matches? result1)
                     (let ((end2 (match-end result1)))
-                      (matches '() end2 end2))
+                      (matches "" end2 end2))
                     (no-match))))
      (gensym-reset!)
      (assert (generate-drop '(: Foo) 'in 'off stripper)
@@ -254,7 +270,7 @@
                (let ((result1 (Foo in off)))
                  (if (matches? result1)
                      (let ((end2 (match-end result1)))
-                       (matches '() end2 end2))
+                       (matches "" end2 end2))
                      (no-match))))))
 
  (it "(~ ...) concatenates all submatches"
@@ -312,14 +328,15 @@
               (R7 (/ A (/ B (/ C D))))
               (R8 (~ "foo"))
               (R9 (~ "foo" "bar" "baz"))
-              (R10 (/ "foo" "bar" "baz"))
-              (R11 (/ "(" "." ")"))
-              (R12 (~ (* "foo")))
-              (R13 (~ (+ (/ "A" "B"))))
-              (R14 (~ (? "X")))
+              (R10 (/ (rx "foo") (rx "bar") (rx "baz")))
+              (R11 (/ (rx "\\(") (rx "\\.") (rx "\\)")))
+              (R12 (~ (* (rx "foo"))))
+              (R13 (~ (+ (/ (rx "A") (rx "B")))))
+              (R14 (~ (? (rx "X"))))
               (R15 (/ "foo" ()))
-              (R16 (/ (~ (* "foo" ())) ()))
-              (R17 (: (* "foo")))))
+              (R16 (/ (~ (* (rx "foo") ())) ()))
+              (R17 (: (* (rx "foo"))))
+              (R18 (/ "(" (rx ".") ")"))))
            (expected
             '((R1 A)
               (R2 B (lambda (i r) r))
@@ -330,14 +347,15 @@
               (R7 (/ A B C D))
               (R8 "foo")
               (R9 "foobarbaz")
-              (R10 "(foo|bar|baz)")
-              (R11 "(\\(|\\.|\\))")
-              (R12 "(foo)*")
-              (R13 "((A|B))+")
-              (R14 "(X)?")
-              (R15 "(foo|$)")
-              (R16 "((foo$)*|$)")
-              (R17 (: "(foo)*")))))
+              (R10 (rx "(foo|bar|baz)"))
+              (R11 (rx "(\\(|\\.|\\))"))
+              (R12 (rx "(foo)*"))
+              (R13 (rx "((A|B))+"))
+              (R14 (rx "(X)?"))
+              (R15 (/ "foo" ()))
+              (R16 (/ (~ (* (rx "foo") ())) ()))
+              (R17 (: (rx "(foo)*")))
+              (R18 (/ "(" (rx ".") ")")))))
        (map (lambda (rule expected)
               (assert (optimize-rules (list rule))
                       (list expected)))
@@ -372,13 +390,13 @@
  (String
   (/ UnterminatedString ProperString))
  (UnterminatedString
-  (Spacing (: "\"") "[^\"]*" ())
+  (Spacing (: "\"") (rx "[^\"]*") ())
   (lambda (input result)
     (map-match (lambda (matching spacing-start end)
                  (raise (format "Unterminated string at location: ~a" (car matching))))
                result)))
  (ProperString
-  (Spacing (: "\"") "[^\"]*" (: "\""))
+  (Spacing (: "\"") (rx "[^\"]*") (: "\""))
   (lambda (input result)
     (map-match (lambda (matching spacing-start end)
                  (let ((start (car matching)))
@@ -391,7 +409,7 @@
                             end)))
                result)))
  (List
-  (Spacing (: "\\(") (* SimpleLisp) Spacing (: "\\)"))
+  (Spacing (: "(") (* SimpleLisp) Spacing (: ")"))
   (lambda (input result)
     (map-match (lambda (matching spacing-start end)
                  (let ((start (car matching)))
@@ -405,7 +423,7 @@
  (Atom
   (/ Symbol Number))
  (Number
-  (Spacing "[+\\-]?[0-9]+(\\.[0-9]*)?")
+  (Spacing (rx "[+\\-]?[0-9]+(\\.[0-9]*)?"))
   (lambda (input result)
     (map-match (lambda (matching spacing-start end)
                  (let ((start (car matching)))
@@ -418,7 +436,7 @@
                             end)))
                result)))
  (Symbol
-  (Spacing (! Number) "[^\\(\\)\"'`,; \t\v\r\n]+")
+  (Spacing (! Number) (rx "[^\\(\\)\"'`,; \t\v\r\n]+"))
   (lambda (input result)
     (map-match (lambda (matching spacing-start end)
                  (let ((start (car matching)))
@@ -431,14 +449,14 @@
                             end)))
                result)))
  (Spacing
-  (: (* (/ "[ \t\v\r\n]+" Comment)))
+  (: (* (/ (rx "[ \t\v\r\n]+") Comment)))
   (lambda (input result)
     (map-match (lambda (matching start end)
                  ;; NOTE So that we can skip the spacing later.
                  (matches end start end))
                result)))
  (Comment
-  (: ";[^\n]*\n")))
+  (: (rx ";[^\n]*\n"))))
 
 (generate-parser
  (Weird
@@ -611,6 +629,6 @@
 
  (it "properly sets the start of a sequence begining with a drop"
      (assert (DropSeq "foobarbaz")
-             (matches '(() "bar" "baz")
+             (matches '("" "bar" "baz")
                       3
                       9))))

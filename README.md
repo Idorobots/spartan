@@ -13,7 +13,8 @@ Currently implemented features are:
 - two compilation targets (`ES6`, `r7rs`),
 - extensive compilation error handling with precise error locations and colored terminal output,
 - a CLI tool `sprtn` with support for `compile`, `run` and `repl` commands,
-- an interactive REPL with a twist.
+- an interactive REPL with a twist,
+- Unicode support in identifiers.
 
 See [here](examples) for some usage examples. You can run these examples with:
 

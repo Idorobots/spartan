@@ -124,7 +124,40 @@
                start
                end))))
  (StringContents
-  "[^\"]*")
+  (* (/ UnescapedStringCharacter EscapedStringCharacter))
+  (lambda (input result)
+    (let ((match (match-match result))
+          (start (match-start result))
+          (end (match-end result)))
+      (matches  (if (every? string? match)
+                    (foldr string-append-immutable "" match)
+                    ;; FIXME This is a bit redundant, but might make more sense when ${} embeds are implemented.
+                    (raise-compilation-error
+                     (make-ast-location (location start end))
+                     "Invalid string literal:"))
+                start
+                end))))
+ (UnescapedStringCharacter
+  (~ (! (/ "\"" "\\")) Any))
+ (EscapedStringCharacter
+  (/ ValidEscapeSequence InvalidEscapeSequence))
+ (ValidEscapeSequence
+  ("\\" (/ "\"" "\\" "b" "f" "n" "r" "t" "v" (~ "u" HexDigit HexDigit HexDigit HexDigit)))
+  (lambda (input result)
+    (matches (unescape (cadr (match-match result)))
+             (match-start result)
+             (match-end result))))
+
+ (InvalidEscapeSequence
+  ("\\" Any)
+  (lambda (input result)
+    (let ((start (match-start result))
+          (end (match-end result)))
+      (matches (raise-compilation-error
+                (make-ast-location (location start end))
+                "Invalid escape sequence in string literal, did you mean `\\\\`?")
+               start
+               end))))
 
  (List
   (/ ProperList UnterminatedList))
@@ -156,7 +189,7 @@
   (/ Symbol Number))
 
  (Number
-  (Spacing (~ (~ (? Sign)) (~ (+ Digit)) (~ (? "." (~ (+ Digit))))))
+  (Spacing (~ (? Sign) (~ (+ Digit)) (? (~ "." (~ (+ Digit))))))
   (lambda (input result)
     (let* ((matching (match-match result))
            (spacing-start (match-start result))
@@ -203,33 +236,48 @@
                start
                end))))
 
-  (SymbolContents
-   (/ (~ SymbolInitial (~ (* SymbolSubsequent))) Sign))
+ (SymbolContents
+  (~ SymbolInitial (~ (* SymbolSubsequent))))
 
  (SymbolInitial
-   (/ Alpha Special "#"))
+  (/ Alpha Special (rx "(\\p{L}|\\p{So}|\\p{Sm}|\\p{Sc})")))
 
  (SymbolSubsequent
-   (/ SymbolInitial "@" Digit Sign))
+  ;; NOTE @ needs to be disallowed in initial position, or otherwise it'll interfere with ,@
+  (/ SymbolInitial "@" Digit (rx "\\p{N}")))
 
  (Alpha
-   "[a-zA-Z]")
+  (rx "[a-zA-Z]")
+  ;; FIXME This one seems to be slower than the remaining PEG vs RegEx cases.
+  ;; FIXME It's also way less convenient.
+  ;; (/ "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"
+  ;;    "A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" "R" "S" "T" "U" "V" "W" "X" "Y" "Z")
+  )
 
  (Special
-   "[!$%*/:<=>?~_^|]")
+  ;; (rx "[!$%*/:<=>?~_^|&#+\\-]")
+  (/ "!" "$" "%" "*" "/" ":" "<" "=" ">" "?" "~" "_" "^" "|" "&" "#" Sign))
 
  (Digit
-   "[0-9]")
+  ;; (rx "[0-9]")
+  (/ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+
+ (HexDigit
+  ;; (rx "[0-9a-fA-F]")
+  (/ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f" "A" "B" "C" "D" "E" "F"))
 
  (Sign
-   "[+\\-]")
+  (/ "+" "-"))
+
+ (Any
+  (rx "."))
 
  (Spacing
-  (: (* (/ "[ \t\v\r\n]+" Comment)))
+  (: (* (/ " " "\t" "\v" "\r" "\n" Comment)))
   no-inline)
 
  (Comment
-  (~ ";[^\n]*" (/ "\n" EOF)))
+  (~ ";" (rx "[^\n]*") (/ "\n" EOF)))
  (EOF
   ()))
 
@@ -255,3 +303,20 @@
   ;; NOTE Prevents inlining of this rule making it hit the cache more often and perform better.
   (lambda (input result)
     result))
+
+(define (unescape sequence)
+  (match sequence
+    ("\\" "\\")
+    ("\"" "\"")
+    ("b" "\b")
+    ("f" "\f")
+    ("n" "\n")
+    ("r" "\r")
+    ("t" "\t")
+    ("v" "\v")
+    (else ;; NOTE Unicode escape
+     (-> sequence
+         (substring 1)
+         (string->number 16)
+         (integer->char)
+         (string)))))

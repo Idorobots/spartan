@@ -37,7 +37,7 @@ Optimization options:
 Code generation options:
   --target {r7rs|ES6}           Selects the compilation target. Default = r7rs.
 
-Code generation options:
+Execution options:
   -- [argument]...              Passes the remaining arguments to the executed script.
 
 Bug reports & documentation available at <https://www.github.com/Idorobots/spartan>."))
@@ -46,7 +46,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
 (generate-parser
  (CommandLineArguments
   (/ Help
-     (Command (/ WhiteSpace EOF) (* Option) (? RestArguments) Spacing EOF)
+     (Command (/ WhiteSpace EOF) (* Option) RestArguments Spacing EOF)
      MissingCommand)
   (lambda (input result)
     (let* ((cmdline (match-match result))
@@ -203,13 +203,17 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                     "Invalid option `~a` specified." match))))
 
  (RestArguments
-  ("--" WhiteSpace Anything)
+  (? "--" WhiteSpace Anything EOF)
   (lambda (input result)
-    (let ((match (caddr (match-match result))))
-      (m result 'rest-args match))))
+    (let ((match (match-match result)))
+      (if (equal? match "")
+          (matches '()
+                   (match-start result)
+                   (match-end result))
+          (m result 'rest-args (caddr match))))))
 
  (Anything
-  ".*")
+  (rx ".*"))
 
  (Spacing
   (: * WhiteSpace)
@@ -219,10 +223,10 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
   (/ WhiteSpace "="))
 
  (WhiteSpace
-  "[ \t\v\r\n]+")
+  (rx "[ \t\v\r\n]+"))
 
  (NonWhiteSpace
-  "[^ \t\v\r\n]+")
+  (rx "[^ \t\v\r\n]+"))
 
  (EOF
   ()))
@@ -285,10 +289,10 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (let* ((init (apply env (append
                                ;; Apply defaults.
                                '(color #t
-                                 last-phase codegen
-                                 optimizer naive
-                                 optimization-level 2
-                                 target r7rs)
+                                       last-phase codegen
+                                       optimizer naive
+                                       optimization-level 2
+                                       target r7rs)
                                (match-match parsed)))))
         (set-color-output (env-get init 'color))
         (case (env-get init 'command)
@@ -297,13 +301,13 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
            (unless (env-contains? init 'input-file)
              (command-error "An input file must be specified!"))
            (with-handlers
-             ((compilation-error?
-               (lambda (e)
-                 (displayln (compilation-error-what e))))
-              ((constantly #t)
-               (lambda (e)
-                 (displayln (format "Compilation aborted due to an error: ~a" e))
-                 (exit 1))))
+               ((compilation-error?
+                 (lambda (e)
+                   (displayln (compilation-error-what e))))
+                ((constantly #t)
+                 (lambda (e)
+                   (displayln (format "Compilation aborted due to an error: ~a" e))
+                   (exit 1))))
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
@@ -315,13 +319,13 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
              (command-error "An input file must be specified!"))
            ;; TODO Check if target is Scheme.
            (with-handlers
-             ((compilation-error?
-               (lambda (e)
-                 (displayln (compilation-error-what e))))
-              ((constantly #t)
-               (lambda (e)
-                 (displayln (format "Execution aborted due to an error: ~a" e))
-                 (exit 1))))
+               ((compilation-error?
+                 (lambda (e)
+                   (displayln (compilation-error-what e))))
+                ((constantly #t)
+                 (lambda (e)
+                   (displayln (format "Execution aborted due to an error: ~a" e))
+                   (exit 1))))
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))

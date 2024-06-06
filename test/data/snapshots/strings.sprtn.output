@@ -1,0 +1,41 @@
+test/data/errors/strings.sprtn(8,1): Invalid escape sequence in string literal, did you mean `\\`?
+  6 [33m|[39m "\\v"
+  7 [33m|[39m "\u2603"
+  8 [33m|[39m "\g"
+    [33m|[39m  [31m^^[39m
+  9 [33m|[39m "\u123"
+ 10 [33m|[39m "\""
+
+test/data/errors/strings.sprtn(8,1): Invalid string literal:
+  6 [33m|[39m "\\v"
+  7 [33m|[39m "\u2603"
+  8 [33m|[39m "\g"
+    [33m|[39m  [31m^^[39m
+  9 [33m|[39m "\u123"
+ 10 [33m|[39m "\""
+
+test/data/errors/strings.sprtn(9,1): Invalid escape sequence in string literal, did you mean `\\`?
+  7 [33m|[39m "\u2603"
+  8 [33m|[39m "\g"
+  9 [33m|[39m "\u123"
+    [33m|[39m  [31m^^[39m
+ 10 [33m|[39m "\""
+ 11 [33m|[39m "\\"" ;; Unterminated.
+
+test/data/errors/strings.sprtn(9,1): Invalid string literal:
+  7 [33m|[39m "\u2603"
+  8 [33m|[39m "\g"
+  9 [33m|[39m "\u123"
+    [33m|[39m  [31m^^^^^[39m
+ 10 [33m|[39m "\""
+ 11 [33m|[39m "\\"" ;; Unterminated.
+
+test/data/errors/strings.sprtn(11,4): Unterminated string literal, expected a closing `"` to follow:
+  9 [33m|[39m "\u123"
+ 10 [33m|[39m "\""
+ 11 [33m|[39m "\\"" ;; Unterminated.
+    [33m|[39m     [31m^^^^^^^^^^^^^^^^^^[39m
+ 12 [33m|[39m 
+    [33m|[39m [31m[39m
+
+Compilation aborted due to 5 errors.
