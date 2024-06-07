@@ -125,6 +125,11 @@
                    1
                    ,(generate-scheme-node env)))
 
+    ((primop-app '&apply (symbol c) args ...)
+     `((vector-ref ,c 2)
+       (vector-ref ,c 1)
+       ,@(map generate-scheme-node args)))
+
     ((primop-app '&apply c args ...)
      (let ((tmp (gensym 'tmp)))
        `(let ((,tmp ,(generate-scheme-node c)))
@@ -133,6 +138,18 @@
            ,@(map generate-scheme-node args)))))
 
     ;; Continuation primops
+    ((primop-app '&yield-cont (symbol c) h)
+     `(if (> (kont-counter) 0)
+          (begin
+            (dec-kont-counter!)
+            ((vector-ref ,c 2)
+             (vector-ref ,c 1)
+             ,(generate-scheme-node h)))
+          (begin
+            (reset-kont-counter!)
+            (resumable ,c
+                       ,(generate-scheme-node h)))))
+
     ((primop-app '&yield-cont k h)
      (let ((tmp (gensym 'tmp)))
        `(if (> (kont-counter) 0)
