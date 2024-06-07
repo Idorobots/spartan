@@ -19,8 +19,7 @@
 
 ;; Ensure that timeouts take very short time.
 (intern-instrument
- '(define (test-sleep time)
-  (sleep (min time 25))))
+ '(define __test_sleep (bootstrap (lambda (time) (sleep (min time 25)) time))))
 
 ;; Determined by a fairly random dice roll.
 (intern-instrument
@@ -44,10 +43,14 @@
                (set-ast-app-op expr
                                (set-ast-symbol-value (ast-app-op expr)
                                                      'test-monitor)))
+
+              ((app (symbol 'sleep) args ...)
+               (set-ast-app-op expr
+                               (set-ast-symbol-value (ast-app-op expr)
+                                                     'test-sleep)))
+
               ((primop-app 'random args ...)
                (set-ast-primop-app-op expr 'test-random))
-              ((primop-app 'sleep args ...)
-               (set-ast-primop-app-op expr 'test-sleep))
               (else
                expr)))
            ast))

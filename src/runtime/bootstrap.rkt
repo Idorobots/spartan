@@ -124,10 +124,14 @@
                                 (&apply cont v))))))))
 
 ;; Actor model:
-(define __sleep (bootstrap sleep))
 (define __self (bootstrap self))
 (define __send (bootstrap send))
 (define __spawn (bootstrap spawn))
+
+(define __sleep (closurize
+                 (lambda (t cont)
+                   (sleep t)
+                   (&yield-cont cont t))))
 
 (define __recv (closurize
                 (lambda (cont)
@@ -142,10 +146,14 @@
                                      '()))))))
 
 (define __task_info (bootstrap task-info))
-(define __monitor (bootstrap (lambda (timeout)
-                               (task-info)
-                               (&apply __sleep timeout (bootstrap (lambda _
-                                                                    (&apply __monitor timeout id)))))))
+(define __monitor (closurize
+                   (lambda (timeout cont)
+                     (task-info)
+                     (sleep timeout)
+                     (&yield-cont (closurize
+                                   (lambda (_)
+                                     (&apply __monitor timeout cont)))
+                                  '()))))
 
 ;; RBS bootstrap:
 (define __assertBANG (bootstrap assert!))

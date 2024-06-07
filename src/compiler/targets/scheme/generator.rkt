@@ -73,7 +73,7 @@
 
     ;; Nullary primops
     ((primop-app op)
-     #:when (member op '(random newline self recv))
+     #:when (member op '(random newline self))
      `(,op))
 
     ;; Monadic primops
@@ -83,7 +83,7 @@
                          car cdr nil? empty?
                          display
                          ref deref
-                         spawn sleep
+                         spawn
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
 
@@ -191,6 +191,7 @@
     ;; call/handler
     ;; raise
     ;; recv
+    ;; sleep
 
     ((primop-app op args ...)
      ;; FIXME These are resulting from the current instrumentation setup, but should never happen otherwise.

@@ -52,10 +52,10 @@
                                    * + - / = < <= > >=
                                    remainder quotient modulo zero? random
                                    ref deref assign!
-                                   self send spawn sleep
+                                   self send spawn
                                    assert! signal! retract! select notify-whenever
                                    display newline debug
                                    ;; NOTE These ones use the continuations, so they cannot be inlined.
-                                   ;; call/current-continuation call/reset call/shift call/handler raise recv
+                                   ;; call/current-continuation call/reset call/shift call/handler raise recv sleep
                                    ))))))
               expr))

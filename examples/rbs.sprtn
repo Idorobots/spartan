@@ -10,7 +10,7 @@
                        (display t)
                        (newline)
                        (listen (- count 1)))))))
-  (spawn (lambda () (monitor 500)))
+  (spawn (lambda () (monitor 3000)))
   (spawn (lambda () (timer 10)))
   (notify-whenever (self)
                    '(countdown ?t))

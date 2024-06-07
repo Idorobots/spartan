@@ -17,5 +17,5 @@
                             (>= ?foo 0.5)
                             (< ?foo 0.75)
                             (<= ?bar 0.1)))
-  (process 'foo 1000 100)
-  (process 'bar 5000 100))
+  (process 'foo 100 100)
+  (process 'bar 500 100))
