@@ -8,7 +8,7 @@
 
 (provide generate-js)
 
-(define +js-continuation-hops+ 100)
+(define +js-continuation-hops+ 200)
 (define +js-bootstrap+ (embed-file-contents "./bootstrap.js"))
 (define +js-runtime+ (embed-file-contents "./rt.js"))
 

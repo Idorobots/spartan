@@ -134,9 +134,17 @@
 
     ;; Continuation primops
     ((primop-app '&yield-cont k h)
-     ;; FIXME Execute immediately when under a certain reduction count.
-     `(resumable ,(generate-scheme-node k)
-                 ,(generate-scheme-node h)))
+     (let ((tmp (gensym 'tmp)))
+       `(if (> (kont-counter) 0)
+            (let ((,tmp ,(generate-scheme-node k)))
+              (dec-kont-counter!)
+              ((vector-ref ,tmp 2)
+               (vector-ref ,tmp 1)
+               ,(generate-scheme-node h)))
+            (begin
+              (reset-kont-counter!)
+              (resumable ,(generate-scheme-node k)
+                         ,(generate-scheme-node h))))))
 
     ((primop-app '&push-delimited-continuation! k)
      (let ((tmp (gensym 'tmp))

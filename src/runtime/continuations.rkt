@@ -7,6 +7,7 @@
 (require "processes.rkt")
 
 (provide (struct-out resumable) &yield-cont resume can-resume?
+         kont-counter reset-kont-counter! dec-kont-counter!
          cpsfy)
 
 (struct resumable (cont arg) #:transparent)
@@ -27,3 +28,15 @@
                  (apply f
                         (take args
                               (- (length args) 1))))))
+
+(define +kont-hops+ 200)
+(define *kont-counter* +kont-hops+)
+
+(define (kont-counter)
+  *kont-counter*)
+
+(define (reset-kont-counter!)
+  (set! *kont-counter* +kont-hops+))
+
+(define (dec-kont-counter!)
+  (set! *kont-counter* (- *kont-counter* 1)))
