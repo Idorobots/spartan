@@ -8,9 +8,10 @@
 (require "continuations.rkt")
 (require "delimited.rkt")
 (require "closures.rkt")
-(require "exceptions.rkt")
 (require "actor.rkt")
 (require "monitor.rkt")
+(require "processes.rkt")
+(require "scheduler.rkt")
 
 (provide nil? notify-whenever
          __nil __true __false __not __car __cdr __cadr __cddr __list __cons __append __concat __equalQUEST __nilQUEST
@@ -93,14 +94,14 @@
 (define __callDIVreset (make-closure
                         '()
                         (lambda (e f cont)
-                          (&push-delimited-continuation! cont)
+                          (push-delimited-continuation! cont)
                           (apply-closure
                            f
                            (make-closure
                             '()
                             (lambda (e v)
                               (apply-closure
-                               (&pop-delimited-continuation!)
+                               (pop-delimited-continuation!)
                                v)))))))
 
 (define __callDIVshift (make-closure
@@ -111,45 +112,45 @@
                            (make-closure
                             '()
                             (lambda (e v ct2)
-                              (&push-delimited-continuation! ct2)
+                              (push-delimited-continuation! ct2)
                               (apply-closure cont v)))
                            (make-closure
                             '()
                             (lambda (e v)
                               (apply-closure
-                               (&pop-delimited-continuation!)
+                               (pop-delimited-continuation!)
                                v)))))))
 
 ;; Exceptions:
 (define __callDIVhandler (make-closure
                           '()
                           (lambda (e handler f cont)
-                            (let* ((curr-handler (&error-handler))
+                            (let* ((curr-handler (uproc-error-handler (current-task)))
                                    (new-handler (make-closure
                                                  '()
                                                  (lambda (e error restart)
-                                                   (&set-error-handler! curr-handler)
+                                                   (set-uproc-error-handler! (current-task) curr-handler)
                                                    (apply-closure handler error restart cont)))))
-                              (&set-error-handler! new-handler)
+                              (set-uproc-error-handler! (current-task) new-handler)
                               (apply-closure
                                f
                                (make-closure
                                 '()
                                 (lambda (e v)
-                                  (&set-error-handler! curr-handler)
+                                  (set-uproc-error-handler! (current-task) curr-handler)
                                   (apply-closure cont v))))))))
 
 (define __raise (make-closure
                  '()
                  (lambda (e err cont)
-                   (let ((curr-handler (&error-handler)))
+                   (let ((curr-handler (uproc-error-handler (current-task))))
                      (apply-closure
                       curr-handler
                       err
                       (make-closure
                        '()
                        (lambda (e v _)
-                         (&set-error-handler! curr-handler)
+                         (set-uproc-error-handler! (current-task) curr-handler)
                          (apply-closure cont v))))))))
 
 ;; Actor model:

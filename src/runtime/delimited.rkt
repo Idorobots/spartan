@@ -5,14 +5,15 @@
 (require "scheduler.rkt")
 (require "processes.rkt")
 
-(provide &push-delimited-continuation! &pop-delimited-continuation!)
+(provide push-delimited-continuation! pop-delimited-continuation!)
 
-(define (&push-delimited-continuation! cont)
-  (set-uproc-delimited-continuations! (current-task)
-                                      (cons cont (uproc-delimited-continuations (current-task)))))
+(define-syntax-rule (push-delimited-continuation! cont)
+  (let ((task (current-task)))
+    (set-uproc-delimited-continuations! task
+                                        (cons cont (uproc-delimited-continuations task)))))
 
-(define (&pop-delimited-continuation!)
-  (let* ((stack (uproc-delimited-continuations (current-task)))
-         (top (car stack)))
-    (set-uproc-delimited-continuations! (current-task) (cdr stack))
-    top))
+(define-syntax-rule (pop-delimited-continuation!)
+  (let* ((task (current-task))
+         (stack (uproc-delimited-continuations task)))
+    (set-uproc-delimited-continuations! task (cdr stack))
+    (car stack)))

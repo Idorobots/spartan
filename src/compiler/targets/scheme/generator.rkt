@@ -189,7 +189,7 @@
     ;; Modules & structures primops
     ((primop-app '&make-structure bindings ...)
      ;; FIXME Should be something better than an alist.
-     `(list &make-structure ,@(map generate-scheme-node bindings)))
+     `(list '&structure ,@(map generate-scheme-node bindings)))
 
     ((primop-app '&structure-binding name value)
      `(cons ,(generate-scheme-node name)
