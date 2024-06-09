@@ -5,6 +5,7 @@
 (require "../../errors.rkt")
 (require "../../utils/assets.rkt")
 (require "../../utils/utils.rkt")
+(require "../../utils/gensym.rkt")
 
 (provide generate-js)
 
@@ -39,9 +40,9 @@
 (define (generate-js-def name value)
   (format "const ~a = ~a;~n"
           name
-          (generate-js-node id value)))
+          (generate-js-node value id)))
 
-(define (generate-js-node return expr)
+(define (generate-js-node expr return)
   (match-ast expr
     ;; AST nodes
     ((string value)
@@ -52,7 +53,7 @@
      (return
       (foldr (lambda (v acc)
               (format "{car:~a,cdr:~a}"
-                      (generate-js-node id v)
+                      (generate-js-node v id)
                       acc))
             "null"
             vals)))
@@ -70,126 +71,88 @@
       (format "\"~a\"" s)))
 
     ((const v)
-     (generate-js-node return v))
+     (generate-js-node v return))
 
     ((lambda args body)
      (format "((~a) => {~a})"
-             (string-join (map (partial generate-js-node id)
+             (string-join (map (lambda (a)
+                                 (generate-js-node a id))
                                args)
                           ", ")
-             (generate-js-node (lambda (v)
-                                 (format "return ~a" v))
-                               body)))
+             (generate-js-node body
+                               (lambda (v)
+                                 (format "return ~a" v)))))
 
     ((if c t e)
      ;; FIXME Booleans should be treated according to the language semantics.
      (format "if (~a) { ~a } else { ~a }"
-             (generate-js-node id c)
-             (generate-js-node return t)
-             (generate-js-node return e)))
+             (generate-js-node c id)
+             (generate-js-node t return)
+             (generate-js-node e return)))
 
     ((let bindings body)
      (foldr (lambda (b acc)
               (format "const ~a = ~a; ~a"
-                      (generate-js-node id (ast-binding-var b))
-                      (generate-js-node id (ast-binding-val b))
+                      (generate-js-node (ast-binding-var b) id)
+                      (generate-js-node (ast-binding-val b) id)
                       acc))
-            (generate-js-node return body)
+            (generate-js-node body return)
             bindings))
 
     ((do exprs ...)
      (let* ((last-s (last exprs))
             (statements (take exprs (- (length exprs) 1)))
-            (ret (generate-js-node return last-s)))
+            (ret (generate-js-node last-s return)))
        (format "~a; ~a"
-               (string-join (map (partial generate-js-node id)
+               (string-join (map (lambda (s)
+                                   (generate-js-node s id))
                                  statements)
                             ";")
                ret)))
 
     ;; Math primops
-    ((primop-app '+ a b)
+    ((primop-app op a b)
+     #:when (member op '(+ - * / < <= > >=))
      (return
-      (format "(~a + ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '- a b)
-     (return
-      (format "(~a - ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '* a b)
-     (return
-      (format "(~a * ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '/ a b)
-     (return
-      (format "(~a / ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+      (format "(~a ~a ~a)"
+              (generate-js-node a id)
+              op
+              (generate-js-node b id))))
 
     ((primop-app '= a b)
      (return
       (format "(~a == ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '< a b)
-     (return
-      (format "(~a < ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '<= a b)
-     (return
-      (format "(~a <= ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '> a b)
-     (return
-      (format "(~a > ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
-
-    ((primop-app '>= a b)
-     (return
-      (format "(~a >= ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'modulo a b)
      (return
       (format "(~a % ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'quotient a b)
      (return
       (format "(Math.floor(~a / ~a))"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ;; List primops.
     ((primop-app 'car l)
      (return
       (format "(~a.car)"
-              (generate-js-node id l))))
+              (generate-js-node l id))))
 
     ((primop-app 'cdr l)
      (return
       (format "(~a.cdr)"
-              (generate-js-node id l))))
+              (generate-js-node l id))))
 
     ((primop-app 'cons a b)
      (return
       (format "{car:~a,cdr:~a}"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'list)
      (return "null"))
@@ -197,7 +160,7 @@
     ((primop-app 'list args ...)
      (return (foldr (lambda (a acc)
                       (format "{car:~a,cdr:~a}"
-                              (generate-js-node id a)
+                              (generate-js-node a id)
                               acc))
                     "null"
                     args)))
@@ -205,37 +168,37 @@
     ((primop-app 'append a b)
      (return
       (format "(function() { const app = ((rest, tail) => (rest === null) ? tail : {car: rest.car, cdr: app(rest.cdr, tail)}); return app(~a, ~a)})()"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'nil? l)
      (return
       (format "(~a === null)"
-              (generate-js-node id l))))
+              (generate-js-node l id))))
 
     ;; Boolean primops
     ((primop-app 'eq? a b)
      (return
       (format "(~a == ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'equal? a b)
      (return
       (format "(~a === ~a)"
-              (generate-js-node id a)
-              (generate-js-node id b))))
+              (generate-js-node a id)
+              (generate-js-node b id))))
 
     ((primop-app 'not a)
      (return
       (format "(!~a)"
-              (generate-js-node id a))))
+              (generate-js-node a id))))
 
     ;; IO primops
     ((primop-app 'display a)
      (return
       (format "(__write(~a), null)"
-              (generate-js-node id a))))
+              (generate-js-node a id))))
 
     ((primop-app 'newline)
      (return "(__write(\"\\n\"), null)"))
@@ -244,16 +207,16 @@
     ((primop-app 'ref a)
      (return
       (format "{ref: ~a}"
-              (generate-js-node id a))))
+              (generate-js-node a id))))
 
     ((primop-app 'deref a)
      (return
       (format "(~a.ref)"
-              (generate-js-node id a))))
+              (generate-js-node a id))))
 
     ((primop-app 'assign! a b)
-     (let ((a-js (generate-js-node id a))
-           (b-js (generate-js-node id b)))
+     (let ((a-js (generate-js-node a id))
+           (b-js (generate-js-node b id)))
        (return
         (format "((~a.ref = ~a), ~a)" a-js b-js a-js))))
 
@@ -261,11 +224,12 @@
     ((primop-app '&make-closure env fun)
      (return
       (format "{env:~a,fun:~a}"
-              (generate-js-node id env)
-              (generate-js-node id fun))))
+              (generate-js-node env id)
+              (generate-js-node fun id))))
 
     ((primop-app '&make-env args ...)
-     (let ((args-js (map (partial generate-js-node id)
+     (let ((args-js (map (lambda (a)
+                           (generate-js-node a id))
                          args)))
        (return
         (format "[~a]"
@@ -274,65 +238,65 @@
     ((primop-app '&env-ref env offset)
      (return
       (format "(~a[~a])"
-              (generate-js-node id env)
-              (generate-js-node id offset))))
+              (generate-js-node env id)
+              (generate-js-node offset id))))
 
     ((primop-app '&set-closure-env! c env)
      (return
       (format "(~a.env = ~a)"
-              (generate-js-node id c)
-              (generate-js-node id env))))
+              (generate-js-node c id)
+              (generate-js-node env id))))
 
     ((primop-app '&apply c args ...)
-     (let* ((args-js (map (partial generate-js-node id)
+     (let* ((args-js (map (lambda (a)
+                            (generate-js-node a id))
                           args))
-            (variant (cond ((= (length args) 1)
-                            "1")
-                           ((= (length args) 2)
-                            "2")
-                           ((= (length args) 3)
-                            "3")
-                           (else
-                            "N"))))
+            (local-closure (gensym '__closure)))
        (generate-js-node
+        c
         (lambda (closure)
-          (return
-           (format "(__apply~a(~a, ~a))"
-                   variant
-                   closure
-                   (string-join args-js ", "))))
-        c)))
+          (format "const ~a = ~a; ~a"
+                  local-closure
+                  closure
+                  (return
+                   ;; FIXME Some tests indicate that this is actually slower than calling into __apply*(). Likely JIT shenanigans.
+                   (format "(~a.fun(~a.env, ~a))"
+                           local-closure
+                           local-closure
+                           (string-join args-js ", "))))))))
 
     ((primop-app '&yield-cont k h)
-     (generate-js-node
-      (lambda (kont)
-        (format "if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
-                (generate-js-node
-                 (lambda (v)
-                   (return
-                    (format "__apply_cont(~a, ~a)"
-                            kont
-                            v)))
-                 h)
-                +js-continuation-hops+
-                (generate-js-node
-                 (lambda (v)
-                   (return
-                    (format "{kont: ~a,hole:~a}"
-                            kont
-                            v)))
-                 h)))
-      k))
+     (let ((local-cont (gensym '__kont)))
+       (generate-js-node
+        k
+        (lambda (kont)
+          (generate-js-node
+           h
+           (lambda (v)
+             (format "const ~a = ~a; if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
+                     local-cont
+                     kont
+                     (return
+                      (format "~a.fun(~a.env, ~a)"
+                              local-cont
+                              local-cont
+                              v))
+                     +js-continuation-hops+
+                     (return
+                      (format "{kont: ~a,hole:~a}"
+                              local-cont
+                              v)))))))))
 
     ;; Modules & structures primops
     ((primop-app '&structure-binding name value)
      (return
       (format "{name: ~a, value: ~a}"
-              (generate-js-node id name)
-              (generate-js-node id value))))
+              (generate-js-node name id)
+              (generate-js-node value id))))
 
     ((primop-app '&make-structure bindings ...)
-     (let ((bindings-js (map (partial generate-js-node id)
+     (let ((bindings-js (map (lambda (b)
+                               (generate-js-node b id))
                              bindings)))
        (return
         (format "(function() {const __s = { struct: true }; [~a].map((b) => __s[b.name] = b.value); return __s})()"
@@ -341,8 +305,8 @@
     ((primop-app '&structure-ref s name)
      (return
       (format "(~a[~a])"
-              (generate-js-node id s)
-              (generate-js-node id name))))
+              (generate-js-node s id)
+              (generate-js-node name id))))
 
     ((primop-app op args ...)
      (compiler-bug "Unsupported primop:" op))
