@@ -10,7 +10,7 @@
 
 ;; TODOs
 ;; - [x] Implement proper code-gen.
-;; - [ ] Remove no-longer-used primops from the runtime code.
+;; - [x] Remove no-longer-used primops from the runtime code.
 ;; - [ ] Update the test suite not to require interning the runtime all the time.
 ;; - [ ] Move the runtime code to a separate directory structure.
 ;; - [ ] Abstract common parts of the runtime to share between JS and Scheme.

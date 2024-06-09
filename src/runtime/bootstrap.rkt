@@ -86,8 +86,8 @@
                                          (apply-closure
                                           f
                                           (make-closure
-                                           '()
-                                           (lambda (e v _)
+                                           cont
+                                           (lambda (cont v _)
                                              (apply-closure cont v)))
                                           cont))))
 
@@ -99,7 +99,7 @@
                            f
                            (make-closure
                             '()
-                            (lambda (e v)
+                            (lambda (_ v)
                               (apply-closure
                                (pop-delimited-continuation!)
                                v)))))))
@@ -110,13 +110,13 @@
                           (apply-closure
                            f
                            (make-closure
-                            '()
-                            (lambda (e v ct2)
+                            cont
+                            (lambda (cont v ct2)
                               (push-delimited-continuation! ct2)
                               (apply-closure cont v)))
                            (make-closure
                             '()
-                            (lambda (e v)
+                            (lambda (_ v)
                               (apply-closure
                                (pop-delimited-continuation!)
                                v)))))))
@@ -124,21 +124,22 @@
 ;; Exceptions:
 (define __callDIVhandler (make-closure
                           '()
-                          (lambda (e handler f cont)
+                          (lambda (_ handler f cont)
                             (let* ((curr-handler (uproc-error-handler (current-task)))
+                                   (state (cons cont curr-handler))
                                    (new-handler (make-closure
-                                                 '()
-                                                 (lambda (e error restart)
-                                                   (set-uproc-error-handler! (current-task) curr-handler)
-                                                   (apply-closure handler error restart cont)))))
+                                                 state
+                                                 (lambda (cont/curr-handler error restart)
+                                                   (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
+                                                   (apply-closure handler error restart (car cont/curr-handler))))))
                               (set-uproc-error-handler! (current-task) new-handler)
                               (apply-closure
                                f
                                (make-closure
-                                '()
-                                (lambda (e v)
-                                  (set-uproc-error-handler! (current-task) curr-handler)
-                                  (apply-closure cont v))))))))
+                                state
+                                (lambda (cont/curr-handler v)
+                                  (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
+                                  (apply-closure (car cont/curr-handler) v))))))))
 
 (define __raise (make-closure
                  '()
@@ -148,10 +149,10 @@
                       curr-handler
                       err
                       (make-closure
-                       '()
-                       (lambda (e v _)
-                         (set-uproc-error-handler! (current-task) curr-handler)
-                         (apply-closure cont v))))))))
+                       (cons cont curr-handler)
+                       (lambda (cont/curr-handler v _)
+                         (set-uproc-error-handler! (current-task) (cdr cont/curr-handler ))
+                         (apply-closure (car cont/curr-handler ) v))))))))
 
 ;; Actor model:
 (define __self (bootstrap self))
@@ -174,8 +175,8 @@
                         ;; Else, setup a continuation that attempts to re-fetch the message.
                         (make-resumable
                          (make-closure
-                          '()
-                          (lambda (e v)
+                          cont
+                          (lambda (cont v)
                             (apply-closure __recv cont)))
                          '()))))))
 
@@ -187,9 +188,9 @@
                      (sleep timeout)
                      (make-resumable
                       (make-closure
-                       '()
-                       (lambda (e v)
-                         (apply-closure __monitor timeout cont)))
+                       (cons timeout cont)
+                       (lambda (timeout/cont v)
+                         (apply-closure __monitor (car timeout/cont) (cdr timeout/cont))))
                       '()))))
 
 ;; RBS bootstrap:
