@@ -64,4 +64,7 @@
      (test-perf "examples/rsa.sprtn" 2))
 
  (it "amb"
-     (test-perf "examples/amb.sprtn" 2)))
+     (test-perf "examples/amb.sprtn" 2))
+
+ (it "bend"
+     (test-perf "examples/bend.sprtn" 2)))

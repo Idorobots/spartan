@@ -115,10 +115,12 @@
 (define-syntax test-perf
   (syntax-rules ()
     ((_ filename factor)
-     (test-perf (string-append +perf-dir+ (base-name filename) ".perf") factor
-                (collect-garbage 'major)
-                (time-execution
-                 (run-test-file filename))))
+     (test-perf (string-append +perf-dir+ (base-name filename) ".perf")
+                factor
+                ;; NOTE Exclude compilation time from the performance test.
+                (let ((compiled (compile-test-file filename)))
+                  (collect-garbage 'major)
+                  (time-execution (run-code compiled)))))
     ((_ filename factor body ...)
      (if (file-exists? filename)
          (let ((actual (begin body ...))
@@ -127,8 +129,8 @@
                                         (< (compare-perf a e factor)
                                            1)))
                (better-performance (lambda (a e)
-                                        (< (compare-perf a e factor)
-                                           0))))
+                                     (< (compare-perf a e factor)
+                                        0))))
            (assert not-worse-performance
                    actual
                    expected)
@@ -251,7 +253,7 @@
 (define (run-instrumented-test-file filename instrument)
   (with-output-to-string
     (lambda ()
-      ;; NOTE Ignores the compilation abort.
+      ;; NOTE Ignores the compilation abort, but assuming the snapshot won't match, it'll show up in the test log.
       (with-handlers ((compilation-error?
                        (lambda (e)
                          (display (compilation-error-what e))
@@ -260,6 +262,14 @@
 
 (define (run-test-file filename)
   (run-instrumented-test-file filename id))
+
+(define (compile-test-file filename)
+  (with-handlers ((compilation-error?
+                       (lambda (e)
+                         (display (compilation-error-what e))
+                         (newline)
+                         (assert #f))))
+        (compile-instrumented-file filename id)))
 
 (define (sort-lines contents)
   (string-join
