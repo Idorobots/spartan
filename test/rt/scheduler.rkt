@@ -11,8 +11,8 @@
  "scheduler"
  (it "Can step a process:"
      (assert (not (executable? (make-uproc 100 '() '() 0 'waiting))))
-     (assert (executable? (make-uproc 100 (&yield-cont (&make-closure (&make-env) id) '()) '() 0 'waiting)))
-     (assert (uproc? (execute-step! (make-uproc 100 (&yield-cont (&make-closure (&make-env) id) '()) '() 0 'waiting)))))
+     (assert (executable? (make-uproc 100 (make-resumable (make-closure (make-env) id) '()) '() 0 'waiting)))
+     (assert (uproc? (execute-step! (make-uproc 100 (make-resumable (make-closure (make-env) id) '()) '() 0 'waiting)))))
 
  (it "Can modify task list:"
      (let ((t (make-uproc 100 '() '() 0 'waiting)))
@@ -33,15 +33,27 @@
      (assert (resume
               (resume
                (resume
-                (&apply __MULT 3 2 (&make-closure
-                                    (&make-env)
-                                    (lambda (_ mult)
-                                      (&apply __PLUS 3 3 (&make-closure
-                                                          (&make-env mult)
-                                                          (lambda (e plus)
-                                                            (&apply __EQUAL (&env-ref e 0) plus (&make-closure
-                                                                                                 (&make-env)
-                                                                                                 (lambda (_ v) v))))))))))))))
+                (apply-closure
+                 __MULT
+                 3
+                 2
+                 (make-closure
+                  (make-env)
+                  (lambda (_ mult)
+                    (apply-closure
+                     __PLUS
+                     3
+                     3
+                     (make-closure
+                      (make-env mult)
+                      (lambda (e plus)
+                        (apply-closure
+                         __EQUAL
+                         (env-ref e 0)
+                         plus
+                         (make-closure
+                          (make-env)
+                          (lambda (_ v) v))))))))))))))
 
  (it "Can run compiled code."
      (assert (run '23) 23)

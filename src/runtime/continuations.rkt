@@ -6,28 +6,19 @@
 (require "closures.rkt")
 (require "processes.rkt")
 
-(provide (struct-out resumable) &yield-cont resume can-resume?
+(provide (struct-out resumable) resume can-resume?
          kont-counter reset-kont-counter! dec-kont-counter!
+         ;; NOTE For easier testing
          cpsfy)
 
-(struct resumable (cont arg) #:transparent)
+;; NOTE Used in compiler-generated code under &yield-cont primop.
+(struct resumable (cont arg) #:transparent #:constructor-name make-resumable)
 
-;; NOTE Used in compiler-generated code not via bootstrap.
-(define (&yield-cont cont hole)
-  (resumable cont hole))
-
-(define (resume thing)
-  (&apply (resumable-cont thing) (resumable-arg thing)))
+(define (resume c)
+  (apply-closure (resumable-cont c) (resumable-arg c)))
 
 (define (can-resume? thing)
   (closure? (resumable-cont thing)))
-
-(define (cpsfy f)
-  (lambda args
-    (&yield-cont (last args)
-                 (apply f
-                        (take args
-                              (- (length args) 1))))))
 
 (define +kont-hops+ 200)
 (define *kont-counter* +kont-hops+)
@@ -40,3 +31,11 @@
 
 (define (dec-kont-counter!)
   (set! *kont-counter* (- *kont-counter* 1)))
+
+(define (cpsfy f)
+  (lambda args
+    (make-resumable
+     (last args)
+     (apply f
+            (take args
+                  (- (length args) 1))))))

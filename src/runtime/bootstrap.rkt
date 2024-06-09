@@ -22,7 +22,16 @@
          ;; FIXME For test access.
          bootstrap)
 
-(define bootstrap (compose closurize cpsfy))
+(define (bootstrap f)
+  (make-closure
+   '()
+   (lambda args
+     (make-resumable
+      (last args)
+      (apply f
+             (take (cdr args)
+                   ;; NOTE Args minus env and cont.
+                   (- (length args) 2)))))))
 
 ;; Built-in primops
 
@@ -70,90 +79,117 @@
 (define __assignBANG (bootstrap assign!))
 
 ;; Continuations:
-(define __callDIVcurrent_continuation (closurize
-                                       (lambda (f cont)
-                                         (&apply f (closurize
-                                                    (lambda (v _)
-                                                      (&apply cont v)))
-                                                 cont))))
+(define __callDIVcurrent_continuation (make-closure
+                                       '()
+                                       (lambda (e f cont)
+                                         (apply-closure
+                                          f
+                                          (make-closure
+                                           '()
+                                           (lambda (e v _)
+                                             (apply-closure cont v)))
+                                          cont))))
 
-(define __callDIVreset (closurize
-                        (lambda (f cont)
+(define __callDIVreset (make-closure
+                        '()
+                        (lambda (e f cont)
                           (&push-delimited-continuation! cont)
-                          (&apply f
-                                  (closurize
-                                   (lambda (v)
-                                     (&apply (&pop-delimited-continuation!)
-                                             v)))))))
+                          (apply-closure
+                           f
+                           (make-closure
+                            '()
+                            (lambda (e v)
+                              (apply-closure
+                               (&pop-delimited-continuation!)
+                               v)))))))
 
-(define __callDIVshift (closurize
-                        (lambda (f cont)
-                          (&apply f
-                                  (closurize
-                                     (lambda (v ct2)
-                                       (&push-delimited-continuation! ct2)
-                                       (&apply cont v)))
-                                  (closurize
-                                   (lambda (v)
-                                     (&apply (&pop-delimited-continuation!)
-                                             v)))))))
+(define __callDIVshift (make-closure
+                        '()
+                        (lambda (e f cont)
+                          (apply-closure
+                           f
+                           (make-closure
+                            '()
+                            (lambda (e v ct2)
+                              (&push-delimited-continuation! ct2)
+                              (apply-closure cont v)))
+                           (make-closure
+                            '()
+                            (lambda (e v)
+                              (apply-closure
+                               (&pop-delimited-continuation!)
+                               v)))))))
 
 ;; Exceptions:
-(define __callDIVhandler (closurize
-                          (lambda (handler f cont)
+(define __callDIVhandler (make-closure
+                          '()
+                          (lambda (e handler f cont)
                             (let* ((curr-handler (&error-handler))
-                                   (new-handler (closurize
-                                                 (lambda (error restart)
+                                   (new-handler (make-closure
+                                                 '()
+                                                 (lambda (e error restart)
                                                    (&set-error-handler! curr-handler)
-                                                   (&apply handler error restart cont)))))
+                                                   (apply-closure handler error restart cont)))))
                               (&set-error-handler! new-handler)
-                              (&apply f
-                                      (closurize
-                                       (lambda (v)
-                                         (&set-error-handler! curr-handler)
-                                         (&apply cont v))))))))
+                              (apply-closure
+                               f
+                               (make-closure
+                                '()
+                                (lambda (e v)
+                                  (&set-error-handler! curr-handler)
+                                  (apply-closure cont v))))))))
 
-(define __raise (closurize
-                 (lambda (e cont)
+(define __raise (make-closure
+                 '()
+                 (lambda (e err cont)
                    (let ((curr-handler (&error-handler)))
-                     (&apply curr-handler
-                             e
-                             (closurize
-                              (lambda (v _)
-                                (&set-error-handler! curr-handler)
-                                (&apply cont v))))))))
+                     (apply-closure
+                      curr-handler
+                      err
+                      (make-closure
+                       '()
+                       (lambda (e v _)
+                         (&set-error-handler! curr-handler)
+                         (apply-closure cont v))))))))
 
 ;; Actor model:
 (define __self (bootstrap self))
 (define __send (bootstrap send))
 (define __spawn (bootstrap spawn))
 
-(define __sleep (closurize
-                 (lambda (t cont)
+(define __sleep (make-closure
+                 '()
+                 (lambda (e t cont)
                    (sleep t)
-                   (&yield-cont cont t))))
+                   (make-resumable cont t))))
 
-(define __recv (closurize
-                (lambda (cont)
+(define __recv (make-closure
+                '()
+                (lambda (e cont)
                   (let ((r (recv)))
                     (if (car r)
                         ;; If a message is received, return the message.
-                        (&yield-cont cont (cdr r))
+                        (make-resumable cont (cdr r))
                         ;; Else, setup a continuation that attempts to re-fetch the message.
-                        (&yield-cont (closurize
-                                      (lambda (_)
-                                        (&apply __recv cont)))
-                                     '()))))))
+                        (make-resumable
+                         (make-closure
+                          '()
+                          (lambda (e v)
+                            (apply-closure __recv cont)))
+                         '()))))))
 
 (define __task_info (bootstrap task-info))
-(define __monitor (closurize
-                   (lambda (timeout cont)
+(define __monitor (make-closure
+                   '()
+                   (lambda (e timeout cont)
                      (task-info)
                      (sleep timeout)
-                     (&yield-cont (closurize
-                                   (lambda (_)
-                                     (&apply __monitor timeout cont)))
-                                  '()))))
+                     (make-resumable
+                      (make-closure
+                       '()
+                       (lambda (e v)
+                         (apply-closure __monitor timeout cont)))
+                      '()))))
 
 ;; RBS bootstrap:
 (define __assertBANG (bootstrap assert!))

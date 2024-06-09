@@ -16,10 +16,11 @@
  "Actor Model"
  (it "Can sleep for a time."
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __sleep v (closurize id))))
-                                       23)
+                          (make-resumable
+                           (closurize
+                            (lambda (v)
+                              (apply-closure __sleep v (closurize id))))
+                           23)
                           '()
                           0
                           'waiting)))
@@ -38,17 +39,18 @@
 
  (it "Can send a message."
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __self (closurize
-                                                          (lambda (__value4)
-                                                            (&apply __send
-                                                                    __value4
-                                                                    v
-                                                                    (closurize
-                                                                     (lambda (__value3)
-                                                                       __value3))))))))
-                                       'msg)
+                          (make-resumable
+                           (closurize
+                            (lambda (v)
+                              (apply-closure __self (closurize
+                                                     (lambda (__value4)
+                                                       (apply-closure __send
+                                                                      __value4
+                                                                      v
+                                                                      (closurize
+                                                                       (lambda (__value3)
+                                                                         __value3))))))))
+                           'msg)
                           '()
                           0
                           'waiting)))
@@ -57,23 +59,24 @@
        (assert (not (empty? (uproc-msg-queue p))))
        (assert (equal? (first (uproc-msg-queue p)) 'msg)))
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __self
-                                                  (closurize
-                                                   (lambda (__value7)
-                                                     (&apply __send
-                                                             __value7
-                                                             v
-                                                             (closurize
-                                                              (lambda (__value6)
-                                                                (&apply __send
-                                                                        __value6
-                                                                        v
-                                                                        (closurize
-                                                                         (lambda (__value5)
-                                                                           __value5)))))))))))
-                                       'msg)
+                          (make-resumable
+                           (closurize
+                            (lambda (v)
+                              (apply-closure __self
+                                             (closurize
+                                              (lambda (__value7)
+                                                (apply-closure __send
+                                                               __value7
+                                                               v
+                                                               (closurize
+                                                                (lambda (__value6)
+                                                                  (apply-closure __send
+                                                                                 __value6
+                                                                                 v
+                                                                                 (closurize
+                                                                                  (lambda (__value5)
+                                                                                    __value5)))))))))))
+                           'msg)
                           '()
                           0
                           'waiting)))
@@ -84,10 +87,11 @@
 
  (it "Can't receive when there are no messages."
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (_)
-                                          (&apply __recv (closurize id))))
-                                       '())
+                          (make-resumable
+                           (closurize
+                            (lambda (_)
+                              (apply-closure __recv (closurize id))))
+                           '())
                           '()
                           0
                           'waiting)))

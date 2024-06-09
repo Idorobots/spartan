@@ -35,13 +35,19 @@
 (define (run-code expr)
   (reset-rete!)
   (reset-tasks! '())
-  (spawn-task! (&yield-cont (closurize intern-instrument) expr)
-               (closurize
-                (lambda (e _)
+  (spawn-task! (make-resumable
+                (make-closure
+                 '()
+                 (lambda (e expr)
+                   (intern-instrument expr)))
+                expr)
+               (make-closure
+                '()
+                (lambda (e err _)
                   (display ";; Execution finished due to an unhandled error: ")
-                  (display e)
+                  (display err)
                   (newline)
-                  e)))
+                  err)))
   ;; NOTE Returns only the last result.
   (last (execute!)))
 

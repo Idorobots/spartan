@@ -35,18 +35,22 @@
         (cons #t (uproc-dequeue-msg! p)))))
 
 (define (spawn fun)
-  (let ((kont (closurize
-               (lambda (v)
+  (let ((kont (make-closure
+               '()
+               (lambda (e v)
                  (set-uproc-state! (current-task)
                                    'halted)
                  v))))
-    (spawn-task! (&yield-cont (closurize
-                               (lambda (_)
-                                 (&apply fun kont)))
-                              '())
-                 (closurize
-                  (lambda (e _)
+    (spawn-task! (make-resumable
+                  (make-closure
+                   '()
+                   (lambda (e _)
+                     (apply-closure fun kont)))
+                  '())
+                 (make-closure
+                  '()
+                  (lambda (e err _)
                     (display ";; Task finished due to unhandled error: ")
-                    (display e)
+                    (display err)
                     (newline)
-                    (&apply kont e))))))
+                    (apply-closure kont err))))))

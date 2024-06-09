@@ -2,29 +2,27 @@
 
 ;; Runtime closure creation.
 
-(provide &make-env &env-ref &set-env!
-         &make-closure &set-closure-env! &apply closure?
+(provide (struct-out closure) make-env env-ref set-env! apply-closure
+         ;; NOTE For testing
          closurize)
 
-(define &make-env vector)
+(struct closure ((env #:mutable) fun) #:transparent #:constructor-name make-closure)
 
-(define &env-ref vector-ref)
+(define-syntax-rule (make-env vals ...)
+  (vector vals ...))
 
-(define &set-env! vector-set!)
+(define-syntax-rule (env-ref e offset)
+  (vector-ref e offset))
 
-(define (&make-closure env fun)
-  (vector &make-closure env fun))
+(define-syntax-rule (set-env! e offset val)
+  (vector-set! e offset val))
 
-(define (&set-closure-env! closure env)
-  (vector-set! closure 1 env))
-
-(define (&apply closure . args)
-  (apply (vector-ref closure 2) (vector-ref closure 1) args))
-
-(define (closure? thing)
-  (equal? (vector-ref thing 0) &make-closure))
+(define-syntax-rule (apply-closure c args ...)
+  (let ((clo c))
+    ((closure-fun clo) (closure-env clo) args ...)))
 
 (define (closurize f)
-  (&make-closure '()
-                 (lambda (env . args)
-                   (apply f args))))
+  (make-closure
+   '()
+   (lambda (env . args)
+     (apply f args))))

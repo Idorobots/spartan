@@ -116,25 +116,23 @@
                    ,(generate-scheme-node value)))
 
     ((primop-app '&make-closure env fun)
-     `(vector &make-closure ;; FIXME Some internals require this to be the runtime function.
-              ,(generate-scheme-node env)
-              ,(generate-scheme-node fun)))
+     `(make-closure ,(generate-scheme-node env)
+                    ,(generate-scheme-node fun)))
 
     ((primop-app '&set-closure-env! c env)
-     `(vector-set! ,(generate-scheme-node c)
-                   1
-                   ,(generate-scheme-node env)))
+     `(set-closure-env! ,(generate-scheme-node c)
+                        ,(generate-scheme-node env)))
 
     ((primop-app '&apply (symbol c) args ...)
-     `((vector-ref ,c 2)
-       (vector-ref ,c 1)
+     `((closure-fun ,c)
+       (closure-env ,c)
        ,@(map generate-scheme-node args)))
 
     ((primop-app '&apply c args ...)
      (let ((tmp (gensym 'tmp)))
        `(let ((,tmp ,(generate-scheme-node c)))
-          ((vector-ref ,tmp 2)
-           (vector-ref ,tmp 1)
+          ((closure-fun ,tmp)
+           (closure-env ,tmp)
            ,@(map generate-scheme-node args)))))
 
     ;; Continuation primops
@@ -142,26 +140,26 @@
      `(if (> (kont-counter) 0)
           (begin
             (dec-kont-counter!)
-            ((vector-ref ,c 2)
-             (vector-ref ,c 1)
+            ((closure-fun ,c)
+             (closure-env ,c)
              ,(generate-scheme-node h)))
           (begin
             (reset-kont-counter!)
-            (resumable ,c
-                       ,(generate-scheme-node h)))))
+            (make-resumable ,c
+                            ,(generate-scheme-node h)))))
 
     ((primop-app '&yield-cont k h)
      (let ((tmp (gensym 'tmp)))
        `(if (> (kont-counter) 0)
             (let ((,tmp ,(generate-scheme-node k)))
               (dec-kont-counter!)
-              ((vector-ref ,tmp 2)
-               (vector-ref ,tmp 1)
+              ((closure-fun ,tmp)
+               (closure-env ,tmp)
                ,(generate-scheme-node h)))
             (begin
               (reset-kont-counter!)
-              (resumable ,(generate-scheme-node k)
-                         ,(generate-scheme-node h))))))
+              (make-resumable ,(generate-scheme-node k)
+                              ,(generate-scheme-node h))))))
 
     ((primop-app '&push-delimited-continuation! k)
      (let ((tmp (gensym 'tmp))
