@@ -88,7 +88,7 @@
                                           (make-closure
                                            cont
                                            (lambda (cont v _)
-                                             (apply-closure cont v)))
+                                             (make-resumable cont v)))
                                           cont))))
 
 (define __callDIVreset (make-closure
@@ -100,9 +100,7 @@
                            (make-closure
                             '()
                             (lambda (_ v)
-                              (apply-closure
-                               (pop-delimited-continuation!)
-                               v)))))))
+                              (make-resumable (pop-delimited-continuation!) v)))))))
 
 (define __callDIVshift (make-closure
                         '()
@@ -113,13 +111,11 @@
                             cont
                             (lambda (cont v ct2)
                               (push-delimited-continuation! ct2)
-                              (apply-closure cont v)))
+                              (make-resumable cont v)))
                            (make-closure
                             '()
                             (lambda (_ v)
-                              (apply-closure
-                               (pop-delimited-continuation!)
-                               v)))))))
+                              (make-resumable (pop-delimited-continuation!) v)))))))
 
 ;; Exceptions:
 (define __callDIVhandler (make-closure
@@ -139,7 +135,7 @@
                                 state
                                 (lambda (cont/curr-handler v)
                                   (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
-                                  (apply-closure (car cont/curr-handler) v))))))))
+                                  (make-resumable (car cont/curr-handler) v))))))))
 
 (define __raise (make-closure
                  '()
@@ -151,8 +147,8 @@
                       (make-closure
                        (cons cont curr-handler)
                        (lambda (cont/curr-handler v _)
-                         (set-uproc-error-handler! (current-task) (cdr cont/curr-handler ))
-                         (apply-closure (car cont/curr-handler ) v))))))))
+                         (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
+                         (make-resumable (car cont/curr-handler) v))))))))
 
 ;; Actor model:
 (define __self (bootstrap self))
