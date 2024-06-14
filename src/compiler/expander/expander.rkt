@@ -53,16 +53,12 @@
    ;; Regular application
    ((list values ...)
     ;; NOTE Handles its own internal expansions.
-    (apply-expander '&application
-                    env
-                    expr))
+    (expand-application env expr))
 
    ;; Body with local definition support
    ((ast-body exprs ...)
     ;; NOTE Handles its own internal expansions.
-    (apply-expander '&body
-                    env
-                    expr))
+    (expand-body env expr))
 
    ;; Syntactic closures
    ((ast-syntactic-closure closure-env free expr)
@@ -106,6 +102,79 @@
    (else
     (traverse-ast expand-quasiquote env expr))))
 
+(define (expand-application env expr)
+  (match-ast expr
+   ((list op args ...)
+    (replace expr
+             (expand env
+                     (make-ast-app (ast-node-location expr)
+                                   op
+                                   args))))
+   (else
+    (raise-compilation-error
+     expr
+     "Bad call syntax, expected at least one expression within the call:"))))
+
+(define (expand-body env expr)
+  (match-ast expr
+   ((ast-body exprs ...)
+    ;; FIXME Should this pre-expand with a limited env and only one level deep, so that we get defs, syntax defs and bodies expanded?
+    ;; What about macros that expand to defs?
+    ;; Can this perform an expansion fix-point?
+    ;; Expand all nodes, see if there are any syntax defs in scope, expand again with the extended env and repeat.
+    ;; What about existing macro redefinitions? Should these be disallowed?
+    ;; Introduce expansion phases?
+    ;; - 0 - runtime
+    ;; - 1 - macros
+    ;; - 2 - macro binders
+    ;; - 3 - syntax elaboration
+    (let* ((pre-expanded (map (partial expand env) exprs))
+           ;; TODO
+           ;; - pre-expand should also contain def-syntax nodes that omit expansion of their internals.
+           ;; - def-syntax nodes should be extracted same as definitions and put in a wrapping letrec of their own.
+           ;; - The use-env should be extended with extra syntax and then the body expansion should proceed.
+           (defs (extract-defs pre-expanded))
+           (non-defs (extract-non-defs pre-expanded)))
+      (if (> (length defs) 0)
+          (generated
+           (make-ast-letrec (ast-node-location expr)
+                            (unique-bindings defs (ast-node-context expr))
+                            (reconstruct-simple-body non-defs expr)))
+          (reconstruct-simple-body pre-expanded expr))))
+   (else
+    (compiler-bug "Invalid ast-body object" expr))))
+
+(define (extract-defs exprs)
+  (foldr (lambda (e acc)
+           (match-ast e
+            ((def name value)
+             (cons (generated
+                    (make-ast-binding (ast-node-location e) name value))
+                   acc))
+            (else acc)))
+         '()
+         exprs))
+
+(define (extract-non-defs exprs)
+  (filter (compose not ast-def?)
+          exprs))
+
+(define (reconstruct-simple-body exprs parent)
+  (let ((ctx (ast-node-context* parent "Bad `do` syntax")))
+    (cond ((= (length exprs) 0)
+           (raise-compilation-error
+            parent
+            (format "~a, expected at least one non-definition expression within:" ctx)))
+          ((= (length exprs) 1)
+           (car exprs))
+          (else
+           (generated
+            ;; NOTE The context should be preserved.
+            (set-ast-node-context
+             (make-ast-do (ast-node-location parent)
+                          exprs)
+             ctx))))))
+
 (define (apply-expander key env expr)
   (let ((expander (environment-ref env key)))
     ((expander-transformer expander)
@@ -126,11 +195,6 @@
 
 (define (make-static-environment)
   (hasheq
-   ;; Special expanders
-   ;; FIXME Kinda hacky...
-   '&application (make-builtin-expander (make-app-expander expand))
-   '&body (make-builtin-expander (make-body-expander expand))
-
    ;; Syntax forms
    'if (make-builtin-expander if-expander)
    'do (make-builtin-expander do-expander)
