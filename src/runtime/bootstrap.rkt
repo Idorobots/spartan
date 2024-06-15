@@ -82,7 +82,7 @@
 ;; Continuations:
 (define __callDIVcurrent_continuation (make-closure
                                        '()
-                                       (lambda (e f cont)
+                                       (lambda (_ f cont)
                                          (apply-closure
                                           f
                                           (make-closure
@@ -93,7 +93,7 @@
 
 (define __callDIVreset (make-closure
                         '()
-                        (lambda (e f cont)
+                        (lambda (_ f cont)
                           (push-delimited-continuation! cont)
                           (apply-closure
                            f
@@ -104,7 +104,7 @@
 
 (define __callDIVshift (make-closure
                         '()
-                        (lambda (e f cont)
+                        (lambda (_ f cont)
                           (apply-closure
                            f
                            (make-closure
@@ -122,24 +122,27 @@
                           '()
                           (lambda (_ handler f cont)
                             (let* ((curr-handler (uproc-error-handler (current-task)))
-                                   (state (cons cont curr-handler))
+                                   (state (list handler cont curr-handler))
                                    (new-handler (make-closure
                                                  state
-                                                 (lambda (cont/curr-handler error restart)
-                                                   (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
-                                                   (apply-closure handler error restart (car cont/curr-handler))))))
+                                                 (lambda (handler/cont/curr-handler error restart _)
+                                                   (set-uproc-error-handler! (current-task) (caddr handler/cont/curr-handler))
+                                                   (apply-closure (car handler/cont/curr-handler)
+                                                                  error
+                                                                  restart
+                                                                  (cadr handler/cont/curr-handler))))))
                               (set-uproc-error-handler! (current-task) new-handler)
                               (apply-closure
                                f
                                (make-closure
-                                state
+                                (cons cont curr-handler)
                                 (lambda (cont/curr-handler v)
                                   (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
                                   (make-resumable (car cont/curr-handler) v))))))))
 
 (define __raise (make-closure
                  '()
-                 (lambda (e err cont)
+                 (lambda (_ err cont)
                    (let ((curr-handler (uproc-error-handler (current-task))))
                      (apply-closure
                       curr-handler
@@ -148,7 +151,8 @@
                        (cons cont curr-handler)
                        (lambda (cont/curr-handler v _)
                          (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
-                         (make-resumable (car cont/curr-handler) v))))))))
+                         (make-resumable (car cont/curr-handler) v)))
+                      cont)))))
 
 ;; Actor model:
 (define __self (bootstrap self))
@@ -157,13 +161,13 @@
 
 (define __sleep (make-closure
                  '()
-                 (lambda (e t cont)
+                 (lambda (_ t cont)
                    (sleep t)
                    (make-resumable cont t))))
 
 (define __recv (make-closure
                 '()
-                (lambda (e cont)
+                (lambda (_ cont)
                   (let ((r (recv)))
                     (if (car r)
                         ;; If a message is received, return the message.
@@ -179,7 +183,7 @@
 (define __task_info (bootstrap task-info))
 (define __monitor (make-closure
                    '()
-                   (lambda (e timeout cont)
+                   (lambda (_ timeout cont)
                      (task-info)
                      (sleep timeout)
                      (make-resumable

@@ -37,19 +37,19 @@
 (define (spawn fun)
   (let ((kont (make-closure
                '()
-               (lambda (e v)
+               (lambda (_ v)
                  (set-uproc-state! (current-task)
                                    'halted)
                  v))))
     (spawn-task! (make-resumable
                   (make-closure
-                   '()
-                   (lambda (e _)
+                   kont
+                   (lambda (kont fun)
                      (apply-closure fun kont)))
-                  '())
+                  fun)
                  (make-closure
-                  '()
-                  (lambda (e err _)
+                  kont
+                  (lambda (kont err restart _)
                     (display ";; Task finished due to unhandled error: ")
                     (display err)
                     (newline)

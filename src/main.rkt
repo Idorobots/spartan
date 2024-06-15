@@ -38,12 +38,12 @@
   (spawn-task! (make-resumable
                 (make-closure
                  '()
-                 (lambda (e expr)
+                 (lambda (_ expr)
                    (intern-instrument expr)))
                 expr)
                (make-closure
                 '()
-                (lambda (e err _)
+                (lambda (e err restart _)
                   (display ";; Execution finished due to an unhandled error: ")
                   (display err)
                   (newline)
