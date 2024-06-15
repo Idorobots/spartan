@@ -20,7 +20,7 @@
          (init-loc (ast-node-location init))
          (defs (env-get env 'data)))
     (if (empty? defs)
-        (generate-scheme-node init)
+        (generate-scheme-node '__leaf_continuation init)
         `(begin ,@(map (lambda (v)
                          (generate-scheme-def (car v) (cdr v)))
                        defs)
@@ -28,20 +28,22 @@
                 ;; ,(generate-scheme-def '__module_init
                 ;;                       (make-ast-lambda init-loc '() init))
                 ;; (__module_init)
-                ,(generate-scheme-node init)))))
+                ,(generate-scheme-node '__leaf_continuation init)))))
 
 (define (generate-scheme-def name value)
   `(define ,name
-     ,(generate-scheme-node value)))
+     ,(generate-scheme-node '__leaf_continuation value)))
 
-(define (generate-scheme-node expr)
+(define (generate-scheme-node curr-cont expr)
   (match-ast expr
     ;; AST nodes
     ((string value)
     value)
 
     ((list vals ...)
-     (map generate-scheme-node vals))
+     (map (lambda (v)
+            (generate-scheme-node curr-cont v))
+          vals))
 
     ((number v)
      v)
@@ -50,26 +52,30 @@
      s)
 
     ((const v)
-     `(quote ,(generate-scheme-node v)))
+     `(quote ,(generate-scheme-node curr-cont v)))
 
     ((lambda args body)
-     `(lambda ,(map generate-scheme-node args)
-        ,(generate-scheme-node body)))
+     `(lambda ,(map (lambda (a)
+                      (generate-scheme-node curr-cont a))
+                    args)
+        ,(generate-scheme-node (ast-symbol-value (last args)) body)))
 
     ((if c t e)
-     `(if ,(generate-scheme-node c)
-          ,(generate-scheme-node t)
-          ,(generate-scheme-node e)))
+     `(if ,(generate-scheme-node curr-cont c)
+          ,(generate-scheme-node curr-cont t)
+          ,(generate-scheme-node curr-cont e)))
 
     ((let bindings body)
      `(let (,@(map (lambda (b)
-                     (list (generate-scheme-node (ast-binding-var b))
-                           (generate-scheme-node (ast-binding-val b))))
+                     (list (generate-scheme-node curr-cont (ast-binding-var b))
+                           (generate-scheme-node curr-cont (ast-binding-val b))))
                    bindings))
-        ,(generate-scheme-node body)))
+        ,(generate-scheme-node curr-cont body)))
 
     ((do exprs ...)
-     `(begin ,@(map generate-scheme-node exprs)))
+     `(begin ,@(map (lambda (e)
+                      (generate-scheme-node curr-cont e))
+                    exprs)))
 
     ;; Nullary primops
     ((primop-app op)
@@ -85,7 +91,7 @@
                          ref deref
                          spawn
                          assert! signal! retract! select))
-     `(,op ,(generate-scheme-node a)))
+     `(,op ,(generate-scheme-node curr-cont a)))
 
     ;; Diadic primops
     ((primop-app op a b)
@@ -94,77 +100,88 @@
                          cons append concat
                          send notify-whenever
                          assign!))
-     `(,op ,(generate-scheme-node a)
-           ,(generate-scheme-node b)))
+     `(,op ,(generate-scheme-node curr-cont a)
+           ,(generate-scheme-node curr-cont b)))
 
     ;; Vararg primops
     ((primop-app op args ...)
      #:when (member op '(list debug))
-     `(,op ,@(map generate-scheme-node args)))
+     `(,op ,@(map (lambda (a)
+                    (generate-scheme-node curr-cont a))
+                  args)))
 
     ;; Closure primops
     ((primop-app '&make-env args ...)
-     `(vector ,@(map generate-scheme-node args)))
+     `(vector ,@(map (lambda (a)
+                       (generate-scheme-node curr-cont a))
+                     args)))
 
     ((primop-app '&env-ref env offset)
-     `(vector-ref ,(generate-scheme-node env)
-                  ,(generate-scheme-node offset)))
+     `(vector-ref ,(generate-scheme-node curr-cont env)
+                  ,(generate-scheme-node curr-cont offset)))
 
     ((primop-app '&set-env! env offset value)
-     `(vector-set! ,(generate-scheme-node env)
-                   ,(generate-scheme-node offset)
-                   ,(generate-scheme-node value)))
+     `(vector-set! ,(generate-scheme-node curr-cont env)
+                   ,(generate-scheme-node curr-cont offset)
+                   ,(generate-scheme-node curr-cont value)))
 
     ((primop-app '&make-closure env fun)
-     `(make-closure ,(generate-scheme-node env)
-                    ,(generate-scheme-node fun)))
+     `(make-closure ,(generate-scheme-node curr-cont env)
+                    ,(generate-scheme-node curr-cont fun)))
 
     ((primop-app '&set-closure-env! c env)
-     `(set-closure-env! ,(generate-scheme-node c)
-                        ,(generate-scheme-node env)))
+     `(set-closure-env! ,(generate-scheme-node curr-cont c)
+                        ,(generate-scheme-node curr-cont env)))
 
     ((primop-app '&apply (symbol c) args ...)
      `((closure-fun ,c)
        (closure-env ,c)
-       ,@(map generate-scheme-node args)))
+       ,@(map (lambda (a)
+                (generate-scheme-node curr-cont a))
+              args)))
 
     ((primop-app '&apply c args ...)
      (let ((tmp (gensym 'tmp)))
-       `(let ((,tmp ,(generate-scheme-node c)))
+       `(let ((,tmp ,(generate-scheme-node curr-cont c)))
           ((closure-fun ,tmp)
            (closure-env ,tmp)
-           ,@(map generate-scheme-node args)))))
+           ,@(map (lambda (a)
+                    (generate-scheme-node curr-cont a))
+                  args)))))
 
     ;; Continuation primops
+    ((primop-app '&current-continuation)
+     curr-cont)
+
     ((primop-app '&yield-cont (symbol c) h)
      `(if (> (kont-counter) 0)
           (begin
             (dec-kont-counter!)
             ((closure-fun ,c)
              (closure-env ,c)
-             ,(generate-scheme-node h)))
+             ,(generate-scheme-node curr-cont h)))
           (begin
             (reset-kont-counter!)
             (make-resumable ,c
-                            ,(generate-scheme-node h)))))
+                            ,(generate-scheme-node curr-cont h)))))
 
     ((primop-app '&yield-cont k h)
      (let ((tmp (gensym 'tmp)))
        `(if (> (kont-counter) 0)
-            (let ((,tmp ,(generate-scheme-node k)))
+            (let ((,tmp ,(generate-scheme-node curr-cont k)))
               (dec-kont-counter!)
               ((closure-fun ,tmp)
                (closure-env ,tmp)
-               ,(generate-scheme-node h)))
+               ,(generate-scheme-node curr-cont h)))
             (begin
               (reset-kont-counter!)
-              (make-resumable ,(generate-scheme-node k)
-                              ,(generate-scheme-node h))))))
+              (make-resumable ,(generate-scheme-node curr-cont k)
+                              ,(generate-scheme-node curr-cont h))))))
 
     ((primop-app '&push-delimited-continuation! k)
      (let ((tmp (gensym 'tmp))
            (uproc (gensym 'uproc)))
-       `(let ((,tmp ,(generate-scheme-node k))
+       `(let ((,tmp ,(generate-scheme-node curr-cont k))
               (,uproc (current-task)))
           (set-uproc-delimited-continuations! ,uproc
                                               (cons ,tmp
@@ -184,20 +201,22 @@
      `(uproc-error-handler (current-task)))
 
     ((primop-app '&set-error-handler! handler)
-     `(set-uproc-error-handler! (current-task) ,(generate-scheme-node handler)))
+     `(set-uproc-error-handler! (current-task) ,(generate-scheme-node curr-cont handler)))
 
     ;; Modules & structures primops
     ((primop-app '&make-structure bindings ...)
      ;; FIXME Should be something better than an alist.
-     `(list '&structure ,@(map generate-scheme-node bindings)))
+     `(list '&structure ,@(map (lambda (b)
+                                 (generate-scheme-node curr-cont b))
+                               bindings)))
 
     ((primop-app '&structure-binding name value)
-     `(cons ,(generate-scheme-node name)
-            ,(generate-scheme-node value)))
+     `(cons ,(generate-scheme-node curr-cont name)
+            ,(generate-scheme-node curr-cont value)))
 
     ((primop-app '&structure-ref s name)
-     `(cdr (assoc ,(generate-scheme-node name)
-                  (cdr ,(generate-scheme-node s)))))
+     `(cdr (assoc ,(generate-scheme-node curr-cont name)
+                  (cdr ,(generate-scheme-node curr-cont s)))))
 
     ;; Currently not-primops primops:
     ;; call/current-continuation
@@ -210,7 +229,9 @@
 
     ((primop-app op args ...)
      ;; FIXME These are resulting from the current instrumentation setup, but should never happen otherwise.
-     `(,op ,@(map generate-scheme-node args)))
+     `(,op ,@(map (lambda (a)
+                    (generate-scheme-node curr-cont a))
+                  args)))
 
     (else
      (compiler-bug "Unsupported AST node type:" expr))))

@@ -27,8 +27,9 @@
 
 (define (make-global-definitions-list)
   (apply set
-         '(nil car cadr cdr cddr list cons append concat
-           equal? nil? empty? true false not
+         '(yield continue-with0 continue-with1 continue-with2 nil true false
+           car cadr cdr cddr list cons append concat
+           equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?
            ref deref assign!

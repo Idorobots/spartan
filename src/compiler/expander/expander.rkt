@@ -9,6 +9,7 @@
 (require "../errors.rkt")
 (require "syntax-forms.rkt")
 (require "macros.rkt")
+(require "lowlevel.rkt")
 
 (provide expand make-static-environment)
 
@@ -195,6 +196,11 @@
 
 (define (make-static-environment)
   (hasheq
+   ;; Low-level support
+   'declare-primval (make-builtin-expander ignore-expander)
+   'declare-primop (make-builtin-expander ignore-expander)
+   'asm (make-builtin-expander asm-expander)
+
    ;; Syntax forms
    'if (make-builtin-expander if-expander)
    'do (make-builtin-expander do-expander)

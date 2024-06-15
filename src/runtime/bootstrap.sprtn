@@ -1,0 +1,240 @@
+;; Primitive values
+(declare-primval nil)
+(declare-primval true)
+(declare-primval false)
+
+;; Boolean
+(declare-primop (not x))
+
+(define (not x)
+  (asm (primop-app 'not x)))
+
+;; Equality
+(declare-primop (equal? a b))
+(declare-primop (eq? a b))
+(declare-primop (= a b))
+(declare-primop (< a b))
+(declare-primop (<= a b))
+(declare-primop (> a b))
+(declare-primop (>= a b))
+
+(define (equal? a b)
+  (asm (primop-app 'equal? a b)))
+
+(define (eq? a b)
+  (asm (primop-app 'eq? a b)))
+
+(define (= a b)
+  (asm (primop-app '= a b)))
+
+(define (< a b)
+  (asm (primop-app '< a b)))
+
+(define (<= a b)
+  (asm (primop-app '<= a b)))
+
+(define (> a b)
+  (asm (primop-app '> a b)))
+
+(define (>= a b)
+  (asm (primop-app '>= a b)))
+
+;; Math
+(declare-primop (zero? a))
+(declare-primop (* a b))
+(declare-primop (+ a b))
+(declare-primop (- a b))
+(declare-primop (/ a b))
+(declare-primop (modulo a b))
+(declare-primop (quotient a b))
+(declare-primop (remainder a b))
+(declare-primop (random x))
+
+(define (zero? x)
+  (asm (primop-app 'zero? x)))
+
+(define (* a b)
+  (asm (primop-app '* a b)))
+
+(define (+ a b)
+  (asm (primop-app '+ a b)))
+
+(define (- a b)
+  (asm (primop-app '- a b)))
+
+(define (/ a b)
+  (asm (primop-app '/ a b)))
+
+(define (modulo a b)
+  (asm (primop-app 'modulo a b)))
+
+(define (quotient a b)
+  (asm (primop-app 'quotient a b)))
+
+(define (remainder a b)
+  (asm (primop-app 'remainder a b)))
+
+(define (random x)
+  (asm (primop-app 'random x)))
+
+;; List
+(declare-primop (nil? x))
+;; (declare-primop (empty? x))
+(declare-primop (car l))
+;; (declare-primop (cadr l))
+(declare-primop (cdr l))
+;; (declare-primop (cddr l))
+(declare-primop (cons a b))
+;; (declare-primop (append a b))
+;; (declare-primop (concat a b))
+
+(define (nil? l)
+  (asm (primop-app 'nil? l)))
+
+(define (empty? l)
+  (nil? l))
+
+(define (car l)
+  (asm (primop-app 'car l)))
+
+(define (cdr l)
+  (asm (primop-app 'cdr l)))
+
+(define (cadr l)
+  (car (cdr l)))
+
+(define (caddr l)
+  (cdr (cdr l)))
+
+(define (cons a b)
+  (asm (primop-app 'cons a b)))
+
+(define (append a b)
+  (if (nil? a)
+      b
+      (cons (car a)
+            (append (cdr a)
+                    b))))
+
+(define (concat a b)
+  (append a b))
+
+;; Mutable refs
+(declare-primop (ref r))
+(declare-primop (deref r))
+(declare-primop (assign! r v))
+
+(define (ref a)
+  (asm (primop-app 'ref a)))
+
+(define (deref r)
+  (asm (primop-app 'deref r)))
+
+(define (assign! r v)
+  (asm (primop-app 'assign! r v)))
+
+;; IO
+(declare-primop (display x))
+;; (declare-primop (newline))
+
+(define (display x)
+  (asm (primop-app 'display x)))
+
+(define (newline)
+  (display "\n"))
+
+;; Continuations
+(declare-primop (&yield-cont c v))
+(declare-primop (push-delimited-continuation! c))
+(declare-primop (pop-delimited-continuation!))
+;; FIXME This is actually a vararg primop.
+(declare-primop (&apply f args))
+
+;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
+;; FIXME Inlining might change the lexical continuation, but that ought to be fine, right?
+(declare-primop (&current-continuation))
+
+;; NOTE Needed to translate closures into continuations and vice-versa.
+;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
+(declare-primval yield)
+(declare-primval continue-with0)
+(declare-primval continue-with1)
+(declare-primval continue-with2)
+
+(define (call/current-continuation f)
+  (let ((cc (asm (primop-app '&current-continuation))))
+    ;; NOTE cc is passed here implicitly as well.
+    (f (lambda (v)
+         (yield cc v)))))
+
+(define (call/reset f)
+  (let ((cc (asm (primop-app '&current-continuation))))
+    (asm (primop-app 'push-delimited-continuation! cc))
+    (continue-with0 f (lambda (v)
+                        (yield (asm (primop-app 'pop-delimited-continuation!))
+                               v)))))
+
+(define (call/shift f)
+  (let* ((cc (asm (primop-app '&current-continuation)))
+         (reified (lambda (v)
+                    (let ((ct2 (asm (primop-app '&current-continuation))))
+                      (asm (primop-app 'push-delimited-continuation! ct2))
+                      (yield cc v))))
+         (cont (lambda (v)
+                 (let ((restored (asm (primop-app 'pop-delimited-continuation!))))
+                   (yield restored v)))))
+    (continue-with1 f reified cont)))
+
+;; Exceptions
+(declare-primop (current-task))
+(declare-primop (uproc-error-handler x))
+(declare-primop (set-uproc-error-handler! x))
+
+(define (call/handler handler f)
+  (let* ((curr-task (asm (primop-app 'current-task)))
+         (curr-handler (asm (primop-app 'uproc-error-handler curr-task)))
+         (cc (asm (primop-app '&current-continuation)))
+         (cont (lambda (v)
+                 (yield cc v)))
+         (new-handler (lambda (error restart)
+                        (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
+                        (continue-with2 handler error restart cont)))
+         (restart (lambda (v)
+                    (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
+                    (yield cc v))))
+    (asm (primop-app 'set-uproc-error-handler! curr-task new-handler))
+    (continue-with0 f restart)))
+
+(define (raise e)
+  (let* ((curr-task (asm (primop-app 'current-task)))
+         (curr-handler (asm (primop-app 'uproc-error-handler curr-task)))
+         (cont (asm (primop-app '&current-continuation)))
+         (restart (lambda (v)
+                     (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
+                     (yield cont v))))
+    ;; NOTE Cont is going to be passed implicitly.
+    (curr-handler e restart)))
+
+;; Actor model
+(declare-primop (self))
+(declare-primop (recv))
+(declare-primop (send pid msg))
+(declare-primop (spawn f))
+(declare-primop (sleep t))
+
+;; RBS
+(declare-primop (assert! fact))
+(declare-primop (signal! fact))
+(declare-primop (retract! fact))
+(declare-primop (select query))
+(declare-primop (notify-whenever pid query))
+
+;; RT Debugging
+(declare-primop (task-info))
+(declare-primop (monitor t))
+(declare-primop (debug msg))
+
+;; FIXME To avoid the "unused variable" errors.
+not equal? eq? = < <= > >= zero? * + - / modulo quotient remainder random nil? empty? car cdr cadr caddr cons append concat ref deref assign! display newline call/current-continuation call/reset call/shift call/handler raise
+
+'()
