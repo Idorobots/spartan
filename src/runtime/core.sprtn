@@ -269,6 +269,21 @@
  (declare-primop (select query))
  (declare-primop (notify-whenever pid query))
 
+ (define (assert! fact)
+   (asm (primop-app 'assert! fact)))
+
+ (define (signal! fact)
+   (asm (primop-app 'signal! fact)))
+
+ (define (retract! fact)
+   (asm (primop-app 'retract! fact)))
+
+ (define (select pattern)
+   (asm (primop-app 'select pattern)))
+
+ (define (notify-whenever pid pattern)
+   (asm (primop-app 'notify-whenever pid pattern)))
+
  ;; TODO Implement RBS primops.
 
 )

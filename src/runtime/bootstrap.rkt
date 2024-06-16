@@ -16,7 +16,6 @@
 (provide nil? notify-whenever
          __nil __true __false __yield __recur
          __list
-         __assertBANG __signalBANG __retractBANG __select __notify_whenever
          __monitor
          ;; FIXME For test access.
          bootstrap)
@@ -57,23 +56,18 @@
 (define nil? null?)
 
 ;; List
+;; FIXME There's currently no vararg function support, so this can't be implemented in Spartan.
 (define __list (bootstrap list))
 
 ;; RBS bootstrap:
-(define __assertBANG (bootstrap assert!))
-(define __signalBANG (bootstrap signal!))
-(define __retractBANG (bootstrap retract!))
-(define __select (bootstrap select))
-
 (define (notify-whenever who pattern)
   (whenever pattern
             ;; FIXME We can't use Spartan functions, since they yield execution.
             (lambda (b)
               (send who b))))
 
-(define __notify_whenever (bootstrap notify-whenever))
-
 ;; Misc:
+;; FIXME Spartan version currently doesn't inline properly.
 (define __monitor (make-closure
                    '()
                    (lambda (_ timeout cont)
