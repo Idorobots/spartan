@@ -183,24 +183,35 @@
 (define (structure-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'structure) defs ...)
-    (let ((names (map extract-definition-name defs)))
-      (let ((loc (ast-node-location expr)))
-        (make-ast-body loc
-                       (append defs
-                               (list (make-ast-primop-app loc
-                                                          '&make-structure
-                                                          (map (lambda (n)
-                                                                 (make-ast-primop-app (ast-node-location n)
-                                                                                      '&structure-binding
-                                                                                      (list (make-ast-quote (ast-node-location n) n)
-                                                                                            n)))
-                                                               names))))
-                       "Bad `structure` syntax"))))
+    (let* ((filtered (filter-defs defs))
+           (names (map extract-definition-name filtered))
+           (loc (ast-node-location expr)))
+      (make-ast-body loc
+                     (append defs
+                             (list (make-ast-primop-app loc
+                                                        '&make-structure
+                                                        (map (lambda (n)
+                                                               (make-ast-primop-app (ast-node-location n)
+                                                                                    '&structure-binding
+                                                                                    (list (make-ast-quote (ast-node-location n) n)
+                                                                                          n)))
+                                                             names))))
+                     "Bad `structure` syntax")))
    (else
     (let ((node (ast-list-car expr)))
       (raise-compilation-error
        node
        "Bad `structure` syntax, expected a module specification followed by a body:")))))
+
+(define (filter-defs defs)
+  (if (empty? defs)
+      '()
+      (match-ast (car defs)
+       ((list (symbol 'define) rest ...)
+        (cons (car defs)
+              (filter-defs (cdr defs))))
+       (else
+        (filter-defs (cdr defs))))))
 
 (define (extract-definition-name expr)
   (match-ast expr
