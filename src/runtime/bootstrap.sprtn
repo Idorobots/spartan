@@ -144,22 +144,22 @@
   (display "\n"))
 
 ;; Continuations
-(declare-primop (&yield-cont c v))
+;; NOTE Needed to translate closures into continuations.
+;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
+(declare-primval yield)
+
 (declare-primop (push-delimited-continuation! c))
 (declare-primop (pop-delimited-continuation!))
-;; FIXME This is actually a vararg primop.
-(declare-primop (&apply f args))
 
 ;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
 ;; FIXME Inlining might change the lexical continuation, but that ought to be fine, right?
 (declare-primop (&current-continuation))
 
-;; NOTE Needed to translate closures into continuations and vice-versa.
-;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
-(declare-primval yield)
-(declare-primval continue-with0)
-(declare-primval continue-with1)
-(declare-primval continue-with2)
+(define (push-delimited-continuation! c)
+  (asm (primop-app 'push-delimited-continuation! c)))
+
+(define (pop-delimited-continuation!)
+  (asm (primop-app 'pop-delimited-continuation!)))
 
 (define (call/current-continuation f)
   (let ((cc (asm (primop-app '&current-continuation))))
@@ -169,49 +169,52 @@
 
 (define (call/reset f)
   (let ((cc (asm (primop-app '&current-continuation))))
-    (asm (primop-app 'push-delimited-continuation! cc))
-    (continue-with0 f (lambda (v)
-                        (yield (asm (primop-app 'pop-delimited-continuation!))
-                               v)))))
+    (push-delimited-continuation! cc)
+    (let ((result (f)))
+      (yield (pop-delimited-continuation!) result))))
 
 (define (call/shift f)
-  (let* ((cc (asm (primop-app '&current-continuation)))
-         (reified (lambda (v)
-                    (let ((ct2 (asm (primop-app '&current-continuation))))
-                      (asm (primop-app 'push-delimited-continuation! ct2))
-                      (yield cc v))))
-         (cont (lambda (v)
-                 (let ((restored (asm (primop-app 'pop-delimited-continuation!))))
-                   (yield restored v)))))
-    (continue-with1 f reified cont)))
+  (let* ((cc (asm (primop-app '&current-continuation))))
+    (let ((result (f (lambda (v)
+                       (let ((ct2 (asm (primop-app '&current-continuation))))
+                         (push-delimited-continuation! ct2)
+                         (yield cc v))))))
+      (yield (pop-delimited-continuation!) v))))
 
 ;; Exceptions
 (declare-primop (current-task))
 (declare-primop (uproc-error-handler x))
 (declare-primop (set-uproc-error-handler! x))
 
+(define (current-task)
+  (asm (primop-app 'current-task)))
+
+(define (uproc-error-handler uproc)
+  (asm (primop-app 'uproc-error-handler uproc)))
+
+(define (set-uproc-error-handler! uproc handler)
+  (asm (primop-app 'set-uproc-error-handler! uproc handler)))
+
 (define (call/handler handler f)
-  (let* ((curr-task (asm (primop-app 'current-task)))
-         (curr-handler (asm (primop-app 'uproc-error-handler curr-task)))
-         (cc (asm (primop-app '&current-continuation)))
-         (cont (lambda (v)
-                 (yield cc v)))
-         (new-handler (lambda (error restart)
-                        (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
-                        (continue-with2 handler error restart cont)))
-         (restart (lambda (v)
-                    (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
-                    (yield cc v))))
-    (asm (primop-app 'set-uproc-error-handler! curr-task new-handler))
-    (continue-with0 f restart)))
+  (let* ((cc (asm (primop-app '&current-continuation)))
+         (curr-task (current-task))
+         (curr-handler (uproc-error-handler curr-task)))
+    (set-uproc-error-handler! curr-task
+                              (lambda (error restart)
+                                (set-uproc-error-handler! curr-task curr-handler)
+                                (let ((result (handler error restart)))
+                                  (yield cc result))))
+    (let ((result (f)))
+      (set-uproc-error-handler! curr-task curr-handler)
+      (yield cc result))))
 
 (define (raise e)
-  (let* ((curr-task (asm (primop-app 'current-task)))
-         (curr-handler (asm (primop-app 'uproc-error-handler curr-task)))
-         (cont (asm (primop-app '&current-continuation)))
+  (let* ((cont (asm (primop-app '&current-continuation)))
+         (curr-task (current-task))
+         (curr-handler (uproc-error-handler curr-task))
          (restart (lambda (v)
-                     (asm (primop-app 'set-uproc-error-handler! curr-task curr-handler))
-                     (yield cont v))))
+                    (set-uproc-error-handler! curr-task curr-handler)
+                    (yield cont v))))
     ;; NOTE Cont is going to be passed implicitly.
     (curr-handler e restart)))
 

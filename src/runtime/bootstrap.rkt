@@ -20,7 +20,7 @@
          __sleep __self __send __spawn __recv __task_info __monitor
          __assertBANG __signalBANG __retractBANG __select __notify_whenever
          __display __newline __random __debug
-         __yield __continue_with0 __continue_with1 __continue_with2 __leaf_continuation
+         __yield __leaf_continuation
          ;; FIXME For test access.
          bootstrap)
 
@@ -45,40 +45,6 @@
    '()
    (lambda (_ cont v ignored)
      (make-resumable cont v))))
-
-(define __continue_with0
-  (make-closure
-   '()
-   (lambda (_ fun cont-fun cont)
-     (apply-closure fun
-                    (unreify cont-fun cont)))))
-
-(define __continue_with1
-  (make-closure
-   '()
-   (lambda (_ fun a cont-fun cont)
-     (apply-closure fun
-                    a
-                    (unreify cont-fun cont)))))
-
-(define __continue_with2
-  (make-closure
-   '()
-   (lambda (_ fun a b cont-fun cont)
-     (apply-closure fun
-                    a
-                    b
-                    (unreify cont-fun cont)))))
-
-(define (unreify fun cont)
-  (make-closure
-   (cons cont fun)
-   (lambda (cont/fun v)
-    (apply-closure (cdr cont/fun)
-                   v
-                   (make-closure (car cont/fun)
-                                 (lambda (cont v)
-                                   (make-resumable cont v)))))))
 
 (define __leaf_continuation
   (make-closure
