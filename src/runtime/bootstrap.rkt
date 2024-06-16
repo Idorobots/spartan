@@ -20,7 +20,7 @@
          __sleep __self __send __spawn __recv __task_info __monitor
          __assertBANG __signalBANG __retractBANG __select __notify_whenever
          __display __newline __random __debug
-         __yield __leaf_continuation
+         __yield
          ;; FIXME For test access.
          bootstrap)
 
@@ -45,12 +45,6 @@
    '()
    (lambda (_ cont v ignored)
      (make-resumable cont v))))
-
-(define __leaf_continuation
-  (make-closure
-   '()
-   (lambda (_ v)
-     v)))
 
 ;; Built-in primops
 (define nil? null?)

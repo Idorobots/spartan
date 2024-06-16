@@ -20,7 +20,7 @@
          (init-loc (ast-node-location init))
          (defs (env-get env 'data)))
     (if (empty? defs)
-        (generate-scheme-node '__leaf_continuation init)
+        (generate-scheme-node 'invalid-continuation init)
         `(begin ,@(map (lambda (v)
                          (generate-scheme-def (car v) (cdr v)))
                        defs)
@@ -28,11 +28,11 @@
                 ;; ,(generate-scheme-def '__module_init
                 ;;                       (make-ast-lambda init-loc '() init))
                 ;; (__module_init)
-                ,(generate-scheme-node '__leaf_continuation init)))))
+                ,(generate-scheme-node 'invalid-continuation init)))))
 
 (define (generate-scheme-def name value)
   `(define ,name
-     ,(generate-scheme-node '__leaf_continuation value)))
+     ,(generate-scheme-node 'invalid-continuation value)))
 
 (define (generate-scheme-node curr-cont expr)
   (match-ast expr
@@ -151,7 +151,10 @@
 
     ;; Continuation primops
     ((primop-app '&current-continuation)
-     curr-cont)
+     (if (equal? curr-cont 'invalid-continuation)
+         ;; FIXME This ideally would be checked in the validation.
+         (compiler-bug "Invalid `&current-continuation` application:" expr)
+         curr-cont))
 
     ((primop-app '&yield-cont (symbol c) h)
      `(if (> (kont-counter) 0)
