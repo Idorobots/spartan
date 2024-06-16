@@ -12,6 +12,12 @@
   (and (>= value (- expected delta))
        (<= value (+ expected delta))))
 
+(define __core (bootstrap-core-once!))
+(define __self (intern-instrument '__self))
+(define __send (intern-instrument '__send))
+(define __recv (intern-instrument '__recv))
+(define __sleep (intern-instrument '__sleep))
+
 (describe
  "Actor Model"
  (it "Can sleep for a time."

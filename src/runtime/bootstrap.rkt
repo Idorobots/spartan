@@ -14,11 +14,10 @@
 (require "scheduler.rkt")
 
 (provide nil? notify-whenever
-         __nil __true __false __yield
+         __nil __true __false __yield __recur
          __list
-         __sleep __self __send __spawn __recv __task_info __monitor
          __assertBANG __signalBANG __retractBANG __select __notify_whenever
-         __display __newline __random __debug
+         __monitor
          ;; FIXME For test access.
          bootstrap)
 
@@ -44,50 +43,21 @@
    (lambda (_ cont v ignored)
      (make-resumable cont v))))
 
+(define __recur
+  (make-closure
+   '()
+   (lambda (_ fun cont)
+     (make-resumable (make-closure
+                      (cons fun cont)
+                      (lambda (fun/cont _)
+                        (apply-closure (car fun/cont) (cdr fun/cont))))
+                     '()))))
+
 ;; Built-in primops
 (define nil? null?)
 
 ;; List
 (define __list (bootstrap list))
-
-;; Actor model:
-(define __self (bootstrap self))
-(define __send (bootstrap send))
-(define __spawn (bootstrap spawn))
-
-(define __sleep (make-closure
-                 '()
-                 (lambda (_ t cont)
-                   (sleep t)
-                   (make-resumable cont t))))
-
-(define __recv (make-closure
-                '()
-                (lambda (_ cont)
-                  (let ((r (recv)))
-                    (if (car r)
-                        ;; If a message is received, return the message.
-                        (make-resumable cont (cdr r))
-                        ;; Else, setup a continuation that attempts to re-fetch the message.
-                        (make-resumable
-                         (make-closure
-                          cont
-                          (lambda (cont v)
-                            (apply-closure __recv cont)))
-                         '()))))))
-
-(define __task_info (bootstrap task-info))
-(define __monitor (make-closure
-                   '()
-                   (lambda (_ timeout cont)
-                     (task-info)
-                     (sleep timeout)
-                     (make-resumable
-                      (make-closure
-                       (cons timeout cont)
-                       (lambda (timeout/cont v)
-                         (apply-closure __monitor (car timeout/cont) (cdr timeout/cont))))
-                      '()))))
 
 ;; RBS bootstrap:
 (define __assertBANG (bootstrap assert!))
@@ -104,9 +74,14 @@
 (define __notify_whenever (bootstrap notify-whenever))
 
 ;; Misc:
-(define __display (bootstrap display))
-(define __newline (bootstrap newline))
-(define __random (bootstrap random))
-(define __debug (bootstrap (lambda args
-                             (pretty-print args)
-                             (newline))))
+(define __monitor (make-closure
+                   '()
+                   (lambda (_ timeout cont)
+                     (task-info)
+                     (sleep timeout)
+                     (make-resumable
+                      (make-closure
+                       (cons timeout cont)
+                       (lambda (timeout/cont v)
+                         (apply-closure __monitor (car timeout/cont) (cdr timeout/cont))))
+                      '()))))

@@ -22,7 +22,9 @@
          compile-string
          compile-instrumented-string
          compile-file
-         compile-instrumented-file)
+         compile-instrumented-file
+         ;; FIXME For test access
+         bootstrap-core-once!)
 
 (provide (all-from-out "runtime/rt.rkt"))
 (provide (all-from-out "rete/rete.rkt"))
@@ -36,7 +38,7 @@
 (define *core-interned* #f)
 (define +core-spartan+ (embed-file-contents "./runtime/core.sprtn"))
 
-(define (bootstrap-core-once)
+(define (bootstrap-core-once!)
   ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
   (unless *core-interned*
     (set! *core-interned* #t)
@@ -47,7 +49,7 @@
            (cdr core)))))
 
 (define (run-code expr)
-  (bootstrap-core-once)
+  (bootstrap-core-once!)
   (reset-rete!)
   (reset-tasks! '())
   (spawn-task! (make-resumable

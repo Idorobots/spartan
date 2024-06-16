@@ -27,7 +27,7 @@
 
 (define (make-global-definitions-list)
   (apply set
-         '(yield nil true false
+         '(yield recur nil true false
            car cadr cdr cddr list cons append concat
            equal? nil? empty? not
            * + - / = < <= > >=
