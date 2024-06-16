@@ -14,13 +14,11 @@
 (require "scheduler.rkt")
 
 (provide nil? notify-whenever
-         __nil __true __false __not __car __cdr __cadr __cddr __list __cons __append __concat __equalQUEST __nilQUEST
-         __MULT __PLUS ___ __DIV __zeroQUEST __modulo __quotient __remainder __EQUAL __LESS __LESSEQUAL __GREATER __GREATEREQUAL
-         __ref __deref __assignBANG __callDIVcurrent_continuation __callDIVreset __callDIVshift __callDIVhandler __raise
+         __nil __true __false __yield
+         __list
          __sleep __self __send __spawn __recv __task_info __monitor
          __assertBANG __signalBANG __retractBANG __select __notify_whenever
          __display __newline __random __debug
-         __yield
          ;; FIXME For test access.
          bootstrap)
 
@@ -49,117 +47,8 @@
 ;; Built-in primops
 (define nil? null?)
 
-;; Built-in functions
-(define __not (bootstrap not))
-
-(define __car (bootstrap car))
-(define __cadr (bootstrap car))
-(define __cdr (bootstrap cdr))
-(define __cddr (bootstrap cddr))
-
+;; List
 (define __list (bootstrap list))
-(define __cons (bootstrap cons))
-(define __append (bootstrap append))
-(define __concat (bootstrap append))
-
-(define __equalQUEST (bootstrap equal?))
-(define __nilQUEST (bootstrap nil?))
-(define __emptyQUEST (bootstrap empty?))
-
-(define __MULT (bootstrap *))
-(define __PLUS (bootstrap +))
-(define ___ (bootstrap -))
-(define __DIV (bootstrap /))
-(define __zeroQUEST (bootstrap zero?))
-
-(define __modulo (bootstrap modulo))
-(define __quotient (bootstrap quotient))
-(define __remainder (bootstrap remainder))
-
-(define __EQUAL (bootstrap =))
-(define __LESS (bootstrap <))
-(define __LESSEQUAL (bootstrap <=))
-(define __GREATER (bootstrap >))
-(define __GREATEREQUAL (bootstrap >=))
-
-(define __ref (bootstrap ref))
-(define __deref (bootstrap deref))
-(define __assignBANG (bootstrap assign!))
-
-;; Continuations:
-(define __callDIVcurrent_continuation (make-closure
-                                       '()
-                                       (lambda (_ f cont)
-                                         (apply-closure
-                                          f
-                                          (make-closure
-                                           cont
-                                           (lambda (cont v _)
-                                             (make-resumable cont v)))
-                                          cont))))
-
-(define __callDIVreset (make-closure
-                        '()
-                        (lambda (_ f cont)
-                          (push-delimited-continuation! cont)
-                          (apply-closure
-                           f
-                           (make-closure
-                            '()
-                            (lambda (_ v)
-                              (make-resumable (pop-delimited-continuation!) v)))))))
-
-(define __callDIVshift (make-closure
-                        '()
-                        (lambda (_ f cont)
-                          (apply-closure
-                           f
-                           (make-closure
-                            cont
-                            (lambda (cont v ct2)
-                              (push-delimited-continuation! ct2)
-                              (make-resumable cont v)))
-                           (make-closure
-                            '()
-                            (lambda (_ v)
-                              (make-resumable (pop-delimited-continuation!) v)))))))
-
-;; Exceptions:
-(define __callDIVhandler (make-closure
-                          '()
-                          (lambda (_ handler f cont)
-                            (let* ((curr-handler (uproc-error-handler (current-task)))
-                                   (state (list handler cont curr-handler))
-                                   (new-handler (make-closure
-                                                 state
-                                                 (lambda (handler/cont/curr-handler error restart _)
-                                                   (set-uproc-error-handler! (current-task) (caddr handler/cont/curr-handler))
-                                                   (apply-closure (car handler/cont/curr-handler)
-                                                                  error
-                                                                  restart
-                                                                  (cadr handler/cont/curr-handler))))))
-                              (set-uproc-error-handler! (current-task) new-handler)
-                              (apply-closure
-                               f
-                               (make-closure
-                                (cons cont curr-handler)
-                                (lambda (cont/curr-handler v)
-                                  (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
-                                  (make-resumable (car cont/curr-handler) v))))))))
-
-(define __raise (make-closure
-                 '()
-                 (lambda (_ err cont)
-                   (let ((curr-handler (uproc-error-handler (current-task))))
-                     (apply-closure
-                      curr-handler
-                      err
-                      (make-closure
-                       (cons cont curr-handler)
-                       (lambda (cont/curr-handler v _)
-                         (set-uproc-error-handler! (current-task) (cdr cont/curr-handler))
-                         (make-resumable (car cont/curr-handler) v)))
-                      cont)))))
 
 ;; Actor model:
 (define __self (bootstrap self))

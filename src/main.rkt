@@ -2,10 +2,12 @@
 
 ;; The main entry point.
 
+(require "compiler/utils/assets.rkt")
 (require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
+(require "compiler/passes/rename.rkt") ;; FIXME For symbol->safe
 (require "runtime/rt.rkt")
 (require "rete/rete.rkt")
 
@@ -23,7 +25,6 @@
          compile-instrumented-file)
 
 (provide (all-from-out "runtime/rt.rkt"))
-
 (provide (all-from-out "rete/rete.rkt"))
 
 (define-namespace-anchor anc)
@@ -32,7 +33,21 @@
 (define (intern-instrument expr)
   (eval expr ns))
 
+(define *core-interned* #f)
+(define +core-spartan+ (embed-file-contents "./runtime/core.sprtn"))
+
+(define (bootstrap-core-once)
+  ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
+  (unless *core-interned*
+    (set! *core-interned* #t)
+    (let ((core (run-code (compile-string +core-spartan+))))
+      (map (lambda (b)
+             (let ((binding `(define ,(symbol->safe (car b)) ,(cdr b))))
+               (intern-instrument binding)))
+           (cdr core)))))
+
 (define (run-code expr)
+  (bootstrap-core-once)
   (reset-rete!)
   (reset-tasks! '())
   (spawn-task! (make-resumable

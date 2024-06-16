@@ -30,6 +30,9 @@
                t2)))
 
  (it "Can as easily resume stuff."
+     (define __MULT (bootstrap *))
+     (define __PLUS (bootstrap +))
+     (define __EQUAL (bootstrap =))
      (assert (resume
               (resume
                (resume
