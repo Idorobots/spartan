@@ -189,5 +189,4 @@
        (continuation-mark-set->context marks)))
 
 (define (compiler-bug what context)
-  (map displayln (get-stacktrace (current-continuation-marks)))
   (error (format "Likely a compiler bug! ~a ~a" what context)))

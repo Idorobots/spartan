@@ -327,6 +327,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                 ((constantly #t)
                  (lambda (e)
                    (displayln (format "Execution aborted due to an error: ~a" e))
+                   (for-each displayln
+                             (get-stacktrace (exn-continuation-marks e)))
                    (exit 1))))
              (-> init
                  (env-set 'module (env-get init 'input-file))
