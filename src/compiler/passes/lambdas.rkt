@@ -35,6 +35,7 @@
                        (map loop args)
                        (loop body))
           (loop expr)))
+
      ;; Actual inlining
      ((app (symbol op) args ...)
       (let ((l (assoc op lambdas)))
@@ -49,6 +50,7 @@
                                (ast-lambda-body (cdr l)))
                   (loop expr)))
             (loop expr))))
+
      ;; Collect lambdas
      ((let bindings body)
       (let ((ls (map (lambda (b)
@@ -113,7 +115,20 @@
   (make-ast-gensym (ast-node-location original)
                    (ast-symbol-value original)))
 
+;; NOTE Max "depth" of a lambda expression to consider during inlining.
 (define +max-inlineable-size+ 15)
 
+;; NOTE Currently only &current-continuation is lexically dependant.
+;; NOTE It needs to be compiled in the scope of the original function that introduced the primop.
+(define +lexically-dependant-primops+ '(&current-continuation))
+
 (define (suitable-lambda? b)
-  (< (ast-size b) +max-inlineable-size+))
+  (and (< (ast-size b) +max-inlineable-size+)
+       (not (ast-contains? (lambda (e)
+                             (match-ast e
+                              ((primop-app op args ...)
+                               #:when (member op +lexically-dependant-primops+)
+                               #t)
+                              (else
+                               #f)))
+                           b))))
