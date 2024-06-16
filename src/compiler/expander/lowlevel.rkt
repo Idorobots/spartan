@@ -1,6 +1,6 @@
 #lang racket
 
-;; Low-level expander... Expander.
+;; Low-level RT macro support.
 
 (require "../utils/utils.rkt")
 (require "../ast.rkt")
@@ -18,7 +18,7 @@
   (define (expand-instruction instruction)
     (match-ast instruction
      ((list (symbol 'primop-app) (ast-quote (symbol op)) args ...)
-      (replace expr
+      (replace instruction
                (make-ast-primop-app (ast-node-location instruction)
                                     op
                                     args)))
@@ -28,13 +28,14 @@
        "Bad `asm` instruction:"))))
 
   (match-ast expr
-   ((list (symbol 'asm) instructions ...)
+   ((list (symbol 'asm) first rest ...)
     (let ((loc (ast-node-location expr)))
       (replace expr
              (make-ast-body loc
-                            (map expand-instruction instructions)
+                            (map expand-instruction (cons first rest))
                             "Bad `asm` syntax"))))
    (else
-    (raise-compilation-error
-     expr
-     "Bad `asm` syntax, expected a list of assembly instructions to follow:"))))
+    (let ((node (ast-list-car expr)))
+      (raise-compilation-error
+       node
+       "Bad `asm` syntax, expected a list of assembly instructions to follow:")))))
