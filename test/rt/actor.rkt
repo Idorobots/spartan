@@ -12,15 +12,12 @@
   (and (>= value (- expected delta))
        (<= value (+ expected delta))))
 
-(define __core (bootstrap-core-once!))
-(define __self (intern-instrument '__self))
-(define __send (intern-instrument '__send))
-(define __recv (intern-instrument '__recv))
-(define __sleep (intern-instrument '__sleep))
-
 (describe
  "Actor Model"
  (it "Can sleep for a time."
+     (bootstrap-core-once!)
+     (define __sleep (intern-instrument '__sleep))
+
      (let ((p (make-uproc 100
                           (make-resumable
                            (closurize
@@ -44,6 +41,10 @@
          (error "Actually get this test to work!"))
 
  (it "Can send a message."
+     (bootstrap-core-once!)
+     (define __self (intern-instrument '__self))
+     (define __send (intern-instrument '__send))
+
      (let ((p (make-uproc 100
                           (make-resumable
                            (closurize
@@ -92,6 +93,9 @@
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
  (it "Can't receive when there are no messages."
+     (bootstrap-core-once!)
+     (define __recv (intern-instrument '__recv))
+
      (let ((p (make-uproc 100
                           (make-resumable
                            (closurize
