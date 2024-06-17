@@ -5,7 +5,9 @@
 (require "../testing.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/runtime/actor.rkt")
 (require "../../src/runtime/closures.rkt")
+(require "../../src/runtime/continuations.rkt")
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 
@@ -18,14 +20,14 @@
                 'test-task-info
                 (make-closure '()
                               (lambda (env cont)
-                                (cont '()))))
+                                (make-resumable cont '()))))
 
     ;; Ensure that monitor task doesn't ever hang the execution.
     (rt-define! rt
                 'test-monitor
                 (make-closure '()
                               (lambda (env interval cont)
-                                (cont interval))))
+                                (make-resumable cont interval))))
 
     ;; Ensure that timeouts take very short time.
     (rt-define! rt
@@ -33,19 +35,19 @@
                 (make-closure '()
                               (lambda (env delay cont)
                                 (sleep (min delay 25))
-                                (cont delay))))
+                                (make-resumable cont delay))))
 
     ;; Determined by a fairly random dice roll.
     (rt-define! rt
                 'test-random
                 (make-closure '()
                               (let ((*random* 0.05))
-                                (lambda (env x cont)
+                                (lambda (env cont)
                                   (let ((r *random*))
                                     (set! *random* (+ r 0.05))
                                     (when (> *random* 1.0)
                                       (set! *random* 0.05))
-                                    (cont r))))))
+                                    (make-resumable cont r))))))
     rt))
 
 (define (instrument-for-test ast)
@@ -78,22 +80,19 @@
 (describe
  "instrumented r7rs target"
 
- (ignore "should support continuations"
-     (bootstrap-instruments!)
-     ;; FIXME This should take the RT created by bootstrap-instruments.
-     (test-instrumented-file "examples/errors.sprtn" instrument-for-test)
-     (test-instrumented-file "examples/errors3.sprtn" instrument-for-test))
+ (it "should support continuations"
+     (define rt (bootstrap-instruments!))
+     (test-instrumented-file rt "examples/errors.sprtn" instrument-for-test)
+     (test-instrumented-file rt "examples/errors3.sprtn" instrument-for-test))
 
- (ignore "should support Actor Model"
-     (bootstrap-instruments!)
-     ;; FIXME This should take the RT created by bootstrap-instruments.
-     (test-instrumented-file "examples/uprocs.sprtn" instrument-for-test)
-     (test-instrumented-file "examples/uprocs2.sprtn" instrument-for-test sort-lines)
-     (test-instrumented-file "examples/fibonacci2.sprtn" instrument-for-test)
-     (test-instrumented-file "examples/errors2.sprtn" instrument-for-test))
+ (it "should support Actor Model"
+     (define rt (bootstrap-instruments!))
+     (test-instrumented-file rt "examples/uprocs.sprtn" instrument-for-test)
+     (test-instrumented-file rt "examples/uprocs2.sprtn" instrument-for-test sort-lines)
+     (test-instrumented-file rt "examples/fibonacci2.sprtn" instrument-for-test)
+     (test-instrumented-file rt "examples/errors2.sprtn" instrument-for-test))
 
- (ignore "should support the RBS"
-     (bootstrap-instruments!)
-     ;; FIXME This should take the RT created by bootstrap-instruments.
-     (test-instrumented-file "examples/rbs.sprtn" instrument-for-test)
-     (test-instrumented-file "examples/cep.sprtn" instrument-for-test)))
+ (it "should support the RBS"
+     (define rt (bootstrap-instruments!))
+     (test-instrumented-file rt "examples/rbs.sprtn" instrument-for-test)
+     (test-instrumented-file rt "examples/cep.sprtn" instrument-for-test)))

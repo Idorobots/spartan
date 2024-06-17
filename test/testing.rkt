@@ -5,6 +5,7 @@
 (require "gen.rkt")
 
 (require "../src/main.rkt")
+(require "../src/runtime/rt.rkt")
 (require "../src/compiler/utils/utils.rkt")
 (require "../src/compiler/utils/io.rkt")
 (require "../src/compiler/utils/refs.rkt")
@@ -95,11 +96,11 @@
 
 (define-syntax test-instrumented-file
   (syntax-rules ()
-    ((_ filename instrument)
-     (test-instrumented-file filename instrument id))
-    ((_ filename instrument preprocess)
+    ((_ rt filename instrument)
+     (test-instrumented-file rt filename instrument id))
+    ((_ rt filename instrument preprocess)
      (run-with-snapshot (lambda (f)
-                          (run-instrumented-test-file f instrument))
+                          (run-instrumented-test-file rt f instrument))
                         filename
                         preprocess))))
 
@@ -256,7 +257,7 @@
                (deref failed-tests))
           (error (red (format "~a tests failed." (length (deref failed-tests)))))))))
 
-(define (run-instrumented-test-file filename instrument)
+(define (run-instrumented-test-file rt filename instrument)
   (with-output-to-string
     (lambda ()
       ;; NOTE Ignores the compilation abort, but assuming the snapshot won't match, it'll show up in the test log.
@@ -264,10 +265,18 @@
                        (lambda (e)
                          (display (compilation-error-what e))
                          (newline))))
-        (run-instrumented-file filename instrument)))))
+        (rt-execute! rt
+                     (compile-instrumented-file filename instrument))))))
 
 (define (run-test-file filename)
-  (run-instrumented-test-file filename id))
+  (with-output-to-string
+    (lambda ()
+      ;; NOTE Ignores the compilation abort, but assuming the snapshot won't match, it'll show up in the test log.
+      (with-handlers ((compilation-error?
+                       (lambda (e)
+                         (display (compilation-error-what e))
+                         (newline))))
+        (run-file filename)))))
 
 (define (compile-test-file filename)
   (with-handlers ((compilation-error?

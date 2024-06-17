@@ -68,6 +68,8 @@
         validate
         'validate
         report-errors
+        instrument
+        'instrument
         alpha-convert
         'alpha
         (optimize opts-early)
@@ -81,8 +83,6 @@
         'cps
         (optimize opts-late)
         'optimize-late
-        instrument
-        'instrument
         annotate-free-vars
         closure-convert
         'closures

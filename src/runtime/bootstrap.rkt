@@ -5,6 +5,7 @@
 (require "../rete/rete.rkt")
 (require "continuations.rkt")
 (require "closures.rkt")
+(require "actor.rkt")
 
 (provide notify-whenever
          __nil __true __false __yield __recur
