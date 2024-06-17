@@ -10,7 +10,9 @@
 (require "../../src/compiler/utils/utils.rkt")
 
 (define (bootstrap-instruments!)
-  (let ((rt (bootstrap-rt-once! run-string)))
+  (let ((rt (bootstrap-rt!)))
+    (import-defaults! rt)
+
     ;; Silence task info logs since these might vary in the specific timings.
     (rt-define! rt
                 'test-task-info
@@ -43,7 +45,8 @@
                                     (set! *random* (+ r 0.05))
                                     (when (> *random* 1.0)
                                       (set! *random* 0.05))
-                                    (cont r))))))))
+                                    (cont r))))))
+    rt))
 
 (define (instrument-for-test ast)
   (map-ast (lambda (expr)
@@ -77,11 +80,13 @@
 
  (ignore "should support continuations"
      (bootstrap-instruments!)
+     ;; FIXME This should take the RT created by bootstrap-instruments.
      (test-instrumented-file "examples/errors.sprtn" instrument-for-test)
      (test-instrumented-file "examples/errors3.sprtn" instrument-for-test))
 
  (ignore "should support Actor Model"
      (bootstrap-instruments!)
+     ;; FIXME This should take the RT created by bootstrap-instruments.
      (test-instrumented-file "examples/uprocs.sprtn" instrument-for-test)
      (test-instrumented-file "examples/uprocs2.sprtn" instrument-for-test sort-lines)
      (test-instrumented-file "examples/fibonacci2.sprtn" instrument-for-test)
@@ -89,5 +94,6 @@
 
  (ignore "should support the RBS"
      (bootstrap-instruments!)
+     ;; FIXME This should take the RT created by bootstrap-instruments.
      (test-instrumented-file "examples/rbs.sprtn" instrument-for-test)
      (test-instrumented-file "examples/cep.sprtn" instrument-for-test)))

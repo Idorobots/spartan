@@ -2,6 +2,7 @@
 
 ;; The main entry point.
 
+(require "compiler/utils/assets.rkt")
 (require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
@@ -18,11 +19,21 @@
          compile-string
          compile-instrumented-string
          compile-file
-         compile-instrumented-file)
+         compile-instrumented-file
+         ;; FIXME For test access
+         import-defaults!)
 
 (define (run-code expr)
-  (rt-execute! (bootstrap-rt-once! run-string)
-               expr))
+  (let* ((rt (bootstrap-rt!)))
+      (import-defaults! rt)
+      (rt-execute! rt expr)))
+
+(define +core-import+ #f)
+(define (import-defaults! rt)
+  (unless +core-import+
+    (set! +core-import+ (rt-execute! rt +core-spartan+)))
+  (rt-import! rt
+              +core-import+))
 
 (define (run-instrumented expr instrument)
   (run-code
@@ -67,3 +78,7 @@
 
 (define (run-file filename)
   (run-instrumented-file filename id))
+
+;; Default modules to be included in the binary.
+
+(define +core-spartan+ (compile-string (embed-file-contents "./runtime/core.sprtn")))

@@ -19,7 +19,9 @@
 (describe
  "Actor Model"
  (it "Can sleep for a time."
-     (define __sleep (rt-export (bootstrap-rt-once! run-string) 'sleep))
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+     (define __sleep (rt-export rt 'sleep))
 
      (let ((p (make-uproc 100
                           (make-resumable
@@ -44,7 +46,8 @@
          (error "Actually get this test to work!"))
 
  (it "Can send a message."
-     (define rt (bootstrap-rt-once! run-string))
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
      (define __self (rt-export rt 'self))
      (define __send (rt-export rt 'send))
 
@@ -96,7 +99,9 @@
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
  (it "Can't receive when there are no messages."
-     (define __recv (rt-export (bootstrap-rt-once! run-string) 'recv))
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+     (define __recv (rt-export rt 'recv))
 
      (let ((p (make-uproc 100
                           (make-resumable

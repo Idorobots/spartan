@@ -35,6 +35,7 @@
 (define *run-queue* (ref (task-queue)))
 
 (define (reset-tasks! tasks)
+  (assign! *current-task* '())
   (assign! *task-list* tasks)
   (assign! *run-queue*
            (foldl (lambda (task q)

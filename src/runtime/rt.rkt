@@ -1,8 +1,8 @@
 #lang racket
 
-;; The runtime.
-(require "../compiler/utils/assets.rkt") ;; FIXME For embed-file-contents
 (require "../compiler/passes/rename.rkt") ;; FIXME For symbol->safe
+
+;; The runtime.
 
 (require "closures.rkt")
 (require "continuations.rkt")
@@ -13,52 +13,86 @@
 (require "monitor.rkt")
 (require "bootstrap.rkt")
 
-;; (provide (all-from-out "closures.rkt"))
-;; (provide (all-from-out "continuations.rkt"))
-;; (provide (all-from-out "delimited.rkt"))
-;; (provide (all-from-out "processes.rkt"))
-;; (provide (all-from-out "actor.rkt"))
-;; (provide (all-from-out "scheduler.rkt"))
-;; (provide (all-from-out "monitor.rkt"))
-;; (provide (all-from-out "bootstrap.rkt"))
-
 ;; Also part of the runtime primops:
 (require "../rete/rete.rkt")
-;;(provide (all-from-out "../rete/rete.rkt"))
-
 (require "../compiler/utils/refs.rkt")
-;;(provide ref deref assign!)
 
 (provide rt-intern!
          rt-define!
          rt-export
+         rt-import!
          rt-execute!
-         bootstrap-rt-once!)
+         bootstrap-rt!)
 
-(define-namespace-anchor anc)
-(define ns (namespace-anchor->namespace anc))
+(define (bootstrap-rt!)
+  (let ((rt (make-base-namespace)))
+    ;; Primitive values
+    (for-each (lambda (p)
+                (rt-define! rt (car p) (cdr p)))
+              (list (cons 'nil __nil)
+                    (cons 'true __true)
+                    (cons 'false __false)
+                    (cons 'yield __yield)
+                    (cons 'recur __recur)
+                    (cons 'list __list)))
+    ;; Primitive operations
+    (for-each (lambda (p)
+                (rt-define-primop! rt (car p) (cdr p)))
+              (list (cons 'nil? null?)
+                    (cons 'ref ref)
+                    (cons 'deref deref)
+                    (cons 'assign! assign!)
+                    (cons 'current-task current-task)
+                    (cons 'uproc-error-handler uproc-error-handler)
+                    (cons 'set-uproc-error-handler! set-uproc-error-handler!)
+                    (cons 'set-uproc-delimited-continuations! set-uproc-delimited-continuations!)
+                    (cons 'uproc-delimited-continuations uproc-delimited-continuations)
+                    (cons 'push-delimited-continuation! (lambda (cont)
+                                                          ;; FIXME Expand this in core.
+                                                          (push-delimited-continuation! cont)))
+                    (cons 'pop-delimited-continuation! (lambda ()
+                                                         ;; FIXME Expand this in core.
+                                                         (pop-delimited-continuation!)))
+                    (cons 'uproc-error-handler uproc-error-handler)
+                    (cons 'set-uproc-error-handler! set-uproc-error-handler!)
+                    (cons 'self self)
+                    (cons 'recv recv)
+                    (cons 'send send)
+                    (cons 'sleep sleep)
+                    (cons 'spawn spawn)
+                    (cons 'task-info task-info)
+                    (cons 'assert! assert!)
+                    (cons 'signal! signal!)
+                    (cons 'retract! retract!)
+                    (cons 'select select)
+                    (cons 'notify-whenever notify-whenever)
+                    (cons 'make-closure make-closure)
+                    (cons 'closure-fun closure-fun)
+                    (cons 'closure-env closure-env)
+                    (cons 'set-closure-env! set-closure-env!)
+                    (cons 'kont-counter kont-counter)
+                    (cons 'dec-kont-counter! dec-kont-counter!)
+                    (cons 'reset-kont-counter! reset-kont-counter!)
+                    (cons 'make-resumable make-resumable)))
 
-(define *core-interned* #f)
-(define +core-spartan+ (embed-file-contents "./core.sprtn"))
-
-;; FIXME The run is needed to avoid cyclic dependencies.
-(define (bootstrap-rt-once! run)
-  ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
-  (unless *core-interned*
-    (set! *core-interned* #t)
-    (let ((core (run +core-spartan+)))
-      (map (lambda (b)
-             (rt-define! ns (car b) (cdr b)))
-           (cdr core))))
-  (reset-rete!)
-  (reset-tasks! '())
-  ns)
+    (reset-rete!)
+    (reset-tasks! '())
+    rt))
 
 (define (rt-intern! rt expr)
   (eval expr rt))
 
+(define (rt-define-primop! rt name value)
+  (namespace-set-variable-value! name value #t rt))
+
 (define (rt-define! rt name value)
-  (namespace-set-variable-value! (symbol->safe name) value #f rt))
+  (namespace-set-variable-value! (symbol->safe name) value #f rt #t))
+
+(define (rt-import! rt structure)
+  ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
+  (map (lambda (b)
+         (rt-define! rt (car b) (cdr b)))
+       (cdr structure)))
 
 (define (rt-export rt name)
   (namespace-variable-value (symbol->safe name) #f #f rt))

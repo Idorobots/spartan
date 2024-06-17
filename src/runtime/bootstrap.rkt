@@ -13,7 +13,7 @@
 (require "processes.rkt")
 (require "scheduler.rkt")
 
-(provide nil? notify-whenever
+(provide notify-whenever
          __nil __true __false __yield __recur
          __list
          ;; FIXME For test access.
@@ -50,9 +50,6 @@
                       (lambda (fun/cont _)
                         (apply-closure (car fun/cont) (cdr fun/cont))))
                      '()))))
-
-;; Built-in primops
-(define nil? null?)
 
 ;; List
 ;; FIXME There's currently no vararg function support, so this can't be implemented in Spartan.
