@@ -5,6 +5,10 @@
 (require "../testing.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/runtime/processes.rkt")
+(require "../../src/runtime/scheduler.rkt")
+(require "../../src/runtime/continuations.rkt")
+(require "../../src/runtime/closures.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 
@@ -15,8 +19,7 @@
 (describe
  "Actor Model"
  (it "Can sleep for a time."
-     (bootstrap-core-once!)
-     (define __sleep (intern-instrument '__sleep))
+     (define __sleep (rt-export (bootstrap-rt-once! run-string) 'sleep))
 
      (let ((p (make-uproc 100
                           (make-resumable
@@ -41,9 +44,9 @@
          (error "Actually get this test to work!"))
 
  (it "Can send a message."
-     (bootstrap-core-once!)
-     (define __self (intern-instrument '__self))
-     (define __send (intern-instrument '__send))
+     (define rt (bootstrap-rt-once! run-string))
+     (define __self (rt-export rt 'self))
+     (define __send (rt-export rt 'send))
 
      (let ((p (make-uproc 100
                           (make-resumable
@@ -93,8 +96,7 @@
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
  (it "Can't receive when there are no messages."
-     (bootstrap-core-once!)
-     (define __recv (intern-instrument '__recv))
+     (define __recv (rt-export (bootstrap-rt-once! run-string) 'recv))
 
      (let ((p (make-uproc 100
                           (make-resumable

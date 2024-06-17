@@ -4,6 +4,7 @@
 
 (require "../testing.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/runtime/closures.rkt")
 (require "../../src/main.rkt")
 
 (describe

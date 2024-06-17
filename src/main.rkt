@@ -2,17 +2,13 @@
 
 ;; The main entry point.
 
-(require "compiler/utils/assets.rkt")
 (require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
-(require "compiler/passes/rename.rkt") ;; FIXME For symbol->safe
 (require "runtime/rt.rkt")
-(require "rete/rete.rkt")
 
-(provide intern-instrument
-         run-code
+(provide run-code
          run
          run-instrumented
          run-string
@@ -22,51 +18,11 @@
          compile-string
          compile-instrumented-string
          compile-file
-         compile-instrumented-file
-         ;; FIXME For test access
-         bootstrap-core-once!)
-
-(provide (all-from-out "runtime/rt.rkt"))
-(provide (all-from-out "rete/rete.rkt"))
-
-(define-namespace-anchor anc)
-(define ns (namespace-anchor->namespace anc))
-
-(define (intern-instrument expr)
-  (eval expr ns))
-
-(define *core-interned* #f)
-(define +core-spartan+ (embed-file-contents "./runtime/core.sprtn"))
-
-(define (bootstrap-core-once!)
-  ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
-  (unless *core-interned*
-    (set! *core-interned* #t)
-    (let ((core (run-code (compile-string +core-spartan+))))
-      (map (lambda (b)
-             (let ((binding `(define ,(symbol->safe (car b)) ,(cdr b))))
-               (intern-instrument binding)))
-           (cdr core)))))
+         compile-instrumented-file)
 
 (define (run-code expr)
-  (bootstrap-core-once!)
-  (reset-rete!)
-  (reset-tasks! '())
-  (spawn-task! (make-resumable
-                (make-closure
-                 '()
-                 (lambda (_ expr)
-                   (intern-instrument expr)))
-                expr)
-               (make-closure
-                '()
-                (lambda (e err restart _)
-                  (display ";; Execution finished due to an unhandled error: ")
-                  (display err)
-                  (newline)
-                  err)))
-  ;; NOTE Returns only the last result.
-  (last (execute!)))
+  (rt-execute! (bootstrap-rt-once! run-string)
+               expr))
 
 (define (run-instrumented expr instrument)
   (run-code

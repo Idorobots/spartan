@@ -5,6 +5,11 @@
 (require "../testing.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/runtime/scheduler.rkt")
+(require "../../src/runtime/processes.rkt")
+(require "../../src/runtime/continuations.rkt")
+(require "../../src/runtime/closures.rkt")
+(require "../../src/runtime/bootstrap.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 
 (describe
