@@ -16,7 +16,6 @@
 (provide nil? notify-whenever
          __nil __true __false __yield __recur
          __list
-         __monitor
          ;; FIXME For test access.
          bootstrap)
 
@@ -65,17 +64,3 @@
             ;; FIXME We can't use Spartan functions, since they yield execution.
             (lambda (b)
               (send who b))))
-
-;; Misc:
-;; FIXME Spartan version currently doesn't inline properly.
-(define __monitor (make-closure
-                   '()
-                   (lambda (_ timeout cont)
-                     (task-info)
-                     (sleep timeout)
-                     (make-resumable
-                      (make-closure
-                       (cons timeout cont)
-                       (lambda (timeout/cont v)
-                         (apply-closure __monitor (car timeout/cont) (cdr timeout/cont))))
-                      '()))))

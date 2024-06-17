@@ -116,19 +116,25 @@
                    (ast-symbol-value original)))
 
 ;; NOTE Max "depth" of a lambda expression to consider during inlining.
-(define +max-inlineable-size+ 15)
+(define +max-inlineable-size+ 23)
+;; NOTE Recursive functions smaller than this much won't be inlined,
+;; NOTE as the introduced continuations are more expensive than the self call.
+(define +max-inlineable-size-for-recursive+ 5)
 
 ;; NOTE Currently only &current-continuation is lexically dependant.
 ;; NOTE It needs to be compiled in the scope of the original function that introduced the primop.
 (define +lexically-dependant-primops+ '(&current-continuation))
 
 (define (suitable-lambda? b)
-  (and (< (ast-size b) +max-inlineable-size+)
-       (not (ast-contains? (lambda (e)
-                             (match-ast e
-                              ((primop-app op args ...)
-                               #:when (member op +lexically-dependant-primops+)
-                               #t)
-                              (else
-                               #f)))
-                           b))))
+  (let ((size (ast-size b)))
+    (and (<= size +max-inlineable-size+)
+         (not (and (<= size +max-inlineable-size-for-recursive+)
+                   (ast-binding-self-recursive b)))
+         (not (ast-contains? (lambda (e)
+                               (match-ast e
+                                          ((primop-app op args ...)
+                                           #:when (member op +lexically-dependant-primops+)
+                                           #t)
+                                          (else
+                                           #f)))
+                             b)))))

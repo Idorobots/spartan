@@ -111,7 +111,7 @@
                ((app) (foldl +
                              (ast-app-op expr)
                              (ast-app-args expr)))
-               ((primop-app) (apply + (ast-primop-app-args expr)))
+               ((primop-app) (+ 1 (apply + (ast-primop-app-args expr))))
                ((def) (ast-def-value expr))
                (else 0)))
            ast))

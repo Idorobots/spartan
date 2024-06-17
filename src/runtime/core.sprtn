@@ -256,11 +256,10 @@
  (define (task-info)
    (asm (primop-app 'task-info)))
 
- ;; FIXME Fails to inline.
- ;; (define (monitor timeout)
- ;;   (task-info)
- ;;   (sleep timeout)
- ;;   (monitor timeout))
+ (define (monitor timeout)
+   (task-info)
+   (sleep timeout)
+   (monitor timeout))
 
  ;; RBS
  (declare-primop (assert! fact))
