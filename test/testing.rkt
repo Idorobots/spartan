@@ -200,18 +200,24 @@
                                                        (cons (red (format "- ~a - ~a" test-name test-case-name))
                                                              (deref failures)))))
                                (timing (time-execution
-                                        (with-handlers ((assert-exception?
-                                                         (lambda (e)
-                                                           (log-failure (assert->string e))))
-                                                        (compilation-error?
-                                                         (lambda (e)
-                                                           (log-failure (compilation-error-what e))))
-                                                        (exn:fail?
-                                                         (lambda (e)
-                                                           (log-failure (format "~s~n" e)))))
-                                          (with-output-to-file output-file
-                                            test-case-thunk
-                                            #:exists 'replace)))))
+                                        (with-output-to-file output-file
+                                          (lambda ()
+                                            (with-handlers ((assert-exception?
+                                                             (lambda (e)
+                                                               (log-failure (assert->string e))))
+                                                            (compilation-error?
+                                                             (lambda (e)
+                                                               (log-failure (compilation-error-what e))))
+                                                            (exn?
+                                                             (lambda (e)
+                                                               (log-failure (exn-message e))
+                                                               (displayln (exn-message e))
+                                                               (displayln "Stack trace:")
+                                                               (map displayln
+                                                                    (get-stacktrace
+                                                                     (exn-continuation-marks e))))))
+                                              (test-case-thunk)))
+                                          #:exists 'replace))))
                           (if (string? (deref result))
                               (let ((output (slurp output-file)))
                                 (display (red (format "- ~a - !!!FAILURE!!!~n" test-case-name)))
