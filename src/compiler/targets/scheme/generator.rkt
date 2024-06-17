@@ -72,13 +72,13 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(newline self recv))
+     #:when (member op '(newline random self recv))
      `(,op))
 
     ;; Monadic primops
     ((primop-app op a)
      #:when (member op '(not
-                         zero? random
+                         zero?
                          car cdr nil? empty?
                          display
                          ref deref

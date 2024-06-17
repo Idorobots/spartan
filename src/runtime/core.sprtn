@@ -49,7 +49,7 @@
  (declare-primop (modulo a b))
  (declare-primop (quotient a b))
  (declare-primop (remainder a b))
- (declare-primop (random x))
+ (declare-primop (random))
 
  (define (zero? x)
    (asm (primop-app 'zero? x)))
@@ -75,8 +75,8 @@
  (define (remainder a b)
    (asm (primop-app 'remainder a b)))
 
- (define (random x)
-   (asm (primop-app 'random x)))
+ (define (random)
+   (asm (primop-app 'random)))
 
  ;; List
  (declare-primop (nil? x))
