@@ -31,9 +31,9 @@
     ;; Primitive values
     (for-each (lambda (p)
                 (rt-define! rt (car p) (cdr p)))
-              (list (cons 'nil __nil)
-                    (cons 'true __true)
-                    (cons 'false __false)
+              (list (cons 'nil '())
+                    (cons 'true #t)
+                    (cons 'false #f)
                     (cons 'yield __yield)
                     (cons 'recur __recur)
                     (cons 'list __list)))

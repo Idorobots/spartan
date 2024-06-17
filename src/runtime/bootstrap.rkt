@@ -7,28 +7,9 @@
 (require "closures.rkt")
 (require "actor.rkt")
 
-(provide notify-whenever
-         __nil __true __false __yield __recur
-         __list
-         ;; FIXME For test access.
-         bootstrap)
-
-(define (bootstrap f)
-  (make-closure
-   '()
-   (lambda args
-     (make-resumable
-      (last args)
-      (apply f
-             (take (cdr args)
-                   ;; NOTE Args minus env and cont.
-                   (- (length args) 2)))))))
+(provide notify-whenever __yield __recur __list)
 
 ;; Built-in values
-(define __nil '())
-(define __true #t)
-(define __false #f)
-
 (define __yield
   (make-closure
    '()
@@ -47,7 +28,15 @@
 
 ;; List
 ;; FIXME There's currently no vararg function support, so this can't be implemented in Spartan.
-(define __list (bootstrap list))
+(define __list
+  (make-closure
+   '()
+   (lambda args
+     (make-resumable
+      (last args)
+      (take (cdr args)
+            ;; NOTE Args minus env and cont.
+            (- (length args) 2))))))
 
 ;; RBS bootstrap:
 (define (notify-whenever who pattern)

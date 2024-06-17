@@ -80,14 +80,9 @@
 
  ;; List
  (declare-primop (nil? x))
- ;; (declare-primop (empty? x))
  (declare-primop (car l))
- ;; (declare-primop (cadr l))
  (declare-primop (cdr l))
- ;; (declare-primop (cddr l))
  (declare-primop (cons a b))
- ;; (declare-primop (append a b))
- ;; (declare-primop (concat a b))
 
  (define (nil? l)
    (asm (primop-app 'nil? l)))
@@ -136,7 +131,6 @@
 
  ;; IO
  (declare-primop (display x))
- ;; (declare-primop (newline))
 
  (define (display x)
    (asm (primop-app 'display x)))
@@ -282,7 +276,4 @@
 
  (define (notify-whenever pid pattern)
    (asm (primop-app 'notify-whenever pid pattern)))
-
- ;; TODO Implement RBS primops.
-
 )

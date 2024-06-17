@@ -9,7 +9,6 @@
 (require "../../src/runtime/processes.rkt")
 (require "../../src/runtime/continuations.rkt")
 (require "../../src/runtime/closures.rkt")
-(require "../../src/runtime/bootstrap.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 
 (describe
@@ -35,32 +34,32 @@
                t2)))
 
  (it "Can as easily resume stuff."
-     (define __MULT (bootstrap *))
-     (define __PLUS (bootstrap +))
-     (define __EQUAL (bootstrap =))
+     (define test (make-closure '()
+                                (lambda (_ a b cont)
+                                  (make-resumable cont (equal? a b)))))
      (assert (resume
               (resume
                (resume
                 (apply-closure
-                 __MULT
-                 3
+                 test
+                 2
                  2
                  (make-closure
-                  (make-env)
-                  (lambda (_ mult)
+                  '()
+                  (lambda (_ two)
                     (apply-closure
-                     __PLUS
+                     test
                      3
                      3
                      (make-closure
-                      (make-env mult)
-                      (lambda (e plus)
+                      two
+                      (lambda (two three)
                         (apply-closure
-                         __EQUAL
-                         (env-ref e 0)
-                         plus
+                         test
+                         two
+                         three
                          (make-closure
-                          (make-env)
+                          '()
                           (lambda (_ v) v))))))))))))))
 
  (it "Can run compiled code."
