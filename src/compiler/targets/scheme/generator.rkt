@@ -8,13 +8,6 @@
 
 (provide generate-scheme)
 
-;; TODOs
-;; - [x] Implement proper code-gen.
-;; - [x] Remove no-longer-used primops from the runtime code.
-;; - [ ] Update the test suite not to require interning the runtime all the time.
-;; - [ ] Move the runtime code to a separate directory structure.
-;; - [ ] Abstract common parts of the runtime to share between JS and Scheme.
-
 (define (generate-scheme env)
   (let* ((init (env-get env 'init))
          (init-loc (ast-node-location init))
@@ -77,19 +70,19 @@
                       (generate-scheme-node curr-cont e))
                     exprs)))
 
-    ;; Nullary primops
+    ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random newline self))
+     #:when (member op '(newline self recv))
      `(,op))
 
     ;; Monadic primops
     ((primop-app op a)
      #:when (member op '(not
-                         zero?
+                         zero? random
                          car cdr nil? empty?
                          display
                          ref deref
-                         spawn
+                         spawn sleep
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node curr-cont a)))
 
@@ -106,6 +99,17 @@
     ;; Vararg primops
     ((primop-app op args ...)
      #:when (member op '(list debug))
+     `(,op ,@(map (lambda (a)
+                    (generate-scheme-node curr-cont a))
+                  args)))
+
+    ;; RT system primops
+    ((primop-app op args ...)
+     #:when (member op '(current-task task-info
+                         uproc-error-handler set-uproc-error-handler!
+                         uproc-delimited-continuations set-uproc-delimited-continuations!
+                         ;; FIXME Remove once the core is refactored.
+                         pop-delimited-continuation! push-delimited-continuation!))
      `(,op ,@(map (lambda (a)
                     (generate-scheme-node curr-cont a))
                   args)))
@@ -220,21 +224,6 @@
     ((primop-app '&structure-ref s name)
      `(cdr (assoc ,(generate-scheme-node curr-cont name)
                   (cdr ,(generate-scheme-node curr-cont s)))))
-
-    ;; Currently not-primops primops:
-    ;; call/current-continuation
-    ;; call/reset
-    ;; call/shift
-    ;; call/handler
-    ;; raise
-    ;; recv
-    ;; sleep
-
-    ((primop-app op args ...)
-     ;; FIXME These are resulting from the current instrumentation setup, but should never happen otherwise.
-     `(,op ,@(map (lambda (a)
-                    (generate-scheme-node curr-cont a))
-                  args)))
 
     (else
      (compiler-bug "Unsupported AST node type:" expr))))

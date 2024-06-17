@@ -25,6 +25,8 @@
          bootstrap-rt!)
 
 (define (bootstrap-rt!)
+  ;; FIXME This is about 2-4 times slower than using the current-namespace.
+
   (let ((rt (make-base-namespace)))
     ;; Primitive values
     (for-each (lambda (p)
