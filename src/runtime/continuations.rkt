@@ -2,7 +2,6 @@
 
 ;; Continuations:
 
-(require "../compiler/utils/utils.rkt")
 (require "closures.rkt")
 (require "processes.rkt")
 

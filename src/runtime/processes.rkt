@@ -2,7 +2,6 @@
 
 ;; Actor model:
 
-(require "../compiler/utils/utils.rkt")
 (require "../compiler/utils/gensym.rkt")
 
 (provide (struct-out uproc) make-uproc uproc-vtime

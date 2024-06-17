@@ -2,16 +2,9 @@
 
 ;; The bootstrap code.
 
-(require "../compiler/utils/utils.rkt")
-(require "../compiler/utils/refs.rkt")
 (require "../rete/rete.rkt")
 (require "continuations.rkt")
-(require "delimited.rkt")
 (require "closures.rkt")
-(require "actor.rkt")
-(require "monitor.rkt")
-(require "processes.rkt")
-(require "scheduler.rkt")
 
 (provide notify-whenever
          __nil __true __false __yield __recur
