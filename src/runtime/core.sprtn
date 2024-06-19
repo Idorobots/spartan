@@ -143,18 +143,30 @@
  ;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
  (declare-primval yield)
 
- (declare-primop (push-delimited-continuation! c))
- (declare-primop (pop-delimited-continuation!))
+ (declare-primop (current-task))
+ (declare-primop (uproc-delimited-continuations p))
+ (declare-primop (set-uproc-delimited-continuations! p c))
+
+ (define (uproc-delimited-continuations p)
+   (asm (primop-app 'uproc-delimited-continuations p)))
+
+ (define (set-uproc-delimited-continuations! p c)
+   (asm (primop-app 'set-uproc-delimited-continuations! p c)))
 
  ;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
  ;; FIXME Inlining might change the lexical continuation, but that ought to be fine, right?
  (declare-primop (&current-continuation))
 
  (define (push-delimited-continuation! c)
-   (asm (primop-app 'push-delimited-continuation! c)))
+   (let ((task (current-task)))
+     (set-uproc-delimited-continuations! task
+                                         (cons c (uproc-delimited-continuations task)))))
 
  (define (pop-delimited-continuation!)
-   (asm (primop-app 'pop-delimited-continuation!)))
+   (let* ((task (current-task))
+          (stack (uproc-delimited-continuations task)))
+     (set-uproc-delimited-continuations! task (cdr stack))
+     (car stack)))
 
  (define (call/current-continuation f)
    (let ((cc (asm (primop-app '&current-continuation))))
@@ -163,7 +175,7 @@
           (yield cc v)))))
 
  (define (call/reset f)
-   (let ((cc (asm (primop-app '&current-continuation))))
+   (let* ((cc (asm (primop-app '&current-continuation))))
      (push-delimited-continuation! cc)
      (let ((result (f)))
        (yield (pop-delimited-continuation!) result))))
@@ -178,7 +190,6 @@
               result))))
 
  ;; Exceptions
- (declare-primop (current-task))
  (declare-primop (uproc-error-handler x))
  (declare-primop (set-uproc-error-handler! x))
 

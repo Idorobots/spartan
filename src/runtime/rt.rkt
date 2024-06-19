@@ -6,7 +6,6 @@
 
 (require "closures.rkt")
 (require "continuations.rkt")
-(require "delimited.rkt")
 (require "processes.rkt")
 (require "actor.rkt")
 (require "scheduler.rkt")
@@ -49,12 +48,6 @@
                     (cons 'set-uproc-error-handler! set-uproc-error-handler!)
                     (cons 'set-uproc-delimited-continuations! set-uproc-delimited-continuations!)
                     (cons 'uproc-delimited-continuations uproc-delimited-continuations)
-                    (cons 'push-delimited-continuation! (lambda (cont)
-                                                          ;; FIXME Expand this in core.
-                                                          (push-delimited-continuation! cont)))
-                    (cons 'pop-delimited-continuation! (lambda ()
-                                                         ;; FIXME Expand this in core.
-                                                         (pop-delimited-continuation!)))
                     (cons 'uproc-error-handler uproc-error-handler)
                     (cons 'set-uproc-error-handler! set-uproc-error-handler!)
                     (cons 'self self)

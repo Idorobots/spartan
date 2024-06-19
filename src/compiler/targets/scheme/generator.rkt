@@ -82,6 +82,7 @@
                          car cdr nil? empty?
                          display
                          ref deref
+                         uproc-delimited-continuations
                          spawn sleep
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
@@ -91,6 +92,7 @@
      #:when (member op '(eq? equal?
                          + - * / = < <= > >= modulo remainder quotient
                          cons append concat
+                         set-uproc-delimited-continuations!
                          send notify-whenever
                          assign!))
      `(,op ,(generate-scheme-node a)
@@ -107,9 +109,7 @@
     ((primop-app op args ...)
      #:when (member op '(current-task task-info
                          uproc-error-handler set-uproc-error-handler!
-                         uproc-delimited-continuations set-uproc-delimited-continuations!
-                         ;; FIXME Remove once the core is refactored.
-                         pop-delimited-continuation! push-delimited-continuation!))
+                         uproc-delimited-continuations set-uproc-delimited-continuations!))
      `(,op ,@(map (lambda (a)
                     (generate-scheme-node a))
                   args)))
@@ -178,24 +178,6 @@
               (reset-kont-counter!)
               (make-resumable ,(generate-scheme-node k)
                               ,(generate-scheme-node h))))))
-
-    ((primop-app '&push-delimited-continuation! k)
-     (let ((tmp (gensym 'tmp))
-           (uproc (gensym 'uproc)))
-       `(let ((,tmp ,(generate-scheme-node k))
-              (,uproc (current-task)))
-          (set-uproc-delimited-continuations! ,uproc
-                                              (cons ,tmp
-                                                    (uproc-delimited-continuations ,uproc))))))
-
-    ((primop-app '&pop-delimited-continuation!)
-     (let ((stack (gensym 'stack))
-           (uproc (gensym 'uproc)))
-       `(let ((,uproc (current-task)))
-          (let ((,stack (uproc-delimited-continuations ,uproc)))
-            (set-uproc-delimited-continuations! ,uproc
-                                                (cdr ,stack))
-            (car ,stack)))))
 
     ;; Exceptions
     ((primop-app '&error-handler)
