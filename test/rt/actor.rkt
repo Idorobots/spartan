@@ -25,9 +25,15 @@
 
      (let ((p (make-uproc 100
                           (make-resumable
-                           (closurize
-                            (lambda (v)
-                              (apply-closure __sleep v (closurize id))))
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __sleep
+                                             v
+                                             (make-closure
+                                              '()
+                                              (lambda (e v)
+                                                v)))))
                            23)
                           '()
                           0
@@ -39,7 +45,7 @@
 
  (it "Can retrieve own pid."
      (gensym-reset!)
-     (assert (run '(self)) 'pid2))
+     (assert (run '(self)) 'pid5))
 
  (ignore "Can retrieve current node."
          ;; There is no notion of a node yet.
@@ -53,16 +59,20 @@
 
      (let ((p (make-uproc 100
                           (make-resumable
-                           (closurize
-                            (lambda (v)
-                              (apply-closure __self (closurize
-                                                     (lambda (__value4)
-                                                       (apply-closure __send
-                                                                      __value4
-                                                                      v
-                                                                      (closurize
-                                                                       (lambda (__value3)
-                                                                         __value3))))))))
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __self
+                                             (make-closure
+                                              '()
+                                              (lambda (_ __value4)
+                                                (apply-closure __send
+                                                               __value4
+                                                               v
+                                                               (make-closure
+                                                                '()
+                                                                (lambda (_ __value3)
+                                                                  __value3))))))))
                            'msg)
                           '()
                           0
@@ -73,21 +83,25 @@
        (assert (equal? (first (uproc-msg-queue p)) 'msg)))
      (let ((p (make-uproc 100
                           (make-resumable
-                           (closurize
-                            (lambda (v)
+                           (make-closure
+                            '()
+                            (lambda (_ v)
                               (apply-closure __self
-                                             (closurize
-                                              (lambda (__value7)
+                                             (make-closure
+                                              '()
+                                              (lambda (_ __value7)
                                                 (apply-closure __send
                                                                __value7
                                                                v
-                                                               (closurize
-                                                                (lambda (__value6)
+                                                               (make-closure
+                                                                '()
+                                                                (lambda (_ __value6)
                                                                   (apply-closure __send
                                                                                  __value6
                                                                                  v
-                                                                                 (closurize
-                                                                                  (lambda (__value5)
+                                                                                 (make-closure
+                                                                                  '()
+                                                                                  (lambda (_ __value5)
                                                                                     __value5)))))))))))
                            'msg)
                           '()
@@ -105,9 +119,14 @@
 
      (let ((p (make-uproc 100
                           (make-resumable
-                           (closurize
-                            (lambda (_)
-                              (apply-closure __recv (closurize id))))
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __recv
+                                             (make-closure
+                                              '()
+                                              (lambda (_ v)
+                                                v)))))
                            '())
                           '()
                           0

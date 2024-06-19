@@ -5,7 +5,8 @@
 (require "../testing.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
-(require "../../src/runtime/actor.rkt")
+(require "../../src/runtime/scheduler.rkt")
+(require "../../src/runtime/processes.rkt")
 (require "../../src/runtime/closures.rkt")
 (require "../../src/runtime/continuations.rkt")
 (require "../../src/compiler/ast.rkt")
@@ -34,7 +35,8 @@
                 'test-sleep
                 (make-closure '()
                               (lambda (env delay cont)
-                                (sleep (min delay 25))
+                                (inc-uproc-rtime! (current-task)
+                                                  (min delay 25))
                                 (make-resumable cont delay))))
 
     ;; Determined by a fairly random dice roll.

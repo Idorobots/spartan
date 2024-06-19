@@ -6,9 +6,7 @@
 (require "processes.rkt")
 
 (provide (struct-out resumable) resume can-resume?
-         kont-counter reset-kont-counter! dec-kont-counter!
-         ;; NOTE For easier testing
-         cpsfy)
+         kont-counter reset-kont-counter! dec-kont-counter!)
 
 ;; NOTE Used in compiler-generated code under &yield-cont primop.
 (struct resumable (cont arg) #:transparent #:constructor-name make-resumable)
@@ -30,11 +28,3 @@
 
 (define (dec-kont-counter!)
   (set! *kont-counter* (- *kont-counter* 1)))
-
-(define (cpsfy f)
-  (lambda args
-    (make-resumable
-     (last args)
-     (apply f
-            (take args
-                  (- (length args) 1))))))
