@@ -24,23 +24,19 @@
          bootstrap-rt!)
 
 (define (bootstrap-rt!)
-  ;; FIXME This is about 2-4 times slower than using the current-namespace.
-
   (let ((rt (make-base-namespace)))
+    ;; FIXME This is about 2-4 times slower than using the current-namespace.
     ;; Primitive values
     (for-each (lambda (p)
                 (rt-define! rt (car p) (cdr p)))
-              (list (cons 'nil '())
-                    (cons 'true #t)
-                    (cons 'false #f)
-                    (cons 'yield __yield)
+              (list (cons 'yield __yield)
                     (cons 'recur __recur)
-                    (cons 'list __list)))
+                    (cons 'list __list)
+                    ))
     ;; Primitive operations
     (for-each (lambda (p)
                 (rt-define-primop! rt (car p) (cdr p)))
-              (list (cons 'nil? null?)
-                    (cons 'ref ref)
+              (list (cons 'ref ref)
                     (cons 'deref deref)
                     (cons 'assign! assign!)
                     (cons 'current-task current-task)

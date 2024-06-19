@@ -26,6 +26,7 @@
           (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
 
 (define (make-global-definitions-list)
+  ;; FIXME To be replaced by the list of interned global symbols in the runtime.
   (apply set
          '(yield recur nil true false
            car cadr cdr cddr list cons append concat

@@ -1,14 +1,26 @@
 (structure
- ;; Primitive values
- (declare-primval nil)
- (declare-primval true)
- (declare-primval false)
+
+ (define nil '())
+ (define true (asm (primop-app 'eq? nil nil)))
+ (define false (asm (primop-app 'eq? nil 23)))
 
  ;; Boolean
- (declare-primop (not x))
-
  (define (not x)
-   (asm (primop-app 'not x)))
+   (if x false true))
+
+ ;; Mutable refs
+ (declare-primop (ref r))
+ (declare-primop (deref r))
+ (declare-primop (assign! r v))
+
+ (define (ref a)
+   (asm (primop-app 'ref a)))
+
+ (define (deref r)
+   (asm (primop-app 'deref r)))
+
+ (define (assign! r v)
+   (asm (primop-app 'assign! r v)))
 
  ;; Equality
  (declare-primop (equal? a b))
@@ -41,7 +53,6 @@
    (asm (primop-app '>= a b)))
 
  ;; Math
- (declare-primop (zero? a))
  (declare-primop (* a b))
  (declare-primop (+ a b))
  (declare-primop (- a b))
@@ -52,7 +63,7 @@
  (declare-primop (random))
 
  (define (zero? x)
-   (asm (primop-app 'zero? x)))
+   (= x 0))
 
  (define (* a b)
    (asm (primop-app '* a b)))
@@ -79,16 +90,14 @@
    (asm (primop-app 'random)))
 
  ;; List
- (declare-primop (nil? x))
  (declare-primop (car l))
  (declare-primop (cdr l))
  (declare-primop (cons a b))
 
  (define (nil? l)
-   (asm (primop-app 'nil? l)))
+   (eq? l nil))
 
- (define (empty? l)
-   (nil? l))
+ (define empty? nil?)
 
  (define (car l)
    (asm (primop-app 'car l)))
@@ -114,20 +123,6 @@
 
  (define (concat a b)
    (append a b))
-
- ;; Mutable refs
- (declare-primop (ref r))
- (declare-primop (deref r))
- (declare-primop (assign! r v))
-
- (define (ref a)
-   (asm (primop-app 'ref a)))
-
- (define (deref r)
-   (asm (primop-app 'deref r)))
-
- (define (assign! r v)
-   (asm (primop-app 'assign! r v)))
 
  ;; IO
  (declare-primop (display x))
@@ -237,7 +232,7 @@
 
  (declare-primop (uproc-state p))
  (declare-primop (set-uproc-state! p s))
- (declare-primop (uproc-msg-queue-empty? p))
+ (declare-primop (uproc-msg-queue p))
  (declare-primop (uproc-dequeue-msg! p))
 
  (define (uproc-pid p)

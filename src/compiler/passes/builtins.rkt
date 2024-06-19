@@ -46,11 +46,12 @@
                     (set->list
                      (set-intersection
                       builtins
+                      ;; FIXME To be replaced by the declare-primop's from core.
                       (apply set
-                             '(car cdr list cons
-                               equal? nil? empty? not
+                             '(car cdr cons list
+                               eq? equal?
                                * + - / = < <= > >=
-                               remainder quotient modulo zero? random
+                               remainder quotient modulo random
                                ref deref assign!
                                current-task uproc-pid inc-uproc-rtime!
                                uproc-delimited-continuations set-uproc-delimited-continuations!
