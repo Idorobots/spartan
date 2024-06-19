@@ -32,6 +32,10 @@
            equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?
+           current-task uproc-pid inc-uproc-rtime!
+           uproc-delimited-continuations set-uproc-delimited-continuations!
+           uproc-error-handler set-uproc-error-handler!
+           uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg!
            ref deref assign!
            call/current-continuation call/reset call/shift call/handler raise
            sleep self send recv spawn task-info monitor

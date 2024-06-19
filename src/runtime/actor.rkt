@@ -8,15 +8,7 @@
 (require "scheduler.rkt")
 (require "closures.rkt")
 
-(provide sleep self send recv spawn)
-
-(define (sleep time)
-  (inc-uproc-rtime! (current-task)
-                    time)
-  time)
-
-(define (self)
-  (uproc-pid (current-task)))
+(provide send spawn)
 
 (define (send pid msg)
   (let ((t (find-task pid)))
@@ -26,13 +18,6 @@
       (set-uproc-rtime! t (current-milliseconds))
       (enqueue-task! t))
     pid))
-
-(define (recv)
-  (let ((p (current-task)))
-    (if (uproc-msg-queue-empty? p)
-        (begin (set-uproc-state! p 'waiting-4-msg)
-               (cons #f '()))
-        (cons #t (uproc-dequeue-msg! p)))))
 
 (define (spawn fun)
   (let ((kont (make-closure

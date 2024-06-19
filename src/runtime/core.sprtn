@@ -228,24 +228,47 @@
  ;; Actor model
  ;; FIXME Needed for recv to yield execution before recurring.
  (declare-primval recur)
- (declare-primop (self))
- (declare-primop (recv))
  (declare-primop (send pid msg))
  (declare-primop (spawn f))
- (declare-primop (sleep t))
  (declare-primop (task-info))
  (declare-primop (monitor t))
+ (declare-primop (uproc-pid p))
+ (declare-primop (inc-uproc-rtime! p t))
+
+ (declare-primop (uproc-state p))
+ (declare-primop (set-uproc-state! p s))
+ (declare-primop (uproc-msg-queue-empty? p))
+ (declare-primop (uproc-dequeue-msg! p))
+
+ (define (uproc-pid p)
+   (asm (primop-app 'uproc-pid p)))
+
+ (define (inc-uproc-rtime! p t)
+   (asm (primop-app 'inc-uproc-rtime! p t)))
+
+ (define (uproc-state p)
+   (asm (primop-app 'uproc-state p)))
+
+ (define (set-uproc-state! p s)
+   (asm (primop-app 'set-uproc-state! p s)))
+
+ (define (uproc-msg-queue-empty? p)
+   (asm (primop-app 'uproc-msg-queue-empty? p)))
+
+ (define (uproc-dequeue-msg! p)
+   (asm (primop-app 'uproc-dequeue-msg! p)))
 
  (define (self)
-   (asm (primop-app 'self)))
+   (uproc-pid (current-task)))
 
  (define (recv)
    (let* ((cc (asm (primop-app '&current-continuation)))
-          (r (asm (primop-app 'recv))))
-     (if (car r)
-         (yield cc (cdr r))
-         ;; FIXME Required as otherwise it'll spin without ever yielding in case there is no message available.
-         (recur recv))))
+          (curr-task (current-task)))
+     (if (uproc-msg-queue-empty? curr-task)
+         (do (set-uproc-state! curr-task 'waiting-4-msg)
+             ;; FIXME Required as otherwise it'll spin without ever yielding in case there is no message available.
+             (recur recv))
+         (yield cc (uproc-dequeue-msg! curr-task)))))
 
  (define (send pid msg)
    (asm (primop-app 'send pid msg)))
@@ -255,7 +278,7 @@
 
  (define (sleep t)
    (let ((cc (asm (primop-app '&current-continuation))))
-     (asm (primop-app 'sleep t))
+     (inc-uproc-rtime! (current-task) t)
      (yield cc t)))
 
  (define (task-info)

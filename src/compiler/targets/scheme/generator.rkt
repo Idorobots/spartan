@@ -72,7 +72,7 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(newline random self recv))
+     #:when (member op '(random))
      `(,op))
 
     ;; Monadic primops
@@ -82,8 +82,11 @@
                          car cdr nil? empty?
                          display
                          ref deref
+                         uproc-pid
                          uproc-delimited-continuations
-                         spawn sleep
+                         uproc-state
+                         uproc-msg-queue-empty? uproc-dequeue-msg!
+                         spawn
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
 
@@ -93,6 +96,8 @@
                          + - * / = < <= > >= modulo remainder quotient
                          cons append concat
                          set-uproc-delimited-continuations!
+                         inc-uproc-rtime!
+                         set-uproc-state!
                          send notify-whenever
                          assign!))
      `(,op ,(generate-scheme-node a)

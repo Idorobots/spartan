@@ -47,15 +47,16 @@
                      (set-intersection
                       builtins
                       (apply set
-                             '(car cadr cdr cddr list cons append concat
-                                   equal? nil? empty? not
-                                   * + - / = < <= > >=
-                                   remainder quotient modulo zero? random
-                                   ref deref assign!
-                                   self send spawn
-                                   assert! signal! retract! select notify-whenever
-                                   display newline debug
-                                   ;; NOTE These ones use the continuations, so they cannot be inlined.
-                                   ;; call/current-continuation call/reset call/shift call/handler raise recv sleep
-                                   ))))))
+                             '(car cdr list cons
+                               equal? nil? empty? not
+                               * + - / = < <= > >=
+                               remainder quotient modulo zero? random
+                               ref deref assign!
+                               current-task uproc-pid inc-uproc-rtime!
+                               uproc-delimited-continuations set-uproc-delimited-continuations!
+                               uproc-error-handler set-uproc-error-handler
+                               uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg!
+                               send spawn
+                               assert! signal! retract! select notify-whenever
+                               display))))))
               expr))
