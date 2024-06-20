@@ -9,110 +9,47 @@
    (if x false true))
 
  ;; Mutable refs
- (declare-primop (ref r))
- (declare-primop (deref r))
- (declare-primop (assign! r v))
-
- (define (ref a)
-   (asm (primop-app 'ref a)))
-
- (define (deref r)
-   (asm (primop-app 'deref r)))
-
- (define (assign! r v)
-   (asm (primop-app 'assign! r v)))
+ (declare-primitive (ref r))
+ (declare-primitive (deref r))
+ (declare-primitive (assign! r v))
 
  ;; Equality
- (declare-primop (equal? a b))
- (declare-primop (eq? a b))
- (declare-primop (= a b))
- (declare-primop (< a b))
- (declare-primop (<= a b))
- (declare-primop (> a b))
- (declare-primop (>= a b))
-
- (define (equal? a b)
-   (asm (primop-app 'equal? a b)))
-
- (define (eq? a b)
-   (asm (primop-app 'eq? a b)))
-
- (define (= a b)
-   (asm (primop-app '= a b)))
-
- (define (< a b)
-   (asm (primop-app '< a b)))
-
- (define (<= a b)
-   (asm (primop-app '<= a b)))
-
- (define (> a b)
-   (asm (primop-app '> a b)))
-
- (define (>= a b)
-   (asm (primop-app '>= a b)))
+ (declare-primitive (equal? a b))
+ (declare-primitive (eq? a b))
+ (declare-primitive (= a b))
+ (declare-primitive (< a b))
+ (declare-primitive (<= a b))
+ (declare-primitive (> a b))
+ (declare-primitive (>= a b))
 
  ;; Math
- (declare-primop (* a b))
- (declare-primop (+ a b))
- (declare-primop (- a b))
- (declare-primop (/ a b))
- (declare-primop (modulo a b))
- (declare-primop (quotient a b))
- (declare-primop (remainder a b))
- (declare-primop (random))
+ (declare-primitive (* a b))
+ (declare-primitive (+ a b))
+ (declare-primitive (- a b))
+ (declare-primitive (/ a b))
+ (declare-primitive (modulo a b))
+ (declare-primitive (quotient a b))
+ (declare-primitive (remainder a b))
+ (declare-primitive (random))
 
  (define (zero? x)
    (= x 0))
 
- (define (* a b)
-   (asm (primop-app '* a b)))
-
- (define (+ a b)
-   (asm (primop-app '+ a b)))
-
- (define (- a b)
-   (asm (primop-app '- a b)))
-
- (define (/ a b)
-   (asm (primop-app '/ a b)))
-
- (define (modulo a b)
-   (asm (primop-app 'modulo a b)))
-
- (define (quotient a b)
-   (asm (primop-app 'quotient a b)))
-
- (define (remainder a b)
-   (asm (primop-app 'remainder a b)))
-
- (define (random)
-   (asm (primop-app 'random)))
-
  ;; List
- (declare-primop (car l))
- (declare-primop (cdr l))
- (declare-primop (cons a b))
+ (declare-primitive (car l))
+ (declare-primitive (cdr l))
+ (declare-primitive (cons a b))
 
  (define (nil? l)
    (eq? l nil))
 
  (define empty? nil?)
 
- (define (car l)
-   (asm (primop-app 'car l)))
-
- (define (cdr l)
-   (asm (primop-app 'cdr l)))
-
  (define (cadr l)
    (car (cdr l)))
 
  (define (caddr l)
    (cdr (cdr l)))
-
- (define (cons a b)
-   (asm (primop-app 'cons a b)))
 
  (define (append a b)
    (if (nil? a)
@@ -125,10 +62,7 @@
    (append a b))
 
  ;; IO
- (declare-primop (display x))
-
- (define (display x)
-   (asm (primop-app 'display x)))
+ (declare-primitive (display x))
 
  (define (newline)
    (display "\n"))
@@ -136,21 +70,17 @@
  ;; Continuations
  ;; NOTE Needed to translate closures into continuations.
  ;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
- (declare-primval yield)
+ ;; FIXME Pulls it into the structure scope and overrides the bootstrapped value.
+ ;;(declare-primitive yield)
 
- (declare-primop (current-task))
- (declare-primop (uproc-delimited-continuations p))
- (declare-primop (set-uproc-delimited-continuations! p c))
-
- (define (uproc-delimited-continuations p)
-   (asm (primop-app 'uproc-delimited-continuations p)))
-
- (define (set-uproc-delimited-continuations! p c)
-   (asm (primop-app 'set-uproc-delimited-continuations! p c)))
+ (declare-primitive (current-task))
+ (declare-primitive (uproc-delimited-continuations p))
+ (declare-primitive (set-uproc-delimited-continuations! p c))
 
  ;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
  ;; FIXME Inlining might change the lexical continuation, but that ought to be fine, right?
- (declare-primop (&current-continuation))
+ ;; FIXME This isn't an actual primop.
+ ;;(declare-primitive (&current-continuation))
 
  (define (push-delimited-continuation! c)
    (let ((task (current-task)))
@@ -185,17 +115,8 @@
               result))))
 
  ;; Exceptions
- (declare-primop (uproc-error-handler x))
- (declare-primop (set-uproc-error-handler! x))
-
- (define (current-task)
-   (asm (primop-app 'current-task)))
-
- (define (uproc-error-handler uproc)
-   (asm (primop-app 'uproc-error-handler uproc)))
-
- (define (set-uproc-error-handler! uproc handler)
-   (asm (primop-app 'set-uproc-error-handler! uproc handler)))
+ (declare-primitive (uproc-error-handler p))
+ (declare-primitive (set-uproc-error-handler! p h))
 
  (define (call/handler handler f)
    (let* ((cc (asm (primop-app '&current-continuation)))
@@ -222,36 +143,18 @@
 
  ;; Actor model
  ;; FIXME Needed for recv to yield execution before recurring.
- (declare-primval recur)
- (declare-primop (send pid msg))
- (declare-primop (spawn f))
- (declare-primop (task-info))
- (declare-primop (monitor t))
- (declare-primop (uproc-pid p))
- (declare-primop (inc-uproc-rtime! p t))
+ ;; FIXME Pulls it into the structure scope and then tries to override the bootstrapped value.
+ ;;(declare-primitive recur)
+ (declare-primitive (send pid msg))
+ (declare-primitive (spawn f))
+ (declare-primitive (task-info))
+ (declare-primitive (uproc-pid p))
+ (declare-primitive (inc-uproc-rtime! p t))
 
- (declare-primop (uproc-state p))
- (declare-primop (set-uproc-state! p s))
- (declare-primop (uproc-msg-queue p))
- (declare-primop (uproc-dequeue-msg! p))
-
- (define (uproc-pid p)
-   (asm (primop-app 'uproc-pid p)))
-
- (define (inc-uproc-rtime! p t)
-   (asm (primop-app 'inc-uproc-rtime! p t)))
-
- (define (uproc-state p)
-   (asm (primop-app 'uproc-state p)))
-
- (define (set-uproc-state! p s)
-   (asm (primop-app 'set-uproc-state! p s)))
-
- (define (uproc-msg-queue-empty? p)
-   (asm (primop-app 'uproc-msg-queue-empty? p)))
-
- (define (uproc-dequeue-msg! p)
-   (asm (primop-app 'uproc-dequeue-msg! p)))
+ (declare-primitive (uproc-state p))
+ (declare-primitive (set-uproc-state! p s))
+ (declare-primitive (uproc-dequeue-msg! p))
+ (declare-primitive (uproc-enqueue-msg! p m))
 
  (define (self)
    (uproc-pid (current-task)))
@@ -265,19 +168,10 @@
              (recur recv))
          (yield cc (uproc-dequeue-msg! curr-task)))))
 
- (define (send pid msg)
-   (asm (primop-app 'send pid msg)))
-
- (define (spawn fun)
-   (asm (primop-app 'spawn fun)))
-
  (define (sleep t)
    (let ((cc (asm (primop-app '&current-continuation))))
      (inc-uproc-rtime! (current-task) t)
      (yield cc t)))
-
- (define (task-info)
-   (asm (primop-app 'task-info)))
 
  (define (monitor timeout)
    (task-info)
@@ -285,24 +179,10 @@
    (monitor timeout))
 
  ;; RBS
- (declare-primop (assert! fact))
- (declare-primop (signal! fact))
- (declare-primop (retract! fact))
- (declare-primop (select query))
- (declare-primop (notify-whenever pid query))
+ (declare-primitive (assert! fact))
+ (declare-primitive (signal! fact))
+ (declare-primitive (retract! fact))
+ (declare-primitive (select query))
+ (declare-primitive (notify-whenever pid query))
 
- (define (assert! fact)
-   (asm (primop-app 'assert! fact)))
-
- (define (signal! fact)
-   (asm (primop-app 'signal! fact)))
-
- (define (retract! fact)
-   (asm (primop-app 'retract! fact)))
-
- (define (select pattern)
-   (asm (primop-app 'select pattern)))
-
- (define (notify-whenever pid pattern)
-   (asm (primop-app 'notify-whenever pid pattern)))
 )

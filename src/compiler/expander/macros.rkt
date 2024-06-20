@@ -207,7 +207,9 @@
   (if (empty? defs)
       '()
       (match-ast (car defs)
-       ((list (symbol 'define) rest ...)
+       ((list (symbol def) rest ...)
+        ;; FIXME Structure is a macro, so the primitive declarations are not expanded yet when this runs.
+        #:when (member def '(define declare-primitive))
         (cons (car defs)
               (filter-defs (cdr defs))))
        (else
@@ -218,6 +220,11 @@
    ((list (symbol 'define) (list name rest ...) body ...)
     name)
    ((list (symbol 'define) name value)
+    name)
+   ;; FIXME Structure is a macro, so the primitive declarations are not expanded yet when this runs.
+   ((list (symbol 'declare-primitive) (list name rest ...) body ...)
+    name)
+   ((list (symbol 'declare-primitive) name body ...)
     name)
    (else
     (raise-compilation-error

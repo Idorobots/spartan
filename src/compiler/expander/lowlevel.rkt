@@ -5,14 +5,36 @@
 (require "../utils/utils.rkt")
 (require "../ast.rkt")
 (require "../errors.rkt")
+(require "./syntax-forms.rkt")
 
-(provide (all-defined-out))
+(provide asm-expander declare-primitive-expander)
 
-(define (ignore-expander expr use-env def-env)
+(define (declare-primitive-expander expr use-env def-env)
+  ;; TODO Register the primitive as an intrinsic in the compiler.
   (let ((loc (ast-node-location expr)))
-    (replace expr
-             (make-ast-quote loc
-                             (make-ast-list loc '())))))
+    (match-ast expr
+     ((list (symbol 'declare-primitive) (symbol name))
+      (replace expr
+               (generated
+                (make-ast-quote loc
+                                (make-ast-list loc '())))))
+     ((list (symbol 'declare-primitive) (list op args ...))
+      (let ((name (valid-symbol op "Bad primitive operation name")))
+        (replace expr
+                 (make-ast-def loc
+                               name
+                               (generated
+                                (make-ast-lambda loc
+                                                 (valid-formals (generated
+                                                                 (make-ast-list loc args))
+                                                                "Bad primitive operation declaration")
+                                                 (make-ast-primop-app loc
+                                                                      (ast-symbol-value name)
+                                                                      args)))))))
+     (else
+      (raise-compilation-error
+       expr
+       "Bad primitive operation declaration:")))))
 
 (define (asm-expander expr use-env def-env)
   (define (expand-instruction instruction)

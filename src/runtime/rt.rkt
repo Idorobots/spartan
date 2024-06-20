@@ -52,6 +52,7 @@
                     (cons 'set-uproc-state! set-uproc-state!)
                     (cons 'uproc-msg-queue-empty? uproc-msg-queue-empty?)
                     (cons 'uproc-dequeue-msg! uproc-dequeue-msg!)
+                    (cons 'uproc-enqueue-msg! uproc-enqueue-msg!)
                     (cons 'send send)
                     (cons 'spawn spawn)
                     (cons 'task-info task-info)

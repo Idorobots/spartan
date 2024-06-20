@@ -98,6 +98,7 @@
                          set-uproc-delimited-continuations!
                          inc-uproc-rtime!
                          set-uproc-state!
+                         uproc-enqueue-msg!
                          send notify-whenever
                          assign!))
      `(,op ,(generate-scheme-node a)

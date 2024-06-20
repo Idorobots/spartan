@@ -197,8 +197,7 @@
 (define (make-static-environment)
   (hasheq
    ;; Low-level support
-   'declare-primval (make-builtin-expander ignore-expander)
-   'declare-primop (make-builtin-expander ignore-expander)
+   'declare-primitive (make-builtin-expander declare-primitive-expander)
    'asm (make-builtin-expander asm-expander)
 
    ;; Syntax forms
