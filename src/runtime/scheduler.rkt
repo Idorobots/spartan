@@ -7,7 +7,7 @@
 (require "processes.rkt")
 (require "continuations.rkt")
 
-(provide current-task running-tasks find-task reset-tasks! spawn-task! enqueue-task!
+(provide current-task running-tasks find-task reset-tasks! spawn-task! wake-task! enqueue-task!
          ;; FIXME For test access.
          next-task dequeue-next-task! executable? execute! execute-step!)
 
@@ -59,6 +59,11 @@
 
 (define (task-queue-empty?)
   (queue-empty? (deref *run-queue*)))
+
+(define (wake-task! task)
+  (when (equal? (uproc-state task) 'waiting-4-msg)
+    (set-uproc-rtime! task (current-milliseconds))
+    (enqueue-task! task)))
 
 (define (enqueue-task! task)
   (assign! *run-queue*

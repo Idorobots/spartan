@@ -145,19 +145,27 @@
  ;; FIXME Needed for recv to yield execution before recurring.
  ;; FIXME Pulls it into the structure scope and then tries to override the bootstrapped value.
  ;;(declare-primitive recur)
- (declare-primitive (send pid msg))
  (declare-primitive (spawn f))
  (declare-primitive (task-info))
  (declare-primitive (uproc-pid p))
  (declare-primitive (inc-uproc-rtime! p t))
-
  (declare-primitive (uproc-state p))
  (declare-primitive (set-uproc-state! p s))
+ (declare-primitive (uproc-msg-queue-empty? p))
  (declare-primitive (uproc-dequeue-msg! p))
  (declare-primitive (uproc-enqueue-msg! p m))
+ (declare-primitive (find-task pid))
+ (declare-primitive (wake-task! p))
 
  (define (self)
    (uproc-pid (current-task)))
+
+ (define (send pid msg)
+   (let ((t (find-task pid)))
+     ;; FIXME Throw exception when pid isn't found.
+     (uproc-enqueue-msg! t msg)
+     (wake-task! t)
+     pid))
 
  (define (recv)
    (let* ((cc (asm (primop-app '&current-continuation)))

@@ -10,15 +10,6 @@
 
 (provide send spawn)
 
-(define (send pid msg)
-  (let ((t (find-task pid)))
-    ;; FIXME Throw exception when pid isn't found.
-    (uproc-enqueue-msg! t msg)
-    (when (equal? (uproc-state t) 'waiting-4-msg)
-      (set-uproc-rtime! t (current-milliseconds))
-      (enqueue-task! t))
-    pid))
-
 (define (spawn fun)
   (let ((kont (make-closure
                '()

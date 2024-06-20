@@ -86,7 +86,7 @@
                          uproc-delimited-continuations
                          uproc-state
                          uproc-msg-queue-empty? uproc-dequeue-msg!
-                         spawn
+                         find-task wake-task! spawn
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
 
@@ -99,7 +99,7 @@
                          inc-uproc-rtime!
                          set-uproc-state!
                          uproc-enqueue-msg!
-                         send notify-whenever
+                         notify-whenever
                          assign!))
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)))

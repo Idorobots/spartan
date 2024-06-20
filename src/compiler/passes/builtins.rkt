@@ -53,11 +53,11 @@
                                * + - / = < <= > >=
                                remainder quotient modulo random
                                ref deref assign!
-                               current-task uproc-pid inc-uproc-rtime!
+                               current-task find-task wake-task! spawn
+                               uproc-pid inc-uproc-rtime!
                                uproc-delimited-continuations set-uproc-delimited-continuations!
                                uproc-error-handler set-uproc-error-handler
                                uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
-                               send spawn
                                assert! signal! retract! select notify-whenever
                                display))))))
               expr))
