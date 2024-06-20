@@ -145,7 +145,6 @@
  ;; FIXME Needed for recv to yield execution before recurring.
  ;; FIXME Pulls it into the structure scope and then tries to override the bootstrapped value.
  ;;(declare-primitive recur)
- (declare-primitive (spawn f))
  (declare-primitive (task-info))
  (declare-primitive (uproc-pid p))
  (declare-primitive (inc-uproc-rtime! p t))
@@ -156,9 +155,19 @@
  (declare-primitive (uproc-enqueue-msg! p m))
  (declare-primitive (find-task pid))
  (declare-primitive (wake-task! p))
+ (declare-primitive (spawn-task! p f h))
 
  (define (self)
    (uproc-pid (current-task)))
+
+ (define (spawn fun)
+   (spawn-task! 100 ;; NOTE Default priority.
+                fun
+                (lambda (err _)
+                  (display ";; Task finished due to an unhandled error: ")
+                  (display err)
+                  (newline)
+                  err)))
 
  (define (send pid msg)
    (let ((t (find-task pid)))

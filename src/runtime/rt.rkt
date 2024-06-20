@@ -7,7 +7,6 @@
 (require "closures.rkt")
 (require "continuations.rkt")
 (require "processes.rkt")
-(require "actor.rkt")
 (require "scheduler.rkt")
 (require "monitor.rkt")
 (require "bootstrap.rkt")
@@ -39,9 +38,6 @@
               (list (cons 'ref ref)
                     (cons 'deref deref)
                     (cons 'assign! assign!)
-                    (cons 'current-task current-task)
-                    (cons 'find-task find-task)
-                    (cons 'wake-task! wake-task!)
                     (cons 'uproc-pid uproc-pid)
                     (cons 'set-uproc-state! set-uproc-state!)
                     (cons 'uproc-state uproc-state)
@@ -55,7 +51,10 @@
                     (cons 'uproc-msg-queue-empty? uproc-msg-queue-empty?)
                     (cons 'uproc-dequeue-msg! uproc-dequeue-msg!)
                     (cons 'uproc-enqueue-msg! uproc-enqueue-msg!)
-                    (cons 'spawn spawn)
+                    (cons 'current-task current-task)
+                    (cons 'find-task find-task)
+                    (cons 'wake-task! wake-task!)
+                    (cons 'spawn-task! spawn-task!)
                     (cons 'task-info task-info)
                     (cons 'assert! assert!)
                     (cons 'signal! signal!)
@@ -95,18 +94,20 @@
   (namespace-variable-value (symbol->safe name) #f #f rt))
 
 (define (rt-execute! rt expr)
-    (spawn-task! (make-resumable
-                  (make-closure
-                   '()
-                   (lambda (_ expr)
-                     (rt-intern! rt expr)))
-                  expr)
-                 (make-closure
-                  '()
-                  (lambda (e err restart _)
-                    (display ";; Execution finished due to an unhandled error: ")
-                    (display err)
-                    (newline)
-                    err)))
-    ;; NOTE Returns only the last result.
-    (last (execute!)))
+  (let* ((t (spawn-task! 100
+                         (make-closure
+                          (cons rt expr)
+                          (lambda (rt/expr _)
+                            (rt-intern! (car rt/expr) (cdr rt/expr))))
+                         (make-closure
+                          '()
+                          (lambda (e err restart _)
+                            (display ";; Execution finished due to an unhandled error: ")
+                            (display err)
+                            (newline)
+                            err))))
+         ;; NOTE Returns only the last result.
+         (result (last (execute!))))
+    ;; FIXME Doesn't update the process state automatically as it never calls the continuation.
+    (set-uproc-state! (find-task t) 'halted)
+    result))

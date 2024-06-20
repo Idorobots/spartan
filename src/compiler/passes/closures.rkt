@@ -33,7 +33,7 @@
            equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?
-           current-task find-task wake-task! spawn task-info monitor
+           current-task find-task wake-task! spawn-task! spawn task-info monitor
            uproc-pid inc-uproc-rtime!
            uproc-delimited-continuations set-uproc-delimited-continuations!
            uproc-error-handler set-uproc-error-handler!

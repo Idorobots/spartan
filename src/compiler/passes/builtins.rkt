@@ -53,7 +53,7 @@
                                * + - / = < <= > >=
                                remainder quotient modulo random
                                ref deref assign!
-                               current-task find-task wake-task! spawn
+                               current-task find-task wake-task! spawn-task!
                                uproc-pid inc-uproc-rtime!
                                uproc-delimited-continuations set-uproc-delimited-continuations!
                                uproc-error-handler set-uproc-error-handler

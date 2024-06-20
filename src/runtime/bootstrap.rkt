@@ -5,7 +5,8 @@
 (require "../rete/rete.rkt")
 (require "continuations.rkt")
 (require "closures.rkt")
-(require "actor.rkt")
+(require "processes.rkt")
+(require "scheduler.rkt")
 
 (provide notify-whenever __yield __recur __list)
 
@@ -43,4 +44,7 @@
   (whenever pattern
             ;; FIXME We can't use Spartan functions, since they yield execution.
             (lambda (b)
-              (send who b))))
+              (let ((t (find-task who)))
+                (uproc-enqueue-msg! t b)
+                (wake-task! t)
+                who))))

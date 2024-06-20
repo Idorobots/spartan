@@ -4,6 +4,7 @@
 
 (require "../compiler/utils/refs.rkt")
 (require "priority-queue.rkt")
+(require "closures.rkt")
 (require "processes.rkt")
 (require "continuations.rkt")
 
@@ -12,7 +13,6 @@
          next-task dequeue-next-task! executable? execute! execute-step!)
 
 ;; Some configuration constants:
-(define +priority+ 100)           ;; Default priority.
 (define +n-reductions+ 100)       ;; Default number of reductions.
 (define +idle-timeout+ 50)        ;; Time to wait between run queue polls.
 (define +initial-state+ 'waiting) ;; Initial state of uProcs.
@@ -43,12 +43,29 @@
                   (task-queue)
                   tasks)))
 
-(define (spawn-task! cont handler)
-  (let ((t (make-uproc +priority+
-                       cont
-                       handler
-                       (current-milliseconds)
-                       +initial-state+)))
+(define (spawn-task! priority thunk handler)
+  (let* ((kont (make-closure
+                '()
+                (lambda (_ v)
+                  (set-uproc-state! (current-task)
+                                    'halted)
+                  v)))
+         (t (make-uproc priority
+                        (make-resumable
+                         (make-closure
+                          kont
+                          (lambda (kont fun)
+                            (apply-closure fun kont)))
+                         thunk)
+                        (make-closure
+                         (cons handler kont)
+                         (lambda (handler/kont err restart _)
+                           (apply-closure (car handler/kont)
+                                          err
+                                          restart
+                                          (cdr handler/kont))))
+                        (current-milliseconds)
+                        +initial-state+)))
     (add-task! t)
     (enqueue-task! t)
     (uproc-pid t)))

@@ -72,7 +72,7 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random))
+     #:when (member op '(random current-task task-info))
      `(,op))
 
     ;; Monadic primops
@@ -82,13 +82,30 @@
                          car cdr nil? empty?
                          display
                          ref deref
-                         uproc-pid
+                         uproc-pid uproc-state
                          uproc-delimited-continuations
-                         uproc-state
+                         uproc-error-handler
+                         uproc-delimited-continuations
                          uproc-msg-queue-empty? uproc-dequeue-msg!
-                         find-task wake-task! spawn
+                         find-task wake-task!
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
+
+    ;; Diadic primops
+    ((primop-app op a b)
+     #:when (member op '(eq? equal?
+                         + - * / = < <= > >= modulo remainder quotient
+                         cons append concat
+                         set-uproc-delimited-continuations!
+                         inc-uproc-rtime!
+                         set-uproc-state!
+                         uproc-enqueue-msg!
+                         set-uproc-error-handler!
+                         set-uproc-delimited-continuations!
+                         notify-whenever
+                         assign!))
+     `(,op ,(generate-scheme-node a)
+           ,(generate-scheme-node b)))
 
     ;; Diadic primops
     ((primop-app op a b)
@@ -104,18 +121,17 @@
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)))
 
-    ;; Vararg primops
-    ((primop-app op args ...)
-     #:when (member op '(list debug))
-     `(,op ,@(map (lambda (a)
-                    (generate-scheme-node a))
-                  args)))
+    ;; Triadic primops
+    ((primop-app op a b c)
+     #:when (member op '(spawn-task!))
+     `(,op ,(generate-scheme-node a)
+           ,(generate-scheme-node b)
+           ,(generate-scheme-node c)))
 
-    ;; RT system primops
+    ;; Vararg primops
+    ;; FIXME This should be removed as there shouldn't be any vararg primops.
     ((primop-app op args ...)
-     #:when (member op '(current-task task-info
-                         uproc-error-handler set-uproc-error-handler!
-                         uproc-delimited-continuations set-uproc-delimited-continuations!))
+     #:when (member op '(list))
      `(,op ,@(map (lambda (a)
                     (generate-scheme-node a))
                   args)))
