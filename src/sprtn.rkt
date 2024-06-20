@@ -27,7 +27,7 @@ General options:
   -o, --output [filename]       Names the output file.
 
 Compilation options:
-  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|instrument|closures|optimize-final|hoist|rename|codegen}
+  --phase {parse|expand|instrument|alpha|optimize-early|letrec|cps|optimize-late|closures|optimize-final|hoist|rename|codegen}
                                 Selects up to which compilation phase (inclusive) the pipeline will run.
 
 Optimization options:
@@ -289,10 +289,10 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
       (let* ((init (apply env (append
                                ;; Apply defaults.
                                '(color #t
-                                       last-phase codegen
-                                       optimizer naive
-                                       optimization-level 2
-                                       target r7rs)
+                                 last-phase codegen
+                                 optimizer naive
+                                 optimization-level 2
+                                 target r7rs)
                                (match-match parsed)))))
         (set-color-output (env-get init 'color))
         (case (env-get init 'command)

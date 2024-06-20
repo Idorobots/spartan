@@ -65,11 +65,11 @@
         annotate-constants
         annotate-free-vars
         annotate-bindings
+        instrument
+        'instrument
         validate
         'validate
         report-errors
-        instrument
-        'instrument
         alpha-convert
         'alpha
         (optimize opts-early)
