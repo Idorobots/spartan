@@ -2,24 +2,34 @@
 
 ;; An implementation of a priority queue.
 
-(require data/heap) ;; NOTE The only external library in this codebase.
-
-(provide (all-from-out data/heap)
+(provide (struct-out queue)
          priority-queue queue-enqueue queue-dequeue queue-min queue-empty?)
 
+(struct queue (comparator items))
+
 (define (priority-queue comparator)
-  (make-heap comparator))
-
-(define (queue-enqueue q thing)
-  (heap-add! q thing)
-  q)
-
-(define (queue-dequeue q)
-  (heap-remove-min! q)
-  q)
-
-(define (queue-min q)
-  (heap-min q))
+  (queue comparator '()))
 
 (define (queue-empty? q)
-  (= (heap-count q) 0))
+  (empty? (queue-items q)))
+
+(define (queue-min q)
+  ;; NOTE Assumes non-empty queue.
+  (car (queue-items q)))
+
+(define (queue-dequeue q)
+  ;; NOTE Assumes non-empty queue.
+  (queue (queue-comparator q)
+         (cdr (queue-items q))))
+
+(define (queue-enqueue q thing)
+  (let ((new-items (let loop ((i (queue-items q)))
+                     (cond ((empty? i)
+                            (list thing))
+                           (((queue-comparator q) thing (car i))
+                            (cons thing i))
+                           (else
+                            (cons (car i)
+                                  (loop (cdr i))))))))
+    (queue (queue-comparator q)
+           new-items)))
