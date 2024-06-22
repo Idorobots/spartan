@@ -61,6 +61,25 @@
  (define (concat a b)
    (append a b))
 
+ (define (map f l)
+   (if (empty? l)
+       '()
+       (cons (f (car l))
+             (map f (cdr l)))))
+
+ (define (foldr f z l)
+   (if (empty? l)
+       z
+       (f (car l)
+          (foldr f z (cdr l)))))
+
+ (define (foldl f z l)
+   (if (empty? l)
+       z
+       (foldl f
+              (f (car l) z)
+              (cdr l))))
+
  ;; IO
  (declare-primitive (display x))
 
@@ -111,8 +130,7 @@
                         (let ((ct2 (asm (primop-app '&current-continuation))))
                           (push-delimited-continuation! ct2)
                           (yield cc v))))))
-       (yield (pop-delimited-continuation!)
-              result))))
+       (yield (pop-delimited-continuation!) result))))
 
  ;; Exceptions
  (declare-primitive (uproc-error-handler p))
@@ -145,17 +163,20 @@
  ;; FIXME Needed for recv to yield execution before recurring.
  ;; FIXME Pulls it into the structure scope and then tries to override the bootstrapped value.
  ;;(declare-primitive recur)
- (declare-primitive (task-info))
  (declare-primitive (uproc-pid p))
- (declare-primitive (inc-uproc-rtime! p t))
  (declare-primitive (uproc-state p))
  (declare-primitive (set-uproc-state! p s))
+ (declare-primitive (uproc-priority p))
+ (declare-primitive (uproc-vtime p))
+ (declare-primitive (uproc-rtime p))
+ (declare-primitive (inc-uproc-rtime! p t))
  (declare-primitive (uproc-msg-queue-empty? p))
  (declare-primitive (uproc-dequeue-msg! p))
  (declare-primitive (uproc-enqueue-msg! p m))
  (declare-primitive (find-task pid))
  (declare-primitive (wake-task! p))
  (declare-primitive (spawn-task! p f h))
+ (declare-primitive (running-tasks))
 
  (define (self)
    (uproc-pid (current-task)))
@@ -189,6 +210,31 @@
    (let ((cc (asm (primop-app '&current-continuation))))
      (inc-uproc-rtime! (current-task) t)
      (yield cc t)))
+
+ (define (task-info)
+   (define (display-line pid prio state vtime rtime)
+     ;; FIXME Needs padding.
+     (display ";; ")
+     (display pid)
+     (display " ")
+     (display prio)
+     (display " ")
+     (display state)
+     (display " ")
+     (display vtime)
+     (display " ")
+     (display rtime)
+     (newline))
+
+   (display-line "PID" "priority" "state" "VTime" "RTime")
+   (map (lambda (t)
+          (display-line (uproc-pid t)
+                        (uproc-priority t)
+                        (uproc-state t)
+                        (uproc-vtime t)
+                        (uproc-rtime t)))
+        ;; FIXME Ideally should not be exposed by the scheduler.
+        (running-tasks)))
 
  (define (monitor timeout)
    (task-info)

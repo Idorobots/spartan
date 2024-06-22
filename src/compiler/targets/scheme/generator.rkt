@@ -72,7 +72,7 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random current-task task-info))
+     #:when (member op '(random current-task running-tasks))
      `(,op))
 
     ;; Monadic primops
@@ -82,10 +82,8 @@
                          car cdr nil? empty?
                          display
                          ref deref
-                         uproc-pid uproc-state
-                         uproc-delimited-continuations
-                         uproc-error-handler
-                         uproc-delimited-continuations
+                         uproc-pid uproc-priority uproc-state uproc-vtime uproc-rtime
+                         uproc-delimited-continuations uproc-error-handler uproc-delimited-continuations
                          uproc-msg-queue-empty? uproc-dequeue-msg!
                          find-task wake-task!
                          assert! signal! retract! select))
