@@ -95,7 +95,7 @@
   ;; FIXME This is very hacky, should be replaced when the module system is fleshed out more.
   (map (lambda (b)
          (rt-define! rt (car b) (cdr b)))
-       (cdr structure)))
+       (hash->list structure)))
 
 (define (rt-export rt name)
   (namespace-variable-value (symbol->safe name) #f #f rt))

@@ -218,18 +218,20 @@
 
     ;; Modules & structures primops
     ((primop-app '&make-structure bindings ...)
-     ;; FIXME Should be something better than an alist.
-     `(list '&structure ,@(map (lambda (b)
-                                 (generate-scheme-node b))
-                               bindings)))
+     ;; FIXME Should be something r7rs-compatible.
+     `(make-hasheq
+       (list ,@(map (lambda (b)
+                      (generate-scheme-node b))
+                    bindings))))
 
     ((primop-app '&structure-binding name value)
      `(cons ,(generate-scheme-node name)
             ,(generate-scheme-node value)))
 
     ((primop-app '&structure-ref s name)
-     `(cdr (assoc ,(generate-scheme-node name)
-                  (cdr ,(generate-scheme-node s)))))
+     `(hash-ref
+       ,(generate-scheme-node s)
+       ,(generate-scheme-node name)))
 
     (else
      (compiler-bug "Unsupported AST node type:" expr))))
