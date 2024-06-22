@@ -160,9 +160,6 @@
      (curr-handler e restart)))
 
  ;; Actor model
- ;; FIXME Needed for recv to yield execution before recurring.
- ;; FIXME Pulls it into the structure scope and then tries to override the bootstrapped value.
- ;;(declare-primitive recur)
  (declare-primitive (uproc-pid p))
  (declare-primitive (uproc-state p))
  (declare-primitive (set-uproc-state! p s))
@@ -197,13 +194,20 @@
      (wake-task! t)
      pid))
 
+ (define (nice)
+   (let ((cc (asm (primop-app '&current-continuation))))
+     ;; NOTE This makes sure to yield the continuation, even thoug it doesn't modify the continuation.
+     (yield cc '())))
+
  (define (recv)
    (let* ((cc (asm (primop-app '&current-continuation)))
           (curr-task (current-task)))
      (if (uproc-msg-queue-empty? curr-task)
          (do (set-uproc-state! curr-task 'waiting-4-msg)
              ;; FIXME Required as otherwise it'll spin without ever yielding in case there is no message available.
-             (recur recv))
+             ;; FIXME This is caused by the kont-counter optimisation.
+             (nice)
+             (recv))
          (yield cc (uproc-dequeue-msg! curr-task)))))
 
  (define (sleep t)

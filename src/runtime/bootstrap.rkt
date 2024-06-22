@@ -8,7 +8,7 @@
 (require "processes.rkt")
 (require "scheduler.rkt")
 
-(provide notify-whenever __yield __recur __list)
+(provide notify-whenever __yield __list)
 
 ;; Built-in values
 (define __yield
@@ -16,16 +16,6 @@
    '()
    (lambda (_ cont v ignored)
      (make-resumable cont v))))
-
-(define __recur
-  (make-closure
-   '()
-   (lambda (_ fun cont)
-     (make-resumable (make-closure
-                      (cons fun cont)
-                      (lambda (fun/cont _)
-                        (apply-closure (car fun/cont) (cdr fun/cont))))
-                     '()))))
 
 ;; List
 ;; FIXME There's currently no vararg function support, so this can't be implemented in Spartan.

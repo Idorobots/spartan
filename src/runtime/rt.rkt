@@ -28,7 +28,6 @@
     (for-each (lambda (p)
                 (rt-define! rt (car p) (cdr p)))
               (list (cons 'yield __yield)
-                    (cons 'recur __recur)
                     (cons 'list __list)
                     ))
     ;; Primitive operations

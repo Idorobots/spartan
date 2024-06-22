@@ -28,7 +28,7 @@
 (define (make-global-definitions-list)
   ;; FIXME To be replaced by the list of interned global symbols in the runtime.
   (apply set
-         '(yield recur nil true false
+         '(yield nil true false
            car cadr cdr cddr list cons append concat
            equal? nil? empty? not
            * + - / = < <= > >=
