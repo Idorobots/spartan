@@ -7,23 +7,21 @@
 [90m;; [39m  (define __global42
 [90m;; [39m    (lambda (__env35 __value17)
 [90m;; [39m      (let ((__value10 (+ (cdr __env35) __value17)))
-[90m;; [39m        (if (> (kont-counter) 0)
-[90m;; [39m          (let ((tmp51 (car __env35)))
-[90m;; [39m            (dec-kont-counter!)
-[90m;; [39m            ((closure-fun tmp51) (closure-env tmp51) __value10))
-[90m;; [39m          (begin
-[90m;; [39m            (reset-kont-counter!)
-[90m;; [39m            (make-resumable (car __env35) __value10))))))
+[90m;; [39m        (let ((tmp51 (car __env35)))
+[90m;; [39m          (if (> (kont-counter) 0)
+[90m;; [39m            (begin
+[90m;; [39m              (dec-kont-counter!)
+[90m;; [39m              ((closure-fun tmp51) (closure-env tmp51) __value10))
+[90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp51 __value10)))))))
 [90m;; [39m  (define __global43
 [90m;; [39m    (lambda (__env37 __value21)
 [90m;; [39m      (let ((__value19 (+ (cdr __env37) __value21)))
-[90m;; [39m        (if (> (kont-counter) 0)
-[90m;; [39m          (let ((tmp52 (car __env37)))
-[90m;; [39m            (dec-kont-counter!)
-[90m;; [39m            ((closure-fun tmp52) (closure-env tmp52) __value19))
-[90m;; [39m          (begin
-[90m;; [39m            (reset-kont-counter!)
-[90m;; [39m            (make-resumable (car __env37) __value19))))))
+[90m;; [39m        (let ((tmp52 (car __env37)))
+[90m;; [39m          (if (> (kont-counter) 0)
+[90m;; [39m            (begin
+[90m;; [39m              (dec-kont-counter!)
+[90m;; [39m              ((closure-fun tmp52) (closure-env tmp52) __value19))
+[90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp52 __value19)))))))
 [90m;; [39m  (define __global44
 [90m;; [39m    (lambda (__env36 __value20)
 [90m;; [39m      (let ((__value22 (- (vector-ref __env36 '2) '2)))
@@ -61,13 +59,12 @@
 [90m;; [39m  (define __global46
 [90m;; [39m    (lambda (__env39 __value26)
 [90m;; [39m      (let ((__value24 (+ (cdr __env39) __value26)))
-[90m;; [39m        (if (> (kont-counter) 0)
-[90m;; [39m          (let ((tmp55 (car __env39)))
-[90m;; [39m            (dec-kont-counter!)
-[90m;; [39m            ((closure-fun tmp55) (closure-env tmp55) __value24))
-[90m;; [39m          (begin
-[90m;; [39m            (reset-kont-counter!)
-[90m;; [39m            (make-resumable (car __env39) __value24))))))
+[90m;; [39m        (let ((tmp55 (car __env39)))
+[90m;; [39m          (if (> (kont-counter) 0)
+[90m;; [39m            (begin
+[90m;; [39m              (dec-kont-counter!)
+[90m;; [39m              ((closure-fun tmp55) (closure-env tmp55) __value24))
+[90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp55 __value24)))))))
 [90m;; [39m  (define __global47
 [90m;; [39m    (lambda (__env38 __value25)
 [90m;; [39m      (let ((__value27 (- (vector-ref __env38 '2) '2)))
