@@ -83,7 +83,7 @@
                          display
                          ref deref
                          uproc-pid uproc-priority uproc-state uproc-vtime uproc-rtime
-                         uproc-delimited-continuations uproc-error-handler uproc-delimited-continuations
+                         uproc-delimited-continuations uproc-error-handler
                          uproc-msg-queue-empty? uproc-dequeue-msg!
                          find-task wake-task!
                          assert! signal! retract! select))
@@ -174,6 +174,21 @@
                   args)))))
 
     ;; Continuation primops
+    ((primop-app '&yield-cont-immediate (symbol c) h)
+     `(begin
+        (reset-kont-counter!)
+        (make-resumable ,c
+                        ,(generate-scheme-node h))))
+
+    ((primop-app '&yield-cont-immediate k h)
+     (let ((tmp (gensym 'tmp))
+           (loc (ast-node-location k)))
+       `(let ((,tmp ,(generate-scheme-node k)))
+          ,(generate-scheme-node
+            (set-ast-primop-app-args expr
+                                     (list (make-ast-symbol loc tmp)
+                                           h))))))
+
     ((primop-app '&yield-cont (symbol c) h)
      `(if (> (kont-counter) 0)
           (begin
@@ -181,23 +196,17 @@
             ((closure-fun ,c)
              (closure-env ,c)
              ,(generate-scheme-node h)))
-          (begin
-            (reset-kont-counter!)
-            (make-resumable ,c
-                            ,(generate-scheme-node h)))))
+          ,(generate-scheme-node
+            (set-ast-primop-app-op expr '&yield-cont-immediate))))
 
     ((primop-app '&yield-cont k h)
-     (let ((tmp (gensym 'tmp)))
-       `(if (> (kont-counter) 0)
-            (let ((,tmp ,(generate-scheme-node k)))
-              (dec-kont-counter!)
-              ((closure-fun ,tmp)
-               (closure-env ,tmp)
-               ,(generate-scheme-node h)))
-            (begin
-              (reset-kont-counter!)
-              (make-resumable ,(generate-scheme-node k)
-                              ,(generate-scheme-node h))))))
+     (let ((tmp (gensym 'tmp))
+           (loc (ast-node-location k)))
+       `(let ((,tmp ,(generate-scheme-node k)))
+          ,(generate-scheme-node
+            (set-ast-primop-app-args expr
+                                     (list (make-ast-symbol loc tmp)
+                                           h))))))
 
     ;; Exceptions
     ((primop-app '&error-handler)

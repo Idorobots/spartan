@@ -87,19 +87,28 @@
    (display "\n"))
 
  ;; Continuations
- ;; NOTE Needed to translate closures into continuations.
- ;; FIXME Alternatively, this should be replaced by a continuation AST node that is passed through the whole compiler unchanged.
- ;; FIXME Pulls it into the structure scope and overrides the bootstrapped value.
- ;;(declare-primitive yield)
+
+ ;; FIXME These arent't actual primops.
+ ;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
+ ;; (declare-primitive (&current-continuation))
+ ;; (declare-primitive (&yield-cont-immediate cc v))
+
+ ;; FIXME Must be defined in bootstrap in order to avoid a double yield vio the explicit and then implicit continuation.
+ ;; (define (yield cc v)
+ ;;   ;; NOTE Avoids the kont-counter optimization which can sometimes lead to tight loops not yielding fast enough.
+ ;;   (asm (primop-app '&yield-cont-immediate cc v)))
+
+ ;; FIXME Overrides the bootstrapped-value.
+ ;; (declare-primitive (yield cc v))
+
+ (define (nice)
+   ;; NOTE This makes sure to yield the continuation, even thoug it doesn't modify the continuation.
+   (let ((cc (asm (primop-app '&current-continuation))))
+     (yield cc '())))
 
  (declare-primitive (current-task))
  (declare-primitive (uproc-delimited-continuations p))
  (declare-primitive (set-uproc-delimited-continuations! p c))
-
- ;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
- ;; FIXME Inlining might change the lexical continuation, but that ought to be fine, right?
- ;; FIXME This isn't an actual primop.
- ;;(declare-primitive (&current-continuation))
 
  (define (push-delimited-continuation! c)
    (let ((task (current-task)))
@@ -193,11 +202,6 @@
      (uproc-enqueue-msg! t msg)
      (wake-task! t)
      pid))
-
- (define (nice)
-   (let ((cc (asm (primop-app '&current-continuation))))
-     ;; NOTE This makes sure to yield the continuation, even thoug it doesn't modify the continuation.
-     (yield cc '())))
 
  (define (recv)
    (let* ((cc (asm (primop-app '&current-continuation)))
