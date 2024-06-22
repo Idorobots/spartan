@@ -1,0 +1,220 @@
+(module (scheduler)
+
+  ;; Task definition
+  (define (make-task prio cont handler)
+    (let ((time (current-milliseconds)))
+      (structure
+       (define pid (+ 1 (length (deref *task-list*))))
+       (define priority prio)
+       (define state (ref 'waiting))
+       (define rtime (ref time))
+       (define msg-queue (ref '()))
+       (define continuation (ref cont))
+       (define delimited-continuation (ref '()))
+       (define error-handler (ref handler)))))
+
+  (define (task-pid t)
+    t.pid)
+
+  (define (task-priority t)
+    t.priority)
+
+  (define (task-state t)
+    (deref t.state))
+
+  (define (set-task-state! t state)
+    (assign! t.state state))
+
+  (define (task-rtime t)
+    (deref t.rtime))
+
+  (define (inc-task-rtime! t ms)
+    (assign! t.rtime (+ ms (task-rtime t))))
+
+  (define (set-task-rtime! t ms)
+    (assign! t.rtime ms))
+
+  (define (task-vtime t)
+    (* (task-rtime t)
+       (task-priority t)))
+
+  (define (task-msg-queue-empty? t)
+    (empty? (deref t.msg-queue)))
+
+  (define (task-enqueue-msg! t msg)
+    (assign! t.msg-queue
+             ;; FIXME Still abysmal...
+             (append (deref t.msg-queue)
+                     (list msg))))
+
+  (define (task-dequeue-msg! t)
+    (let ((q (deref t.msg-queue)))
+      (assign! t.msg-queue (cdr q))
+      (car q)))
+
+  (define (task-continuation t)
+    (deref t.continuation))
+
+  (define (set-task-continuation! t c)
+    (assign! t.continuation c))
+
+  (define (task-delimited-continuation t)
+    (deref t.delimited-continuation))
+
+  (define (set-task-delimited-continuation! t c)
+    (assign! t.delimited-continuation c))
+
+  (define (task-error-handler t)
+    (deref t.error-handler))
+
+  (define (set-task-error-handler! t h)
+    (assign! t.error-handler h))
+
+  ;; Scheduler
+
+  (define *current-task*
+    (ref '()))
+
+  (define (current-task)
+    (deref *current-task*))
+
+  (define *task-list*
+    (ref '()))
+
+  (define (add-task! task)
+    (assign! *task-list*
+             (cons task (deref *task-list*))))
+
+  (define (find-task pid)
+    (find (lambda (t)
+            (eq? (task-pid t) pid))
+          (deref *task-list*)))
+
+  (define (all-tasks)
+    (deref *task-list*))
+
+  (define *run-queue*
+    (ref '()))
+
+  (define (enqueue-task! task)
+    (define (insert t q)
+      (if (empty? q)
+          (list t)
+          (let ((f (car q)))
+            (if (<= (task-vtime t)
+                    (task-vtime f))
+                (cons t q)
+                (cons f (insert t (cdr q)))))))
+
+    (set-task-state! task 'waiting)
+    (assign! *run-queue*
+             (insert task
+                     (deref *run-queue*))))
+
+  (define (dequeue-next-task!)
+    (let* ((q (deref *run-queue*)))
+      (assign! *run-queue* (cdr q))
+      (car q)))
+
+  (define (spawn-task! prio fun handler)
+    (let ((t (make-task prio
+                        (suspend fun)
+                        handler)))
+      (add-task! t)
+      (enqueue-task! t)
+      (task-pid t)))
+
+  (define (wake-task! task)
+    (when (eq? (uproc-state task) 'waiting-4-msg)
+      (set-task-rtime! task (current-milliseconds))
+      (enqueue-task! task)))
+
+  (define (wait-until-ready t)
+    (let ((ts (current-milliseconds)))
+      (unless (>= ts (task-rtime t))
+        ;; TODO Do useful stuff here.
+        (delay-milliseconds 50)
+        (wait-until-ready t))))
+
+  (define (execute!)
+    (define (loop acc)
+      (if (empty? (deref *run-queue*))
+          acc
+          (let ((n (dequeue-next-task!)))
+            (assign! *current-task* n)
+            (wait-until-ready n)
+            (set-task-state! n 'running)
+            (let ((start (current-milliseconds))
+                  (result (resume (task-continuation n))))
+              ;; FIXME Should this encompass the time spent in the scheduler?
+              (inc-task-rtime! n (- (current-milliseconds) start))
+              (if (resumable? result)
+                  (do (set-task-continuation! n result)
+                      (if (eq? (task-state n) 'waiting-4-msg)
+                          ;; NOTE Task will be rescheduled whenever a message is sent to it.
+                          (loop acc)
+                          (do (enqueue-task! n)
+                              (loop acc))))
+                  (do (set-task-state! n 'halted)
+                      (loop (cons result acc))))))))
+    (loop '()))
+
+  ;; The actual API
+
+  (define (sleep ts)
+    (let ((cc (asm (primop-app '&current-continuation))))
+      (inc-task-rtime! (current-task) ts)
+      (yield cc ts)))
+
+  (define (spawn fun)
+    (spawn-task! 100 ;; NOTE Default priority.
+                 fun
+                 (lambda (err _)
+                   (display ";; Task finished due to an unhandled error: ")
+                   (display err)
+                   (newline)
+                   err)))
+
+  (define (send pid msg)
+    (let ((t (find-task pid)))
+      ;; FIXME Throw exception when pid isn't found.
+      (task-enqueue-msg! t msg)
+      (wake-task! t)
+      pid))
+
+  (define (recv)
+    (let* ((cc (asm (primop-app '&current-continuation)))
+           (curr-task (current-task)))
+      (if (task-msg-queue-empty? curr-task)
+          (do (set-task-state! curr-task 'waiting-4-msg)
+              ;; FIXME Required as otherwise it'll spin without ever yielding in case there is no message available.
+              ;; FIXME This is caused by the kont-counter optimisation.
+              (nice)
+            (recv))
+          (yield cc (task-dequeue-msg! curr-task)))))
+
+)
+
+;; Example
+
+(trampoline
+ (suspend
+  (lambda ()
+    (let ((s (scheduler)))
+
+      (define (foo n)
+        (when (> n 0)
+          (display "Running foo...\n")
+          (s.sleep 500)
+          (foo (- n 1))))
+
+      (define (bar n)
+        (when (> n 0)
+          (display "Running bar...\n")
+          (s.sleep 1000)
+          (bar (- n 1))))
+
+      (s.spawn (lambda () (foo 10)))
+      (s.spawn (lambda () (bar 10)))
+      (display (s.execute!))
+      (newline)))))

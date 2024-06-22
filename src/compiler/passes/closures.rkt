@@ -28,9 +28,10 @@
 (define (make-global-definitions-list)
   ;; FIXME To be replaced by the list of interned global symbols in the runtime.
   (apply set
-         '(yield nil true false
-           car cadr cdr cddr list cons append concat
-           equal? nil? empty? not
+         '(yield suspend resume resumable? trampoline nice
+           nil true false
+           car cadr cdr cddr list cons append concat length map foldl foldr find
+           eq? equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?
            current-task running-tasks find-task wake-task! spawn-task! spawn task-info monitor
@@ -42,7 +43,7 @@
            call/current-continuation call/reset call/shift call/handler raise
            sleep self send recv
            assert! signal! retract! select notify-whenever
-           display newline debug)))
+           display newline current-milliseconds delay-milliseconds)))
 
 (define (convert-closures expr globals)
   (match-ast expr

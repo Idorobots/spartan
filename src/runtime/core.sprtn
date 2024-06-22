@@ -80,11 +80,52 @@
               (f (car l) z)
               (cdr l))))
 
+ (define (find f l)
+   (if (empty? l)
+       '()
+       (if (f (car l))
+           (car l)
+           (find f (cdr l)))))
+
+ (define (length l)
+   (if (empty? l)
+       0
+       (+ 1 (length (cdr l)))))
+
  ;; IO
  (declare-primitive (display x))
 
  (define (newline)
    (display "\n"))
+
+ ;; Processes & scheduling
+ (declare-primitive (uproc-pid p))
+ (declare-primitive (uproc-priority p))
+ (declare-primitive (uproc-state p))
+ (declare-primitive (set-uproc-state! p s))
+ (declare-primitive (uproc-vtime p))
+ (declare-primitive (uproc-rtime p))
+ (declare-primitive (inc-uproc-rtime! p t))
+ (declare-primitive (uproc-msg-queue-empty? p))
+ (declare-primitive (uproc-dequeue-msg! p))
+ (declare-primitive (uproc-enqueue-msg! p m))
+ (declare-primitive (uproc-delimited-continuations p))
+ (declare-primitive (set-uproc-delimited-continuations! p c))
+ (declare-primitive (uproc-error-handler p))
+ (declare-primitive (set-uproc-error-handler! p h))
+
+ (declare-primitive (current-task))
+ (declare-primitive (running-tasks))
+ (declare-primitive (find-task pid))
+ (declare-primitive (wake-task! p))
+ (declare-primitive (spawn-task! p f h))
+
+ (declare-primitive (suspend thunk))
+ (declare-primitive (resume r))
+ (declare-primitive (resumable? r))
+ (declare-primitive (trampoline r))
+ (declare-primitive (current-milliseconds))
+ (declare-primitive (delay-milliseconds ts))
 
  ;; Continuations
 
@@ -105,10 +146,6 @@
    ;; NOTE This makes sure to yield the continuation, even thoug it doesn't modify the continuation.
    (let ((cc (asm (primop-app '&current-continuation))))
      (yield cc '())))
-
- (declare-primitive (current-task))
- (declare-primitive (uproc-delimited-continuations p))
- (declare-primitive (set-uproc-delimited-continuations! p c))
 
  (define (push-delimited-continuation! c)
    (let ((task (current-task)))
@@ -142,9 +179,6 @@
        (yield (pop-delimited-continuation!) result))))
 
  ;; Exceptions
- (declare-primitive (uproc-error-handler p))
- (declare-primitive (set-uproc-error-handler! p h))
-
  (define (call/handler handler f)
    (let* ((cc (asm (primop-app '&current-continuation)))
           (curr-task (current-task))
@@ -169,21 +203,6 @@
      (curr-handler e restart)))
 
  ;; Actor model
- (declare-primitive (uproc-pid p))
- (declare-primitive (uproc-state p))
- (declare-primitive (set-uproc-state! p s))
- (declare-primitive (uproc-priority p))
- (declare-primitive (uproc-vtime p))
- (declare-primitive (uproc-rtime p))
- (declare-primitive (inc-uproc-rtime! p t))
- (declare-primitive (uproc-msg-queue-empty? p))
- (declare-primitive (uproc-dequeue-msg! p))
- (declare-primitive (uproc-enqueue-msg! p m))
- (declare-primitive (find-task pid))
- (declare-primitive (wake-task! p))
- (declare-primitive (spawn-task! p f h))
- (declare-primitive (running-tasks))
-
  (define (self)
    (uproc-pid (current-task)))
 

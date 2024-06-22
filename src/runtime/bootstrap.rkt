@@ -8,9 +8,31 @@
 (require "processes.rkt")
 (require "scheduler.rkt")
 
-(provide notify-whenever __yield __list)
+(provide delay-milliseconds notify-whenever suspend trampoline __yield __list)
 
-;; Built-in values
+;; Continuations bootstrap
+
+;; Forms a new resumable continuation that runs a thunk.
+(define (suspend thunk)
+  (make-resumable
+   (make-closure
+    '()
+    (lambda (_ thunk)
+      (apply-closure thunk
+                     (make-closure
+                      '()
+                      (lambda (_ v)
+                        ;; NOTE Suspends with a top-level continuation.
+                        v)))))
+   thunk))
+
+;; Executes a resumable until exhaustion.
+(define (trampoline resumable)
+  (if (resumable? resumable)
+      (trampoline (resume resumable))
+      resumable))
+
+;; Replaces the current continuation with a new one.
 (define __yield
   (make-closure
    '()
@@ -28,6 +50,9 @@
       (take (cdr args)
             ;; NOTE Args minus env and cont.
             (- (length args) 2))))))
+
+(define (delay-milliseconds ms)
+  (sleep (/ ms 1000.0)))
 
 ;; RBS bootstrap:
 (define (notify-whenever who pattern)

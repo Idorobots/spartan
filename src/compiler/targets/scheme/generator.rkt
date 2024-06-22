@@ -72,15 +72,16 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random current-task running-tasks))
+     #:when (member op '(random current-task running-tasks current-milliseconds))
      `(,op))
 
     ;; Monadic primops
     ((primop-app op a)
-     #:when (member op '(not
+     #:when (member op '(suspend resumable? resume trampoline
+                         not
                          zero?
                          car cdr nil? empty?
-                         display
+                         display delay-milliseconds
                          ref deref
                          uproc-pid uproc-priority uproc-state uproc-vtime uproc-rtime
                          uproc-delimited-continuations uproc-error-handler

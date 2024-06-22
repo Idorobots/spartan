@@ -48,7 +48,8 @@
                       builtins
                       ;; FIXME To be replaced by the declare-primop's from core.
                       (apply set
-                             '(car cdr cons list
+                             '(suspend resumable? resume trampoline
+                               car cdr cons list
                                eq? equal?
                                * + - / = < <= > >=
                                remainder quotient modulo random
@@ -59,5 +60,5 @@
                                uproc-error-handler set-uproc-error-handler
                                uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
                                assert! signal! retract! select notify-whenever
-                               display))))))
+                               display current-milliseconds delay-milliseconds))))))
               expr))
