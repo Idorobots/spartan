@@ -223,11 +223,14 @@
             (inc-uproc-rtime! n (- (current-milliseconds) start))
             (if (resumable? result)
                 (do (set-uproc-continuation! n result)
-                    (if (eq? (uproc-state n) 'waiting-4-msg)
-                        ;; NOTE Task will be rescheduled whenever a message is sent to it.
-                        (loop acc)
-                        (do (enqueue-task! n)
-                            (loop acc))))
+                    (cond ((eq? (uproc-state n) 'halted)
+                           (loop acc))
+                          ((eq? (uproc-state n) 'waiting-4-msg)
+                           ;; NOTE Task will be rescheduled whenever a message is sent to it.
+                           (loop acc))
+                          (else
+                           (enqueue-task! n)
+                           (loop acc))))
                 (do (set-uproc-state! n 'halted)
                     (loop (cons result acc))))))))
   (loop '()))
@@ -269,10 +272,13 @@
   (spawn-task! +default-task-priority+
                fun
                (lambda (err _)
-                 (display ";; Task finished due to an unhandled error: ")
-                 (display err)
-                 (newline)
-                 err)))
+                 (let ((curr-task (current-task))
+                       (cc (asm (primop-app '&current-continuation))))
+                   (set-uproc-state! curr-task 'halted)
+                   (display ";; Task finished due to an unhandled error: ")
+                   (display err)
+                   (newline)
+                   (yield cc err)))))
 
 (define (send pid msg)
   (let ((t (find-task pid)))
