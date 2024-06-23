@@ -19,6 +19,7 @@
          rt-export
          rt-import!
          rt-execute!
+         rt-execute-no-init!
          bootstrap-rt!)
 
 (define (bootstrap-rt!)
@@ -57,6 +58,7 @@
                     (cons 'find-task find-task)
                     (cons 'wake-task! wake-task!)
                     (cons 'spawn-task! spawn-task!)
+                    (cons 'execute! execute!)
                     (cons 'assert! assert!)
                     (cons 'signal! signal!)
                     (cons 'retract! retract!)
@@ -100,21 +102,26 @@
 (define (rt-export rt name)
   (namespace-variable-value (symbol->safe name) #f #f rt))
 
+(define (rt-execute-no-init! rt expr)
+  ;; FIXME Needed to evaluate the core module before interning all of its functions.
+  (rt-intern! rt
+              `(trampoline
+                (suspend
+                 (make-closure
+                  '()
+                  (lambda (e cont)
+                    ,expr))))))
+
 (define (rt-execute! rt expr)
-  (let* ((t (spawn-task! 100
-                         (make-closure
-                          (cons rt expr)
-                          (lambda (rt/expr _)
-                            (rt-intern! (car rt/expr) (cdr rt/expr))))
-                         (make-closure
-                          '()
-                          (lambda (e err restart _)
-                            (display ";; Execution finished due to an unhandled error: ")
-                            (display err)
-                            (newline)
-                            err))))
-         ;; NOTE Returns only the last result.
-         (result (last (execute!))))
-    ;; FIXME Doesn't update the process state automatically as it never calls the continuation.
-    (set-uproc-state! (find-task t) 'halted)
-    result))
+  ;; NOTE Uses the core-provided startup routing that boots the scheduler and spawns the initial task.
+  (rt-intern! rt
+              `((closure-fun __rt_start)
+                (closure-env __rt_start)
+                (make-closure
+                 '()
+                 (lambda (_ cont)
+                   ,expr))
+                (make-closure
+                 '()
+                 (lambda (_ v)
+                   v)))))

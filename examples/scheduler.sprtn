@@ -197,24 +197,21 @@
 
 ;; Example
 
-(trampoline
- (suspend
-  (lambda ()
-    (let ((s (scheduler)))
+(let ((s (scheduler)))
 
-      (define (foo n)
-        (when (> n 0)
-          (display "Running foo...\n")
-          (s.sleep 500)
-          (foo (- n 1))))
+  (define (foo n)
+    (when (> n 0)
+      (display "Running foo...\n")
+      (s.sleep 500)
+      (foo (- n 1))))
 
-      (define (bar n)
-        (when (> n 0)
-          (display "Running bar...\n")
-          (s.sleep 1000)
-          (bar (- n 1))))
+  (define (bar n)
+    (when (> n 0)
+      (display "Running bar...\n")
+      (s.sleep 1000)
+      (bar (- n 1))))
 
-      (s.spawn (lambda () (foo 10)))
-      (s.spawn (lambda () (bar 10)))
-      (display (s.execute!))
-      (newline)))))
+  (s.spawn (lambda () (foo 10)))
+  (s.spawn (lambda () (bar 10)))
+  (display (last (s.execute!)))
+  (newline))

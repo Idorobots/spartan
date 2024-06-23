@@ -72,7 +72,7 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random current-task running-tasks current-milliseconds))
+     #:when (member op '(random current-task running-tasks execute! current-milliseconds))
      `(,op))
 
     ;; Monadic primops

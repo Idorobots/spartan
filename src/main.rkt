@@ -31,7 +31,7 @@
 (define +core-import+ #f)
 (define (import-defaults! rt)
   (unless +core-import+
-    (set! +core-import+ (rt-execute! rt +core-spartan+)))
+    (set! +core-import+ (rt-execute-no-init! rt +core-spartan+)))
   (rt-import! rt
               +core-import+))
 

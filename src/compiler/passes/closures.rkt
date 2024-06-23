@@ -30,7 +30,7 @@
   (apply set
          '(yield suspend resume resumable? trampoline nice
            nil true false
-           car cadr cdr cddr list cons append concat length map foldl foldr find
+           car cadr cdr cddr list cons append concat length map foldl foldr find last
            eq? equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?

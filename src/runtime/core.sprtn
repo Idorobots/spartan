@@ -92,6 +92,13 @@
        0
        (+ 1 (length (cdr l)))))
 
+ (define (last l)
+   (if (empty? l)
+       '()
+       (if (empty? (cdr l))
+           (car l)
+           (last (cdr l)))))
+
  ;; IO
  (declare-primitive (display x))
 
@@ -274,5 +281,20 @@
  (declare-primitive (retract! fact))
  (declare-primitive (select query))
  (declare-primitive (notify-whenever pid query))
+
+ (define (rt-start f)
+   ;; NOTE Low-level start of the runtime env with a trampoline.
+   (let* ((init (lambda ()
+                  (spawn-task! 100
+                               f
+                               (lambda (err _)
+                                 (display ";; Execution finished due to an unhandled error: ")
+                                 (display err)
+                                 (newline)
+                                 err))
+                  (let ((result (asm (primop-app 'execute!))))
+                    (last result))))
+          (r (asm (primop-app 'suspend init))))
+     (asm (primop-app 'trampoline r))))
 
 )
