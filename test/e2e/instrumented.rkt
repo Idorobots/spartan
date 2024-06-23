@@ -3,14 +3,14 @@
 ;; Code examples that require instrumentation.
 
 (require "../testing.rkt")
+(require "../../src/compiler/ast.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
-(require "../../src/runtime/scheduler.rkt")
 (require "../../src/runtime/processes.rkt")
 (require "../../src/runtime/closures.rkt")
 (require "../../src/runtime/continuations.rkt")
-(require "../../src/compiler/ast.rkt")
-(require "../../src/compiler/utils/utils.rkt")
+(require "../../src/runtime/bootstrap.rkt")
 
 (define (bootstrap-instruments!)
   (let ((rt (bootstrap-rt!)))
@@ -35,8 +35,8 @@
                 'test-sleep
                 (make-closure '()
                               (lambda (env delay cont)
-                                (inc-uproc-rtime! (current-task)
-                                                  (min delay 25))
+                                ;; FIXME Not quite the same as bumping the rtime of the current process.
+                                (delay-milliseconds (min delay 25))
                                 (make-resumable cont delay))))
 
     ;; Determined by a fairly random dice roll.

@@ -6,9 +6,8 @@
 (require "continuations.rkt")
 (require "closures.rkt")
 (require "processes.rkt")
-(require "scheduler.rkt")
 
-(provide delay-milliseconds notify-whenever suspend trampoline __yield __list)
+(provide delay-milliseconds suspend trampoline __yield __list whenever-trampoline)
 
 ;; Continuations bootstrap
 
@@ -51,15 +50,19 @@
             ;; NOTE Args minus env and cont.
             (- (length args) 2))))))
 
+;; RBS
+(define (whenever-trampoline pattern fun)
+  (whenever pattern
+            (lambda (b)
+              ;; FIXME This can "steal" the continuation and not play nicely with the scheduler.
+              (trampoline
+               (suspend
+                (make-closure
+                 '()
+                 (lambda (e cont)
+                   (apply-closure fun b cont))))))))
+
+;; Other stuff
+
 (define (delay-milliseconds ms)
   (sleep (/ ms 1000.0)))
-
-;; RBS bootstrap:
-(define (notify-whenever who pattern)
-  (whenever pattern
-            ;; FIXME We can't use Spartan functions, since they yield execution.
-            (lambda (b)
-              (let ((t (find-task who)))
-                (uproc-enqueue-msg! t b)
-                (wake-task! t)
-                who))))

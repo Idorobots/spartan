@@ -40,8 +40,6 @@
 (require "compiler/compiler.rkt")
 
 ;; Runtime unit tests:
-(require "rt/queue.rkt")
-(require "rt/scheduler.rkt")
 (require "rt/continuations.rkt")
 (require "rt/exception.rkt")
 (require "rt/actor.rkt")

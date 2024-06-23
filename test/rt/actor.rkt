@@ -6,7 +6,6 @@
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
 (require "../../src/runtime/processes.rkt")
-(require "../../src/runtime/scheduler.rkt")
 (require "../../src/runtime/continuations.rkt")
 (require "../../src/runtime/closures.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
@@ -15,6 +14,86 @@
 (define (near-enough? value expected delta)
   (and (>= value (- expected delta))
        (<= value (+ expected delta))))
+
+(define (execute-task rt t)
+  (rt-execute-no-init!
+   rt
+   `((closure-fun __init_schedulerBANG)
+     (closure-env __init_schedulerBANG)
+     (make-closure
+      '()
+      (lambda (_ v)
+        ((closure-fun __enqueue_taskBANG)
+         (closure-env __enqueue_taskBANG)
+         ,t
+         (make-closure
+          '()
+          (lambda (_ v)
+            ((closure-fun __add_taskBANG)
+             (closure-env __add_taskBANG)
+             ,t
+             (make-closure
+              '()
+              (lambda (_ v)
+                ((closure-fun __executeBANG)
+                 (closure-env __executeBANG)
+                 (make-closure
+                  '()
+                  (lambda (_ v)
+                    v))))))))))))))
+
+(describe
+ "scheduler"
+ (it "Can resume stuff."
+     (define test (make-closure '()
+                                (lambda (_ a b cont)
+                                  (make-resumable cont (equal? a b)))))
+     (assert (resume
+              (resume
+               (resume
+                (apply-closure
+                 test
+                 2
+                 2
+                 (make-closure
+                  '()
+                  (lambda (_ two)
+                    (apply-closure
+                     test
+                     3
+                     3
+                     (make-closure
+                      two
+                      (lambda (two three)
+                        (apply-closure
+                         test
+                         two
+                         three
+                         (make-closure
+                          '()
+                          (lambda (_ v) v))))))))))))))
+
+ (it "Can run compiled code."
+     (assert (run '23) 23)
+     (assert (run '(= (* 3 2) (+ 3 3)))))
+
+ (it "Runing stuff changes state."
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+
+     (let ((p (make-uproc 100
+                          (make-resumable
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              v))
+                           '())
+                          '()
+                          0
+                          'waiting)))
+       (assert (uproc-state p) 'waiting)
+       (execute-task rt p)
+       (assert (uproc-state p) 'halted))))
 
 (describe
  "Actor Model"
@@ -38,8 +117,7 @@
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (near-enough? (uproc-rtime p) 23 1))
        (assert (near-enough? (uproc-vtime p) 2300 100))))
 
@@ -77,8 +155,7 @@
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (not (empty? (uproc-msg-queue p))))
        (assert (equal? (first (uproc-msg-queue p)) 'msg)))
      (let ((p (make-uproc 100
@@ -107,8 +184,7 @@
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (equal? (length (uproc-msg-queue p)) 2))
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
@@ -131,8 +207,7 @@
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (uproc-state p) 'waiting-4-msg)))
 
  (it "Can receive a message."

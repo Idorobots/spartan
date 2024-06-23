@@ -181,7 +181,7 @@
           (filter (lambda (filename)
                     (not (member filename (list "examples/logger.sprtn"
                                                 "examples/amb2.sprtn"
-                                                "examples/scheduler.sprtn"))))
+                                                "examples/preempt.sprtn"))))
                   (filter (lambda (filename)
                             (string-suffix? filename ".sprtn"))
                           (map (lambda (path)

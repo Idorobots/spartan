@@ -34,15 +34,16 @@
            eq? equal? nil? empty? not
            * + - / = < <= > >=
            quotient remainder modulo random zero?
-           current-task running-tasks find-task wake-task! spawn-task! spawn task-info monitor
-           uproc-pid uproc-priority uproc-rtime inc-uproc-rtime! uproc-vtime
+           current-task all-tasks find-task wake-task! spawn-task! spawn task-info monitor
+           make-uproc uproc-pid uproc-priority uproc-rtime set-uproc-rtime! uproc-vtime
+           uproc-continuation set-uproc-continuation!
            uproc-delimited-continuations set-uproc-delimited-continuations!
            uproc-error-handler set-uproc-error-handler!
            uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
            ref deref assign!
            call/current-continuation call/reset call/shift call/handler raise
            sleep self send recv
-           assert! signal! retract! select notify-whenever
+           assert! signal! retract! select whenever notify-whenever
            display newline current-milliseconds delay-milliseconds)))
 
 (define (convert-closures expr globals)

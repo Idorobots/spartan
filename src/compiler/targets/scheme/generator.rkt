@@ -84,7 +84,7 @@
                          display delay-milliseconds
                          ref deref
                          uproc-pid uproc-priority uproc-state uproc-vtime uproc-rtime
-                         uproc-delimited-continuations uproc-error-handler
+                         uproc-continuation uproc-delimited-continuations uproc-error-handler
                          uproc-msg-queue-empty? uproc-dequeue-msg!
                          find-task wake-task!
                          assert! signal! retract! select))
@@ -95,14 +95,10 @@
      #:when (member op '(eq? equal?
                          + - * / = < <= > >= modulo remainder quotient
                          cons append concat
-                         set-uproc-delimited-continuations!
-                         inc-uproc-rtime!
-                         set-uproc-state!
+                         set-uproc-rtime! set-uproc-state!
+                         set-uproc-continuation! set-uproc-delimited-continuations! set-uproc-error-handler!
                          uproc-enqueue-msg!
-                         set-uproc-error-handler!
-                         set-uproc-delimited-continuations!
-                         notify-whenever
-                         assign!))
+                         whenever assign!))
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)))
 
@@ -126,6 +122,14 @@
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)
            ,(generate-scheme-node c)))
+
+    ;; Other primops
+    ((primop-app 'make-uproc prio cont handler time state)
+     `(make-uproc ,(generate-scheme-node prio)
+                  ,(generate-scheme-node cont)
+                  ,(generate-scheme-node handler)
+                  ,(generate-scheme-node time)
+                  ,(generate-scheme-node state)))
 
     ;; Vararg primops
     ;; FIXME This should be removed as there shouldn't be any vararg primops.
