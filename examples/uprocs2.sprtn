@@ -7,5 +7,4 @@
   (spawn (lambda () (times 10 "ipsum")))
   (spawn (lambda () (times 10 "dolor")))
   (spawn (lambda () (times 10 "sit")))
-  (spawn (lambda () (times 10 "amet!")))
-  (monitor 500))
+  (spawn (lambda () (times 10 "amet!"))))
