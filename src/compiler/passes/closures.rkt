@@ -43,7 +43,7 @@
            ref deref assign!
            call/current-continuation call/reset call/shift call/handler raise
            sleep self send recv
-           assert! signal! retract! select whenever notify-whenever
+           assert! signal! retract! select whenever-trampoline notify-whenever
            display newline current-milliseconds delay-milliseconds)))
 
 (define (convert-closures expr globals)

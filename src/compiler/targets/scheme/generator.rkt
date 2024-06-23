@@ -92,27 +92,11 @@
 
     ;; Diadic primops
     ((primop-app op a b)
-     #:when (member op '(eq? equal?
+     #:when (member op '(eq? equal? cons
                          + - * / = < <= > >= modulo remainder quotient
-                         cons append concat
-                         set-uproc-rtime! set-uproc-state!
+                         set-uproc-rtime! inc-uproc-rtime! set-uproc-state! uproc-enqueue-msg!
                          set-uproc-continuation! set-uproc-delimited-continuations! set-uproc-error-handler!
-                         uproc-enqueue-msg!
-                         whenever assign!))
-     `(,op ,(generate-scheme-node a)
-           ,(generate-scheme-node b)))
-
-    ;; Diadic primops
-    ((primop-app op a b)
-     #:when (member op '(eq? equal?
-                         + - * / = < <= > >= modulo remainder quotient
-                         cons append concat
-                         set-uproc-delimited-continuations!
-                         inc-uproc-rtime!
-                         set-uproc-state!
-                         uproc-enqueue-msg!
-                         notify-whenever
-                         assign!))
+                         whenever-trampoline assign!))
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)))
 

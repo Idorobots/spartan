@@ -28,12 +28,17 @@
       (import-defaults! rt)
       (rt-execute! rt expr)))
 
-(define +core-import+ #f)
+(define *core-import* #f)
 (define (import-defaults! rt)
-  (unless +core-import+
-    (set! +core-import+ (rt-execute-no-init! rt +core-spartan+)))
-  (rt-import! rt
-              +core-import+))
+  ;; FIXME Currently the rt.rkt namespace is reused as the evaluation namespace.
+  ;; FIXME This should be done for each new runtime instance.
+  (let ((should-import? (or (not +use-global-namespace+)
+                            (not *core-import*))))
+    (unless *core-import*
+      (set! *core-import* (rt-execute-no-init! rt +core-spartan+)))
+    (when should-import?
+      (rt-import! rt
+                  *core-import*))))
 
 (define (run-instrumented expr instrument)
   (run-code
@@ -81,4 +86,4 @@
 
 ;; Default modules to be included in the binary.
 
-(define +core-spartan+ (compile-string (embed-file-contents "./runtime/core.sprtn")))
+(define +core-spartan+ (compile-string (format "(structure ~a)" (embed-file-contents "./runtime/core.sprtn"))))

@@ -114,7 +114,10 @@
       (run-with-snapshot run "examples/amb.sprtn"))
 
   (it "should support Actor Model"
-      (run-with-snapshot run "examples/msgwait.sprtn"))
+      (run-with-snapshot run "examples/msgwait.sprtn")
+      (run-with-snapshot run "examples/uprocs.sprtn")
+      (run-with-snapshot run "examples/uprocs2.sprtn")
+      (run-with-snapshot run "examples/fibonacci2.sprtn"))
 
   (it "should support the RBS"
       (run-with-snapshot run "examples/rbs2.sprtn"))))

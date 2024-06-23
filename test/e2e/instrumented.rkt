@@ -12,44 +12,49 @@
 (require "../../src/runtime/continuations.rkt")
 (require "../../src/runtime/bootstrap.rkt")
 
+(define *instruments-bootstrapped* #f)
+
 (define (bootstrap-instruments!)
   (let ((rt (bootstrap-rt!)))
-    (import-defaults! rt)
+    ;; FIXME RT reuses its namespace for the evaluation, so this can be done only once.
+    (unless *instruments-bootstrapped*
+      (set! *instruments-bootstrapped* #t)
+      (import-defaults! rt)
 
-    ;; Silence task info logs since these might vary in the specific timings.
-    (rt-define! rt
-                'test-task-info
-                (make-closure '()
-                              (lambda (env cont)
-                                (make-resumable cont '()))))
-
-    ;; Ensure that monitor task doesn't ever hang the execution.
-    (rt-define! rt
-                'test-monitor
-                (make-closure '()
-                              (lambda (env interval cont)
-                                (make-resumable cont interval))))
-
-    ;; Ensure that timeouts take very short time.
-    (rt-define! rt
-                'test-sleep
-                (make-closure '()
-                              (lambda (env delay cont)
-                                ;; FIXME Not quite the same as bumping the rtime of the current process.
-                                (delay-milliseconds (min delay 25))
-                                (make-resumable cont delay))))
-
-    ;; Determined by a fairly random dice roll.
-    (rt-define! rt
-                'test-random
-                (make-closure '()
-                              (let ((*random* 0.05))
+      ;; Silence task info logs since these might vary in the specific timings.
+      (rt-define! rt
+                  'test-task-info
+                  (make-closure '()
                                 (lambda (env cont)
-                                  (let ((r *random*))
-                                    (set! *random* (+ r 0.05))
-                                    (when (> *random* 1.0)
-                                      (set! *random* 0.05))
-                                    (make-resumable cont r))))))
+                                  (make-resumable cont '()))))
+
+      ;; Ensure that monitor task doesn't ever hang the execution.
+      (rt-define! rt
+                  'test-monitor
+                  (make-closure '()
+                                (lambda (env interval cont)
+                                  (make-resumable cont interval))))
+
+      ;; Ensure that timeouts take very short time.
+      (rt-define! rt
+                  'test-sleep
+                  (make-closure '()
+                                (lambda (env delay cont)
+                                  ;; FIXME Not quite the same as bumping the rtime of the current process.
+                                  (delay-milliseconds (min delay 25))
+                                  (make-resumable cont delay))))
+
+      ;; Determined by a fairly random dice roll.
+      (rt-define! rt
+                  'test-random
+                  (make-closure '()
+                                (let ((*random* 0.05))
+                                  (lambda (env cont)
+                                    (let ((r *random*))
+                                      (set! *random* (+ r 0.05))
+                                      (when (> *random* 1.0)
+                                        (set! *random* 0.05))
+                                      (make-resumable cont r)))))))
     rt))
 
 (define (instrument-for-test ast)
@@ -82,17 +87,11 @@
 (describe
  "instrumented r7rs target"
 
- (it "should support continuations"
+ (it "should support exceptions"
      (define rt (bootstrap-instruments!))
      (test-instrumented-file rt "examples/errors.sprtn" instrument-for-test)
+     (test-instrumented-file rt "examples/errors2.sprtn" instrument-for-test)
      (test-instrumented-file rt "examples/errors3.sprtn" instrument-for-test))
-
- (it "should support Actor Model"
-     (define rt (bootstrap-instruments!))
-     (test-instrumented-file rt "examples/uprocs.sprtn" instrument-for-test)
-     (test-instrumented-file rt "examples/uprocs2.sprtn" instrument-for-test sort-lines)
-     (test-instrumented-file rt "examples/fibonacci2.sprtn" instrument-for-test)
-     (test-instrumented-file rt "examples/errors2.sprtn" instrument-for-test))
 
  (it "should support the RBS"
      (define rt (bootstrap-instruments!))
