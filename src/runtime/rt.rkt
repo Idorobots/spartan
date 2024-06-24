@@ -80,7 +80,7 @@
                       (cons 'signal! signal!)
                       (cons 'retract! retract!)
                       (cons 'select select)
-                      (cons 'whenever whenever-trampoline)
+                      (cons 'whenever-trampoline whenever-trampoline)
                       )))
 
     (reset-rete!)
