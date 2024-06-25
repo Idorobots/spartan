@@ -229,7 +229,7 @@
                                   (newline)
                                   (display output)
                                   (newline)))
-                              (display (green (format "- ~a (~a ms)~n" test-case-name (car timing)))))
+                              (display (green (format "- ~a (~a ms)~n" test-case-name (cadr timing)))))
                           (delete-file output-file)))))
                 test-cases)))
        tests))
@@ -246,7 +246,7 @@
          (total-time (time-execution (run-tests tests failed-tests))))
     (if (empty? (deref failed-tests))
         (begin
-          (display (green (format "All ~a tests have passed. (~a ms)" (length tests) (car total-time))))
+          (display (green (format "All ~a tests have passed. (~a ms)" (length tests) (cadr total-time))))
           (newline))
         (begin
           (display (red "Some tests have failed:"))
