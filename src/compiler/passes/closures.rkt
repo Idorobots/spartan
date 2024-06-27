@@ -13,7 +13,6 @@
 (require "../substitute.rkt")
 
 (provide closure-convert
-         make-global-definitions-list
          ;; FIXME For test access.
          convert-closures make-env make-env-subs make-env-setters)
 
@@ -24,27 +23,6 @@
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
-
-(define (make-global-definitions-list)
-  ;; FIXME To be replaced by the list of interned global symbols in the runtime.
-  (apply set
-         '(yield suspend resume resumable? trampoline nice
-           nil true false
-           car cadr cdr cddr list cons append concat length map foldl foldr find last
-           eq? equal? nil? empty? not
-           * + - / = < <= > >=
-           quotient remainder modulo random zero?
-           current-task all-tasks find-task wake-task! spawn-task! spawn task-info monitor
-           make-uproc uproc-pid uproc-priority uproc-rtime set-uproc-rtime! uproc-vtime
-           uproc-continuation set-uproc-continuation!
-           uproc-delimited-continuations set-uproc-delimited-continuations!
-           uproc-error-handler set-uproc-error-handler!
-           uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
-           ref deref assign!
-           call/current-continuation call/reset call/shift call/handler raise
-           sleep self send recv
-           assert! signal! retract! select whenever-trampoline notify-whenever
-           display newline current-milliseconds delay-milliseconds)))
 
 (define (convert-closures expr globals)
   (match-ast expr

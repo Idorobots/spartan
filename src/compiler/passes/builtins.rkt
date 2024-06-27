@@ -16,10 +16,10 @@
 
 (define inline-builtins
   (pass (schema "inline-builtins"
-                'globals a-set?
+                'intrinsics a-list?
                 'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
+          (env-update env 'ast (partial inline-app-ops (env-get env 'intrinsics))))))
 
 (define (inline-app-ops builtins expr)
   (substitute (lambda (subs expr kont)
@@ -43,24 +43,5 @@
                                           (make-ast-primop-app (ast-node-location expr)
                                                                b
                                                                args)))))))
-                    (set->list
-                     (set-intersection
-                      builtins
-                      ;; FIXME To be replaced by the declare-primop's from core.
-                      (apply set
-                             '(suspend resumable? resume trampoline
-                               car cdr cons list
-                               eq? equal?
-                               * + - / = < <= > >=
-                               remainder quotient modulo random
-                               ref deref assign!
-                               make-uproc uproc-pid uproc-priority
-                               uproc-rtime set-uproc-rtime! uproc-vtime
-                               uproc-state set-uproc-state!
-                               uproc-continuation set-uproc-continuation!
-                               uproc-delimited-continuations set-uproc-delimited-continuations!
-                               uproc-error-handler set-uproc-error-handler
-                               uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
-                               assert! signal! retract! select whenever
-                               display current-milliseconds delay-milliseconds))))))
+                    (map car builtins)))
               expr))
