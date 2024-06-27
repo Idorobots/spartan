@@ -84,6 +84,7 @@
                       )))
 
     (reset-rete!)
+    (reset-kont-counter!)
     rt))
 
 (define (rt-intern! rt expr)
