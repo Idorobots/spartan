@@ -10,15 +10,15 @@
 (provide asm-expander declare-primitive-expander)
 
 (define (declare-primitive-expander expr use-env def-env)
-  ;; TODO Register the primitive as an intrinsic in the compiler.
   (let ((loc (ast-node-location expr)))
     (match-ast expr
-     ((list (symbol 'declare-primitive) (symbol name))
+     ((list (symbol 'declare-primitive) (symbol name) meta ...)
+      ;; TODO Register the primitive as a global definition in the compiler.
       (replace expr
                (generated
                 (make-ast-quote loc
                                 (make-ast-list loc '())))))
-     ((list (symbol 'declare-primitive) (list op args ...))
+     ((list (symbol 'declare-primitive) (list op args ...) meta ...)
       (let ((name (valid-symbol op "Bad primitive operation name")))
         (replace expr
                  (make-ast-def loc
@@ -28,9 +28,14 @@
                                                  (valid-formals (generated
                                                                  (make-ast-list loc args))
                                                                 "Bad primitive operation declaration")
-                                                 (make-ast-primop-app loc
-                                                                      (ast-symbol-value name)
-                                                                      args)))))))
+                                                 (make-ast-body loc
+                                                                (list (make-ast-primop-app loc
+                                                                                           '&primitive-metadata
+                                                                                           (cons name meta))
+                                                                      (make-ast-primop-app loc
+                                                                                           (ast-symbol-value name)
+                                                                                           args))
+                                                                "Bad primitive operation declaration")))))))
      (else
       (raise-compilation-error
        expr

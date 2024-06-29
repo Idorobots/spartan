@@ -219,7 +219,7 @@
   (match-ast expr
    ((list (symbol 'define) (list name rest ...) body ...)
     name)
-   ((list (symbol 'define) name value)
+   ((list (symbol 'define) name value ...)
     name)
    ;; FIXME Structure is a macro, so the primitive declarations are not expanded yet when this runs.
    ((list (symbol 'declare-primitive) (list name rest ...) body ...)

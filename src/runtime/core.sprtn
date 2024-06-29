@@ -1,9 +1,9 @@
 ;; Low-level primitives
 
-(declare-primitive (suspend thunk))
-(declare-primitive (resume r))
-(declare-primitive (resumable? r))
-(declare-primitive (trampoline r))
+(declare-primitive (suspend thunk) pure)
+(declare-primitive (resume r) pure)
+(declare-primitive (resumable? r) pure)
+(declare-primitive (trampoline r) pure)
 (declare-primitive (current-milliseconds))
 (declare-primitive (delay-milliseconds ts))
 
@@ -21,31 +21,31 @@
 (declare-primitive (assign! r v))
 
 ;; Equality
-(declare-primitive (equal? a b))
-(declare-primitive (eq? a b))
-(declare-primitive (= a b))
-(declare-primitive (< a b))
-(declare-primitive (<= a b))
-(declare-primitive (> a b))
-(declare-primitive (>= a b))
+(declare-primitive (equal? a b) pure)
+(declare-primitive (eq? a b) pure)
+(declare-primitive (= a b) pure)
+(declare-primitive (< a b) pure)
+(declare-primitive (<= a b) pure)
+(declare-primitive (> a b) pure)
+(declare-primitive (>= a b) pure)
 
 ;; Math
-(declare-primitive (* a b))
-(declare-primitive (+ a b))
-(declare-primitive (- a b))
-(declare-primitive (/ a b))
-(declare-primitive (modulo a b))
-(declare-primitive (quotient a b))
-(declare-primitive (remainder a b))
+(declare-primitive (* a b) pure)
+(declare-primitive (+ a b) pure)
+(declare-primitive (- a b) pure)
+(declare-primitive (/ a b) pure)
+(declare-primitive (modulo a b) pure)
+(declare-primitive (quotient a b) pure)
+(declare-primitive (remainder a b) pure)
 (declare-primitive (random))
 
 (define (zero? x)
   (= x 0))
 
 ;; List
-(declare-primitive (car l))
-(declare-primitive (cdr l))
-(declare-primitive (cons a b))
+(declare-primitive (car l) pure)
+(declare-primitive (cdr l) pure)
+(declare-primitive (cons a b) pure)
 
 (define (nil? l)
   (eq? l nil))
@@ -114,8 +114,8 @@
 
 ;; Processes & scheduling
 (declare-primitive (make-uproc prio cont handler time state))
-(declare-primitive (uproc-pid p))
-(declare-primitive (uproc-priority p))
+(declare-primitive (uproc-pid p) pure)
+(declare-primitive (uproc-priority p) pure)
 (declare-primitive (uproc-state p))
 (declare-primitive (set-uproc-state! p s))
 (declare-primitive (uproc-vtime p))
@@ -423,7 +423,7 @@
 (declare-primitive (assert! fact))
 (declare-primitive (signal! fact))
 (declare-primitive (retract! fact))
-(declare-primitive (select query))
+(declare-primitive (select query) pure)
 (declare-primitive (whenever-trampoline query fun))
 
 (define (notify-whenever pid query)

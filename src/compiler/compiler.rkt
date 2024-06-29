@@ -46,9 +46,9 @@
            'first-phase (env-get* env 'first-phase 'start)
            'last-phase (env-get* env 'last-phase 'codegen)
            ;; Expander & compilation envs.
-           'intrinsics (env-get* env 'intrinsics (make-intrinsics-list))
+           'intrinsics (env-get* env 'intrinsics '())
            'static-env (env-get* env 'static-env (make-static-environment))
-           'globals (env-get* env 'globals (make-global-definitions-list))
+           'globals (env-get* env 'globals (set))
            ;; Parse transforms
            'instrument (env-get* env 'instrument id)
            ;; Optimization
@@ -56,45 +56,6 @@
            'optimization-level (env-get* env 'optimization-level 2)
            ;; Code generation
            'target (env-get* env 'target 'r7rs)))
-
-(define (make-intrinsics-list)
-  ;; FIXME To be replaced by the declare-primop's from core.
-  '((suspend pure) (resumable? pure) (resume) (trampoline)
-    (car pure) (cdr pure) (cons pure)
-    (eq? pure) (equal? pure)
-    (* pure) (+ pure) (- pure) (/ pure) (= pure) (< pure) (<= pure) (> pure) (>= pure)
-    (remainder pure) (quotient pure) (modulo pure) (random)
-    (ref) (deref) (assign!)
-    (make-uproc) (uproc-pid pure) (uproc-priority pure)
-    (uproc-rtime pure) (set-uproc-rtime!) (uproc-vtime pure)
-    (uproc-state pure) (set-uproc-state!)
-    (uproc-continuation pure) (set-uproc-continuation!)
-    (uproc-delimited-continuations pure) (set-uproc-delimited-continuations!)
-    (uproc-error-handler pure) (set-uproc-error-handler)
-    (uproc-msg-queue-empty? pure) (uproc-dequeue-msg!) (uproc-enqueue-msg!)
-    (assert!) (signal!) (retract!) (select pure) (whenever-trampoline)
-    (display) (current-milliseconds) (delay-milliseconds)))
-
-(define (make-global-definitions-list)
-  ;; FIXME To be replaced by the list of interned global symbols in the runtime.
-  (apply set
-         '(yield suspend resume resumable? trampoline nice
-           nil true false
-           car cadr cdr cddr list cons append concat length map foldl foldr find last
-           eq? equal? nil? empty? not
-           * + - / = < <= > >=
-           quotient remainder modulo random zero?
-           current-task all-tasks find-task wake-task! spawn-task! spawn task-info monitor
-           make-uproc uproc-pid uproc-priority uproc-rtime set-uproc-rtime! uproc-vtime
-           uproc-continuation set-uproc-continuation!
-           uproc-delimited-continuations set-uproc-delimited-continuations!
-           uproc-error-handler set-uproc-error-handler!
-           uproc-state set-uproc-state! uproc-msg-queue-empty? uproc-dequeue-msg! uproc-enqueue-msg!
-           ref deref assign!
-           call/current-continuation call/reset call/shift call/handler raise
-           sleep self send recv
-           assert! signal! retract! select whenever-trampoline notify-whenever
-           display newline current-milliseconds delay-milliseconds)))
 
 (define (full-pipeline opts-early opts-late opts-final)
   (list 'start

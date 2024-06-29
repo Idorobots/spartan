@@ -50,6 +50,8 @@
                (let ((size (+ 1 (count (partial equal? #\newline) (string->list input))))
                      (time (time-execution (compile (env 'input input
                                                          'module "perf"
+                                                         'globals (make-global-definitions-list)
+                                                         'intrinsics (make-intrinsics-list)
                                                          'no-validation #t)))))
                  (apply printf "~a, ~a, ~a, ~a~n" size time)
                  ;; NOTE It's hard to avoid the GC here, so in case it kicks in anyway we
