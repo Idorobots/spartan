@@ -26,6 +26,7 @@
         ((closure-fun __enqueue_taskBANG)
          (closure-env __enqueue_taskBANG)
          ,t
+         __MULTrun_queueMULT
          (make-closure
           '()
           (lambda (_ v)
@@ -93,34 +94,37 @@
                           'waiting)))
        (assert (uproc-state p) 'waiting)
        (execute-task rt p)
-       (assert (uproc-state p) 'halted))))
+       (assert (uproc-state p) 'halted)))
 
-(describe
- "Actor Model"
- (it "Can sleep for a time."
+  (it "Can sleep for a time."
      (define rt (bootstrap-rt!))
      (import-defaults! rt)
      (define __sleep (rt-export rt 'sleep))
 
-     (let ((p (make-uproc 100
-                          (make-resumable
-                           (make-closure
-                            '()
-                            (lambda (_ v)
-                              (apply-closure __sleep
-                                             v
-                                             (make-closure
-                                              '()
-                                              (lambda (e v)
-                                                v)))))
-                           23)
-                          '()
-                          0
-                          'waiting)))
-       (execute-task rt p)
-       (assert (near-enough? (uproc-rtime p) 23 1))
-       (assert (near-enough? (uproc-vtime p) 2300 100))))
+     (let* ((prev (current-milliseconds))
+            (p (make-uproc 100
+                           (make-resumable
+                            (make-closure
+                             '()
+                             (lambda (_ v)
+                               (apply-closure __sleep
+                                              v
+                                              (make-closure
+                                               '()
+                                               (lambda (e v)
+                                                 v)))))
+                            200)
+                           '()
+                           prev
+                           'running))
+            (_ (execute-task rt p))
+            (now (current-milliseconds)))
+       ;; FIXME This is actually executing and sleeping, so it's very flaky.
+       (assert (near-enough? (uproc-rtime p) (+ prev 200) 10))
+       (assert (near-enough? (uproc-vtime p) (* 100 (+ prev 200)) 1000)))))
 
+(describe
+ "Actor Model"
  (it "Can retrieve own pid."
      (gensym-reset!)
      (assert (run '(self)) 'pid5))

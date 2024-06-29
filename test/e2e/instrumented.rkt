@@ -90,7 +90,8 @@
  (it "should support exceptions"
      (define rt (bootstrap-instruments!))
      (test-instrumented-file rt "examples/errors.sprtn" instrument-for-test)
-     (test-instrumented-file rt "examples/errors2.sprtn" instrument-for-test)
+     ;; FIXME Needs line sorting as the wait-list scheduler sleep implementation is now much different than just sleeping for a time.
+     (test-instrumented-file rt "examples/errors2.sprtn" instrument-for-test sort-lines)
      (test-instrumented-file rt "examples/errors3.sprtn" instrument-for-test))
 
  (it "should support the RBS"

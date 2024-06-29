@@ -158,81 +158,129 @@
 (define *run-queue*
   (ref '()))
 
+(define *wait-queue*
+  (ref '()))
+
 (define (init-scheduler!)
   (assign! *current-task* '())
   (assign! *task-list* '())
-  (assign! *run-queue* '()))
+  (assign! *run-queue* '())
+  (assign! *wait-queue* '()))
 
-(define (enqueue-task! task)
-  (define (insert t q)
-    (if (empty? q)
-        (list t)
-        (let ((f (car q)))
-          (if (<= (uproc-vtime t)
-                  (uproc-vtime f))
-              (cons t q)
-              (cons f (insert t (cdr q)))))))
+(define (queue-insert t q)
+  (if (empty? q)
+      (list t)
+      (let ((f (car q)))
+        (if (<= (uproc-vtime t)
+                (uproc-vtime f))
+            (cons t q)
+            (cons f (queue-insert t (cdr q)))))))
 
-  (set-uproc-state! task 'waiting)
-  (assign! *run-queue*
-           (insert task
-                   (deref *run-queue*))))
+(define (enqueue-task! task queue)
+  (assign! queue
+           (queue-insert task
+                         (deref queue))))
 
-(define (dequeue-next-task!)
-  (let* ((q (deref *run-queue*)))
-    (assign! *run-queue* (cdr q))
+(define (reschedule-next-task! queue)
+  (let ((q (deref queue)))
+    (assign! queue
+             (queue-insert (car q)
+                           (cdr q)))))
+
+(define (next-task queue)
+  (let* ((q (deref queue)))
     (car q)))
 
-(define +initial-task-state+ 'waiting)
+(define (dequeue-next-task! queue)
+  (let* ((q (deref queue)))
+    (assign! queue (cdr q))
+    (car q)))
+
 (define +default-task-priority+ 100)
-(define +default-idle-timeout+ 50)
+(define +idle-timeout+ 10)
 
 (define (spawn-task! prio fun handler)
   (let ((t (make-uproc prio
                        (suspend fun)
                        handler
                        (current-milliseconds)
-                       +initial-task-state+)))
+                       'waiting)))
     (add-task! t)
-    (enqueue-task! t)
+    (enqueue-task! t *wait-queue*)
     (uproc-pid t)))
 
 (define (wake-task! t)
   (when (eq? (uproc-state t) 'waiting-4-msg)
     (set-uproc-rtime! t (current-milliseconds))
-    (enqueue-task! t)))
+    (set-uproc-state! t 'running)
+    (enqueue-task! t *run-queue*)))
 
-(define (wait-until-ready t)
-  (let ((ts (current-milliseconds)))
-    (unless (>= ts (uproc-rtime t))
-      ;; TODO Do useful stuff here.
-      (delay-milliseconds +default-idle-timeout+)
-      (wait-until-ready t))))
+(define (wake-ready-tasks! now)
+  (unless (empty? (deref *wait-queue*))
+    (let ((t (next-task *wait-queue*)))
+      (when (< (uproc-rtime t) now)
+        (dequeue-next-task! *wait-queue*)
+        (set-uproc-state! t 'running)
+        (enqueue-task! t *run-queue*)))))
+
+(define (sleep ts)
+  (let ((cc (asm (primop-app '&current-continuation)))
+        (task (current-task)))
+    ;; NOTE Scheduler will add this task to the wait queue based on the runtime of the process.
+    (set-uproc-state! task 'waiting)
+    (set-uproc-rtime! task (+ (current-milliseconds) ts))
+    ;; NOTE Ensures that we return to the scheduler and the sleep takes effect immediately.
+    (yield cc ts)))
+
+(define (wait-until-ready! delay)
+  (let ((now (current-milliseconds)))
+    ;; NOTE Do some useful scheduler maintenance.
+    (wake-ready-tasks! now)
+    (when (or (empty? (deref *run-queue*))
+              (< now (uproc-rtime (next-task *run-queue*))))
+      (delay-milliseconds delay)
+      (wait-until-ready! delay))))
 
 (define (execute!)
   (define (loop acc)
-    (if (empty? (deref *run-queue*))
+    (if (and (empty? (deref *run-queue*))
+             (empty? (deref *wait-queue*)))
         acc
-        (let ((n (dequeue-next-task!)))
-          (assign! *current-task* n)
-          (wait-until-ready n)
-          (set-uproc-state! n 'running)
-          (let ((start (current-milliseconds))
-                (result (resume (uproc-continuation n))))
-            ;; FIXME Should this encompass the time spent in the scheduler?
-            (inc-uproc-rtime! n (- (current-milliseconds) start))
-            (if (resumable? result)
-                (do (set-uproc-continuation! n result)
-                    (cond ((eq? (uproc-state n) 'halted)
-                           (loop acc))
-                          ((eq? (uproc-state n) 'waiting-4-msg)
-                           ;; NOTE Task will be rescheduled whenever a message is sent to it.
-                           (loop acc))
-                          (else
-                           (enqueue-task! n)
-                           (loop acc))))
-                (do (set-uproc-state! n 'halted)
-                    (loop (cons result acc))))))))
+        (do (wait-until-ready! +idle-timeout+)
+            (let ((t (next-task *run-queue*)))
+              (assign! *current-task* t)
+              (let* ((start (current-milliseconds))
+                     (result (resume (uproc-continuation t)))
+                     (end (current-milliseconds))
+                     (state (uproc-state t)))
+                (cond ((not (resumable? result))
+                       ;; NOTE Terminated normally, so we mark it as halted and remove from the run queue.
+                       (set-uproc-state! t 'halted)
+                       (dequeue-next-task! *run-queue*)
+                       (loop (cons result acc)))
+                      ((eq? state 'running)
+                       ;; NOTE Still running, so we store the continuation, increment the run time and reschedule the task.
+                       (set-uproc-continuation! t result)
+                       (inc-uproc-rtime! t (- end start))
+                       (reschedule-next-task! *run-queue*)
+                       (loop acc))
+                      ((eq? state 'waiting)
+                       ;; NOTE Waiting for no specific event, so we store the continuation and put it on the wait queue.
+                       (set-uproc-continuation! t result)
+                       (dequeue-next-task! *run-queue*)
+                       (enqueue-task! t *wait-queue*)
+                       (loop acc))
+                      ((eq? state 'waiting-4-msg)
+                       ;; NOTE Waiting for a message, so we store the continuation, remove it from the run queue
+                       ;; NOTE and will reschedule whenever a message is received by the task.
+                       (set-uproc-continuation! t result)
+                       (dequeue-next-task! *run-queue*)
+                       (loop acc))
+                      (else
+                       ;; NOTE Terminated early due to an error, so we just skip it.
+                       ;; FIXME Ideally this would recover the value returned by the top-level error handler and save it.
+                       (dequeue-next-task! *run-queue*)
+                       (loop acc))))))))
   (loop '()))
 
 (define (task-info)
@@ -299,12 +347,6 @@
           (recv))
         (yield cc (uproc-dequeue-msg! curr-task)))))
 
-(define (sleep t)
-  (let ((cc (asm (primop-app '&current-continuation))))
-    (inc-uproc-rtime! (current-task) t)
-    ;; NOTE Ensures that we return to the scheduler and the sleep takes effect immediately.
-    (yield cc t)))
-
 ;; Continuations
 
 ;; FIXME These arent't actual primops.
@@ -312,7 +354,7 @@
 ;; (declare-primitive (&current-continuation))
 ;; (declare-primitive (&yield-cont-immediate cc v))
 
-;; FIXME Must be defined in bootstrap in order to avoid a double yield vio the explicit and then implicit continuation.
+;; FIXME Must be defined in bootstrap in order to avoid a double yield via the explicit and then implicit continuation.
 ;; (define (yield cc v)
 ;;   ;; NOTE Avoids the kont-counter optimization which can sometimes lead to tight loops not yielding fast enough.
 ;;   (asm (primop-app '&yield-cont-immediate cc v)))
