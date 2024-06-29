@@ -76,9 +76,12 @@
                  (append
                   (map (partial format-line input margin)
                        (line-range context-start start-line))
-                  (cond ((= start-line end-line)
+                  (cond ((and (= start-line end-line)
+                              (not (empty-line? input start-line)))
                          (list (format-line input margin start-line)
                                (format-underline margin start-col end-col)))
+                        ((= start-line end-line)
+                         (list (format-line input margin start-line)))
                         ((> (- end-line start-line) +ellide-blocks-larger-than+)
                          (append (format-lines input margin start-col -1 (line-range start-line (+ start-line ellided-size)))
                                  (list (format-ellide margin))
@@ -96,7 +99,9 @@
   (map (lambda (line start-col end-col)
          (string-append
           (format-line input margin line)
-          (format-underline margin start-col end-col)))
+          (if (empty-line? input line)
+              ""
+              (format-underline margin start-col end-col))))
        lines
        (if (< first-start-col 0)
            (map (partial starting-col input) lines)
@@ -113,6 +118,10 @@
 
 (define (ending-col input line)
   (- (string-length (get-line input line)) 1))
+
+(define (empty-line? input line)
+  ;; NOTE Just a newline after normalization.
+  (= 1 (string-length (normalize-for-display (get-line input line)))))
 
 (define (format-line input margin line)
   (let* ((number (number->string (+ 1 line)))

@@ -1,0 +1,10 @@
+test/data/errors/empty3.sprtn(1,0): Expected a Spartan module, found something else:
+  1 [33m|[39m ;; Comment
+    [33m|[39m [31m^^^^^^^^^^[39m
+  2 [33m|[39m 
+... [33m|[39m ...
+  5 [33m|[39m 
+  6 [33m|[39m 
+  7 [33m|[39m 
+
+Compilation aborted due to 1 errors.
