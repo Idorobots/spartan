@@ -80,13 +80,24 @@
                         (assert (map ast-binding-var bindings) (map temporary-name formals))
                         (assert (map ast-binding-val bindings) args))))
 
- (it "doesn't inline too large lambdas"
+ (it "doesn't inline unsuitable lambdas"
      (check ((var gen-valid-symbol)
              (sym (gen-symbol-node var))
              (formals (gen-arg-list (gen-integer 1 5)))
              ;; NOTE This needs to be larger than the max lambda size for inlining.
              (body (gen-do-node +max-inlineable-size+
                                 gen-valid-app-node))
+             (f (gen-lambda-node formals body))
+             (b (gen-binding-node sym f))
+             (args (gen-arg-list (length (ast-lambda-formals f))))
+             (app (apply gen-app-node sym args))
+             (node (gen-let-node (list b) app)))
+            (assert (lambda-inlining '() node) node))
+     (check ((var gen-valid-symbol)
+             (sym (gen-symbol-node var))
+             (formals (gen-arg-list (gen-integer 1 5)))
+             ;; NOTE Uses one of the primops that prevent inlining.
+             (body (gen-primop-app-node '&current-continuation))
              (f (gen-lambda-node formals body))
              (b (gen-binding-node sym f))
              (args (gen-arg-list (length (ast-lambda-formals f))))

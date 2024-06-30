@@ -15,7 +15,9 @@
  (it "optimizes the code"
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
-                           'input (slurp "examples/math.sprtn")))
+                           'input (slurp "examples/math.sprtn")
+                           'globals (set '+ '* 'display)
+                           'intrinsics '((+ pure) (* pure) (display))))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
      (assert (compile (env 'module "optimize"
@@ -25,14 +27,18 @@
                                             (s (lambda () (+ (r) (f 2))))
                                             (g (lambda () (+ (r) (s))))
                                             (t (lambda () (g))))
-                                     (t))"))
+                                     (t))"
+                           'globals (set '+)
+                           'intrinsics '((+ pure))))
              ''42)
      (assert (compile (env 'module "optimize"
                            'input "(letrec ((fact (lambda (x)
                                                    (if (= 0 x)
                                                        1
                                                        (* x (fact (- x 1)))))))
-                                    (fact 2))"))
+                                    (fact 2))"
+                           'globals (set '- '* '=)
+                           'intrinsics '((- pure) (* pure) (= pure))))
              ''2)))
 
 (describe
@@ -41,7 +47,9 @@
      (gensym-reset!)
      (assert (compile (env 'module "optimize"
                            'optimize optimize-super
-                           'input (slurp "examples/math.sprtn")))
+                           'input (slurp "examples/math.sprtn")
+                           'globals (set '+ '* 'display)
+                           'intrinsics '((+ pure) (* pure) (display))))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
      (assert (compile (env 'module "optimize"
@@ -52,7 +60,9 @@
                                             (s (lambda () (+ (r) (f 2))))
                                             (g (lambda () (+ (r) (s))))
                                             (t (lambda () (g))))
-                                     (t))"))
+                                     (t))"
+                           'globals (set '+)
+                           'intrinsics '((+ pure))))
              ''42))
 
  (ignore "superoptimizes recursive functions"
@@ -62,7 +72,9 @@
                                                    (if (= 0 x)
                                                        1
                                                        (* x (fact (- x 1)))))))
-                                    (fact 2))"))
+                                    (fact 2))"
+                               'globals (set '- '* '=)
+                               'intrinsics '((- pure) (* pure) (= pure))))
                  ''2)))
 
 (describe

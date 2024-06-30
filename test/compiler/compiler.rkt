@@ -6,6 +6,7 @@
 (require "../../src/compiler/ast.rkt")
 (require "../../src/compiler/env.rkt")
 (require "../../src/compiler/compiler.rkt")
+(require "../../src/compiler/utils/set.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/passes/optimize.rkt")
 
@@ -17,7 +18,8 @@
                      'optimize (lambda (passes env)
                                  (set! optimized? #t)
                                  env)
-                     'input "(* 2 2)"))
+                     'input "(* 2 2)"
+                     'globals (set '*)))
        (assert optimized?)))
 
  (it "doesn't run optimization if disabled"
@@ -27,7 +29,8 @@
                                  (set! optimized? #t)
                                  env)
                      'optimization-level 0
-                     'input "(* 2 2)"))
+                     'input "(* 2 2)"
+                     'globals (set '*)))
        (assert (not optimized?))))
 
  (it "runs configured instrumentation"
@@ -42,7 +45,8 @@
                                                            (if (= n 0)
                                                                1
                                                                (* n (fact (- n 1)))))))
-                                            (fact 120))"))))
+                                            (fact 120))"
+                                  'globals (set '= '* '-)))))
        (assert instrumented?)
        (assert result ''23.5)))
 

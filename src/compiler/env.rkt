@@ -2,7 +2,7 @@
 
 ;; Static compilation env.
 
-(provide env env? env-get env-get* env-contains? env-set env-update env-remove)
+(provide env env? env-get env-get* env-contains? env-set env-update env-remove env-merge)
 
 (define (env . properties)
   (apply hasheq properties))
@@ -28,3 +28,9 @@
 
 (define (env-remove env key)
   (hash-remove env key))
+
+(define (env-merge a b)
+  (foldl (lambda (kv acc)
+           (env-set acc (car kv) (cdr kv)))
+         a
+         (hash->list b)))

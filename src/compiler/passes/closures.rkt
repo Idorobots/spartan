@@ -13,7 +13,6 @@
 (require "../substitute.rkt")
 
 (provide closure-convert
-         make-global-definitions-list
          ;; FIXME For test access.
          convert-closures make-env make-env-subs make-env-setters)
 
@@ -24,18 +23,6 @@
                                     if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
-
-(define (make-global-definitions-list)
-  (apply set
-         '(nil car cadr cdr cddr list cons append concat
-           equal? nil? empty? true false not
-           * + - / = < <= > >=
-           quotient remainder modulo random zero?
-           ref deref assign!
-           call/current-continuation call/reset call/shift call/handler raise
-           sleep self send recv spawn task-info monitor
-           assert! signal! retract! select notify-whenever
-           display newline debug)))
 
 (define (convert-closures expr globals)
   (match-ast expr

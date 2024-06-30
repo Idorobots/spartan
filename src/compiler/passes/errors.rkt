@@ -14,7 +14,7 @@
   (pass (schema "report-errors"
                 'errors a-list?
                 'module non-empty-string?
-                'input non-empty-string?)
+                'input a-string?)
         (lambda (env)
           (let ((errors (env-get env 'errors)))
             (unless (empty? errors)

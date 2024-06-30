@@ -243,14 +243,6 @@ test/data/errors/macros.sprtn(55,1): Bad `reset` syntax, expected exactly one ex
  56 [33m|[39m (reset 5)
  57 [33m|[39m (reset 1 2 3)
 
-test/data/errors/macros.sprtn(59,11): Bad `structure` syntax, expected a definition:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m            [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
 test/data/errors/macros.sprtn(59,11): Undefined variable `x`, did you mean `*`:
  57 [33m|[39m (reset 1 2 3)
  58 [33m|[39m (structure)
@@ -259,51 +251,11 @@ test/data/errors/macros.sprtn(59,11): Undefined variable `x`, did you mean `*`:
  60 [33m|[39m (structure (define foo 5))
  61 [33m|[39m (structure (define (foo x) x))
 
-test/data/errors/macros.sprtn(59,11): Undefined variable `x`, did you mean `*`:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m            [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
-test/data/errors/macros.sprtn(59,13): Bad `structure` syntax, expected a definition:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m              [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
 test/data/errors/macros.sprtn(59,13): Undefined variable `y`, did you mean `*`:
  57 [33m|[39m (reset 1 2 3)
  58 [33m|[39m (structure)
  59 [33m|[39m (structure x y z)
     [33m|[39m              [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
-test/data/errors/macros.sprtn(59,13): Undefined variable `y`, did you mean `*`:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m              [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
-test/data/errors/macros.sprtn(59,15): Bad `structure` syntax, expected a definition:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m                [31m^[39m
- 60 [33m|[39m (structure (define foo 5))
- 61 [33m|[39m (structure (define (foo x) x))
-
-test/data/errors/macros.sprtn(59,15): Undefined variable `z`, did you mean `*`:
- 57 [33m|[39m (reset 1 2 3)
- 58 [33m|[39m (structure)
- 59 [33m|[39m (structure x y z)
-    [33m|[39m                [31m^[39m
  60 [33m|[39m (structure (define foo 5))
  61 [33m|[39m (structure (define (foo x) x))
 
@@ -339,14 +291,6 @@ test/data/errors/macros.sprtn(69,1): Bad `module` syntax, expected a module spec
  70 [33m|[39m (module (bar _))
  71 [33m|[39m (module (baz) x)
 
-test/data/errors/macros.sprtn(71,14): Bad `structure` syntax, expected a definition:
- 69 [33m|[39m (module ())
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
-    [33m|[39m               [31m^[39m
- 72 [33m|[39m (module (faz) x y z)
- 73 [33m|[39m (module (foobar) (define foo 5))
-
 test/data/errors/macros.sprtn(71,14): Undefined variable `x`, did you mean `*`:
  69 [33m|[39m (module ())
  70 [33m|[39m (module (bar _))
@@ -355,43 +299,11 @@ test/data/errors/macros.sprtn(71,14): Undefined variable `x`, did you mean `*`:
  72 [33m|[39m (module (faz) x y z)
  73 [33m|[39m (module (foobar) (define foo 5))
 
-test/data/errors/macros.sprtn(71,14): Undefined variable `x`, did you mean `*`:
- 69 [33m|[39m (module ())
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
-    [33m|[39m               [31m^[39m
- 72 [33m|[39m (module (faz) x y z)
- 73 [33m|[39m (module (foobar) (define foo 5))
-
-test/data/errors/macros.sprtn(72,14): Bad `structure` syntax, expected a definition:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m               [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
 test/data/errors/macros.sprtn(72,14): Undefined variable `x`, did you mean `*`:
  70 [33m|[39m (module (bar _))
  71 [33m|[39m (module (baz) x)
  72 [33m|[39m (module (faz) x y z)
     [33m|[39m               [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
-test/data/errors/macros.sprtn(72,14): Undefined variable `x`, did you mean `*`:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m               [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
-test/data/errors/macros.sprtn(72,16): Bad `structure` syntax, expected a definition:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m                 [31m^[39m
  73 [33m|[39m (module (foobar) (define foo 5))
  74 [33m|[39m (module (barbaz) (define (foo x) x))
 
@@ -403,22 +315,6 @@ test/data/errors/macros.sprtn(72,16): Undefined variable `y`, did you mean `*`:
  73 [33m|[39m (module (foobar) (define foo 5))
  74 [33m|[39m (module (barbaz) (define (foo x) x))
 
-test/data/errors/macros.sprtn(72,16): Undefined variable `y`, did you mean `*`:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m                 [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
-test/data/errors/macros.sprtn(72,18): Bad `structure` syntax, expected a definition:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m                   [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
 test/data/errors/macros.sprtn(72,18): Undefined variable `z`, did you mean `*`:
  70 [33m|[39m (module (bar _))
  71 [33m|[39m (module (baz) x)
@@ -427,12 +323,4 @@ test/data/errors/macros.sprtn(72,18): Undefined variable `z`, did you mean `*`:
  73 [33m|[39m (module (foobar) (define foo 5))
  74 [33m|[39m (module (barbaz) (define (foo x) x))
 
-test/data/errors/macros.sprtn(72,18): Undefined variable `z`, did you mean `*`:
- 70 [33m|[39m (module (bar _))
- 71 [33m|[39m (module (baz) x)
- 72 [33m|[39m (module (faz) x y z)
-    [33m|[39m                   [31m^[39m
- 73 [33m|[39m (module (foobar) (define foo 5))
- 74 [33m|[39m (module (barbaz) (define (foo x) x))
-
-Compilation aborted due to 55 errors.
+Compilation aborted due to 41 errors.

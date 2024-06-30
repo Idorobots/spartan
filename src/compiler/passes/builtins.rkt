@@ -16,10 +16,10 @@
 
 (define inline-builtins
   (pass (schema "inline-builtins"
-                'globals a-set?
+                'intrinsics a-list?
                 'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial inline-app-ops (env-get env 'globals))))))
+          (env-update env 'ast (partial inline-app-ops (env-get env 'intrinsics))))))
 
 (define (inline-app-ops builtins expr)
   (substitute (lambda (subs expr kont)
@@ -43,19 +43,5 @@
                                           (make-ast-primop-app (ast-node-location expr)
                                                                b
                                                                args)))))))
-                    (set->list
-                     (set-intersection
-                      builtins
-                      (apply set
-                             '(car cadr cdr cddr list cons append concat
-                                   equal? nil? empty? not
-                                   * + - / = < <= > >=
-                                   remainder quotient modulo zero? random
-                                   ref deref assign!
-                                   self send spawn sleep
-                                   assert! signal! retract! select notify-whenever
-                                   display newline debug
-                                   ;; NOTE These ones use the continuations, so they cannot be inlined.
-                                   ;; call/current-continuation call/reset call/shift call/handler raise recv
-                                   ))))))
+                    (map car builtins)))
               expr))

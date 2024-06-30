@@ -10,7 +10,7 @@
 (require "ast.rkt")
 
 (provide (struct-out pass) run-pass sequence debug
-         schema non-empty-string? non-empty-list? non-empty-hash? a-symbol? a-number?
+         schema non-empty-string? non-empty-list? non-empty-hash? a-symbol? a-number? a-string?
          a-pair? a-list? list-of? a-set? a-function? ast-subset?
          schema-validation-error?)
 
@@ -65,6 +65,10 @@
   (unless (and (hash? val)
                (> (hash-count val) 0))
     (schema-validation-error "Not a non-empty hash" val)))
+
+(define (a-string? val)
+  (unless (string? val)
+    (schema-validation-error "Not a string" val)))
 
 (define (a-symbol? val)
   (unless (symbol? val)

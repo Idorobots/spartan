@@ -13,7 +13,7 @@
      (check ((op (gen-symbol-node '*))
              (args (gen-arg-list (gen-integer 0 3)))
              (node (apply gen-app-node op args)))
-            (assert-ast (inline-app-ops (set '*) node)
+            (assert-ast (inline-app-ops '((*)) node)
                         (primop-app '* inlined-args ...)
                         (assert inlined-args args))))
 
@@ -21,7 +21,7 @@
      (check ((op (gen-symbol-node '+))
              (args (gen-arg-list (gen-integer 0 3)))
              (node (apply gen-app-node op args)))
-            (assert (inline-app-ops (set '*) node)
+            (assert (inline-app-ops '((*)) node)
                     node)))
 
  (it "should not inline complex applications"
@@ -30,7 +30,7 @@
              (op (gen-if-node gen-simple-node op1 op2))
              (args (gen-arg-list (gen-integer 0 3)))
              (node (apply gen-app-node op args)))
-            (assert (inline-app-ops (set '* '+) node)
+            (assert (inline-app-ops '((*) (+)) node)
                     node)))
 
  (it "should not inline overridden builtins"
@@ -42,12 +42,12 @@
              (node (gen-with-bv (gen-let-node (list binding)
                                               app)
                                 (set '*))))
-            (assert (inline-app-ops (set '*) node)
+            (assert (inline-app-ops '((*)) node)
                     node)))
 
  (it "should adjust the free variables"
      (check ((op (gen-symbol-node '*))
              (args (gen-arg-list (gen-integer 0 3)))
              (node (apply gen-app-node op args)))
-            (assert (ast-node-free-vars (inline-app-ops (set '*) node))
+            (assert (ast-node-free-vars (inline-app-ops '((*)) node))
                     (apply set (map ast-symbol-value args))))))

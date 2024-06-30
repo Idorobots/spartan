@@ -207,6 +207,9 @@ Available settings:
   (let loop ((env (env-set init
                            'line 2
                            'listing '((1 . "23")) ;; FIXME Needed for now to get the defines working in the REPL.
+                           'intrinsics (make-intrinsics-list)
+                           ;; TODO Maintain the runtime instance and update the defitions list with newly evaluated statements.
+                           'globals (make-global-definitions-list)
                            'autorun #t
                            'show-compiled #f
                            'show-stacktrace #f)))

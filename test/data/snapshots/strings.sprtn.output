@@ -36,6 +36,5 @@ test/data/errors/strings.sprtn(11,4): Unterminated string literal, expected a cl
  11 [33m|[39m "\\"" ;; Unterminated.
     [33m|[39m     [31m^^^^^^^^^^^^^^^^^^[39m
  12 [33m|[39m 
-    [33m|[39m [31m[39m
 
 Compilation aborted due to 5 errors.

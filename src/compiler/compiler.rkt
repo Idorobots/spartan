@@ -4,6 +4,7 @@
 (require "env.rkt")
 (require "pass.rkt")
 (require "utils/utils.rkt")
+(require "utils/set.rkt")
 
 ;; The frontend
 (require "passes/parser.rkt")
@@ -45,8 +46,9 @@
            'first-phase (env-get* env 'first-phase 'start)
            'last-phase (env-get* env 'last-phase 'codegen)
            ;; Expander & compilation envs.
-           'static-env (make-static-environment)
-           'globals (make-global-definitions-list)
+           'intrinsics (env-get* env 'intrinsics '())
+           'static-env (env-get* env 'static-env (make-static-environment))
+           'globals (env-get* env 'globals (set))
            ;; Parse transforms
            'instrument (env-get* env 'instrument id)
            ;; Optimization
@@ -65,6 +67,8 @@
         annotate-constants
         annotate-free-vars
         annotate-bindings
+        instrument
+        'instrument
         validate
         'validate
         report-errors
@@ -81,8 +85,6 @@
         'cps
         (optimize opts-late)
         'optimize-late
-        instrument
-        'instrument
         annotate-free-vars
         closure-convert
         'closures

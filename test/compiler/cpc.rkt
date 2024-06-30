@@ -12,10 +12,10 @@
   (gen-one-of gen-valid-symbol-node gen-const-node))
 
 (describe
- "CPC conversion"
+ "CPC"
  (it "works for the simple cases"
      (check ((node gen-const-node))
-            (assert (cpc node id)
+            (assert (cpc node #f id)
                     node)))
 
  (it "converts if correctly"
@@ -24,7 +24,7 @@
              (else gen-simple-cpc-node)
              (node (gen-if-node cond then else)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (let ((binding (symbol 'cont1) (lambda ((symbol 'value2)) (symbol 'value2))))
                             (if converted-cond
@@ -42,7 +42,7 @@
              (three gen-simple-cpc-node)
              (node (gen-specific-do-node one two three)))
             (gensym-reset!)
-            (assert (cpc node id) node))
+            (assert (cpc node #f id) node))
      (check ((cond gen-simple-cpc-node)
              (then gen-simple-cpc-node)
              (else gen-simple-cpc-node)
@@ -51,7 +51,7 @@
              (three gen-simple-cpc-node)
              (node (gen-specific-do-node one two three)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (let ((binding (symbol 'cont1)
                                          (lambda ((symbol 'value2))
@@ -70,7 +70,7 @@
              (app2 (gen-primop-app-node op2 arg2))
              (node (gen-specific-do-node app1 app2)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (let ((binding (symbol 'value1) (primop-app converted-op1 converted-arg1)))
                             (let ((binding (symbol 'value2) (primop-app converted-op2 converted-arg2)))
@@ -88,7 +88,7 @@
              (body gen-simple-cpc-node)
              (node (gen-lambda-node (list arg) body)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (lambda (converted-arg (symbol 'cont1))
                             (primop-app '&yield-cont (symbol 'cont1) converted-body))
@@ -102,7 +102,7 @@
              (body (gen-if-node arg then else))
              (node (gen-lambda-node (list arg) body)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (lambda (converted-arg (symbol 'cont1))
                             (let ((binding (symbol 'cont2)
@@ -122,7 +122,7 @@
              (args (gen-list (gen-integer 0 5) gen-simple-cpc-node))
              (node (apply gen-primop-app-node op args)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (let ((binding (symbol 'value1)
                                          (primop-app converted-op converted-args ...)))
@@ -137,7 +137,7 @@
              (op2 gen-valid-symbol)
              (app2 (gen-primop-app-node op2 app1)))
             (gensym-reset!)
-            (let ((result (cpc app2 id)))
+            (let ((result (cpc app2 #f id)))
               (assert-ast result
                           (app converted-op1
                                converted-arg1
@@ -156,7 +156,7 @@
              (arg gen-simple-cpc-node)
              (node (gen-app-node op arg)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (app converted-op converted-arg (lambda ((symbol 'value1)) (symbol 'value1)))
                           (assert converted-op op)
@@ -169,7 +169,7 @@
              (arg2 gen-simple-cpc-node)
              (app2 (gen-app-node app1 arg2)))
             (gensym-reset!)
-            (let ((result (cpc app2 id)))
+            (let ((result (cpc app2 #f id)))
               (assert-ast result
                           (app converted-op1
                                converted-arg1
@@ -188,7 +188,7 @@
              (op3 gen-simple-cpc-node)
              (app3 (gen-app-node op3 app2)))
             (gensym-reset!)
-            (let ((result (cpc app3 id)))
+            (let ((result (cpc app3 #f id)))
               (assert-ast result
                           (app converted-op1
                                converted-arg1
@@ -211,7 +211,7 @@
              (app2 (gen-app-node op2 arg2))
              (app3 (gen-app-node app1 app2)))
             (gensym-reset!)
-            (let ((result (cpc app3 id)))
+            (let ((result (cpc app3 #f id)))
               (assert-ast result
                           (app converted-op1
                                converted-arg1
@@ -239,7 +239,7 @@
              (body (gen-app-node var1 var2))
              (node (gen-fix-node (list binding1 binding2) body)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (fix ((binding converted-var1
                                          (lambda (_ (symbol 'cont1))
@@ -268,7 +268,7 @@
              (node (gen-let-node (list binding1 binding2)
                                  body)))
             (gensym-reset!)
-            (let ((result (cpc node id)))
+            (let ((result (cpc node #f id)))
               (assert-ast result
                           (app converted-op1
                                _
@@ -284,4 +284,33 @@
                           (assert converted-var1 var1)
                           (assert converted-var2 var2))
               (assert (ast-node-location result)
-                      (ast-node-location val1))))))
+                      (ast-node-location val1)))))
+
+ (it "maps &current-continuation to the lexical continuation where appropriate"
+     (check ((arg gen-valid-symbol-node)
+             (kont gen-valid-symbol-node)
+             (primop (gen-primop-app-node '&current-continuation))
+             (fun (gen-lambda-node (list arg) primop)))
+            (gensym-reset!)
+            ;; Primop is replaced with the name...
+            (let ((result (cpc primop kont id)))
+              (assert-ast result
+                          (symbol s)
+                          (assert s (ast-symbol-value kont)))
+              (assert (ast-node-location result)
+                      (ast-node-location primop)))
+            ;; ...unless not within a function.
+            (assert string-contains?
+                    (with-handlers ((exn? exn-message))
+                      (cpc primop #f id))
+                    "Invalid `&current-continuation` application: ")
+            ;; Lambda updates the cont name.
+            (assert-ast (cpc fun kont id)
+                        (lambda (converted-arg s1)
+                          (primop-app '&yield-cont s2 s3))
+                        (assert s1 s2)
+                        (assert (ast-symbol-value s1)
+                                (ast-symbol-value s3))
+                        (assert (ast-node-location s3)
+                                (ast-node-location primop))
+                        (assert converted-arg arg)))))

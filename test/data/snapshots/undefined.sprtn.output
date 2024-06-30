@@ -147,7 +147,7 @@ test/data/errors/undefined.sprtn(28,12): Undefined variable `typo`, did you mean
  29 [33m|[39m   (* typo23 opyt5)
  30 [33m|[39m   (* typo23typo5)
 
-test/data/errors/undefined.sprtn(29,12): Undefined variable `opyt5`, did you mean `list`:
+test/data/errors/undefined.sprtn(29,12): Undefined variable `opyt5`, did you mean `last`:
  27 [33m|[39m   (* typo 23 typo5)
  28 [33m|[39m   (* typo23 typo 5)
  29 [33m|[39m   (* typo23 opyt5)
