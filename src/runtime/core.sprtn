@@ -423,7 +423,7 @@
 (declare-primitive (assert! fact))
 (declare-primitive (signal! fact))
 (declare-primitive (retract! fact))
-(declare-primitive (select query) pure)
+(declare-primitive (select query))
 (declare-primitive (whenever-trampoline query fun))
 
 (define (notify-whenever pid query)

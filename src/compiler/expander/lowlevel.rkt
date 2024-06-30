@@ -29,9 +29,14 @@
                                                                  (make-ast-list loc args))
                                                                 "Bad primitive operation declaration")
                                                  (make-ast-body loc
-                                                                (list (make-ast-primop-app loc
-                                                                                           '&primitive-metadata
-                                                                                           (cons name meta))
+                                                                (list (make-ast-primop-app
+                                                                       loc
+                                                                       '&primitive-metadata
+                                                                       (list (make-ast-quote
+                                                                              loc
+                                                                              (make-ast-list
+                                                                               loc
+                                                                               (cons name meta)))))
                                                                       (make-ast-primop-app loc
                                                                                            (ast-symbol-value name)
                                                                                            args))

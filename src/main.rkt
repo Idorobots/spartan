@@ -29,10 +29,10 @@
 
 ;; Core module bootstrap
 
-(define *intrinsics* '())
+(define *primitives* '())
 
 (define (make-intrinsics-list)
-  *intrinsics*)
+  *primitives*)
 
 (define *global-definitions* '(list yield))
 
@@ -49,13 +49,14 @@
   (map-ast (lambda (expr)
              (match-ast expr
               ;; NOTE Extract intrinsic metadata.
-              ((primop-app '&primitive-metadata (symbol name) meta ...)
-               (set! *intrinsics*
-                     (cons (cons name (map ast-symbol-value meta))
-                           *intrinsics*))
+              ((primop-app '&primitive-metadata (const (list meta ...)))
+               #:when (every? ast-symbol? meta)
+               (set! *primitives*
+                     (cons (map ast-symbol-value meta)
+                           *primitives*))
                (replace-with-nil expr))
 
-              ((primop-app '&primitive-metadata op args ...)
+              ((primop-app '&primitive-metadata args ...)
                ;; NOTE Should be a compilation error, but since this is a built-in module it should always work.
                (replace-with-nil expr))
 
@@ -77,7 +78,6 @@
      ;; NOTE Should be a compilation error, but since this is a built-in module it should always work.
      ast)))
 
-;; FIXME This is much slower than the previous `compile-string` version.
 (define +core-spartan+
   ;; FIXME Replace with a pre-compiled module load.
   (let ((init (compile

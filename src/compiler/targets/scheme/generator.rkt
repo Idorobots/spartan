@@ -221,5 +221,8 @@
        ,(generate-scheme-node s)
        ,(generate-scheme-node name)))
 
+    ((primop-app '&primitive-metadata n meta ...)
+     '())
+
     (else
      (compiler-bug "Unsupported AST node type:" expr))))
