@@ -238,6 +238,7 @@
     (wake-ready-tasks! now)
     (when (or (empty? (deref *run-queue*))
               (< now (uproc-rtime (next-task *run-queue*))))
+      ;; FIXME Ideally this would be made non-blocking.
       (delay-milliseconds delay)
       (wait-until-ready! delay))))
 

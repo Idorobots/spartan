@@ -42,36 +42,38 @@
           name
           (generate-js-node value id)))
 
+(define (generate-const-node expr)
+  (match-ast expr
+    ((string value)
+     (format "~v" value))
+
+    ((list vals ...)
+     (foldr (lambda (v acc)
+              (format "makeCons(~a, ~a)"
+                      (generate-const-node v)
+                      acc))
+            "null"
+            vals))
+
+    ((number v)
+     (format "~a" v))
+
+    ((symbol s)
+     (format "\"~a\"" s))
+
+    (else
+     (compiler-bug "Unsupported AST node type:" expr))))
+
 (define (generate-js-node expr return)
   (match-ast expr
     ;; AST nodes
-    ((string value)
-     (return
-      (format "~v" value)))
-
-    ((list vals ...)
-     (return
-      (foldr (lambda (v acc)
-              (format "{car:~a,cdr:~a}"
-                      (generate-js-node v id)
-                      acc))
-            "null"
-            vals)))
-
-    ((number v)
-     (return
-      (format "~a" v)))
-
     ((symbol s)
      (return
       (format "~a" s)))
 
-    ((const (symbol s))
-     (return
-      (format "\"~a\"" s)))
-
     ((const v)
-     (generate-js-node v return))
+     (return
+      (generate-const-node v)))
 
     ((lambda args body)
      (format "((~a) => {~a})"
@@ -110,6 +112,23 @@
                             ";")
                ret)))
 
+    ;; Mutable primops
+    ((primop-app 'ref a)
+     (return
+      (format "makeRef(~a)"
+              (generate-js-node a id))))
+
+    ((primop-app 'deref a)
+     (return
+      (format "deref(~a)"
+              (generate-js-node a id))))
+
+    ((primop-app 'assign! a b)
+     (let ((a-js (generate-js-node a id))
+           (b-js (generate-js-node b id)))
+       (return
+        (format "assign(~a, ~a)" a-js b-js))))
+
     ;; Math primops
     ((primop-app op a b)
      #:when (member op '(+ - * / < <= > >=))
@@ -125,9 +144,15 @@
               (generate-js-node a id)
               (generate-js-node b id))))
 
-    ((primop-app 'modulo a b)
+    ((primop-app 'remainder a b)
      (return
       (format "(~a % ~a)"
+              (generate-js-node a id)
+              (generate-js-node b id))))
+
+    ((primop-app 'modulo a b)
+     (return
+      (format "modulo(~a, ~a)"
               (generate-js-node a id)
               (generate-js-node b id))))
 
@@ -136,6 +161,9 @@
       (format "(Math.floor(~a / ~a))"
               (generate-js-node a id)
               (generate-js-node b id))))
+
+    ((primop-app 'random)
+     (return "(Math.random())"))
 
     ;; List primops.
     ((primop-app 'car l)
@@ -150,33 +178,11 @@
 
     ((primop-app 'cons a b)
      (return
-      (format "{car:~a,cdr:~a}"
+      (format "makeCons(~a, ~a)"
               (generate-js-node a id)
               (generate-js-node b id))))
 
-    ((primop-app 'list)
-     (return "null"))
-
-    ((primop-app 'list args ...)
-     (return (foldr (lambda (a acc)
-                      (format "{car:~a,cdr:~a}"
-                              (generate-js-node a id)
-                              acc))
-                    "null"
-                    args)))
-
-    ((primop-app 'append a b)
-     (return
-      (format "(function() { const app = ((rest, tail) => (rest === null) ? tail : {car: rest.car, cdr: app(rest.cdr, tail)}); return app(~a, ~a)})()"
-              (generate-js-node a id)
-              (generate-js-node b id))))
-
-    ((primop-app 'nil? l)
-     (return
-      (format "(~a === null)"
-              (generate-js-node l id))))
-
-    ;; Boolean primops
+    ;; Equality primops
     ((primop-app 'eq? a b)
      (return
       (format "(~a == ~a)"
@@ -189,41 +195,149 @@
               (generate-js-node a id)
               (generate-js-node b id))))
 
-    ((primop-app 'not a)
-     (return
-      (format "(!~a)"
-              (generate-js-node a id))))
-
     ;; IO primops
     ((primop-app 'display a)
      (return
-      (format "(__write(~a), null)"
+      (format "display(~a)"
               (generate-js-node a id))))
 
-    ((primop-app 'newline)
-     (return "(__write(\"\\n\"), null)"))
+    ;; Time primops
+    ((primop-app 'current-milliseconds)
+     (return "currentMilliseconds()"))
 
-    ;; Mutable primops
-    ((primop-app 'ref a)
+    ((primop-app 'delay-milliseconds ts)
      (return
-      (format "{ref: ~a}"
-              (generate-js-node a id))))
+      (format "delayMilliseconds(~a)"
+              (generate-js-node ts id))))
 
-    ((primop-app 'deref a)
+    ;; Process primops
+    ((primop-app 'make-uproc prio cont handler rtime state)
      (return
-      (format "(~a.ref)"
-              (generate-js-node a id))))
+      (format "makeUproc(~a, ~a, ~a, ~a, ~a)"
+              (generate-js-node prio id)
+              (generate-js-node cont id)
+              (generate-js-node handler id)
+              (generate-js-node rtime id)
+              (generate-js-node state id))))
 
-    ((primop-app 'assign! a b)
-     (let ((a-js (generate-js-node a id))
-           (b-js (generate-js-node b id)))
-       (return
-        (format "((~a.ref = ~a), ~a)" a-js b-js a-js))))
+    ((primop-app 'uproc-pid p)
+     (return
+      (format "(~a.pid)"
+              (generate-js-node p id))))
 
-    ;; Closure & continuation primops.
+    ((primop-app 'uproc-priority p)
+     (return
+      (format "(~a.priority)"
+              (generate-js-node p id))))
+
+    ((primop-app 'uproc-state p)
+     (return
+      (format "(~a.state)"
+              (generate-js-node p id))))
+
+    ((primop-app 'set-uproc-state! p s)
+     (return
+      (format "setUprocState(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node s id))))
+
+    ((primop-app 'uproc-rtime p)
+     (return
+      (format "(~a.rtime)"
+              (generate-js-node p id))))
+
+    ((primop-app 'set-uproc-rtime! p ts)
+     (return
+      (format "setUprocRtime(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node ts id))))
+
+    ((primop-app 'uproc-vtime p)
+     (return
+      (format "uprocVTime(~a)"
+              (generate-js-node p id))))
+
+    ((primop-app 'uproc-continuation p)
+     (return
+      (format "(~a.continuation)"
+              (generate-js-node p id))))
+
+    ((primop-app 'set-uproc-continuation! p c)
+     (return
+      (format "setUprocContinuation(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node c id))))
+
+    ((primop-app 'uproc-delimited-continuations p)
+     (return
+      (format "(~a.delimitedContinuations)"
+              (generate-js-node p id))))
+
+    ((primop-app 'set-uproc-delimited-continuations! p c)
+     (return
+      (format "setUprocDelimitedContinuations(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node c id))))
+
+    ((primop-app 'uproc-error-handler p)
+     (return
+      (format "(~a.errorHandler)"
+              (generate-js-node p id))))
+
+    ((primop-app 'set-uproc-error-handler! p h)
+     (return
+      (format "setUprocErrorHandler(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node h id))))
+
+    ((primop-app 'uproc-msg-queue-empty? p)
+     (return
+      (format "uprocMsgQueueEmpty(~a)"
+              (generate-js-node p id))))
+
+    ((primop-app 'uproc-enqueue-msg! p m)
+     (return
+      (format "uprocEnqueueMsg(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node m id))))
+
+    ((primop-app 'uproc-dequeue-msg! p)
+     (return
+      (format "uprocDequeueMsg(~a)"
+              (generate-js-node p id))))
+
+    ;; RBS primops
+    ;; TODO These should ideally not compile at all until the RBS is properly supported.
+    ((primop-app 'assert! f)
+     (return
+      (format "assertFact(~a)"
+              (generate-js-node f id))))
+
+    ((primop-app 'signal! f)
+     (return
+      (format "signalFact(~a)"
+              (generate-js-node f id))))
+
+    ((primop-app 'retract! f)
+     (return
+      (format "retractFact(~a)"
+              (generate-js-node f id))))
+
+    ((primop-app 'select q)
+     (return
+      (format "selectFacts(~a)"
+              (generate-js-node q id))))
+
+    ((primop-app 'whenever-trampoline p f)
+     (return
+      (format "wheneverTrampoline(~a, ~a)"
+              (generate-js-node p id)
+              (generate-js-node f id))))
+
+    ;; Closure primops
     ((primop-app '&make-closure env fun)
      (return
-      (format "{env:~a,fun:~a}"
+      (format "makeClosure(~a, ~a)"
               (generate-js-node env id)
               (generate-js-node fun id))))
 
@@ -241,9 +355,16 @@
               (generate-js-node env id)
               (generate-js-node offset id))))
 
+    ((primop-app '&set-env! env offset val)
+     (return
+      (format "(~a[~a] = ~a)"
+              (generate-js-node env id)
+              (generate-js-node offset id)
+              (generate-js-node val id))))
+
     ((primop-app '&set-closure-env! c env)
      (return
-      (format "(~a.env = ~a)"
+      (format "setClosureEnv(~a, ~a)"
               (generate-js-node c id)
               (generate-js-node env id))))
 
@@ -259,11 +380,43 @@
                   local-closure
                   closure
                   (return
-                   ;; FIXME Some tests indicate that this is actually slower than calling into __apply*(). Likely JIT shenanigans.
                    (format "(~a.fun(~a.env, ~a))"
                            local-closure
                            local-closure
                            (string-join args-js ", "))))))))
+
+    ;; Continuation primops
+    ((primop-app 'trampoline r)
+     (return
+      (format "trampoline(~a)"
+              (generate-js-node r id))))
+
+    ((primop-app 'suspend t)
+     (return
+      (format "suspend(~a)"
+              (generate-js-node t id))))
+
+    ((primop-app 'resumable? r)
+     (return
+      (format "isResumable(~a)"
+              (generate-js-node r id))))
+
+    ((primop-app 'resume r)
+     (return
+      (format "resume(~a)"
+              (generate-js-node r id))))
+
+    ((primop-app '&yield-cont-immediate k h)
+     (generate-js-node
+      k
+      (lambda (kont)
+        (generate-js-node
+         h
+         (lambda (v)
+           (return
+            (format "makeResumable(~a, ~a)"
+                    kont
+                    v)))))))
 
     ((primop-app '&yield-cont k h)
      (let ((local-cont (gensym '__kont)))
@@ -283,7 +436,7 @@
                               v))
                      +js-continuation-hops+
                      (return
-                      (format "{kont: ~a,hole:~a}"
+                      (format "makeResumable(~a, ~a)"
                               local-cont
                               v)))))))))
 
@@ -299,7 +452,7 @@
                                (generate-js-node b id))
                              bindings)))
        (return
-        (format "(function() {const __s = { struct: true }; [~a].map((b) => __s[b.name] = b.value); return __s})()"
+        (format "makeStructure([~a])"
                 (string-join bindings-js ", ")))))
 
     ((primop-app '&structure-ref s name)
@@ -308,8 +461,8 @@
               (generate-js-node s id)
               (generate-js-node name id))))
 
-    ((primop-app op args ...)
-     (compiler-bug "Unsupported primop:" op))
+    ((primop-app '&primitive-metadata meta ...)
+     (return "null"))
 
     (else
      (compiler-bug "Unsupported AST node type:" expr))))
