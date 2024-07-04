@@ -58,7 +58,7 @@ const makeUproc = (priority, cont, handler, rtime, state) => ({
   type: "uproc"
 });
 const isUproc = (u) => ((typeof u === "object") && u !== null && !!u.type && u.type === "uproc");
-const setUprocRtime = (u, ts) => (u.rtime = ts, u);
+const setUprocRTime = (u, ts) => (u.rtime = ts, u);
 const setUprocState = (u, s) => (u.state = s, u);
 const setUprocContinuation = (u, c) => (u.continuation = c, u);
 const setUprocDelimitedContinuations = (u, c) => (u.delimitedContinuations = c, u);
@@ -166,9 +166,8 @@ const trampoline = (resumable) => {
 };
 
 const delayMilliseconds = (ms) => {
-  // FIXME Requires delayMilliseconds to be async as well.
-  // await new Promise(resolve => setTimeout(resolve, ms));
-
+  // TODO This should be a function that yields a promise that resolves with the continuation after a delay.
+  // TODO Trampoline/resume should then recognize and handle these promises.
   // FIXME This is terrible...
   const start = currentMilliseconds();
   while(currentMilliseconds() < (start + ms));
