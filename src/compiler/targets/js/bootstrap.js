@@ -170,7 +170,7 @@ const delayMilliseconds = (ms) => {
   // TODO Trampoline/resume should then recognize and handle these promises.
   // FIXME This is terrible...
   const start = currentMilliseconds();
-  while(currentMilliseconds() < (start + ms));
+  while(currentMilliseconds() <= (start + ms));
   return ms;
 };
 

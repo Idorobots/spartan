@@ -84,8 +84,8 @@
       (run-with-snapshot run "examples/logger.sprtn"))
 
   (it "should support continuations"
-      (run-with-snapshot run "examples/coroutines.sprtn")
       (run-with-snapshot run "examples/continuations.sprtn" sort-lines)
+      (run-with-snapshot run "examples/coroutines.sprtn")
       (run-with-snapshot run "examples/coroutines2.sprtn")
       (run-with-snapshot run "examples/coroutines3.sprtn")
       (run-with-snapshot run "examples/amb.sprtn"))
