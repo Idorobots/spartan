@@ -144,22 +144,23 @@ function __write(o) {
 }
 
 // Bootstrap primitives
-const suspend = (thunk) =>
-      makeResumable(
-        makeClosure(
-          null,
-          (e, thunk) => thunk.fun(
-            thunk.env,
-            makeClosure(null, (e, v) => v)
-          )
-        ),
-        thunk
-      );
+const suspend = (thunk) => {
+  return makeResumable(
+    makeClosure(
+      null,
+      (e, thunk) => thunk.fun(
+        thunk.env,
+        makeClosure(null, (e, v) => v)
+      )
+    ),
+    thunk
+  );
+};
 
 const trampoline = (resumable) => {
   let r = resumable;
   while(isResumable(r)) {
-    r = resume(resumable);
+    r = resume(r);
   }
   return r;
 };

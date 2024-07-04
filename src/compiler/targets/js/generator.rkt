@@ -9,8 +9,9 @@
 
 (provide generate-js)
 
-(define +js-continuation-hops+ 200)
+(define +js-continuation-hops+ 1)
 (define +js-bootstrap+ (embed-file-contents "./bootstrap.js"))
+(define +core-bootstrap+ (embed-file-contents "./core.js"))
 (define +js-runtime+ (embed-file-contents "./rt.js"))
 
 (define (generate-js env)
@@ -26,6 +27,7 @@
                                        (make-ast-number unknown-loc
                                                         +js-continuation-hops+))))
      +js-bootstrap+
+     +core-bootstrap+
      (foldr (lambda (v acc)
               (string-append
                (generate-js-def (car v) (cdr v))
