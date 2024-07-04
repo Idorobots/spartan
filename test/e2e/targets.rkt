@@ -84,7 +84,17 @@
       (run-with-snapshot run "examples/logger.sprtn"))
 
   (it "should support continuations"
-      (run-with-snapshot run "examples/coroutines.sprtn"))
+      (run-with-snapshot run "examples/coroutines.sprtn")
+      (run-with-snapshot run "examples/continuations.sprtn" sort-lines)
+      (run-with-snapshot run "examples/coroutines2.sprtn")
+      (run-with-snapshot run "examples/coroutines3.sprtn")
+      (run-with-snapshot run "examples/amb.sprtn"))
+
+  (it "should support Actor Model"
+      (run-with-snapshot run "examples/msgwait.sprtn")
+      (run-with-snapshot run "examples/uprocs.sprtn")
+      (run-with-snapshot run "examples/uprocs2.sprtn" sort-lines)
+      (run-with-snapshot run "examples/fibonacci2.sprtn"))
 
   (it "should handle regressions correctly"
       (run-with-snapshot run "test/data/regressions/reusedvars.sprtn")
@@ -104,20 +114,10 @@
   (format "~a target" target)
 
   (it "should support basic language features"
+      ;; FIXME JS runtime oesn't support bignums.
       (run-with-snapshot run "examples/fact.sprtn")
       (run-with-snapshot run "examples/rsa.sprtn"))
 
-  (it "should support continuations"
-      (run-with-snapshot run "examples/continuations.sprtn" sort-lines)
-      (run-with-snapshot run "examples/coroutines2.sprtn")
-      (run-with-snapshot run "examples/coroutines3.sprtn")
-      (run-with-snapshot run "examples/amb.sprtn"))
-
-  (it "should support Actor Model"
-      (run-with-snapshot run "examples/msgwait.sprtn")
-      (run-with-snapshot run "examples/uprocs.sprtn")
-      (run-with-snapshot run "examples/uprocs2.sprtn" sort-lines)
-      (run-with-snapshot run "examples/fibonacci2.sprtn"))
-
   (it "should support the RBS"
+      ;; FIXME JS runtime doesn't support the RBS.
       (run-with-snapshot run "examples/rbs2.sprtn"))))
