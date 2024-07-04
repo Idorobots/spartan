@@ -72,21 +72,18 @@
 
     ;; Nullary primop
     ((primop-app op)
-     #:when (member op '(random current-task running-tasks execute! current-milliseconds))
+     #:when (member op '(random current-milliseconds))
      `(,op))
 
     ;; Monadic primops
     ((primop-app op a)
      #:when (member op '(suspend resumable? resume trampoline
-                         not
-                         zero?
-                         car cdr nil? empty?
+                         car cdr
                          display delay-milliseconds
                          ref deref
                          uproc-pid uproc-priority uproc-state uproc-vtime uproc-rtime
                          uproc-continuation uproc-delimited-continuations uproc-error-handler
                          uproc-msg-queue-empty? uproc-dequeue-msg!
-                         find-task wake-task!
                          assert! signal! retract! select))
      `(,op ,(generate-scheme-node a)))
 
@@ -94,18 +91,11 @@
     ((primop-app op a b)
      #:when (member op '(eq? equal? cons
                          + - * / = < <= > >= modulo remainder quotient
-                         set-uproc-rtime! inc-uproc-rtime! set-uproc-state! uproc-enqueue-msg!
+                         set-uproc-rtime! set-uproc-state! uproc-enqueue-msg!
                          set-uproc-continuation! set-uproc-delimited-continuations! set-uproc-error-handler!
                          whenever-trampoline assign!))
      `(,op ,(generate-scheme-node a)
            ,(generate-scheme-node b)))
-
-    ;; Triadic primops
-    ((primop-app op a b c)
-     #:when (member op '(spawn-task!))
-     `(,op ,(generate-scheme-node a)
-           ,(generate-scheme-node b)
-           ,(generate-scheme-node c)))
 
     ;; Other primops
     ((primop-app 'make-uproc prio cont handler time state)
@@ -114,14 +104,6 @@
                   ,(generate-scheme-node handler)
                   ,(generate-scheme-node time)
                   ,(generate-scheme-node state)))
-
-    ;; Vararg primops
-    ;; FIXME This should be removed as there shouldn't be any vararg primops.
-    ((primop-app op args ...)
-     #:when (member op '(list))
-     `(,op ,@(map (lambda (a)
-                    (generate-scheme-node a))
-                  args)))
 
     ;; Closure primops
     ((primop-app '&make-env args ...)
@@ -196,13 +178,6 @@
             (set-ast-primop-app-args expr
                                      (list (make-ast-symbol loc tmp)
                                            h))))))
-
-    ;; Exceptions
-    ((primop-app '&error-handler)
-     `(uproc-error-handler (current-task)))
-
-    ((primop-app '&set-error-handler! handler)
-     `(set-uproc-error-handler! (current-task) ,(generate-scheme-node handler)))
 
     ;; Modules & structures primops
     ((primop-app '&make-structure bindings ...)
