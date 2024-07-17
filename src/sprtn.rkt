@@ -314,6 +314,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
                  (compile)
+                 (env-get 'generated)
                  (store-result (env-get* init 'output-file 'stdout)))))
           ;; Run the provided script in r7rs target only.
           ((run)
@@ -334,6 +335,7 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
                  (compile)
+                 (env-get 'generated)
                  (run-code)))
            (void))
           ((repl)

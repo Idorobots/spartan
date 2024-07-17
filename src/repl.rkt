@@ -245,13 +245,14 @@ Available settings:
                           (source-order errors))
                 (loop env))
               ;; Proceed as normal.
-              (let ((compiled (compile (env-set validated
-                                                'first-phase 'validate
-                                                'last-phase (env-get new-env 'last-phase)))))
+              (let* ((compiled (compile (env-set validated
+                                                 'first-phase 'validate
+                                                 'last-phase (env-get new-env 'last-phase))))
+                     (gen (env-get* compiled 'generated '())))
                 (when (env-get new-env 'show-compiled)
                   (print-comment "Compilation result:")
-                  (print-comment (output->string compiled)))
-                (print-comment (output->string (run-code compiled)))
+                  (print-comment (output->string gen)))
+                (print-comment (output->string (run-code gen)))
                 (loop new-env)))))
 
       (define (run-laxed new-env)
@@ -293,15 +294,16 @@ Available settings:
                      (loop new-env))
                     (else
                      ;; Proceed as normal, but strip the error object out of the AST.
-                     (let ((compiled (compile (env-set validated
-                                                       'ast (strip-errors (env-get validated 'ast))
-                                                       'errors '()
-                                                       'first-phase 'validate
-                                                       'last-phase (env-get new-env 'last-phase)))))
+                     (let* ((compiled (compile (env-set validated
+                                                        'ast (strip-errors (env-get validated 'ast))
+                                                        'errors '()
+                                                        'first-phase 'validate
+                                                        'last-phase (env-get new-env 'last-phase))))
+                            (gen (env-get* compiled 'generated '())))
                        (when (env-get new-env 'show-compiled)
                          (print-comment "Compilation result:")
-                         (print-comment (output->string compiled)))
-                       (print-comment (output->string (run-code compiled))))
+                         (print-comment (output->string gen)))
+                       (print-comment (output->string (run-code gen))))
                      (loop new-env))))
             (loop new-env)))
 

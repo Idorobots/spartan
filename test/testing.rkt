@@ -11,6 +11,7 @@
 (require "../src/compiler/utils/refs.rkt")
 (require "../src/compiler/errors.rkt")
 (require "../src/compiler/ast/match.rkt")
+(require "../src/compiler/env.rkt")
 
 (provide (all-defined-out))
 (provide (all-from-out "gen.rkt"))
@@ -121,7 +122,7 @@
                 ;; NOTE Exclude compilation time from the performance test.
                 (let ((compiled (compile-test-file filename)))
                   (collect-garbage 'major)
-                  (time-execution (run-code compiled)))))
+                  (time-execution (run-code (env-get compiled 'generated))))))
     ((_ filename factor body ...)
      (if (file-exists? filename)
          (let ((actual (begin body ...))
@@ -266,7 +267,9 @@
                          (display (compilation-error-what e))
                          (newline))))
         (rt-execute! rt
-                     (compile-instrumented-file filename instrument))))))
+                     (-> filename
+                         (compile-instrumented-file instrument)
+                         (env-get 'generated)))))))
 
 (define (run-test-file filename)
   (with-output-to-string

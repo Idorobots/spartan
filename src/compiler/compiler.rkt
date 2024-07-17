@@ -12,6 +12,8 @@
 (require "passes/qq.rkt")
 (require "passes/const.rkt")
 (require "passes/validate.rkt")
+(require "passes/metadata.rkt")
+(require "passes/instrument.rkt")
 (require "passes/errors.rkt")
 
 ;; Optimizations
@@ -31,7 +33,6 @@
 (require "passes/cpc.rkt")
 
 ;; The backend
-(require "passes/instrument.rkt")
 (require "passes/closures.rkt")
 (require "passes/globalization.rkt")
 (require "passes/rename.rkt")
@@ -69,6 +70,7 @@
         annotate-bindings
         instrument
         'instrument
+        extract-metadata
         validate
         'validate
         report-errors

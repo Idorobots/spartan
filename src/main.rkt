@@ -29,40 +29,13 @@
 
 ;; Core module bootstrap
 
-(define *primitives* '())
-
-(define (make-intrinsics-list)
-  *primitives*)
-
 (define *global-definitions* '(list yield))
 
 (define (make-global-definitions-list)
   (apply set *global-definitions*))
 
-(define (extract-intrinsics-metadata ast)
-  (define (replace-with-nil expr)
-    (let ((loc (ast-node-location expr)))
-      (replace expr
-               (generated
-                (make-ast-symbol loc 'nil)))))
-
-  (map-ast (lambda (expr)
-             (match-ast expr
-              ;; NOTE Extract intrinsic metadata.
-              ((primop-app '&primitive-metadata (const (list meta ...)))
-               #:when (every? ast-symbol? meta)
-               (set! *primitives*
-                     (cons (map ast-symbol-value meta)
-                           *primitives*))
-               (replace-with-nil expr))
-
-              ((primop-app '&primitive-metadata args ...)
-               ;; NOTE Should be a compilation error, but since this is a built-in module it should always work.
-               (replace-with-nil expr))
-
-              (else
-               expr)))
-           ast))
+(define (make-intrinsics-list)
+  (env-get* +core-spartan+ 'intrinsics '()))
 
 (define (extract-global-definitions ast)
   ;; FIXME Assumes that the module is turned into a large letrec expression
@@ -85,15 +58,14 @@
                     'input (format "(structure ~a)" (embed-file-contents "./runtime/core.sprtn"))
                     ;; FIXME This still needs the two "built-in" global procedures.
                     'globals (make-global-definitions-list)
-                    'instrument (compose extract-global-definitions
-                                         extract-intrinsics-metadata)
+                    'instrument extract-global-definitions
                     'last-phase 'instrument))))
     (compile (env-set init
                       'first-phase 'instrument
                       'last-phase 'codegen
-                      ;; FIXME Needs the full globals and  intrinsics lists for the optimizations do do anything.
-                      'globals (make-global-definitions-list)
-                      'intrinsics (make-intrinsics-list)))))
+                      ;; FIXME Needs the full globals and intrinsics lists for the optimizations do do anything.
+                      ;; FIXME These global functions are still added to the closure envs despite technically being global.
+                      'globals (make-global-definitions-list)))))
 
 (define *core-import* #f)
 
@@ -103,7 +75,9 @@
   (let ((should-import? (or (not +use-global-namespace+)
                             (not *core-import*))))
     (unless *core-import*
-      (set! *core-import* (rt-execute-no-init! rt +core-spartan+)))
+      (set! *core-import*
+            (rt-execute-no-init! rt
+                                 (env-get +core-spartan+ 'generated))))
     (when should-import?
       (rt-import! rt
                   *core-import*))))
@@ -143,26 +117,31 @@
   (run-instrumented expr id))
 
 (define (run-instrumented expr instrument)
-  (run-code
-   (compile
-    (env 'module "expr"
-         'input (with-output-to-string
-                  (lambda ()
-                    (pretty-write expr)))
-         'intrinsics (make-intrinsics-list)
-         'globals (make-global-definitions-list)
-         'instrument instrument))))
+  (-> (env 'module "expr"
+           'input (with-output-to-string
+                    (lambda ()
+                      (pretty-write expr)))
+           'intrinsics (make-intrinsics-list)
+           'globals (make-global-definitions-list)
+           'instrument instrument)
+      (compile)
+      (env-get 'generated)
+      (run-code)))
 
 (define (run-string input)
   (run-instrumented-string input id))
 
 (define (run-instrumented-string input instrument)
-  (run-code
-   (compile-instrumented-string input instrument)))
+  (-> input
+      (compile-instrumented-string instrument)
+      (env-get 'generated)
+      (run-code)))
 
 (define (run-file filename)
   (run-instrumented-file filename id))
 
 (define (run-instrumented-file filename instrument)
-  (run-code
-   (compile-instrumented-file filename instrument)))
+  (-> filename
+      (compile-instrumented-file instrument)
+      (env-get 'generated)
+      (run-code)))
