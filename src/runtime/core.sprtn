@@ -3,7 +3,6 @@
 (declare-primitive (suspend thunk) pure)
 (declare-primitive (resume r) pure)
 (declare-primitive (resumable? r) pure)
-(declare-primitive (trampoline r) pure)
 (declare-primitive (current-milliseconds))
 (declare-primitive (delay-milliseconds ts))
 
@@ -232,6 +231,11 @@
     ;; NOTE Ensures that we return to the scheduler and the sleep takes effect immediately.
     (yield cc ts)))
 
+(define (yield-delay ms)
+  ;; FIXME Needed to ensure that the value returned by delay-milliseconds is treated correctly by the JS runtime.
+  (let ((cc (asm (primop-app '&current-continuation))))
+    (yield cc (delay-milliseconds ms))))
+
 (define (wait-until-ready! delay)
   (let ((now (current-milliseconds)))
     ;; NOTE Do some useful scheduler maintenance.
@@ -239,7 +243,7 @@
     (when (or (empty? (deref *run-queue*))
               (< now (uproc-rtime (next-task *run-queue*))))
       ;; FIXME Ideally this would be made non-blocking.
-      (delay-milliseconds delay)
+      (yield-delay delay)
       (wait-until-ready! delay))))
 
 (define (execute!)
@@ -435,18 +439,15 @@
 ;; Init
 
 (define (rt-start f)
-  ;; NOTE Low-level start of the runtime env with a trampoline.
-  (let* ((cont (asm (primop-app '&current-continuation)))
-         (init (lambda ()
-                 (init-scheduler!)
-                 (spawn-task! +default-task-priority+
-                              f
-                              (lambda (err _)
-                                (display ";; Execution finished due to an unhandled error: ")
-                                (display err)
-                                (newline)
-                                ;; NOTE In case of any errors, the initial task will abort the whole program.
-                                (yield cont err)))
-                 (last (execute!))))
-         (r (asm (primop-app 'suspend init))))
-    (asm (primop-app 'trampoline r))))
+  ;; NOTE Low-level start of the runtime env.
+  (let* ((cont (asm (primop-app '&current-continuation))))
+    (init-scheduler!)
+    (spawn-task! +default-task-priority+
+                 f
+                 (lambda (err _)
+                   (display ";; Execution finished due to an unhandled error: ")
+                   (display err)
+                   (newline)
+                   ;; NOTE In case of any errors, the initial task will abort the whole program.
+                   (yield cont err)))
+    (last (execute!))))

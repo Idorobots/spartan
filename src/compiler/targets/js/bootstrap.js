@@ -157,21 +157,16 @@ const suspend = (thunk) => {
   );
 };
 
-const trampoline = (resumable) => {
+const trampoline = async (resumable) => {
   let r = resumable;
   while(isResumable(r)) {
-    r = resume(r);
+    r = r.kont.fun(r.kont.env, await r.hole);
   }
   return r;
 };
 
 const delayMilliseconds = (ms) => {
-  // TODO This should be a function that yields a promise that resolves with the continuation after a delay.
-  // TODO Trampoline/resume should then recognize and handle these promises.
-  // FIXME This is terrible...
-  const start = currentMilliseconds();
-  while(currentMilliseconds() <= (start + ms));
-  return ms;
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 const currentMilliseconds = () => +Date.now();

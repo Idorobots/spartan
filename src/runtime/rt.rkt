@@ -118,13 +118,18 @@
 (define (rt-execute! rt expr)
   ;; NOTE Uses the core-provided startup routing that boots the scheduler and spawns the initial task.
   (rt-intern! rt
-              `((closure-fun __rt_start)
-                (closure-env __rt_start)
-                (make-closure
-                 '()
-                 (lambda (_ cont)
-                   ,expr))
-                (make-closure
-                 '()
-                 (lambda (_ v)
-                   v)))))
+              `(trampoline
+                (suspend
+                 (make-closure
+                  '()
+                  (lambda (e cont)
+                    ((closure-fun __rt_start)
+                     (closure-env __rt_start)
+                     (make-closure
+                      '()
+                      (lambda (_ cont)
+                        ,expr))
+                     (make-closure
+                      '()
+                      (lambda (_ v)
+                        v)))))))))
