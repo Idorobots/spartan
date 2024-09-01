@@ -6,38 +6,61 @@
 (require "../../utils/assets.rkt")
 (require "../../utils/utils.rkt")
 (require "../../utils/gensym.rkt")
+(require "../../passes/rename.rkt") ;; FIXME For symbol->safe
+
+;; FIXME This currently results in a cycle dependency. Should be refactored with first-class targets.
+(require racket/lazy-require)
+(lazy-require ["../../core.rkt" (compile-core-spartan)]) ;; FIXME For the core module compilation.
 
 (provide generate-js)
 
 (define +js-continuation-hops+ 1) ;; FIXME Causes a stack overflow already at pretty low values.
 (define +js-bootstrap+ (embed-file-contents "./bootstrap.js"))
-(define +core-bootstrap+ (embed-file-contents "./core.js"))
 (define +js-runtime+ (embed-file-contents "./rt.js"))
 
-(define (generate-js env)
+(define (generate-js e)
   ;; Generate JavaScript code for the root node
-  (let* ((init (env-get env 'init))
+  (let* ((init (env-get e 'init))
          (init-loc (ast-node-location init))
-         (defs (env-get env 'data))
-         (unknown-loc (location 0 0)))
-    (string-append
-     (generate-js-def '__rt_continuation_hops
-                      (generated
-                       (make-ast-const unknown-loc
-                                       (make-ast-number unknown-loc
-                                                        +js-continuation-hops+))))
-     +js-bootstrap+
-     +core-bootstrap+
-     (foldr (lambda (v acc)
-              (string-append
-               (generate-js-def (car v) (cdr v))
-               acc))
-            ""
-            defs)
-     (generate-js-def '__module_init
-                      (generated
-                       (make-ast-lambda init-loc '() init)))
-     +js-runtime+)))
+         (defs (env-get e 'data))
+         (unknown-loc (location 0 0))
+         (js-defs (foldr (lambda (v acc)
+                           (string-append
+                            (generate-js-def (car v) (cdr v))
+                            acc))
+                         ""
+                         defs))
+         (module-name (safe-module-name e))
+         (js-init (generate-js-def module-name
+                                   (generated
+                                    (make-ast-lambda init-loc '() init)))))
+    (if (env-get* e 'omit-runtime #f)
+        (string-append js-defs js-init)
+        (string-append
+         (generate-js-def '__rt_continuation_hops
+                          (generated
+                           (make-ast-const unknown-loc
+                                           (make-ast-number unknown-loc
+                                                            +js-continuation-hops+))))
+         +js-bootstrap+
+         ;; FIXME Needs to be done on each compilation to avoid dependency cycles.
+         (let ((output (compile-core-spartan (env 'target 'ES6
+                                                  'omit-runtime #t))))
+           (env-get output 'generated))
+         js-defs
+         js-init
+         ;; NOTE The runtime expects a specific module as the init one.
+         (generate-js-def '__module_init
+                          (generated
+                           (make-ast-symbol unknown-loc module-name)))
+         +js-runtime+))))
+
+(define (safe-module-name env)
+  (-> env
+      (env-get 'module)
+      (string-replace ".sprtn" "")
+      string->symbol
+      symbol->safe))
 
 (define (generate-js-def name value)
   (format "const ~a = ~a;~n"

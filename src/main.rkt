@@ -2,13 +2,13 @@
 
 ;; The main entry point.
 
-(require "compiler/utils/assets.rkt")
 (require "compiler/utils/set.rkt")
 (require "compiler/utils/utils.rkt")
 (require "compiler/utils/io.rkt")
 (require "compiler/ast.rkt")
 (require "compiler/env.rkt")
 (require "compiler/compiler.rkt")
+(require "compiler/core.rkt")
 (require "runtime/rt.rkt")
 
 (provide run-code
@@ -23,49 +23,18 @@
          compile-file
          compile-instrumented-file
          make-intrinsics-list
+         ;; FIXME Needed by REPL etc
          make-global-definitions-list
          ;; FIXME For test access
          import-defaults!)
 
 ;; Core module bootstrap
 
-(define *global-definitions* '(list yield))
-
-(define (make-global-definitions-list)
-  (apply set *global-definitions*))
+;; FIXME Replace with a pre-compiled module load.
+(define +core-spartan+ (compile-core-spartan (env 'target 'r7rs)))
 
 (define (make-intrinsics-list)
   (env-get* +core-spartan+ 'intrinsics '()))
-
-(define (extract-global-definitions ast)
-  ;; FIXME Assumes that the module is turned into a large letrec expression
-  (match-ast ast
-    ((letrec bindings body)
-     (map (lambda (b)
-            (set! *global-definitions*
-                  (cons (ast-symbol-value (ast-binding-var b))
-                        *global-definitions*)))
-          bindings)
-     ast)
-    (else
-     ;; NOTE Should be a compilation error, but since this is a built-in module it should always work.
-     ast)))
-
-(define +core-spartan+
-  ;; FIXME Replace with a pre-compiled module load.
-  (let ((init (compile
-               (env 'module "core"
-                    'input (format "(structure ~a)" (embed-file-contents "./runtime/core.sprtn"))
-                    ;; FIXME This still needs the two "built-in" global procedures.
-                    'globals (make-global-definitions-list)
-                    'instrument extract-global-definitions
-                    'last-phase 'instrument))))
-    (compile (env-set init
-                      'first-phase 'instrument
-                      'last-phase 'codegen
-                      ;; FIXME Needs the full globals and intrinsics lists for the optimizations do do anything.
-                      ;; FIXME These global functions are still added to the closure envs despite technically being global.
-                      'globals (make-global-definitions-list)))))
 
 (define *core-import* #f)
 
