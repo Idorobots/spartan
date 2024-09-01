@@ -84,10 +84,15 @@
       (enqueue-task! t)
       (task-pid t)))
 
+  (define (yield-delay ms)
+    ;; FIXME Needed to ensure that the value returned by delay-milliseconds is treated correctly by the JS runtime.
+    (let ((cc (asm (primop-app '&current-continuation))))
+      (yield cc (delay-milliseconds ms))))
+
   (define (wait-until-ready t)
     (let ((ts (current-milliseconds)))
       (unless (>= ts (task-rtime t))
-        (delay-milliseconds 50)
+        (yield-delay 50)
         (wait-until-ready t))))
 
   (define (execute!)
@@ -118,25 +123,21 @@
 )
 
 ;; Example
+(let ((s (scheduler)))
 
-(trampoline
- (suspend
-  (lambda ()
-    (let ((s (scheduler)))
+  (define (foo n)
+    (when (> n 0)
+      (display "Running foo...\n")
+      (s.sleep 100)
+      (foo (- n 1))))
 
-      (define (foo n)
-        (when (> n 0)
-          (display "Running foo...\n")
-          (s.sleep 100)
-          (foo (- n 1))))
+  (define (bar n)
+    (when (> n 0)
+      (display "Running bar...\n")
+      (s.sleep 100)
+      (bar (- n 1))))
 
-      (define (bar n)
-        (when (> n 0)
-          (display "Running bar...\n")
-          (s.sleep 100)
-          (bar (- n 1))))
-
-      (s.spawn-task! (lambda () (foo 100)))
-      (s.spawn-task! (lambda () (bar 100)))
-      (display (s.execute!))
-      (newline)))))
+  (s.spawn-task! (lambda () (foo 100)))
+  (s.spawn-task! (lambda () (bar 100)))
+  (display (s.execute!))
+  (newline))
