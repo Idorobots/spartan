@@ -16,6 +16,7 @@
 (require "compiler/errors.rkt")
 (require "compiler/syntax-forms.rkt")
 (require "compiler/macros.rkt")
+(require "compiler/lowlevel.rkt")
 (require "compiler/body.rkt")
 (require "compiler/qq.rkt")
 (require "compiler/const.rkt")
@@ -39,8 +40,6 @@
 (require "compiler/compiler.rkt")
 
 ;; Runtime unit tests:
-(require "rt/queue.rkt")
-(require "rt/scheduler.rkt")
 (require "rt/continuations.rkt")
 (require "rt/exception.rkt")
 (require "rt/actor.rkt")

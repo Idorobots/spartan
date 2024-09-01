@@ -51,10 +51,29 @@
                                 (map (partial dce (set))
                                      (append filtered
                                              (list final))))))))
+
+   ;; NOTE This is purely to facilitate:
+   ;; (if (and a b) t e) => (if (if a b false) t e) => (if a (if b t e) (if false t e)) => (if a (if b t e) e)
+   ;; (if (or a b) t e) => (if (if a true b) t e) => (if a (if true t e) (if b t e)) => (if a t (if b t e))
+   ((if (if a b c) t e)
+    (let ((tt (dce (set) t))
+          (te (dce (set) e)))
+      (replace expr
+             (make-ast-if (ast-node-location expr)
+                          (dce (set) a)
+                          (make-ast-if (ast-node-location b)
+                                       (dce (set) b)
+                                       tt
+                                       te)
+                          (make-ast-if (ast-node-location c)
+                                       (dce (set) c)
+                                       tt
+                                       te)))))
    ((if condition then else)
     (cond ((falsy? condition) (dce (set) else))
           ((truthy? condition) (dce (set) then))
           (else (traverse-ast dce (set) expr))))
+
    ((let bindings body)
     (let* ((free (ast-node-free-vars body))
            (filtered (filter (flip used? free) bindings)))

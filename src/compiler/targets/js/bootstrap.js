@@ -1,45 +1,128 @@
+// Mutable refs
+const makeRef = (v) => ({
+  ref: v,
+  type: "ref"
+});
+const isRef = (r) => ((typeof r === "object") && r !== null && !!r.type && r.type === "ref")
+const deref = (r) => r.ref;
+const assign = (r, v) => ((r.ref = v), r);
+
+// Conses
+const makeCons = (car, cdr) => ({
+  car: car,
+  cdr: cdr,
+  type: "cons"
+});
+const isCons = (c) => (c === null || (typeof c === "object") && !!c.type && c.type === "cons");
+const car = (c) => c.car;
+const cdr = (c) => c.cdr;
+
+// Closures
+const makeClosure = (env, fun) => ({
+  fun: fun,
+  env: env,
+  type: "closure"
+});
+const isClosure = (c) => ((typeof c === "object") && c !== null && !!c.type && c.type === "closure");
+const closureFun = (c) => c.fun;
+const closureEnv = (c) => c.env;
+const setClosureEnv = (c, e) => (c.env = e, c);
+
+// Continuations
+const makeResumable = (cont, hole) => ({
+  kont: cont,
+  hole: hole,
+  type: "resumable"
+});
+const isResumable = (r) => ((typeof r === "object") && r !== null && !!r.type && r.type === "resumable");
+const resume = (r) => r.kont.fun(r.kont.env, r.hole);
+
+// Processes
+const gensym = (function () {
+  let counter = 0;
+  return (symbol) => {
+    const ret = symbol + counter;
+    counter++;
+    return ret;
+  };
+})();
+const makeUproc = (priority, cont, handler, rtime, state) => ({
+  continuation: cont,
+  delimitedContinuations: null,
+  errorHandler: handler,
+  state: state,
+  rtime: rtime,
+  priority: priority,
+  pid: gensym("pid"),
+  msgQueue: null,
+  type: "uproc"
+});
+const isUproc = (u) => ((typeof u === "object") && u !== null && !!u.type && u.type === "uproc");
+const setUprocRTime = (u, ts) => (u.rtime = ts, u);
+const setUprocState = (u, s) => (u.state = s, u);
+const setUprocContinuation = (u, c) => (u.continuation = c, u);
+const setUprocDelimitedContinuations = (u, c) => (u.delimitedContinuations = c, u);
+const setUprocErrorHandler = (u, h) => (u.errorHandler = h, u);
+const uprocVTime = (u) => (u.rtime * u.priority);
+const uprocMsgQueueEmpty = (u) => u.msgQueue === null;
+const uprocEnqueueMsg = (u, m) => {
+  if (u.msgQueue === null) {
+    u.msgQueue = makeCons(m, null);
+  } else {
+    let q = u.msgQueue;
+    while (q.cdr !== null) {
+      q = q.cdr;
+    }
+    q.cdr = makeCons(m, null);
+  }
+};
+const uprocDequeueMsg = (u) => {
+  const msg = u.msgQueue.car;
+  u.msgQueue = u.msgQueue.cdr;
+  return msg;
+};
+
+// Structures
+const makeStructure = (bindings) => {
+  const s = {
+    type: "structure"
+  };
+
+  bindings.forEach((b) => {
+    s[b.name] = b.value;
+  });
+
+  return s;
+};
+
+const isStructure = (s) => ((typeof s === "object") && s !== null && !!s.type && s.type === "structure");
+
 // Internal procedures
-function __apply1(c, a) {
-  return c.fun(c.env, a);
-}
-
-function __apply2(c, a, b) {
-  return c.fun(c.env, a, b);
-}
-
-function __apply3(c_, a, b, c) {
-  return c_.fun(c_.env, a, b, c);
-}
-
-function __applyN(c, ...args) {
-  return c.fun(c.env, ...args);
-}
-
-const __apply_cont = __apply1;
-
 function __write(o) {
+  // FIXME Refactor
   switch(typeof o) {
+  case "undefined":
+    __write("#<void>");
+    break;
   case "string":
     process.stdout.write(o);
     break;
   case "object":
     if (o === null) {
       __write("()")
-    } else if(o.ref !== undefined) {
-      __write("#<ref>")
-    } else if(o.fun !== undefined) {
-      __write("#<procedure>")
-    } else if(o.kont !== undefined) {
-      __write("#<continuation>")
-    } else if(o.struct !== undefined) {
-      __write("#<structure>")
-    } else if(o.car !== undefined) {
+    } else if(isRef(o)) {
+      __write("#<ref>");
+    } else if(isClosure(o)) {
+      __write("#<procedure>");
+    } else if(isResumable(o)) {
+      __write("#<continuation>");
+    } else if(isStructure(o)) {
+      __write("#<structure>");
+    } else if(isCons(o)) {
       __write("(");
       let i = o;
-
       while (i !== null) {
         __write(i.car);
-
         if(i.cdr === null) {
           break;
         } else if (typeof i.cdr === "object" && i.cdr.car !== undefined) {
@@ -60,156 +143,68 @@ function __write(o) {
   }
 }
 
-// Bootstrap values
-const __nil = null;
+// Bootstrap primitives
+const suspend = (thunk) => {
+  return makeResumable(
+    makeClosure(
+      null,
+      (e, thunk) => thunk.fun(
+        thunk.env,
+        makeClosure(null, (e, v) => v)
+      )
+    ),
+    thunk
+  );
+};
+
+const trampoline = async (resumable) => {
+  let r = resumable;
+  while(isResumable(r)) {
+    r = r.kont.fun(r.kont.env, await r.hole);
+  }
+  return r;
+};
+
+const delayMilliseconds = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+const currentMilliseconds = () => +Date.now();
+
+const display = (v) => {
+  __write(v);
+  return v;
+};
+
+const modulo = (a, b) => {
+  return a - b * Math.floor(a / b);
+};
+
+// RBS primops
+const assertFact = (f) => {
+  throw new Exception("RBS is currently not supported.");
+};
+const signalFact = (f) => {
+  throw new Exception("RBS is currently not supported.");
+};
+const retractFact = (f) => {
+  throw new Exception("RBS is currently not supported.");
+};
+const selectFacts = (q) => {
+  throw new Exception("RBS is currently not supported.");
+};
+const wheneverTrampoline = (pattern, fun) => {
+  throw new Exception("RBS is currently not supported.");
+};
 
 // Bootstrap procedures
-const __display = {
-  fun: (e, v, c) => {
-    __write(v);
-    return __apply_cont(c, null);
-  }
-};
-const __newline = {
-  fun: (e, c) => {
-    __write("\n");
-    return __apply_cont(c, null);
-  }
-};
-const __PLUS = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a + b));
-  }
-};
-const ___ = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a - b));
-  }
-};
-const __MULT = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a * b));
-  }
-};
-const __DIV = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a / b));
-  }
-};
-const __modulo = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a % b));
-  }
-};
-const __quotient = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, Math.floor(a/b));
-  }
-};
-const __LESS = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a < b));
-  }
-};
-const __LESSEQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a <= b));
-  }
-};
-const __GREATER = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a > b));
-  }
-};
-const __GREATEREQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a >= b));
-  }
-};
-const __EQUAL = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a == b));
-  }
-};
-const __cons = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, { car: a, cdr: b });
-  }
-};
-const __car = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, l.car);
-  }
-};
-const __cdr = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, l.cdr);
-  }
-};
-const __list = {
-  fun: (e, ...args) => {
-    const c = args[args.length - 1];
-    const vals = args.slice(0, args.length - 1);
-    const lst = ((rest) => (rest.length === 0)
-                 ? null
-                 : { car: rest[0], cdr: lst(rest.slice(1)) });
-    return __apply_cont(c, lst(vals));
-  }
-};
-const __append = {
-  fun: (e, a, b, c) => {
-    const app = ((rest) => (rest === null)
-                 ? b
-                 : { car: rest.car, cdr: app(rest.cdr) });
-    return __apply_cont(c, app(a));
-  }
-};
+const __yield = makeClosure(null, (e, cont, v, ignored) => makeResumable(cont, v));
 
-const __nilQUEST = {
-  fun: (e, l, c) => {
-    return __apply_cont(c, (l === null));
-  }
-};
-const __eqQUEST = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a == b));
-  }
-};
-const __equalQUEST = {
-  fun: (e, a, b, c) => {
-    return __apply_cont(c, (a === b));
-  }
-};
-const __not = {
-  fun: (e, a, c) => {
-    return __apply_cont(c, !a);
-  }
-};
-const __ref = {
-  fun: (e, init, c) => {
-    return __apply_cont(c, { ref: init });
-  }
-};
-const __assignBANG = {
-  fun: (e, r, val, c) => {
-    r.ref = val;
-    return __apply_cont(c, r);
-  }
-};
-const __deref = {
-  fun: (e, r, c) => {
-    return __apply_cont(c, r.ref);
-  }
-};
-const __callDIVcurrent_continuation = {
-  fun: (e, f, c) => {
-    const reified = { fun: (e, ret, _) => __apply_cont(c, ret) };
-    return __apply2(f, reified, c);
-  }
-};
-const __raise = {
-  fun: (e, ex, c) => {
-    // FIXME Actually implement this.
-    throw ex
-  }
-};
+const __list = makeClosure(null, (e, ...args) => {
+  const c = args[args.length - 1];
+  const vals = args.slice(0, args.length - 1);
+  const lst = ((rest) => (rest.length === 0)
+               ? null
+               : makeCons(rest[0], lst(rest.slice(1))));
+  return c.fun(c.env, lst(vals));
+});

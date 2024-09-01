@@ -8,61 +8,86 @@
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/utils/io.rkt")
 (require "../../src/compiler/utils/set.rkt")
+(require "../../src/compiler/utils/utils.rkt")
 (require "../../src/compiler/passes/optimize.rkt")
 
 (describe
  "optimize-naive"
  (it "optimizes the code"
      (gensym-reset!)
-     (assert (compile (env 'module "optimize"
-                           'input (slurp "examples/math.sprtn")))
+     (assert (-> (env 'module "optimize"
+                      'input (slurp "examples/math.sprtn")
+                      'globals (set '+ '* 'display)
+                      'intrinsics '((+ pure) (* pure) (display)))
+                 (compile)
+                 (env-get 'generated))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
-     (assert (compile (env 'module "optimize"
-                           'input "(letrec ((q (lambda () 8))
+     (assert (-> (env 'module "optimize"
+                      'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
                                             (r (lambda () (f (q))))
                                             (s (lambda () (+ (r) (f 2))))
                                             (g (lambda () (+ (r) (s))))
                                             (t (lambda () (g))))
-                                     (t))"))
+                                     (t))"
+                      'globals (set '+)
+                      'intrinsics '((+ pure)))
+                 (compile)
+                 (env-get 'generated))
              ''42)
-     (assert (compile (env 'module "optimize"
-                           'input "(letrec ((fact (lambda (x)
+     (assert (-> (env 'module "optimize"
+                      'input "(letrec ((fact (lambda (x)
                                                    (if (= 0 x)
                                                        1
                                                        (* x (fact (- x 1)))))))
-                                    (fact 2))"))
+                                    (fact 2))"
+                      'globals (set '- '* '=)
+                      'intrinsics '((- pure) (* pure) (= pure)))
+                 (compile)
+                 (env-get 'generated))
              ''2)))
 
 (describe
  "optimize-super"
  (it "superoptimizes the code"
      (gensym-reset!)
-     (assert (compile (env 'module "optimize"
-                           'optimize optimize-super
-                           'input (slurp "examples/math.sprtn")))
+     (assert (-> (env 'module "optimize"
+                      'optimize optimize-super
+                      'input (slurp "examples/math.sprtn")
+                      'globals (set '+ '* 'display)
+                      'intrinsics '((+ pure) (* pure) (display)))
+                 (compile)
+                 (env-get 'generated))
              '(begin (define __global10 '(5 1462731 23))
                      (display __global10)))
-     (assert (compile (env 'module "optimize"
-                           'optimize optimize-super
-                           'input "(letrec ((q (lambda () 8))
+     (assert (-> (env 'module "optimize"
+                      'optimize optimize-super
+                      'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
                                             (r (lambda () (f (q))))
                                             (s (lambda () (+ (r) (f 2))))
                                             (g (lambda () (+ (r) (s))))
                                             (t (lambda () (g))))
-                                     (t))"))
+                                     (t))"
+                      'globals (set '+)
+                      'intrinsics '((+ pure)))
+                 (compile)
+                 (env-get 'generated))
              ''42))
 
  (ignore "superoptimizes recursive functions"
-         (assert (compile (env 'module "optimize"
-                               'optimize optimize-super
-                               'input "(letrec ((fact (lambda (x)
+         (assert (-> (env 'module "optimize"
+                          'optimize optimize-super
+                          'input "(letrec ((fact (lambda (x)
                                                    (if (= 0 x)
                                                        1
                                                        (* x (fact (- x 1)))))))
-                                    (fact 2))"))
+                                    (fact 2))"
+                          'globals (set '- '* '=)
+                          'intrinsics '((- pure) (* pure) (= pure)))
+                     (compile)
+                     (env-get 'generated))
                  ''2)))
 
 (describe

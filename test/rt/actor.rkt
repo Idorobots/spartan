@@ -5,6 +5,9 @@
 (require "../testing.rkt")
 (require "../../src/main.rkt")
 (require "../../src/runtime/rt.rkt")
+(require "../../src/runtime/processes.rkt")
+(require "../../src/runtime/continuations.rkt")
+(require "../../src/runtime/closures.rkt")
 (require "../../src/compiler/utils/gensym.rkt")
 (require "../../src/compiler/utils/utils.rkt")
 
@@ -12,87 +15,203 @@
   (and (>= value (- expected delta))
        (<= value (+ expected delta))))
 
+(define (execute-task rt t)
+  (rt-execute-no-init!
+   rt
+   `((closure-fun __init_schedulerBANG)
+     (closure-env __init_schedulerBANG)
+     (make-closure
+      '()
+      (lambda (_ v)
+        ((closure-fun __enqueue_taskBANG)
+         (closure-env __enqueue_taskBANG)
+         ,t
+         __MULTrun_queueMULT
+         (make-closure
+          '()
+          (lambda (_ v)
+            ((closure-fun __add_taskBANG)
+             (closure-env __add_taskBANG)
+             ,t
+             (make-closure
+              '()
+              (lambda (_ v)
+                ((closure-fun __executeBANG)
+                 (closure-env __executeBANG)
+                 (make-closure
+                  '()
+                  (lambda (_ v)
+                    v))))))))))))))
+
 (describe
- "Actor Model"
- (it "Can sleep for a time."
+ "scheduler"
+ (it "Can resume stuff."
+     (define test (make-closure '()
+                                (lambda (_ a b cont)
+                                  (make-resumable cont (equal? a b)))))
+     (assert (resume
+              (resume
+               (resume
+                (apply-closure
+                 test
+                 2
+                 2
+                 (make-closure
+                  '()
+                  (lambda (_ two)
+                    (apply-closure
+                     test
+                     3
+                     3
+                     (make-closure
+                      two
+                      (lambda (two three)
+                        (apply-closure
+                         test
+                         two
+                         three
+                         (make-closure
+                          '()
+                          (lambda (_ v) v))))))))))))))
+
+ (it "Can run compiled code."
+     (assert (run '23) 23)
+     (assert (run '(= (* 3 2) (+ 3 3)))))
+
+ (it "Runing stuff changes state."
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __sleep v (closurize id))))
-                                       23)
+                          (make-resumable
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              v))
+                           '())
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
-       (assert (near-enough? (uproc-rtime p) 23 1))
-       (assert (near-enough? (uproc-vtime p) 2300 100))))
+       (assert (uproc-state p) 'waiting)
+       (execute-task rt p)
+       (assert (uproc-state p) 'halted)))
 
+  (it "Can sleep for a time."
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+     (define __sleep (rt-export rt 'sleep))
+
+     (let* ((prev (current-milliseconds))
+            (p (make-uproc 100
+                           (make-resumable
+                            (make-closure
+                             '()
+                             (lambda (_ v)
+                               (apply-closure __sleep
+                                              v
+                                              (make-closure
+                                               '()
+                                               (lambda (e v)
+                                                 v)))))
+                            200)
+                           '()
+                           prev
+                           'running))
+            (_ (execute-task rt p))
+            (now (current-milliseconds)))
+       ;; FIXME This is actually executing and sleeping, so it's very flaky.
+       (assert (near-enough? (uproc-rtime p) (+ prev 200) 10))
+       (assert (near-enough? (uproc-vtime p) (* 100 (+ prev 200)) 1000)))))
+
+(describe
+ "Actor Model"
  (it "Can retrieve own pid."
      (gensym-reset!)
-     (assert (run '(self)) 'pid2))
+     (assert (run '(self)) 'pid5))
 
  (ignore "Can retrieve current node."
          ;; There is no notion of a node yet.
          (error "Actually get this test to work!"))
 
  (it "Can send a message."
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+     (define __self (rt-export rt 'self))
+     (define __send (rt-export rt 'send))
+
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __self (closurize
-                                                          (lambda (__value4)
-                                                            (&apply __send
-                                                                    __value4
-                                                                    v
-                                                                    (closurize
-                                                                     (lambda (__value3)
-                                                                       __value3))))))))
-                                       'msg)
+                          (make-resumable
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __self
+                                             (make-closure
+                                              '()
+                                              (lambda (_ __value4)
+                                                (apply-closure __send
+                                                               __value4
+                                                               v
+                                                               (make-closure
+                                                                '()
+                                                                (lambda (_ __value3)
+                                                                  __value3))))))))
+                           'msg)
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (not (empty? (uproc-msg-queue p))))
        (assert (equal? (first (uproc-msg-queue p)) 'msg)))
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (v)
-                                          (&apply __self
-                                                  (closurize
-                                                   (lambda (__value7)
-                                                     (&apply __send
-                                                             __value7
-                                                             v
-                                                             (closurize
-                                                              (lambda (__value6)
-                                                                (&apply __send
-                                                                        __value6
-                                                                        v
-                                                                        (closurize
-                                                                         (lambda (__value5)
-                                                                           __value5)))))))))))
-                                       'msg)
+                          (make-resumable
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __self
+                                             (make-closure
+                                              '()
+                                              (lambda (_ __value7)
+                                                (apply-closure __send
+                                                               __value7
+                                                               v
+                                                               (make-closure
+                                                                '()
+                                                                (lambda (_ __value6)
+                                                                  (apply-closure __send
+                                                                                 __value6
+                                                                                 v
+                                                                                 (make-closure
+                                                                                  '()
+                                                                                  (lambda (_ __value5)
+                                                                                    __value5)))))))))))
+                           'msg)
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (equal? (length (uproc-msg-queue p)) 2))
        (assert (equal? (first (uproc-msg-queue p)) 'msg))))
 
  (it "Can't receive when there are no messages."
+     (define rt (bootstrap-rt!))
+     (import-defaults! rt)
+     (define __recv (rt-export rt 'recv))
+
      (let ((p (make-uproc 100
-                          (&yield-cont (closurize
-                                        (lambda (_)
-                                          (&apply __recv (closurize id))))
-                                       '())
+                          (make-resumable
+                           (make-closure
+                            '()
+                            (lambda (_ v)
+                              (apply-closure __recv
+                                             (make-closure
+                                              '()
+                                              (lambda (_ v)
+                                                v)))))
+                           '())
                           '()
                           0
                           'waiting)))
-       (reset-tasks! (list p))
-       (execute!)
+       (execute-task rt p)
        (assert (uproc-state p) 'waiting-4-msg)))
 
  (it "Can receive a message."
@@ -110,4 +229,4 @@
      (gensym-reset!)
      (assert (run '(spawn (lambda ()
                             (* 1 (+ 2 3)))))
-             'pid7)))
+             'pid10)))

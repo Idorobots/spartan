@@ -7,6 +7,16 @@
 (require "../../src/compiler/passes/cse.rkt")
 (require "../../src/compiler/utils/set.rkt")
 
+(define +eliminatable-primops+ '(car cdr cons eq? * + - / = < <= > >= ref deref))
+
+(define (extract-subexprs bindings)
+  (filter (lambda (b)
+            (let ((node (ast-binding-val b)))
+              (and (ast-primop-app? node)
+                   (member (ast-primop-app-op node)
+                           +eliminatable-primops+))))
+          bindings))
+
 (describe
  "common-subexpression-elimination"
  (it "should eliminate redundant expressions"
@@ -20,7 +30,7 @@
              (b2 gen-valid-binding-node)
              (body (gen-let-node (list b2) app2))
              (node (gen-let-node (list b1) body)))
-            (assert-ast (cse '() node)
+            (assert-ast (cse extract-subexprs '() node)
                         (let ((binding cse-sym1-2 cse-app1))
                           (let _
                               cse-sym1))
@@ -40,7 +50,7 @@
              (args (gen-arg-list (gen-integer 0 5)))
              (body (gen-lambda-node args app2))
              (node (gen-let-node (list b1) body)))
-            (assert-ast (cse '() node)
+            (assert-ast (cse extract-subexprs '() node)
                         (let ((binding cse-sym1 cse-app1))
                           (lambda _
                             cse-app2))
@@ -65,7 +75,7 @@
                                 (set v1)))
              (node (gen-with-bv (gen-let-node (list b1) body)
                                 (set s1))))
-            (assert-ast (cse '() node)
+            (assert-ast (cse extract-subexprs '() node)
                         (let ((binding cse-sym1 cse-app1))
                           (let ((binding cse-var1 _))
                             cse-app2))
@@ -89,7 +99,7 @@
                                 (set v1)))
              (node (gen-with-bv (gen-let-node (list b1) body)
                                 (set s1))))
-            (assert-ast (cse '() node)
+            (assert-ast (cse extract-subexprs '() node)
                         (let ((binding cse-sym1 cse-app1))
                           (letrec ((binding cse-var1 _))
                             cse-app2))
@@ -105,7 +115,7 @@
                              (set v)))
              (node (gen-with-bv (gen-let-node (list b) app)
                                 (set v))))
-            (assert (cse '() node) node)))
+            (assert (cse extract-subexprs '() node) node)))
 
  (it "should not optimize out letrec bindings"
      (check ((v1 gen-valid-symbol)
@@ -121,7 +131,7 @@
              (app2 (gen-primop-app-node op var1 var2))
              (node (gen-with-bv (gen-letrec-node (list b1) app2)
                                 (set s1))))
-            (assert-ast (cse '() node)
+            (assert-ast (cse extract-subexprs '() node)
                         (letrec ((binding cse-sym1-2 cse-app1))
                           cse-sym1)
                         #:when (ast-eqv? cse-sym1 cse-sym1-2)

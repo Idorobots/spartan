@@ -77,6 +77,52 @@
             (assert (dce (set) node)
                     els)))
 
+ (it "should facilitate more dead if branch elimination"
+     (check ((then gen-valid-symbol-node)
+             (els gen-valid-symbol-node)
+             (a gen-valid-symbol-node)
+             (b gen-valid-symbol-node)
+             (c gen-valid-symbol-node)
+             (t (gen-symbol-node 'true))
+             (f (gen-symbol-node 'false))
+             (cnd1 (gen-if-node a b c))
+             (node1 (gen-if-node cnd1 then els))
+             (cnd2 (gen-if-node a b f))
+             (node2 (gen-if-node cnd2 then els))
+             (cnd3 (gen-if-node a t c))
+             (node3 (gen-if-node cnd3 then els)))
+            (assert-ast (dce (set) node1)
+                        (if converted-a
+                            (if converted-b
+                                then
+                                els)
+                            (if converted-c
+                                then
+                                els))
+                        (assert converted-a a)
+                        (assert converted-b b)
+                        (assert converted-c c))
+            (assert-ast (dce (set) node2)
+                        (if converted-a
+                            (if converted-b
+                                then
+                                els)
+                            (if (symbol 'false)
+                                then
+                                els))
+                        (assert converted-a a)
+                        (assert converted-b b))
+            (assert-ast (dce (set) node3)
+                        (if converted-a
+                            (if (symbol 'true)
+                                then
+                                els)
+                            (if converted-c
+                                then
+                                els))
+                        (assert converted-a a)
+                        (assert converted-c c))))
+
  (it "should eliminate unused variables"
      (check ((var1 gen-valid-symbol)
              (sym1 (gen-symbol-node var1))

@@ -4,6 +4,7 @@
 (require "env.rkt")
 (require "pass.rkt")
 (require "utils/utils.rkt")
+(require "utils/set.rkt")
 
 ;; The frontend
 (require "passes/parser.rkt")
@@ -11,6 +12,8 @@
 (require "passes/qq.rkt")
 (require "passes/const.rkt")
 (require "passes/validate.rkt")
+(require "passes/metadata.rkt")
+(require "passes/instrument.rkt")
 (require "passes/errors.rkt")
 
 ;; Optimizations
@@ -30,7 +33,6 @@
 (require "passes/cpc.rkt")
 
 ;; The backend
-(require "passes/instrument.rkt")
 (require "passes/closures.rkt")
 (require "passes/globalization.rkt")
 (require "passes/rename.rkt")
@@ -45,8 +47,9 @@
            'first-phase (env-get* env 'first-phase 'start)
            'last-phase (env-get* env 'last-phase 'codegen)
            ;; Expander & compilation envs.
-           'static-env (make-static-environment)
-           'globals (make-global-definitions-list)
+           'intrinsics (env-get* env 'intrinsics '())
+           'static-env (env-get* env 'static-env (make-static-environment))
+           'globals (env-get* env 'globals (set))
            ;; Parse transforms
            'instrument (env-get* env 'instrument id)
            ;; Optimization
@@ -65,6 +68,9 @@
         annotate-constants
         annotate-free-vars
         annotate-bindings
+        instrument
+        'instrument
+        extract-metadata
         validate
         'validate
         report-errors
@@ -81,8 +87,6 @@
         'cps
         (optimize opts-late)
         'optimize-late
-        instrument
-        'instrument
         annotate-free-vars
         closure-convert
         'closures

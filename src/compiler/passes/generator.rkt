@@ -14,8 +14,9 @@
                 'init (ast-subset? '(const symbol if do let binding primop-app))
                 'target a-symbol?)
         (lambda (env)
-          (case (env-get env 'target)
-            ((ES6)
-             (generate-js env))
-            (else
-             (generate-scheme env))))))
+          (let ((gen (case (env-get env 'target)
+                       ((ES6)
+                        (generate-js env))
+                       (else
+                        (generate-scheme env)))))
+            (env-set env 'generated gen)))))

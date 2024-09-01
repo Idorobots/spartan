@@ -1,0 +1,453 @@
+;; Low-level primitives
+
+(declare-primitive (suspend thunk) pure)
+(declare-primitive (resume r) pure)
+(declare-primitive (resumable? r) pure)
+(declare-primitive (current-milliseconds))
+(declare-primitive (delay-milliseconds ts))
+
+(define nil '())
+(define true (asm (primop-app 'eq? nil nil)))
+(define false (asm (primop-app 'eq? nil 23)))
+
+;; Boolean
+(define (not x)
+  (if x false true))
+
+;; Mutable refs
+(declare-primitive (ref r))
+(declare-primitive (deref r))
+(declare-primitive (assign! r v))
+
+;; Equality
+(declare-primitive (equal? a b) pure)
+(declare-primitive (eq? a b) pure)
+(declare-primitive (= a b) pure)
+(declare-primitive (< a b) pure)
+(declare-primitive (<= a b) pure)
+(declare-primitive (> a b) pure)
+(declare-primitive (>= a b) pure)
+
+;; Math
+(declare-primitive (* a b) pure)
+(declare-primitive (+ a b) pure)
+(declare-primitive (- a b) pure)
+(declare-primitive (/ a b) pure)
+(declare-primitive (modulo a b) pure)
+(declare-primitive (quotient a b) pure)
+(declare-primitive (remainder a b) pure)
+(declare-primitive (random))
+
+(define (zero? x)
+  (= x 0))
+
+;; List
+(declare-primitive (car l) pure)
+(declare-primitive (cdr l) pure)
+(declare-primitive (cons a b) pure)
+
+(define (nil? l)
+  (eq? l nil))
+
+(define empty? nil?)
+
+(define (cadr l)
+  (car (cdr l)))
+
+(define (caddr l)
+  (cdr (cdr l)))
+
+(define (append a b)
+  (if (nil? a)
+      b
+      (cons (car a)
+            (append (cdr a)
+                    b))))
+
+(define (concat a b)
+  (append a b))
+
+(define (map f l)
+  (if (empty? l)
+      '()
+      (cons (f (car l))
+            (map f (cdr l)))))
+
+(define (foldr f z l)
+  (if (empty? l)
+      z
+      (f (car l)
+         (foldr f z (cdr l)))))
+
+(define (foldl f z l)
+  (if (empty? l)
+      z
+      (foldl f
+             (f (car l) z)
+             (cdr l))))
+
+(define (find f l)
+  (if (empty? l)
+      '()
+      (if (f (car l))
+          (car l)
+          (find f (cdr l)))))
+
+(define (length l)
+  (if (empty? l)
+      0
+      (+ 1 (length (cdr l)))))
+
+(define (last l)
+  (if (empty? l)
+      '()
+      (if (empty? (cdr l))
+          (car l)
+          (last (cdr l)))))
+
+;; IO
+(declare-primitive (display x))
+
+(define (newline)
+  (display "\n"))
+
+;; Processes & scheduling
+(declare-primitive (make-uproc prio cont handler time state))
+(declare-primitive (uproc-pid p) pure)
+(declare-primitive (uproc-priority p) pure)
+(declare-primitive (uproc-state p))
+(declare-primitive (set-uproc-state! p s))
+(declare-primitive (uproc-vtime p))
+(declare-primitive (uproc-rtime p))
+(declare-primitive (set-uproc-rtime! p t))
+(declare-primitive (uproc-continuation p))
+(declare-primitive (set-uproc-continuation! p c))
+(declare-primitive (uproc-delimited-continuations p))
+(declare-primitive (set-uproc-delimited-continuations! p c))
+(declare-primitive (uproc-error-handler p))
+(declare-primitive (set-uproc-error-handler! p h))
+(declare-primitive (uproc-msg-queue-empty? p))
+(declare-primitive (uproc-dequeue-msg! p))
+(declare-primitive (uproc-enqueue-msg! p m))
+
+(define (inc-uproc-rtime! p t)
+  (set-uproc-rtime! p (+ t (uproc-rtime p))))
+
+(define *current-task*
+  (ref '()))
+
+(define (current-task)
+  (deref *current-task*))
+
+(define *task-list*
+  (ref '()))
+
+(define (add-task! task)
+  (assign! *task-list*
+           (cons task (deref *task-list*))))
+
+(define (find-task pid)
+  (find (lambda (t)
+          (eq? (uproc-pid t) pid))
+        (deref *task-list*)))
+
+(define (all-tasks)
+  (deref *task-list*))
+
+(define *run-queue*
+  (ref '()))
+
+(define *wait-queue*
+  (ref '()))
+
+(define (init-scheduler!)
+  (assign! *current-task* '())
+  (assign! *task-list* '())
+  (assign! *run-queue* '())
+  (assign! *wait-queue* '()))
+
+(define (queue-insert t q)
+  (if (empty? q)
+      (list t)
+      (let ((f (car q)))
+        (if (<= (uproc-vtime t)
+                (uproc-vtime f))
+            (cons t q)
+            (cons f (queue-insert t (cdr q)))))))
+
+(define (enqueue-task! task queue)
+  (assign! queue
+           (queue-insert task
+                         (deref queue))))
+
+(define (reschedule-next-task! queue)
+  (let ((q (deref queue)))
+    (assign! queue
+             (queue-insert (car q)
+                           (cdr q)))))
+
+(define (next-task queue)
+  (let* ((q (deref queue)))
+    (car q)))
+
+(define (dequeue-next-task! queue)
+  (let* ((q (deref queue)))
+    (assign! queue (cdr q))
+    (car q)))
+
+(define +default-task-priority+ 100)
+(define +idle-timeout+ 10)
+
+(define (spawn-task! prio fun handler)
+  (let ((t (make-uproc prio
+                       (suspend fun)
+                       handler
+                       (current-milliseconds)
+                       'waiting)))
+    (add-task! t)
+    (enqueue-task! t *wait-queue*)
+    (uproc-pid t)))
+
+(define (wake-task! t)
+  (when (eq? (uproc-state t) 'waiting-4-msg)
+    (set-uproc-rtime! t (current-milliseconds))
+    (set-uproc-state! t 'running)
+    (enqueue-task! t *run-queue*)))
+
+(define (wake-ready-tasks! now)
+  (unless (empty? (deref *wait-queue*))
+    (let ((t (next-task *wait-queue*)))
+      (when (< (uproc-rtime t) now)
+        (dequeue-next-task! *wait-queue*)
+        (set-uproc-state! t 'running)
+        (enqueue-task! t *run-queue*)))))
+
+(define (sleep ts)
+  (let ((cc (asm (primop-app '&current-continuation)))
+        (task (current-task)))
+    ;; NOTE Scheduler will add this task to the wait queue based on the runtime of the process.
+    (set-uproc-state! task 'waiting)
+    (set-uproc-rtime! task (+ (current-milliseconds) ts))
+    ;; NOTE Ensures that we return to the scheduler and the sleep takes effect immediately.
+    (yield cc ts)))
+
+(define (yield-delay ms)
+  ;; FIXME Needed to ensure that the value returned by delay-milliseconds is treated correctly by the JS runtime.
+  (let ((cc (asm (primop-app '&current-continuation))))
+    (yield cc (delay-milliseconds ms))))
+
+(define (wait-until-ready! delay)
+  (let ((now (current-milliseconds)))
+    ;; NOTE Do some useful scheduler maintenance.
+    (wake-ready-tasks! now)
+    (when (or (empty? (deref *run-queue*))
+              (< now (uproc-rtime (next-task *run-queue*))))
+      ;; FIXME Ideally this would be made non-blocking.
+      (yield-delay delay)
+      (wait-until-ready! delay))))
+
+(define (execute!)
+  (define (loop acc)
+    (if (and (empty? (deref *run-queue*))
+             (empty? (deref *wait-queue*)))
+        acc
+        (do (wait-until-ready! +idle-timeout+)
+            (let ((t (next-task *run-queue*)))
+              (assign! *current-task* t)
+              (let* ((start (current-milliseconds))
+                     (result (resume (uproc-continuation t)))
+                     (end (current-milliseconds))
+                     (state (uproc-state t)))
+                (cond ((not (resumable? result))
+                       ;; NOTE Terminated normally, so we mark it as halted and remove from the run queue.
+                       (set-uproc-state! t 'halted)
+                       (dequeue-next-task! *run-queue*)
+                       (loop (cons result acc)))
+                      ((eq? state 'running)
+                       ;; NOTE Still running, so we store the continuation, increment the run time and reschedule the task.
+                       (set-uproc-continuation! t result)
+                       (inc-uproc-rtime! t (- end start))
+                       (reschedule-next-task! *run-queue*)
+                       (loop acc))
+                      ((eq? state 'waiting)
+                       ;; NOTE Waiting for no specific event, so we store the continuation and put it on the wait queue.
+                       (set-uproc-continuation! t result)
+                       (dequeue-next-task! *run-queue*)
+                       (enqueue-task! t *wait-queue*)
+                       (loop acc))
+                      ((eq? state 'waiting-4-msg)
+                       ;; NOTE Waiting for a message, so we store the continuation, remove it from the run queue
+                       ;; NOTE and will reschedule whenever a message is received by the task.
+                       (set-uproc-continuation! t result)
+                       (dequeue-next-task! *run-queue*)
+                       (loop acc))
+                      (else
+                       ;; NOTE Terminated early due to an error, so we just skip it.
+                       ;; FIXME Ideally this would recover the value returned by the top-level error handler and save it.
+                       (dequeue-next-task! *run-queue*)
+                       (loop acc))))))))
+  (loop '()))
+
+(define (task-info)
+  (define (display-line pid prio state vtime rtime)
+    ;; FIXME Needs padding.
+    (display ";; ")
+    (display pid)
+    (display " ")
+    (display prio)
+    (display " ")
+    (display state)
+    (display " ")
+    (display vtime)
+    (display " ")
+    (display rtime)
+    (newline))
+
+  (display-line "PID" "priority" "state" "VTime" "RTime")
+  (map (lambda (t)
+         (display-line (uproc-pid t)
+                       (uproc-priority t)
+                       (uproc-state t)
+                       (uproc-vtime t)
+                       (uproc-rtime t)))
+       (all-tasks)))
+
+(define (monitor timeout)
+  (task-info)
+  (sleep timeout)
+  (monitor timeout))
+
+;; Actor Model
+(define (self)
+  (uproc-pid (current-task)))
+
+(define (spawn fun)
+  (spawn-task! +default-task-priority+
+               fun
+               (lambda (err _)
+                 (let ((curr-task (current-task))
+                       (cc (asm (primop-app '&current-continuation))))
+                   (set-uproc-state! curr-task 'halted)
+                   (display ";; Task finished due to an unhandled error: ")
+                   (display err)
+                   (newline)
+                   (yield cc err)))))
+
+(define (send pid msg)
+  (let ((t (find-task pid)))
+    (when (nil? t)
+      (raise "Invalid process identifier passed to `send`"))
+    (uproc-enqueue-msg! t msg)
+    (wake-task! t)
+    pid))
+
+(define (recv)
+  (let* ((cc (asm (primop-app '&current-continuation)))
+         (curr-task (current-task)))
+    (if (uproc-msg-queue-empty? curr-task)
+        (do (set-uproc-state! curr-task 'waiting-4-msg)
+            ;; FIXME Required as otherwise it'll spin without ever yielding in case there is no message available.
+            ;; FIXME This is caused by the kont-counter optimisation.
+            (nice)
+          (recv))
+        (yield cc (uproc-dequeue-msg! curr-task)))))
+
+;; Continuations
+
+;; FIXME These arent't actual primops.
+;; NOTE Needed to get the lexical continuation value before it actually exists in the AST.
+;; (declare-primitive (&current-continuation))
+;; (declare-primitive (&yield-cont-immediate cc v))
+
+;; FIXME Must be defined in bootstrap in order to avoid a double yield via the explicit and then implicit continuation.
+;; (define (yield cc v)
+;;   ;; NOTE Avoids the kont-counter optimization which can sometimes lead to tight loops not yielding fast enough.
+;;   (asm (primop-app '&yield-cont-immediate cc v)))
+
+(define (nice)
+  ;; NOTE This makes sure to yield the continuation, even thoug it doesn't modify the continuation.
+  (let ((cc (asm (primop-app '&current-continuation))))
+    (yield cc '())))
+
+(define (push-delimited-continuation! c)
+  (let ((task (current-task)))
+    (set-uproc-delimited-continuations! task
+                                        (cons c (uproc-delimited-continuations task)))))
+
+(define (pop-delimited-continuation!)
+  (let* ((task (current-task))
+         (stack (uproc-delimited-continuations task)))
+    (set-uproc-delimited-continuations! task (cdr stack))
+    (car stack)))
+
+(define (call/current-continuation f)
+  (let ((cc (asm (primop-app '&current-continuation))))
+    ;; NOTE cc is passed here implicitly as well.
+    (f (lambda (v)
+         (yield cc v)))))
+
+(define (call/reset f)
+  (let* ((cc (asm (primop-app '&current-continuation))))
+    (push-delimited-continuation! cc)
+    (let ((result (f)))
+      (yield (pop-delimited-continuation!) result))))
+
+(define (call/shift f)
+  (let* ((cc (asm (primop-app '&current-continuation))))
+    (let ((result (f (lambda (v)
+                       (let ((ct2 (asm (primop-app '&current-continuation))))
+                         (push-delimited-continuation! ct2)
+                         (yield cc v))))))
+      (yield (pop-delimited-continuation!) result))))
+
+;; Exceptions
+(define (call/handler handler f)
+  (let* ((cc (asm (primop-app '&current-continuation)))
+         (curr-task (current-task))
+         (curr-handler (uproc-error-handler curr-task)))
+    (set-uproc-error-handler! curr-task
+                              (lambda (error restart)
+                                (set-uproc-error-handler! curr-task curr-handler)
+                                (let ((result (handler error restart)))
+                                  (yield cc result))))
+    (let ((result (f)))
+      (set-uproc-error-handler! curr-task curr-handler)
+      (yield cc result))))
+
+(define (raise e)
+  (let* ((cont (asm (primop-app '&current-continuation)))
+         (curr-task (current-task))
+         (curr-handler (uproc-error-handler curr-task))
+         (restart (lambda (v)
+                    (set-uproc-error-handler! curr-task curr-handler)
+                    (yield cont v))))
+    ;; NOTE Cont is going to be passed implicitly.
+    (curr-handler e restart)))
+
+;; RBS
+(declare-primitive (assert! fact))
+(declare-primitive (signal! fact))
+(declare-primitive (retract! fact))
+(declare-primitive (select query))
+(declare-primitive (whenever-trampoline query fun))
+
+(define (notify-whenever pid query)
+  (whenever-trampoline query
+                       (lambda (b)
+                         (send pid b))))
+
+;; Init
+
+(define (rt-start f)
+  ;; NOTE Low-level start of the runtime env.
+  (let* ((cont (asm (primop-app '&current-continuation))))
+    (init-scheduler!)
+    (spawn-task! +default-task-priority+
+                 f
+                 (lambda (err _)
+                   (display ";; Execution finished due to an unhandled error: ")
+                   (display err)
+                   (newline)
+                   ;; NOTE In case of any errors, the initial task will abort the whole program.
+                   (yield cont err)))
+    (last (execute!))))

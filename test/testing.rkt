@@ -5,11 +5,13 @@
 (require "gen.rkt")
 
 (require "../src/main.rkt")
+(require "../src/runtime/rt.rkt")
 (require "../src/compiler/utils/utils.rkt")
 (require "../src/compiler/utils/io.rkt")
 (require "../src/compiler/utils/refs.rkt")
 (require "../src/compiler/errors.rkt")
 (require "../src/compiler/ast/match.rkt")
+(require "../src/compiler/env.rkt")
 
 (provide (all-defined-out))
 (provide (all-from-out "gen.rkt"))
@@ -95,11 +97,11 @@
 
 (define-syntax test-instrumented-file
   (syntax-rules ()
-    ((_ filename instrument)
-     (test-instrumented-file filename instrument id))
-    ((_ filename instrument preprocess)
+    ((_ rt filename instrument)
+     (test-instrumented-file rt filename instrument id))
+    ((_ rt filename instrument preprocess)
      (run-with-snapshot (lambda (f)
-                          (run-instrumented-test-file f instrument))
+                          (run-instrumented-test-file rt f instrument))
                         filename
                         preprocess))))
 
@@ -115,10 +117,12 @@
 (define-syntax test-perf
   (syntax-rules ()
     ((_ filename factor)
-     (test-perf (string-append +perf-dir+ (base-name filename) ".perf") factor
-                (collect-garbage 'major)
-                (time-execution
-                 (run-test-file filename))))
+     (test-perf (string-append +perf-dir+ (base-name filename) ".perf")
+                factor
+                ;; NOTE Exclude compilation time from the performance test.
+                (let ((compiled (compile-test-file filename)))
+                  (collect-garbage 'major)
+                  (time-execution (run-code (env-get compiled 'generated))))))
     ((_ filename factor body ...)
      (if (file-exists? filename)
          (let ((actual (begin body ...))
@@ -127,8 +131,8 @@
                                         (< (compare-perf a e factor)
                                            1)))
                (better-performance (lambda (a e)
-                                        (< (compare-perf a e factor)
-                                           0))))
+                                     (< (compare-perf a e factor)
+                                        0))))
            (assert not-worse-performance
                    actual
                    expected)
@@ -198,18 +202,24 @@
                                                        (cons (red (format "- ~a - ~a" test-name test-case-name))
                                                              (deref failures)))))
                                (timing (time-execution
-                                        (with-handlers ((assert-exception?
-                                                         (lambda (e)
-                                                           (log-failure (assert->string e))))
-                                                        (compilation-error?
-                                                         (lambda (e)
-                                                           (log-failure (compilation-error-what e))))
-                                                        (exn:fail?
-                                                         (lambda (e)
-                                                           (log-failure (format "~s~n" e)))))
-                                          (with-output-to-file output-file
-                                            test-case-thunk
-                                            #:exists 'replace)))))
+                                        (with-output-to-file output-file
+                                          (lambda ()
+                                            (with-handlers ((assert-exception?
+                                                             (lambda (e)
+                                                               (log-failure (assert->string e))))
+                                                            (compilation-error?
+                                                             (lambda (e)
+                                                               (log-failure (compilation-error-what e))))
+                                                            (exn?
+                                                             (lambda (e)
+                                                               (log-failure (exn-message e))
+                                                               (displayln (exn-message e))
+                                                               (displayln "Stack trace:")
+                                                               (map displayln
+                                                                    (get-stacktrace
+                                                                     (exn-continuation-marks e))))))
+                                              (test-case-thunk)))
+                                          #:exists 'replace))))
                           (if (string? (deref result))
                               (let ((output (slurp output-file)))
                                 (display (red (format "- ~a - !!!FAILURE!!!~n" test-case-name)))
@@ -220,7 +230,7 @@
                                   (newline)
                                   (display output)
                                   (newline)))
-                              (display (green (format "- ~a (~a ms)~n" test-case-name (car timing)))))
+                              (display (green (format "- ~a (~a ms)~n" test-case-name (cadr timing)))))
                           (delete-file output-file)))))
                 test-cases)))
        tests))
@@ -237,7 +247,7 @@
          (total-time (time-execution (run-tests tests failed-tests))))
     (if (empty? (deref failed-tests))
         (begin
-          (display (green (format "All ~a tests have passed. (~a ms)" (length tests) (car total-time))))
+          (display (green (format "All ~a tests have passed. (~a ms)" (length tests) (cadr total-time))))
           (newline))
         (begin
           (display (red "Some tests have failed:"))
@@ -248,18 +258,36 @@
                (deref failed-tests))
           (error (red (format "~a tests failed." (length (deref failed-tests)))))))))
 
-(define (run-instrumented-test-file filename instrument)
+(define (run-instrumented-test-file rt filename instrument)
   (with-output-to-string
     (lambda ()
-      ;; NOTE Ignores the compilation abort.
+      ;; NOTE Ignores the compilation abort, but assuming the snapshot won't match, it'll show up in the test log.
       (with-handlers ((compilation-error?
                        (lambda (e)
                          (display (compilation-error-what e))
                          (newline))))
-        (run-instrumented-file filename instrument)))))
+        (rt-execute! rt
+                     (-> filename
+                         (compile-instrumented-file instrument)
+                         (env-get 'generated)))))))
 
 (define (run-test-file filename)
-  (run-instrumented-test-file filename id))
+  (with-output-to-string
+    (lambda ()
+      ;; NOTE Ignores the compilation abort, but assuming the snapshot won't match, it'll show up in the test log.
+      (with-handlers ((compilation-error?
+                       (lambda (e)
+                         (display (compilation-error-what e))
+                         (newline))))
+        (run-file filename)))))
+
+(define (compile-test-file filename)
+  (with-handlers ((compilation-error?
+                       (lambda (e)
+                         (display (compilation-error-what e))
+                         (newline)
+                         (assert #f))))
+        (compile-instrumented-file filename id)))
 
 (define (sort-lines contents)
   (string-join

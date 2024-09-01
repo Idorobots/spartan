@@ -1,0 +1,12 @@
+(do
+    (define (sum d x)
+      (if (= d 0)
+          x
+          (let ((fst (sum (- d 1)
+                          (+ 0 (* x 2))))
+                (snd (sum (- d 1)
+                          (+ 1 (* x 2)))))
+            (+ fst snd))))
+
+    (display (sum 25 0))
+    (newline))

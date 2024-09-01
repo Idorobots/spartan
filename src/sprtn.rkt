@@ -27,7 +27,7 @@ General options:
   -o, --output [filename]       Names the output file.
 
 Compilation options:
-  --phase {parse|expand|alpha|optimize-early|letrec|cps|optimize-late|instrument|closures|optimize-final|hoist|rename|codegen}
+  --phase {parse|expand|instrument|alpha|optimize-early|letrec|cps|optimize-late|closures|optimize-final|hoist|rename|codegen}
                                 Selects up to which compilation phase (inclusive) the pipeline will run.
 
 Optimization options:
@@ -286,14 +286,14 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
        (input (string-join (vector->list args) " "))
        (parsed (CommandLineArguments input)))
   (if (matches? parsed)
-      (let* ((init (apply env (append
-                               ;; Apply defaults.
-                               '(color #t
-                                       last-phase codegen
-                                       optimizer naive
-                                       optimization-level 2
-                                       target r7rs)
-                               (match-match parsed)))))
+      (let* ((init (env-merge (env 'color #t
+                                   'last-phase 'codegen
+                                   'target 'r7rs
+                                   'optimizer 'naive
+                                   'optimization-level 2
+                                   'intrinsics (make-intrinsics-list)
+                                   'globals (make-global-definitions-list))
+                              (apply env (match-match parsed)))))
         (set-color-output (env-get init 'color))
         (case (env-get init 'command)
           ;; Just run the compiler.
@@ -307,11 +307,14 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                 ((constantly #t)
                  (lambda (e)
                    (displayln (format "Compilation aborted due to an error: ~a" e))
+                   (for-each displayln
+                             (get-stacktrace (exn-continuation-marks e)))
                    (exit 1))))
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
                  (compile)
+                 (env-get 'generated)
                  (store-result (env-get* init 'output-file 'stdout)))))
           ;; Run the provided script in r7rs target only.
           ((run)
@@ -325,11 +328,14 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
                 ((constantly #t)
                  (lambda (e)
                    (displayln (format "Execution aborted due to an error: ~a" e))
+                   (for-each displayln
+                             (get-stacktrace (exn-continuation-marks e)))
                    (exit 1))))
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
                  (compile)
+                 (env-get 'generated)
                  (run-code)))
            (void))
           ((repl)

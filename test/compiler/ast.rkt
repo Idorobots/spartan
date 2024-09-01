@@ -299,3 +299,48 @@
  (it "computes AST size for any node"
      (check ((node gen-ast-node))
             (assert (>= (ast-size node) 0)))))
+
+(describe
+ "ast-contains?"
+ (it "should not find AST nodes if they are not present"
+     (check ((node gen-ast-node))
+            (assert (not (ast-contains?
+                          (lambda (e)
+                            ;; NOTE Technically possible to be generated in node, but yeah...
+                            (match-ast e
+                             ((primop-app 'needle-in-a-haystack) #t)
+                             (else                               #f)))
+                          node)))))
+
+ (it "should find AST nodes given a predicate"
+     (check ((needle gen-valid-symbol)
+             (node (gen-symbol-node needle)))
+            (assert (ast-contains?
+                     (lambda (e)
+                       (match-ast e
+                        ((symbol s)
+                        #:when (equal? s needle)
+                        #t)
+                       (else
+                        #f)))
+                     node)))
+     (check ((needle gen-valid-symbol)
+             (needle-node (gen-symbol-node needle))
+             (other-node (gen-one-of (gen-number-node gen-number)
+                               (gen-string-node (gen-integer 10 20))
+                               gen-valid-symbol-node
+                               gen-const-node))
+             (size (gen-integer 5 10))
+             (red-herring (gen-do-node size gen-ast-node))
+             (inner (gen-specific-do-node red-herring needle-node other-node))
+             (outer (gen-specific-do-node other-node inner red-herring))
+             (outer-most (gen-specific-list-node other-node outer other-node)))
+            (assert (ast-contains?
+                     (lambda (e)
+                       (match-ast e
+                        ((symbol s)
+                        #:when (equal? s needle)
+                        #t)
+                       (else
+                        #f)))
+                     outer-most)))))

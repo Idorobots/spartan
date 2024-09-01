@@ -1,0 +1,142 @@
+;; A simple preemptive concurrency implementation
+
+(module (scheduler)
+
+  ;; Task definition
+  (define (make-task cont)
+    (let ((time (current-milliseconds)))
+      (structure
+       (define pid (+ 1 (length (deref *task-list*))))
+       (define state (ref 'waiting))
+       (define rtime (ref time))
+       (define continuation (ref cont)))))
+
+  (define (task-pid t)
+    t.pid)
+
+  (define (task-state t)
+    (deref t.state))
+
+  (define (set-task-state! t state)
+    (assign! t.state state))
+
+  (define (task-rtime t)
+    (deref t.rtime))
+
+  (define (inc-task-rtime! t ms)
+    (assign! t.rtime (+ ms (task-rtime t))))
+
+  (define (task-continuation t)
+    (deref t.continuation))
+
+  (define (set-task-continuation! t c)
+    (assign! t.continuation c))
+
+  ;; Scheduler
+
+  (define *current-task*
+    (ref '()))
+
+  (define (current-task)
+    (deref *current-task*))
+
+  (define *task-list*
+    (ref '()))
+
+  (define (add-task! task)
+    (assign! *task-list*
+             (cons task (deref *task-list*))))
+
+  (define (find-task pid)
+    (find (lambda (t)
+            (eq? (task-pid t) pid))
+          (deref *task-list*)))
+
+  (define (all-tasks)
+    (deref *task-list*))
+
+  (define *run-queue*
+    (ref '()))
+
+  (define (enqueue-task! task)
+    (define (insert t q)
+      (if (empty? q)
+          (list t)
+          (let ((f (car q)))
+            (if (<= (task-rtime t)
+                    (task-rtime f))
+                (cons t q)
+                (cons f (insert t (cdr q)))))))
+
+    (set-task-state! task 'waiting)
+    (assign! *run-queue*
+             (insert task
+                     (deref *run-queue*))))
+
+  (define (dequeue-next-task!)
+    (let* ((q (deref *run-queue*)))
+      (assign! *run-queue* (cdr q))
+      (car q)))
+
+  (define (spawn-task! fun)
+    (let ((t (make-task (suspend fun))))
+      (add-task! t)
+      (enqueue-task! t)
+      (task-pid t)))
+
+  (define (wait-until-ready t)
+    (let ((ts (current-milliseconds)))
+      (unless (>= ts (task-rtime t))
+        (delay-milliseconds 50)
+        (wait-until-ready t))))
+
+  (define (execute!)
+    (define (loop acc)
+      (if (empty? (deref *run-queue*))
+          acc
+          (let ((n (dequeue-next-task!)))
+            (assign! *current-task* n)
+            (wait-until-ready n)
+            (set-task-state! n 'running)
+            (let ((start (current-milliseconds))
+                  (result (resume (task-continuation n))))
+              (inc-task-rtime! n (- (current-milliseconds) start))
+              (if (resumable? result)
+                  (do (set-task-continuation! n result)
+                      (enqueue-task! n)
+                      (loop acc))
+                  (do (set-task-state! n 'halted)
+                      (loop (cons result acc))))))))
+    (loop '()))
+
+ (define (sleep t)
+   (let ((cc (asm (primop-app '&current-continuation))))
+     (inc-task-rtime! (current-task) t)
+     ;; Well, ackshually, this is cooperative.
+     (yield cc t)))
+
+)
+
+;; Example
+
+(trampoline
+ (suspend
+  (lambda ()
+    (let ((s (scheduler)))
+
+      (define (foo n)
+        (when (> n 0)
+          (display "Running foo...\n")
+          (s.sleep 100)
+          (foo (- n 1))))
+
+      (define (bar n)
+        (when (> n 0)
+          (display "Running bar...\n")
+          (s.sleep 100)
+          (bar (- n 1))))
+
+      (s.spawn-task! (lambda () (foo 100)))
+      (s.spawn-task! (lambda () (bar 100)))
+      (display (s.execute!))
+      (newline)))))

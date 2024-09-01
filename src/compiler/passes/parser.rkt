@@ -283,7 +283,7 @@
 
 (define parse
   (pass (schema "parse"
-                'input non-empty-string?
+                'input a-string?
                 'errors a-list?)
         (lambda (env)
           (let ((result (collect-errors (env-get env 'errors)
@@ -294,7 +294,7 @@
                                                 (match-match parsed)
                                                 (raise-compilation-error
                                                  (make-ast-location (location 0 (string-length input)))
-                                                 "Not a valid Spartan file:")))))))
+                                                 "Expected a Spartan module, found something else:")))))))
             (env-set env
                      'ast (car result)
                      'errors (cadr result))))))
