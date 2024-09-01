@@ -1,0 +1,85 @@
+(fix
+ ((monitor2785
+   (lambda (timeout2786 cont2787)
+     (task-info
+      (lambda (value2788)
+        (sleep
+         timeout2786
+         (lambda (value2789)
+           (task-info
+            (lambda (value2788)
+              (sleep
+               timeout2786
+               (lambda (value2789)
+                 (task-info
+                  (lambda (value2788)
+                    (sleep
+                     timeout2786
+                     (lambda (value2789)
+                       (task-info
+                        (lambda (value2788)
+                          (sleep
+                           timeout2786
+                           (lambda (value2789)
+                             (task-info
+                              (lambda (value2788)
+                                (sleep
+                                 timeout2786
+                                 (lambda (value2789)
+                                   (task-info
+                                    (lambda (value2788)
+                                      (sleep
+                                       timeout2786
+                                       (lambda (value2789)
+                                         (task-info
+                                          (lambda (value2788)
+                                            (sleep
+                                             timeout2786
+                                             (lambda (value2789)
+                                               (task-info
+                                                (lambda (value2788)
+                                                  (sleep
+                                                   timeout2786
+                                                   (lambda (value2789)
+                                                     (monitor2785
+                                                      timeout2786
+                                                      cont2787))))))))))))))))))))))))))))))))))))
+ (let ((cont27872793 (lambda (value2791) value2791)))
+   (task-info
+    (lambda (value2788)
+      (sleep
+       '1000
+       (lambda (value2789)
+         (task-info
+          (lambda (value2788)
+            (sleep
+             '1000
+             (lambda (value2789)
+               (task-info
+                (lambda (value2788)
+                  (sleep
+                   '1000
+                   (lambda (value2789)
+                     (task-info
+                      (lambda (value2788)
+                        (sleep
+                         '1000
+                         (lambda (value2789)
+                           (task-info
+                            (lambda (value2788)
+                              (sleep
+                               '1000
+                               (lambda (value2789)
+                                 (task-info
+                                  (lambda (value2788)
+                                    (sleep
+                                     '1000
+                                     (lambda (value2789)
+                                       (task-info
+                                        (lambda (value2788)
+                                          (sleep
+                                           '1000
+                                           (lambda (value2789)
+                                             (monitor2785
+                                              '1000
+                                              cont27872793)))))))))))))))))))))))))))))))
