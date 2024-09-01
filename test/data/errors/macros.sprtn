@@ -78,3 +78,15 @@
 (module (fazfoo bar)
   (define (foo x) (+ x bar)))
 foo bar baz faz foobar barbaz bazfaz fazfoo
+when
+unless
+cond
+and
+or
+let*
+letcc
+shift
+reset
+handle
+structure
+module

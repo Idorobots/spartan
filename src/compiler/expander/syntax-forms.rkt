@@ -8,6 +8,12 @@
 
 (provide (all-defined-out))
 
+(define (offending-node expr)
+  (match-ast expr
+   ((list s rest ...)
+    s)
+   (else expr)))
+
 (define (if-expander expr use-env def-env)
   (match-ast expr
    ((list (symbol 'if) condition then else)
@@ -17,7 +23,7 @@
                            then
                            else)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:")))))
@@ -30,7 +36,7 @@
                    (cons first rest)
                    "Bad `do` syntax"))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `do` syntax, expected at least one expression to follow:")))))
@@ -45,7 +51,7 @@
                                              (cons first rest)
                                              "Bad `lambda` body syntax"))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `lambda` syntax, expected a formal arguments specification followed by a body:")))))
@@ -124,7 +130,7 @@
                    (cons first rest)
                    "Bad `let` body syntax"))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `let` syntax, expected a list of bindings followed by a body:")))))
@@ -143,7 +149,7 @@
                    (cons first rest)
                    "Bad `letrec` body syntax"))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `letrec` syntax, expected a list of bindings followed by a body:")))))
@@ -215,7 +221,7 @@
              (make-ast-quote (ast-node-location expr)
                              value)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `quote` syntax, expected exactly one expression to follow:")))))
@@ -227,7 +233,7 @@
              (make-ast-quasiquote (ast-node-location expr)
                                   value)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `quasiquote` syntax, expected exactly one expression to follow:")))))
@@ -239,7 +245,7 @@
              (make-ast-unquote (ast-node-location expr)
                                value)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `unquote` syntax, expected exactly one expression to follow:")))))
@@ -251,7 +257,7 @@
              (make-ast-unquote-splicing (ast-node-location expr)
                                         value)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `unquote-splicing` syntax, expected exactly one expression to follow:")))))
@@ -279,7 +285,7 @@
                            (valid-symbol name "Bad `define` syntax")
                             value)))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:")))))
