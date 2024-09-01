@@ -50,6 +50,7 @@
 (require "e2e/modules.rkt")
 (require "e2e/targets.rkt")
 (require "e2e/instrumented.rkt")
+(require "e2e/cli.rkt")
 (require "e2e/repl.rkt")
 
 ;; Performance tests:

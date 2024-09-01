@@ -1,0 +1,6 @@
+(define (monitor timeout)
+  (task-info)
+  (sleep timeout)
+  (monitor timeout))
+
+(monitor 1000)

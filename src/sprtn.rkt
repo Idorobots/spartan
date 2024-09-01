@@ -281,6 +281,16 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
         (with-output-to-file filename p
           #:exists 'replace))))
 
+(define (extract-result env)
+  (env-get* env 'generated
+            (if (env-get* env 'init #f)
+                (list 'let (map (lambda (e)
+                             (list (car e)
+                                   (ast->plain (cdr e))))
+                           (env-get env 'data))
+                      (ast->plain (env-get env 'init)))
+                (ast->plain (env-get env 'ast)))))
+
 (let* ((args (current-command-line-arguments))
        ;; FIXME Kinda redundant to stringify these when they were almost already parsed.
        (input (string-join (vector->list args) " "))
@@ -313,8 +323,8 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
-                 (compile)
-                 (env-get 'generated)
+                 compile
+                 extract-result
                  (store-result (env-get* init 'output-file 'stdout)))))
           ;; Run the provided script in r7rs target only.
           ((run)
@@ -334,12 +344,12 @@ Bug reports & documentation available at <https://www.github.com/Idorobots/spart
              (-> init
                  (env-set 'module (env-get init 'input-file))
                  (env-set 'input (slurp (env-get init 'input-file)))
-                 (compile)
-                 (env-get 'generated)
-                 (run-code)))
+                 compile
+                 extract-result
+                 run-code))
            (void))
           ((repl)
            (-> init
                (env-set 'module "repl")
-               (run-repl)))))
+               run-repl))))
       (command-error "Invalid invocation!")))
