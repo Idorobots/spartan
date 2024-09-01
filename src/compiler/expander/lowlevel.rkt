@@ -67,7 +67,7 @@
                             (map expand-instruction (cons first rest))
                             "Bad `asm` syntax"))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `asm` syntax, expected a list of assembly instructions to follow:")))))

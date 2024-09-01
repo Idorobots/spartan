@@ -323,4 +323,99 @@ test/data/errors/macros.sprtn(72,18): Undefined variable `z`, did you mean `*`:
  73 [33m|[39m (module (foobar) (define foo 5))
  74 [33m|[39m (module (barbaz) (define (foo x) x))
 
-Compilation aborted due to 41 errors.
+test/data/errors/macros.sprtn(81,0): Bad `when` syntax, expected a condition and a body to follow:
+ 79 [33m|[39m   (define (foo x) (+ x bar)))
+ 80 [33m|[39m foo bar baz faz foobar barbaz bazfaz fazfoo
+ 81 [33m|[39m when
+    [33m|[39m [31m^^^^[39m
+ 82 [33m|[39m unless
+ 83 [33m|[39m cond
+
+test/data/errors/macros.sprtn(82,0): Bad `unless` syntax, expected a condition and a body to follow:
+ 80 [33m|[39m foo bar baz faz foobar barbaz bazfaz fazfoo
+ 81 [33m|[39m when
+ 82 [33m|[39m unless
+    [33m|[39m [31m^^^^^^[39m
+ 83 [33m|[39m cond
+ 84 [33m|[39m and
+
+test/data/errors/macros.sprtn(83,0): Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:
+ 81 [33m|[39m when
+ 82 [33m|[39m unless
+ 83 [33m|[39m cond
+    [33m|[39m [31m^^^^[39m
+ 84 [33m|[39m and
+ 85 [33m|[39m or
+
+test/data/errors/macros.sprtn(84,0): Bad `and` syntax, expected a list of expressions to follow:
+ 82 [33m|[39m unless
+ 83 [33m|[39m cond
+ 84 [33m|[39m and
+    [33m|[39m [31m^^^[39m
+ 85 [33m|[39m or
+ 86 [33m|[39m let*
+
+test/data/errors/macros.sprtn(85,0): Bad `or` syntax, expected a list of expressions to follow:
+ 83 [33m|[39m cond
+ 84 [33m|[39m and
+ 85 [33m|[39m or
+    [33m|[39m [31m^^[39m
+ 86 [33m|[39m let*
+ 87 [33m|[39m letcc
+
+test/data/errors/macros.sprtn(86,0): Bad `let*` syntax, expected a list of bindings and a body to follow:
+ 84 [33m|[39m and
+ 85 [33m|[39m or
+ 86 [33m|[39m let*
+    [33m|[39m [31m^^^^[39m
+ 87 [33m|[39m letcc
+ 88 [33m|[39m shift
+
+test/data/errors/macros.sprtn(87,0): Bad `letcc` syntax, expected an identifier and a body to follow:
+ 85 [33m|[39m or
+ 86 [33m|[39m let*
+ 87 [33m|[39m letcc
+    [33m|[39m [31m^^^^^[39m
+ 88 [33m|[39m shift
+ 89 [33m|[39m reset
+
+test/data/errors/macros.sprtn(88,0): Bad `shift` syntax, expected an identifier and a body to follow:
+ 86 [33m|[39m let*
+ 87 [33m|[39m letcc
+ 88 [33m|[39m shift
+    [33m|[39m [31m^^^^^[39m
+ 89 [33m|[39m reset
+ 90 [33m|[39m handle
+
+test/data/errors/macros.sprtn(89,0): Bad `reset` syntax, expected exactly one expression to follow:
+ 87 [33m|[39m letcc
+ 88 [33m|[39m shift
+ 89 [33m|[39m reset
+    [33m|[39m [31m^^^^^[39m
+ 90 [33m|[39m handle
+ 91 [33m|[39m structure
+
+test/data/errors/macros.sprtn(90,0): Bad `handle` syntax, expected exactly two expressions to follow:
+ 88 [33m|[39m shift
+ 89 [33m|[39m reset
+ 90 [33m|[39m handle
+    [33m|[39m [31m^^^^^^[39m
+ 91 [33m|[39m structure
+ 92 [33m|[39m module
+
+test/data/errors/macros.sprtn(91,0): Bad `structure` syntax, expected a module specification followed by a body:
+ 89 [33m|[39m reset
+ 90 [33m|[39m handle
+ 91 [33m|[39m structure
+    [33m|[39m [31m^^^^^^^^^[39m
+ 92 [33m|[39m module
+ 93 [33m|[39m 
+
+test/data/errors/macros.sprtn(92,0): Bad `module` syntax, expected a module specification followed by a body:
+ 90 [33m|[39m handle
+ 91 [33m|[39m structure
+ 92 [33m|[39m module
+    [33m|[39m [31m^^^^^^[39m
+ 93 [33m|[39m 
+
+Compilation aborted due to 53 errors.

@@ -7,7 +7,7 @@
 (require "../errors.rkt")
 
 (require (only-in "syntax-forms.rkt"
-                  valid-bindings valid-symbol))
+                  valid-bindings valid-symbol offending-node))
 
 (provide (all-defined-out))
 
@@ -21,7 +21,7 @@
                              (make-ast-body loc (cons first rest) "Bad `when` body syntax")
                              (make-ast-symbol loc 'nil)))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `when` syntax, expected a condition and a body to follow:")))))
@@ -36,7 +36,7 @@
                              (make-ast-symbol loc 'nil)
                              (make-ast-body loc (cons first rest) "Bad `unless` body syntax")))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `unless` syntax, expected a condition and a body to follow:")))))
@@ -57,7 +57,7 @@
                                             (cons (ast-list-car expr)
                                                   rest))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `cond` syntax, expected a list of conditional branches with a final else branch to follow:")))))
@@ -74,7 +74,7 @@
                           (make-ast-list loc (cons and rest))
                           (make-ast-symbol loc 'false)))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `and` syntax, expected a list of expressions to follow:")))))
@@ -91,7 +91,7 @@
                           (make-ast-symbol loc 'true)
                           (make-ast-list loc (cons or rest))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `or` syntax, expected a list of expressions to follow:")))))
@@ -112,7 +112,7 @@
                                                    (make-ast-list loc rest-bindings) ;; FIXME Could use a better location.
                                                  body))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `let*` syntax, expected a list of bindings and a body to follow:")))))
@@ -128,7 +128,7 @@
                                                     (list (valid-symbol name "Bad `letcc` syntax"))
                                                     (make-ast-body loc (cons first rest) "Bad `letcc` body syntax")))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `letcc` syntax, expected an identifier and a body to follow:")))))
@@ -144,7 +144,7 @@
                                                     (list (valid-symbol name "Bad `shift` syntax"))
                                                     (make-ast-body loc (cons first rest) "Bad `shift` body syntax")))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `shift` syntax, expected an identifier and a body to follow:")))))
@@ -160,7 +160,7 @@
                                                     '()
                                                     (make-ast-body loc (cons first rest) "Bad `reset` body syntax")))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `reset` syntax, expected exactly one expression to follow:")))))
@@ -175,7 +175,7 @@
                              (list handler
                                    (make-ast-lambda loc '() subexpr))))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `handle` syntax, expected exactly two expressions to follow:")))))
@@ -198,7 +198,7 @@
                                                              names))))
                      "Bad `structure` syntax")))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `structure` syntax, expected a module specification followed by a body:")))))
@@ -246,7 +246,7 @@
                                                                     body))))
                 "Bad `module` syntax"))))
    (else
-    (let ((node (ast-list-car expr)))
+    (let ((node (offending-node expr)))
       (raise-compilation-error
        node
        "Bad `module` syntax, expected a module specification followed by a body:")))))

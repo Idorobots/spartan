@@ -520,6 +520,86 @@ test/data/errors/syntax-forms.sprtn(82,1): Misplaced `unquote-splicing`, expecte
  81 [33m|[39m `,bar
  82 [33m|[39m `,@wat
     [33m|[39m  [31m^^^^^[39m
- 83 [33m|[39m 
+ 83 [33m|[39m if
+ 84 [33m|[39m do
 
-Compilation aborted due to 66 errors.
+test/data/errors/syntax-forms.sprtn(83,0): Bad `if` syntax, expected exactly three expressions - condition, then and else branches - to follow:
+ 81 [33m|[39m `,bar
+ 82 [33m|[39m `,@wat
+ 83 [33m|[39m if
+    [33m|[39m [31m^^[39m
+ 84 [33m|[39m do
+ 85 [33m|[39m lambda
+
+test/data/errors/syntax-forms.sprtn(84,0): Bad `do` syntax, expected at least one expression to follow:
+ 82 [33m|[39m `,@wat
+ 83 [33m|[39m if
+ 84 [33m|[39m do
+    [33m|[39m [31m^^[39m
+ 85 [33m|[39m lambda
+ 86 [33m|[39m let
+
+test/data/errors/syntax-forms.sprtn(85,0): Bad `lambda` syntax, expected a formal arguments specification followed by a body:
+ 83 [33m|[39m if
+ 84 [33m|[39m do
+ 85 [33m|[39m lambda
+    [33m|[39m [31m^^^^^^[39m
+ 86 [33m|[39m let
+ 87 [33m|[39m letrec
+
+test/data/errors/syntax-forms.sprtn(86,0): Bad `let` syntax, expected a list of bindings followed by a body:
+ 84 [33m|[39m do
+ 85 [33m|[39m lambda
+ 86 [33m|[39m let
+    [33m|[39m [31m^^^[39m
+ 87 [33m|[39m letrec
+ 88 [33m|[39m quote
+
+test/data/errors/syntax-forms.sprtn(87,0): Bad `letrec` syntax, expected a list of bindings followed by a body:
+ 85 [33m|[39m lambda
+ 86 [33m|[39m let
+ 87 [33m|[39m letrec
+    [33m|[39m [31m^^^^^^[39m
+ 88 [33m|[39m quote
+ 89 [33m|[39m quasiquote
+
+test/data/errors/syntax-forms.sprtn(88,0): Bad `quote` syntax, expected exactly one expression to follow:
+ 86 [33m|[39m let
+ 87 [33m|[39m letrec
+ 88 [33m|[39m quote
+    [33m|[39m [31m^^^^^[39m
+ 89 [33m|[39m quasiquote
+ 90 [33m|[39m unquote
+
+test/data/errors/syntax-forms.sprtn(89,0): Bad `quasiquote` syntax, expected exactly one expression to follow:
+ 87 [33m|[39m letrec
+ 88 [33m|[39m quote
+ 89 [33m|[39m quasiquote
+    [33m|[39m [31m^^^^^^^^^^[39m
+ 90 [33m|[39m unquote
+ 91 [33m|[39m unquote-splicing
+
+test/data/errors/syntax-forms.sprtn(90,0): Bad `unquote` syntax, expected exactly one expression to follow:
+ 88 [33m|[39m quote
+ 89 [33m|[39m quasiquote
+ 90 [33m|[39m unquote
+    [33m|[39m [31m^^^^^^^[39m
+ 91 [33m|[39m unquote-splicing
+ 92 [33m|[39m define
+
+test/data/errors/syntax-forms.sprtn(91,0): Bad `unquote-splicing` syntax, expected exactly one expression to follow:
+ 89 [33m|[39m quasiquote
+ 90 [33m|[39m unquote
+ 91 [33m|[39m unquote-splicing
+    [33m|[39m [31m^^^^^^^^^^^^^^^^[39m
+ 92 [33m|[39m define
+ 93 [33m|[39m 
+
+test/data/errors/syntax-forms.sprtn(92,0): Bad `define` syntax, expected either an identifier and an expression or a function signature and a body to follow:
+ 90 [33m|[39m unquote
+ 91 [33m|[39m unquote-splicing
+ 92 [33m|[39m define
+    [33m|[39m [31m^^^^^^[39m
+ 93 [33m|[39m 
+
+Compilation aborted due to 76 errors.

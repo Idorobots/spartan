@@ -80,3 +80,13 @@
 '(,@wat)
 `,bar
 `,@wat
+if
+do
+lambda
+let
+letrec
+quote
+quasiquote
+unquote
+unquote-splicing
+define
