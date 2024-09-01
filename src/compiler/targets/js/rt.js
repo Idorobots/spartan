@@ -28,8 +28,6 @@ const importModule = async (init) => {
   }
 }
 
-let __kontCounter = __rt_continuation_hops;
-
 (async () => {
   await importModule(__core);
 

@@ -14,7 +14,6 @@
 
 (provide generate-js)
 
-(define +js-continuation-hops+ 1) ;; FIXME Causes a stack overflow already at pretty low values.
 (define +js-bootstrap+ (embed-file-contents "./bootstrap.js"))
 (define +js-runtime+ (embed-file-contents "./rt.js"))
 
@@ -37,11 +36,6 @@
     (if (env-get* e 'omit-runtime #f)
         (string-append js-defs js-init)
         (string-append
-         (generate-js-def '__rt_continuation_hops
-                          (generated
-                           (make-ast-const unknown-loc
-                                           (make-ast-number unknown-loc
-                                                            +js-continuation-hops+))))
          +js-bootstrap+
          ;; FIXME Needs to be done on each compilation to avoid dependency cycles.
          (let ((output (compile-core-spartan (env 'target 'ES6
@@ -396,7 +390,9 @@
      (let ((local-cont (gensym '__kont)))
        (<- ((k (generate-js-node kont))
             (h (generate-js-node hole)))
-           (format "const ~a = ~a; if (__kontCounter-- > 0) { ~a } else { __kontCounter = ~a; ~a }"
+           ;; FIXME Not quite correct if anything else in JS land throws a RangeError,
+           ;; FIXME but since we're not using JS exceptions she'll be right.
+           (format "const ~a = ~a; try { ~a } catch (e) { if (e instanceof RangeError) { ~a } else { throw e } }"
                    local-cont
                    k
                    (return
@@ -404,7 +400,6 @@
                             local-cont
                             local-cont
                             h))
-                   +js-continuation-hops+
                    (return
                     (format "makeResumable(~a, ~a)"
                             local-cont
