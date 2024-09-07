@@ -3,7 +3,7 @@
 ;; Various utilities
 
 (provide empty? every? some? sorted? tagged-list? symbol<?
-         last nth concat uniq zip offset iota
+         find last nth concat uniq zip offset iota
          id partial flip constantly
          array array-ref array-assign!
          matrix matrix-ref matrix-assign!
@@ -31,6 +31,13 @@
       (and (pred (car lst)
                  (cadr lst))
            (sorted? (cdr lst) pred))))
+
+(define (find p lst)
+  (if (null? lst)
+      #f
+      (if (p (car lst))
+          (car lst)
+          (find p (cdr lst)))))
 
 (define (uniq lst)
   (let loop ((acc '())
