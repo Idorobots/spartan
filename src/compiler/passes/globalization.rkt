@@ -24,32 +24,31 @@
 
 (define (hoist-values expr)
   (let* ((hoisted '())
-         (push! (lambda (expr)
-                  (let* ((name (gensym 'global)))
-                    (set! hoisted (cons (cons name expr)
+         (push! (lambda (name expr)
+                  (let* ((n (gensym name)))
+                    (set! hoisted (cons (cons n expr)
                                         hoisted))
                     (generated
                      (make-ast-symbol (ast-node-location expr)
-                                     name)))))
+                                     n)))))
          (init (map-ast
                 (lambda (expr)
-                  (match-ast
-                   expr
+                  (match-ast expr
                    ;; NOTE Only complex const values that need construction are hoisted.
                    ((const (list))
                     expr)
                    ((const (list values ...))
-                    (push! expr))
+                    (push! 'list expr))
                    ((const (string value))
-                    (push! expr))
+                    (push! 'string expr))
                    ((const (symbol value))
-                    (push! expr))
+                    (push! value expr))
                    ;; Closures that don't capture any free variables can be hoisted as well.
                    ((primop-app '&make-closure (const (list)) _)
-                    (push! expr))
+                    (push! 'closure expr))
                    ;; All functions should now use their closure for free variables.
                    ((lambda _ _)
-                    (push! expr))
+                    (push! 'function expr))
                    (else
                     expr)))
                 expr)))

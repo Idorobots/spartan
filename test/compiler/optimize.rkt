@@ -21,8 +21,8 @@
                       'intrinsics '((+ pure) (* pure) (display)))
                  (compile)
                  (env-get 'generated))
-             '(begin (define __global10 '(5 1462731 23))
-                     (display __global10)))
+             '(begin (define __list10 '(5 1462731 23))
+                     (display __list10)))
      (assert (-> (env 'module "optimize"
                       'input "(letrec ((q (lambda () 8))
                                             (f (lambda (x) (+  x (q))))
@@ -59,8 +59,8 @@
                       'intrinsics '((+ pure) (* pure) (display)))
                  (compile)
                  (env-get 'generated))
-             '(begin (define __global10 '(5 1462731 23))
-                     (display __global10)))
+             '(begin (define __list10 '(5 1462731 23))
+                     (display __list10)))
      (assert (-> (env 'module "optimize"
                       'optimize optimize-super
                       'input "(letrec ((q (lambda () 8))
