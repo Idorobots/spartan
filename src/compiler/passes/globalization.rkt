@@ -24,13 +24,19 @@
 
 (define (hoist-values expr)
   (let* ((hoisted '())
-         (push! (lambda (name expr)
-                  (let* ((n (gensym name)))
-                    (set! hoisted (cons (cons n expr)
-                                        hoisted))
+         (push! (lambda (name-hint expr)
+                  (let* ((eqv (find (lambda (e)
+                                       (ast-eqv? (cdr e) expr))
+                                    hoisted))
+                         (name (if eqv
+                                   (car eqv)
+                                   (let ((n (gensym name-hint)))
+                                     (set! hoisted (cons (cons n expr)
+                                                         hoisted))
+                                     n))))
                     (generated
                      (make-ast-symbol (ast-node-location expr)
-                                     n)))))
+                                      name)))))
          (init (map-ast
                 (lambda (expr)
                   (match-ast expr
