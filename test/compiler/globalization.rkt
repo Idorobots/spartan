@@ -72,7 +72,8 @@
                           (assert val1 value1)
                           (assert val2 value2)
                           (assert (length hoisted) 1)
-                          (assert (cdr (assoc 'function1 hoisted)) fun)))))
+                          (assert (cdr (assoc 'function1 hoisted))
+                                  (normalize-lambda fun))))))
 
  (it "should hoist non-capturing closures"
      (check ((fun1 gen-valid-lambda-node)
@@ -97,15 +98,35 @@
                                       (primop-app &make-closure (const (list)) (symbol name3))
                                       (assert name3 'function1)
                                       (assert (cdr (assoc name3 hoisted))
-                                              fun1))
+                                              (normalize-lambda fun1)))
                           (assert (cdr (assoc name2 hoisted))
-                                  fun2)))))
+                                  (normalize-lambda fun2))))))
+
+ (it "should normalize lambdas"
+     (check ((simple gen-simple)
+             (arg1 gen-valid-symbol-node)
+             (arg2 gen-valid-symbol-node)
+             (body (gen-specific-do-node arg1 simple arg2))
+             (node (gen-lambda-node (list arg1 arg2) body)))
+            (gensym-reset!)
+            (let* ((result (hoist-values node))
+                   (hoisted (car result))
+                   (init (cadr result)))
+              (assert-ast init
+                          (symbol name)
+                          (assert 'function1 name)
+                          (assert (length hoisted) 1)
+                          (assert-ast (cdr (assoc name hoisted))
+                                      (lambda ((symbol 'arg0) (symbol 'arg1))
+                                        (do (symbol 'arg0)
+                                            simple1
+                                            (symbol 'arg1)))
+                                      (assert simple1 simple))))))
 
  (it "should deduplicate equivalent values"
      (check ((values (gen-list (gen-integer 1 10) gen-simple))
              (complex (gen-one-of (gen-specific-const-node (gen-string-node (gen-text (gen-integer 0 20))))
-                                  (gen-specific-const-node (apply gen-specific-list-node values))
-                                  gen-valid-lambda-node))
+                                  (gen-specific-const-node (apply gen-specific-list-node values))))
              (node (gen-specific-do-node complex (set-ast-node-location complex
                                                                         (location 5 23)))))
             (gensym-reset!)
@@ -117,4 +138,23 @@
                           (do (symbol name) (symbol name))
                           (assert set-member? (set 'function1 'list1 'string1) name)
                           (assert (length hoisted) 1)
-                          (assert (cdr (assoc name hoisted)) complex))))))
+                          (assert (cdr (assoc name hoisted))
+                                  complex)))))
+
+ (it "should deduplicate not-exactly-equivalent lambdas"
+     (check ((body gen-simple)
+             (arg1 gen-valid-symbol-node)
+             (arg2 gen-valid-symbol-node)
+             (fun1 (gen-lambda-node (list arg1) body))
+             (fun2 (gen-lambda-node (list arg2) body))
+             (node (gen-specific-do-node fun1 fun2)))
+            (gensym-reset!)
+            (let* ((result (hoist-values node))
+                   (hoisted (car result))
+                   (init (cadr result)))
+              (assert-ast init
+                          ;; NOTE Both values are extracted but the latter one is deduplicated & normalized.
+                          (do (symbol name) (symbol name))
+                          (assert 'function1 name)
+                          (assert (length hoisted) 1)
+                          (assert (cdr (assoc name hoisted)) (normalize-lambda fun1)))))))

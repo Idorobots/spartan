@@ -5,40 +5,40 @@
 1 [33m|[39m 2 [33m|[39m 3 [33m|[39m 4 [33m|[39m 5 [33m|[39m 6 [33m|[39m 7 [33m|[39m [90m;; [39mCompilation result:
 [90m;; [39m(begin
 [90m;; [39m  (define __function42
-[90m;; [39m    (lambda (__env35 __value17)
-[90m;; [39m      (let ((__value10 (+ (cdr __env35) __value17)))
-[90m;; [39m        (let ((tmp51 (car __env35)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value10 (+ (cdr __arg0) __arg1)))
+[90m;; [39m        (let ((tmp51 (car __arg0)))
 [90m;; [39m          (if (> (kont-counter) 0)
 [90m;; [39m            (begin
 [90m;; [39m              (dec-kont-counter!)
 [90m;; [39m              ((closure-fun tmp51) (closure-env tmp51) __value10))
 [90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp51 __value10)))))))
 [90m;; [39m  (define __function43
-[90m;; [39m    (lambda (__env37 __value21)
-[90m;; [39m      (let ((__value19 (+ (cdr __env37) __value21)))
-[90m;; [39m        (let ((tmp52 (car __env37)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value19 (+ (cdr __arg0) __arg1)))
+[90m;; [39m        (let ((tmp52 (car __arg0)))
 [90m;; [39m          (if (> (kont-counter) 0)
 [90m;; [39m            (begin
 [90m;; [39m              (dec-kont-counter!)
 [90m;; [39m              ((closure-fun tmp52) (closure-env tmp52) __value19))
 [90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp52 __value19)))))))
 [90m;; [39m  (define __function44
-[90m;; [39m    (lambda (__env36 __value20)
-[90m;; [39m      (let ((__value22 (- (vector-ref __env36 '2) '2)))
-[90m;; [39m        (let ((tmp53 (vector-ref __env36 '1)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value22 (- (vector-ref __arg0 '2) '2)))
+[90m;; [39m        (let ((tmp53 (vector-ref __arg0 '1)))
 [90m;; [39m          ((closure-fun tmp53)
 [90m;; [39m           (closure-env tmp53)
 [90m;; [39m           __value22
 [90m;; [39m           (make-closure
-[90m;; [39m            (cons (vector-ref __env36 '0) __value20)
+[90m;; [39m            (cons (vector-ref __arg0 '0) __arg1)
 [90m;; [39m            __function43))))))
 [90m;; [39m  (define __function45
-[90m;; [39m    (lambda (__env34 __value13)
-[90m;; [39m      (let ((__value15 (- (vector-ref __env34 '2) '2)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value15 (- (vector-ref __arg0 '2) '2)))
 [90m;; [39m        (let ((__value18 (< __value15 '2)))
 [90m;; [39m          (let ((__cont16
 [90m;; [39m                 (make-closure
-[90m;; [39m                  (cons (vector-ref __env34 '0) __value13)
+[90m;; [39m                  (cons (vector-ref __arg0 '0) __arg1)
 [90m;; [39m                  __function42)))
 [90m;; [39m            (if __value18
 [90m;; [39m              (if (> (kont-counter) 0)
@@ -49,46 +49,46 @@
 [90m;; [39m                  (reset-kont-counter!)
 [90m;; [39m                  (make-resumable __cont16 __value15)))
 [90m;; [39m              (let ((__value23 (- __value15 '1)))
-[90m;; [39m                (let ((tmp54 (vector-ref __env34 '1)))
+[90m;; [39m                (let ((tmp54 (vector-ref __arg0 '1)))
 [90m;; [39m                  ((closure-fun tmp54)
 [90m;; [39m                   (closure-env tmp54)
 [90m;; [39m                   __value23
 [90m;; [39m                   (make-closure
-[90m;; [39m                    (vector __cont16 (vector-ref __env34 '1) __value15)
+[90m;; [39m                    (vector __cont16 (vector-ref __arg0 '1) __value15)
 [90m;; [39m                    __function44))))))))))
 [90m;; [39m  (define __function46
-[90m;; [39m    (lambda (__env39 __value26)
-[90m;; [39m      (let ((__value24 (+ (cdr __env39) __value26)))
-[90m;; [39m        (let ((tmp55 (car __env39)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value24 (+ (cdr __arg0) __arg1)))
+[90m;; [39m        (let ((tmp55 (car __arg0)))
 [90m;; [39m          (if (> (kont-counter) 0)
 [90m;; [39m            (begin
 [90m;; [39m              (dec-kont-counter!)
 [90m;; [39m              ((closure-fun tmp55) (closure-env tmp55) __value24))
 [90m;; [39m            (begin (reset-kont-counter!) (make-resumable tmp55 __value24)))))))
 [90m;; [39m  (define __function47
-[90m;; [39m    (lambda (__env38 __value25)
-[90m;; [39m      (let ((__value27 (- (vector-ref __env38 '2) '2)))
-[90m;; [39m        (let ((tmp56 (vector-ref __env38 '1)))
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      (let ((__value27 (- (vector-ref __arg0 '2) '2)))
+[90m;; [39m        (let ((tmp56 (vector-ref __arg0 '1)))
 [90m;; [39m          ((closure-fun tmp56)
 [90m;; [39m           (closure-env tmp56)
 [90m;; [39m           __value27
 [90m;; [39m           (make-closure
-[90m;; [39m            (cons (vector-ref __env38 '0) __value25)
+[90m;; [39m            (cons (vector-ref __arg0 '0) __arg1)
 [90m;; [39m            __function46))))))
 [90m;; [39m  (define __function48
-[90m;; [39m    (lambda (__env33 __n2 __cont6)
-[90m;; [39m      (let ((__value9 (< __n2 '2)))
+[90m;; [39m    (lambda (__arg0 __arg1 __arg2)
+[90m;; [39m      (let ((__value9 (< __arg1 '2)))
 [90m;; [39m        (if __value9
 [90m;; [39m          (if (> (kont-counter) 0)
 [90m;; [39m            (begin
 [90m;; [39m              (dec-kont-counter!)
-[90m;; [39m              ((closure-fun __cont6) (closure-env __cont6) __n2))
-[90m;; [39m            (begin (reset-kont-counter!) (make-resumable __cont6 __n2)))
-[90m;; [39m          (let ((__value11 (- __n2 '1)))
+[90m;; [39m              ((closure-fun __arg2) (closure-env __arg2) __arg1))
+[90m;; [39m            (begin (reset-kont-counter!) (make-resumable __arg2 __arg1)))
+[90m;; [39m          (let ((__value11 (- __arg1 '1)))
 [90m;; [39m            (let ((__value14 (< __value11 '2)))
 [90m;; [39m              (let ((__cont12
 [90m;; [39m                     (make-closure
-[90m;; [39m                      (vector __cont6 __env33 __n2)
+[90m;; [39m                      (vector __arg2 __arg0 __arg1)
 [90m;; [39m                      __function45)))
 [90m;; [39m                (if __value14
 [90m;; [39m                  (if (> (kont-counter) 0)
@@ -101,19 +101,19 @@
 [90m;; [39m                      (reset-kont-counter!)
 [90m;; [39m                      (make-resumable __cont12 __value11)))
 [90m;; [39m                  (let ((__value28 (- __value11 '1)))
-[90m;; [39m                    ((closure-fun __env33)
-[90m;; [39m                     (closure-env __env33)
+[90m;; [39m                    ((closure-fun __arg0)
+[90m;; [39m                     (closure-env __arg0)
 [90m;; [39m                     __value28
 [90m;; [39m                     (make-closure
-[90m;; [39m                      (vector __cont12 __env33 __value11)
+[90m;; [39m                      (vector __cont12 __arg0 __value11)
 [90m;; [39m                      __function47)))))))))))
-[90m;; [39m  (define __function49 (lambda (__env41 __value31) (+ __env41 __value31)))
+[90m;; [39m  (define __function49 (lambda (__arg0 __arg1) (+ __arg0 __arg1)))
 [90m;; [39m  (define __function50
-[90m;; [39m    (lambda (__env40 __value30)
-[90m;; [39m      ((closure-fun __env40)
-[90m;; [39m       (closure-env __env40)
+[90m;; [39m    (lambda (__arg0 __arg1)
+[90m;; [39m      ((closure-fun __arg0)
+[90m;; [39m       (closure-env __arg0)
 [90m;; [39m       '21
-[90m;; [39m       (make-closure __value30 __function49))))
+[90m;; [39m       (make-closure __arg1 __function49))))
 [90m;; [39m  (let ((__env32 '()))
 [90m;; [39m    (let ((__fib1 (make-closure __env32 __function48)))
 [90m;; [39m      (begin
