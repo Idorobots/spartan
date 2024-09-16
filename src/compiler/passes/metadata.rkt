@@ -12,9 +12,7 @@
 
 (define extract-metadata
   (pass (schema "extract-metadata"
-                'ast (ast-subset? '(const symbol
-                                          if do let letrec binding lambda app
-                                          primop-app def <error>))
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app def <error>))
                 'intrinsics a-list?)
         (lambda (env)
           (let* ((ast (env-get env 'ast))
@@ -24,7 +22,10 @@
                  (updated (cdr result)))
             (env-set env
                      'ast updated
-                     'intrinsics primitives)))))
+                     'intrinsics primitives)))
+        (schema "extract-metadata output"
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app def <error>))
+                'intrinsics a-list?)))
 
 (define (extract-intrinsics-metadata ast)
   (define (replace-with-nil expr)

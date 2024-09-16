@@ -22,7 +22,8 @@
                            ((naive) optimize-naive)
                            ((super) optimize-super)))
                passes
-               env)))))
+               env)))
+        (schema "optimize output")))
 
 (define +optimization-loops+ 23)
 

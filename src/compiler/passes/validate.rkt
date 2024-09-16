@@ -21,21 +21,26 @@
                 'errors a-list?
                 'globals a-set?
                 'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app
-                                    primop-app def <error>)))
-   (lambda (env)
-     (let ((result (collect-errors (env-get env 'errors)
-                                   (lambda ()
-                                     (let ((expr (env-get env 'ast))
-                                           (globals (env-get env 'globals)))
-                                       (validate-ast globals
-                                                     (get-undefined-vars expr globals)
-                                                     (set)
-                                                     (set)
-                                                     expr))))))
-       (env-set env
-                'ast (car result)
-                'errors (cadr result))))))
+                                          if do let letrec binding lambda app
+                                          primop-app def <error>)))
+        (lambda (env)
+          (let ((result (collect-errors (env-get env 'errors)
+                                        (lambda ()
+                                          (let ((expr (env-get env 'ast))
+                                                (globals (env-get env 'globals)))
+                                            (validate-ast globals
+                                                          (get-undefined-vars expr globals)
+                                                          (set)
+                                                          (set)
+                                                          expr))))))
+            (env-set env
+                     'ast (car result)
+                     'errors (cadr result))))
+        (schema "validate output"
+                'errors a-list?
+                'ast (ast-subset? '(const symbol
+                                          if do let letrec binding lambda app
+                                          primop-app def <error>)))))
 
 (define (get-undefined-vars expr globals)
   (set-difference (ast-node-free-vars expr) globals))

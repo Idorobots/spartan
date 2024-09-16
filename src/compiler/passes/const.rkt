@@ -19,7 +19,11 @@
                                     if do let letrec binding lambda app
                                     primop-app def <error>)))
         (lambda (env)
-          (env-update env 'ast wrap-constants))))
+          (env-update env 'ast wrap-constants))
+        (schema "annotate-constants output"
+                'ast (ast-subset? '(const number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app def <error>)))))
 
 (define (wrap-constants expr)
   (case (ast-node-type expr)

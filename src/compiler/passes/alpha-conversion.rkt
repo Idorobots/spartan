@@ -20,7 +20,9 @@
   (pass (schema "alpha-convert"
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial alpha-rename (make-subs '()))))))
+          (env-update env 'ast (partial alpha-rename (make-subs '()))))
+        (schema "alpha-convert output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (alpha-rename subs expr)
   (define (loop subs expr)

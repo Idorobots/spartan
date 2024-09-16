@@ -18,7 +18,9 @@
   (pass (schema "propagate-copies"
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial copy-propagation (make-subs '()))))))
+          (env-update env 'ast (partial copy-propagation (make-subs '()))))
+        (schema "propagate-copies output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (copy-propagation subs expr)
   (propagate symbol-binding?

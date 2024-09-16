@@ -19,4 +19,6 @@
                         (generate-js env))
                        (else
                         (generate-scheme env)))))
-            (env-set env 'generated gen)))))
+            (env-set env 'generated gen)))
+        (schema "generate-target-code output"
+                'generated not-nil?)))

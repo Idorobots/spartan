@@ -18,7 +18,11 @@
                                     if do let letrec fix binding lambda app ;; NOTE fix, since this pass is used multiple times.
                                     primop-app def <error>)))
         (lambda (env)
-          (env-update env 'ast compute-free-vars))))
+          (env-update env 'ast compute-free-vars))
+        (schema "annotate-free-vars output"
+                'ast (ast-subset? '(const symbol
+                                    if do let letrec fix binding lambda app
+                                    primop-app def <error>)))))
 
 (define (compute-free-vars expr)
   (map-ast (lambda (expr)

@@ -22,7 +22,9 @@
                 'ast (ast-subset? '(const symbol if do let fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (lambda (expr)
-                                 (cpc expr #f (make-identity-continuation)))))))
+                                 (cpc expr #f (make-identity-continuation)))))
+        (schema "continuation-passing-convert output"
+                'ast (ast-subset? '(const symbol if do let fix binding lambda app primop-app)))))
 
 (define (make-identity-continuation)
   id)

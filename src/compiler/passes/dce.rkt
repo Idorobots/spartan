@@ -19,7 +19,9 @@
   (pass (schema "eliminate-dead-code"
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial dce (set))))))
+          (env-update env 'ast (partial dce (set))))
+        (schema "eliminate-dead-code output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (dce eta-disallow expr)
   (match-ast expr

@@ -16,7 +16,9 @@
   (pass (schema "fold-constants"
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast constant-folding))))
+          (env-update env 'ast constant-folding))
+        (schema "fold-constants output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (constant-folding expr)
   (map-ast (lambda (expr)

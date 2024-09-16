@@ -18,10 +18,11 @@
 
 (define fix-letrec
   (pass (schema "fix-letrec"
-                'ast (ast-subset? '(const symbol
-                                          if do let letrec binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast fixing-letrec))))
+          (env-update env 'ast fixing-letrec))
+        (schema "fix-letrec output"
+                'ast (ast-subset? '(const symbol if do let fix binding lambda app primop-app)))))
 
 (define (fixing-letrec expr)
   (map-ast (lambda (expr)

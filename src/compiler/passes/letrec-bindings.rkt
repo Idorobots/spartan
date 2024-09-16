@@ -56,10 +56,11 @@
 
 (define reorder-letrec-bindings
   (pass (schema "reorder-letrec-bindings"
-                'ast (ast-subset? '(const symbol
-                                    if do let letrec binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast reorder-letrec))))
+          (env-update env 'ast reorder-letrec))
+        (schema "reorder-letrec-bindings output"
+                'ast (ast-subset? '(const symbol if do let letrec binding lambda app primop-app)))))
 
 (define (reorder-letrec expr)
   (map-ast (lambda (expr)

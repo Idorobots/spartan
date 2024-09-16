@@ -26,4 +26,10 @@
                                                   (env-get env 'ast))))))
             (env-set env
                      'ast (car result)
-                     'errors (cadr result))))))
+                     'errors (cadr result))))
+        (schema "macro-expand output"
+                'errors a-list?
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    if do let letrec binding lambda app
+                                    primop-app def <error>)))))

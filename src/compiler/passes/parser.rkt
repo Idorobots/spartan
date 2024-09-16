@@ -297,7 +297,12 @@
                                                  "Expected a Spartan module, found something else:")))))))
             (env-set env
                      'ast (car result)
-                     'errors (cadr result))))))
+                     'errors (cadr result))))
+        (schema "parse output"
+                'ast (ast-subset? '(quote quasiquote unquote unquote-splicing
+                                    number symbol string list
+                                    primop-app body <error>))
+                'errors a-list?)))
 
 (define no-inline
   ;; NOTE Prevents inlining of this rule making it hit the cache more often and perform better.

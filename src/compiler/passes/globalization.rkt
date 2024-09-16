@@ -22,7 +22,11 @@
             (-> env
                 (env-remove 'ast)
                 (env-set 'data (car result)
-                         'init (cadr result)))))))
+                         'init (cadr result)))))
+        (schema "globalize output"
+                'data (list-of? (a-pair? a-symbol?
+                                         (ast-subset? '(const symbol if do let binding lambda primop-app))))
+                'init (ast-subset? '(const symbol if do let binding primop-app)))))
 
 (define (hoist-values expr)
   (let* ((hoisted '())

@@ -24,7 +24,11 @@
                               (map (lambda (v)
                                      (cons (symbol->safe (car v))
                                            (mangle-names (cdr v))))
-                                   values))))))
+                                   values))))
+        (schema "symbol-rename output"
+                'data (list-of? (a-pair? a-symbol?
+                                         (ast-subset? '(const symbol if do let binding lambda primop-app))))
+                'init (ast-subset? '(const symbol if do let binding primop-app)))))
 
 (define (mangle-names expr)
   (match-ast expr

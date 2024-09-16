@@ -19,7 +19,9 @@
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
           (env-update env 'ast (lambda (expr)
-                                   (cse (subexpr-extractor (env-get env 'intrinsics)) '() expr))))))
+                                   (cse (subexpr-extractor (env-get env 'intrinsics)) '() expr))))
+        (schema "eliminate-common-subexpressions output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (cse extract-subexprs subexprs expr)
   (let loop ((subexprs subexprs)

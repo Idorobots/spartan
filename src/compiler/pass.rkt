@@ -11,22 +11,26 @@
 
 (provide (struct-out pass) run-pass sequence debug
          schema non-empty-string? non-empty-list? non-empty-hash? a-symbol? a-number? a-string?
-         a-pair? a-list? list-of? a-set? a-function? ast-subset?
+         a-pair? a-list? list-of? a-set? a-function? ast-subset? not-nil?
          schema-validation-error?)
 
-(struct pass (schema transform) #:transparent)
+(struct pass (input-schema transform output-schema) #:transparent)
 
 (define (run-pass pass env)
-  (unless (env-contains? env 'no-validation)
-    ((pass-schema pass) env))
-  ((pass-transform pass) env))
+  (if (env-contains? env 'no-validation)
+      ((pass-transform pass) env)
+      (let* ((pre ((pass-input-schema pass) env))
+             (result ((pass-transform pass) env))
+             (post ((pass-output-schema pass) result)))
+        result)))
 
 (define (sequence . passes)
   (pass (schema "sequence")
         (lambda (env)
           (foldl run-pass
                  env
-                 passes))))
+                 passes))
+        (schema "sequence output")))
 
 (define (schema hint . properties)
   (lambda (env)
@@ -49,7 +53,12 @@
   (pass (schema "debug")
         (lambda (env)
           (pretty-print (ast->plain (env-get env 'ast)))
-          env)))
+          env)
+        (schema "debug output")))
+
+(define (not-nil? val)
+  (when (equal? val '())
+    (schema-validation-error "Not a non-nil value" val)))
 
 (define (non-empty-string? val)
   (unless (and (string? val)
