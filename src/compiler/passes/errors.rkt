@@ -22,7 +22,8 @@
                    (source-order errors))
               (raise-compilation-error (location 0 0)
                                        (format "Compilation aborted due to ~s errors." (length errors))))
-            env))))
+            env))
+        (schema "report-errors output")))
 
 (define (report-error env error)
   (let* ((location (compilation-error-location error))

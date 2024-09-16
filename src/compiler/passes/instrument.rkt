@@ -11,4 +11,5 @@
   (pass (schema "instrument"
                 'instrument a-function?)
         (lambda (env)
-          (env-update env 'ast (env-get env 'instrument)))))
+          (env-update env 'ast (env-get env 'instrument)))
+        (schema "instrument output")))

@@ -19,10 +19,11 @@
 (define closure-convert
   (pass (schema "closure-convert"
                 'globals a-set?
-                'ast (ast-subset? '(const symbol
-                                    if do let fix binding lambda app primop-app)))
+                'ast (ast-subset? '(const symbol if do let fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (flip convert-closures (env-get env 'globals))))))
+          (env-update env 'ast (flip convert-closures (env-get env 'globals))))
+        (schema "closure-convert output"
+                'ast (ast-subset? '(const symbol if do let fix binding lambda app primop-app)))))
 
 (define (convert-closures expr globals)
   (match-ast expr

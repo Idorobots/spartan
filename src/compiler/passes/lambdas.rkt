@@ -21,7 +21,9 @@
   (pass (schema "inline-lambdas"
                 'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))
         (lambda (env)
-          (env-update env 'ast (partial lambda-inlining '())))))
+          (env-update env 'ast (partial lambda-inlining '())))
+        (schema "inline-lambdas output"
+                'ast (ast-subset? '(const symbol if do let letrec fix binding lambda app primop-app)))))
 
 (define (lambda-inlining lambdas expr)
   (let ((loop (partial traverse-ast lambda-inlining lambdas)))
